@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CypherStick: MEDIUM - The Vanishing Journalist Challenge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Using canvas-confetti and jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+      :root {
+      --primary-color: #007bff;
+      --success-color: #28a745;
+      --warning-color: #f1c40f;
+      --danger-color: #e74c3c;
+      --dark-blue: #002244;
+      --light-gray: #f8f9fa;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: url('MEDIUM_BG.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0 1rem 1rem 1rem;
+      padding-top: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.7);
+      z-index: -1;
+    }
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 0;
+      margin: 0;
+      border: none;
+      box-shadow: none;
+    }
+    header img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      flex: 1;
+      margin-top: calc(100vw * 0.18); /* enough space below header image (approx 20% of width) */
+      padding: 1rem;
+    }
+    .intro {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      border-left: 5px solid var(--warning-color);
+      background: #fffef2;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+    .intro p {
+      margin-bottom: 1rem;
+    }
+    /* Two-line question box styling */
+    .question {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .question .question-text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--dark-blue);
+      margin-bottom: 0.5rem;
+    }
+    .question .input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .question input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .question input[type="text"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px rgba(0,123,255,0.4);
+      outline: none;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-hint, .btn-check {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .btn-hint {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      color: #fff;
+    }
+    .btn-hint:hover {
+      background: linear-gradient(135deg, #5a6268, #4a4e53);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .btn-check {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: #fff;
+    }
+    .btn-check:hover {
+      background: linear-gradient(135deg, #0056b3, #003d80);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .hint {
+      margin-top: 0.5rem;
+      background: var(--light-gray);
+      border-left: 5px solid #6c757d;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-style: italic;
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .result {
+      font-weight: bold;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      min-height: 1.2rem;
+    }
+    .result.incorrect {
+      color: var(--danger-color);
+    }
+    /* Toast messages (slide in from the side) */
+    #toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      animation: slideIn 0.5s ease-out;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    /* Final message styling */
+    #finalMessage {
+      text-align: center;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border: 2px solid var(--warning-color);
+      border-radius: 10px;
+      background: #fff3cd;
+      color: #856404;
+      font-family: 'Poppins', sans-serif;
+      display: none;
+    }
+    /* Victory overlay (appears only when quiz is complete) */
+    #victoryOverlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Poppins', sans-serif;
+      font-size: 3rem;
+      color: #f1c40f;
+      background: rgba(0,0,0,0.7);
+      padding: 2rem 4rem;
+      border-radius: 10px;
+      z-index: 1500;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      pointer-events: none;
+    }
+    /* Certificate modal for name input */
+    .name-input-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      z-index: 2000;
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+    }
+    .name-input-modal input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      width: 80%;
+    }
+    .name-input-modal button {
+      padding: 0.75rem 1.5rem;
+      background: var(--warning-color);
+      color: var(--dark-blue);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .name-input-modal button:hover {
+      background: #d4ac0d;
+      transform: scale(1.05);
+    }
+    /* Certificate claim button styling */
+    .btn-certificate {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    .btn-certificate:hover {
+      background: #c0392b;
+      transform: translateY(-3px);
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+    @media (max-width: 768px) {
+      header h1 { font-size: 2rem; }
+      header p { font-size: 1rem; }
+      .container { padding: 1rem; }
+      .question { padding: 0.8rem; }
+      .btn-hint, .btn-check { padding: 0.5rem 1rem; font-size: 0.9rem; }
+      #victoryOverlay { font-size: 2rem; padding: 1rem 2rem; }
+    }
+    @media print {
+      body { background: #fff !important; }
+      header, footer, .container { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header style="padding: 0; border: none; box-shadow: none; margin-bottom: 1rem;">
+  <img src="OSINT_MEDIUM.png" alt="CypherStick: Medium" style="width: 100%; height: auto; display: block;" />
+</header>
+  <div class="container">
+    <div class="intro" id="introText">
+      <!-- Intro text will be injected via JS -->
+    </div>
+    <details style="margin: 1rem 0; background: #fffef2; border-left: 5px solid #007bff; padding: 1rem; border-radius: 8px;">
+      <summary style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">🧰 Useful OSINT Tools (click to expand)</summary>
+      <ul style="margin-top: 0.75rem; padding-left: 1.2rem; line-height: 1.7;">
+        <li><a href="https://www.metadata2go.com/" target="_blank">📷 Metadata2Go</a> – Extracts metadata from images</li>
+        <li>🛠 Browser <strong>Inspect Tool</strong> – Right click → Inspect → View source & elements</li>
+        <li><a href="https://www.base64decode.org/" target="_blank">📂 Base64 Decode</a> – Decode encoded strings</li>
+        <li><a href="https://www.gps-coordinates.net/" target="_blank">📍 GPS Coordinates Lookup</a> – Find places from lat/long</li>
+        <li><a href="https://archive.org/web/" target="_blank">🕰️ Wayback Machine</a> – View old versions of websites</li>
+        <li><a href="https://www.osintcurio.us/2019/12/20/google-dorks/" target="_blank">🧠 Google "Dorking"</a> - Learn how to search the web most effectivly</li>
+      </ul>
+    </details>    
+    <br>
+    <!-- Questions generated dynamically -->
+    <div id="questionsContainer"></div>
+    <div id="finalMessage">
+      <h2 style="color: #f1c40f;">You beat it!</h2>
+      <button class="btn-certificate" onclick="openCertificateModal()">Claim Your Certificate</button>
+    </div>
+  </div>
+  <!-- Victory overlay -->
+  <div id="victoryOverlay">You beat it!</div>
+  <!-- Certificate name input modal -->
+  <div id="nameInputModal" class="name-input-modal">
+    <h2>Enter Your Name</h2>
+    <input type="text" id="userNameInput" placeholder="Your Name" />
+    <button onclick="downloadCertificate()">Download Certificate</button>
+  </div>
+  <div id="toast"></div>
+  <footer>
+    <p>© 2025 CypherStick. All rights reserved.</p>
+  </footer>
+<script>
+  const storageKeyPrefix = "OSINT-MEDIUM";
+const requiredPrefix = "";
+  const requiredSuffix = "";
+  const prefixEnabled = requiredPrefix.trim() !== "";
+  let testMode = false;
+  let quizCompleted = false;
+
+  const questions = [
+    { question: "What is the URL of the website where Emma’s investigation begins?", hint: "Look at the domain name provided in the instructions.", answer: "emmatruthseeker.wordpress.com" },
+    { question: "What is the title of the blog post that starts the trail?", hint: "It’s the opening post title on Emma's website.", answer: "The City's Secrets" },
+    { question: "What phrase in the blog post hints at Emma’s social media activity?", hint: "The phrase mentions tweeting about hidden truths.", answer: "I often tweet about hidden truths" },
+    { question: "What is the file name of the photo linked in the blog post?", hint: "", answer: "cityscape.png" },
+    { question: "Where was the photo taken (exact GPS coordonates)", hint: "", answer: "40.7128° N, 74.0060° W" },
+    { question: "Where does Emma call home?", hint: "She calls this tropical paradise her home.", answer: "hawaii" },
+    { question: "What is the hidden message in the photo?", hint: "It looks like a short encoded string.", answer: "QJXQ4==" },
+    { question: "What is the name of the café that is refrenced?", hint: "", answer: "Liberty Café" },
+    { question: "What is the note attached to that?", hint: "It implies that art is key to the mystery.", answer: "The key is in the art" },
+    { question: "What is the unlock code for the repository?", hint: "Often, the unlock code is similar to the café's name.", answer: "liberty" },
+    { question: "What is Emma’s X handle?", hint: "Remember, Twitter handles start with '@'.", answer: "@EmmaTruthSeeker" },
+    { question: "What is the message in Emma’s tweet?", hint: "This message is encoded. Give the encoded message.", answer: "Wkh orfdwlrq lv klgghq" },
+    { question: "What are the coordinates in the unlocked repository file?", hint: "Check the contents of the unlocked file in the repository.", answer: "40.7829° N, 73.9654° W" },
+    { question: "What location do these coordinates point to?", hint: "", answer: "Central Park" },
+    { question: "What is Emma's email (encoded in Base64)?", hint: "It should match the Base64 format ending with '=='.", answer: "ZW1tYUBleGFtcGxlLmNvbQ==" },
+    { question: "What is Emma’s email address?", hint: "Decoding the string from the previous question will give you the email address.", answer: "emmatruthseeker@proton.me" }
+  ];
+
+  let checkedQuestions = new Array(questions.length).fill(false);
+  let answeredCorrectly = new Array(questions.length).fill(false);
+
+  function normalizeInput(str) {
+    return str
+      .toLowerCase()
+      .replace(/[’‘]/g, "'")
+      .replace(/[“”]/g, '"')
+      .normalize("NFKC")
+      .trim();
+  }
+
+  function showToastMessage(message, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.style.background = type === "correct" ? "#28a745" : "#e74c3c";
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 3000);
+  }
+
+  function checkAnswer(index, showBanner = true) {
+    const inputField = document.getElementById(`input-${index}`);
+    const userInputRaw = inputField.value;
+    const userInput = normalizeInput(userInputRaw);
+    const expected = normalizeInput(`${requiredPrefix}${questions[index].answer}${requiredSuffix}`);
+    const questionDiv = document.getElementById(`question-${index}`);
+
+    localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
+
+    if (userInput !== "") {
+      checkedQuestions[index] = true;
+    }
+
+    if (userInput === expected) {
+      if (!answeredCorrectly[index]) {
+        answeredCorrectly[index] = true;
+        questionDiv.style.borderColor = 'var(--success-color)';
+        inputField.style.backgroundColor = "#d4edda";
+        if (showBanner) {
+          showToastMessage("Correct!", "correct");
+          confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+        }
+      }
+    } else {
+      questionDiv.style.borderColor = 'var(--danger-color)';
+      inputField.style.backgroundColor = "#f8d7da";
+      if (showBanner) {
+        showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
+      }
+    }
+
+    checkAllAnswers();
+  }
+
+  function checkAllAnswers() {
+    let allCorrect = true;
+    for (let i = 0; i < questions.length; i++) {
+      const inputVal = normalizeInput(document.getElementById(`input-${i}`).value);
+      const expected = normalizeInput(`${requiredPrefix}${questions[i].answer}${requiredSuffix}`);
+      if (inputVal !== expected || !checkedQuestions[i]) {
+        allCorrect = false;
+        break;
+      }
+    }
+
+    const finalMessage = document.getElementById('finalMessage');
+    if (allCorrect && !quizCompleted) {
+      quizCompleted = true;
+      finalMessage.style.display = 'block';
+      startVictoryConfetti();
+      showVictoryOverlay();
+    } else if (!allCorrect) {
+      finalMessage.style.display = 'none';
+      quizCompleted = false;
+    }
+  }
+
+  function generatePlaceholder(answer) {
+    return answer.replace(/[^{} ]/g, '*');
+  }
+
+  function toggleHint(index) {
+    const hint = document.getElementById(`hint-${index}`);
+    hint.style.display = (hint.style.display === 'none' || hint.style.display === '') ? 'block' : 'none';
+  }
+
+  function generateQuestions() {
+    const container = document.getElementById('questionsContainer');
+    questions.forEach((q, index) => {
+      const questionDiv = document.createElement('div');
+      questionDiv.className = 'question';
+      questionDiv.id = `question-${index}`;
+
+      const questionText = document.createElement('div');
+      questionText.className = 'question-text';
+      questionText.textContent = `${index + 1}. ${q.question}`;
+      questionDiv.appendChild(questionText);
+
+      const inputGroup = document.createElement('div');
+      inputGroup.className = 'input-group';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = `input-${index}`;
+      input.placeholder = generatePlaceholder(`${requiredPrefix}${q.answer}${requiredSuffix}`);
+      input.oninput = () => localStorage.setItem(`${storageKeyPrefix}-input-${index}`, input.value);
+      inputGroup.appendChild(input);
+
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'btn-group';
+
+      if (q.hint) {
+        const hintBtn = document.createElement('button');
+        hintBtn.className = 'btn-hint';
+        hintBtn.textContent = 'Show Hint';
+        hintBtn.onclick = () => toggleHint(index);
+        btnGroup.appendChild(hintBtn);
+      }
+
+      const checkBtn = document.createElement('button');
+      checkBtn.className = 'btn-check';
+      checkBtn.textContent = 'Check Answer';
+      checkBtn.onclick = () => checkAnswer(index, true);
+      btnGroup.appendChild(checkBtn);
+
+      inputGroup.appendChild(btnGroup);
+      questionDiv.appendChild(inputGroup);
+
+      if (q.hint) {
+        const hintDiv = document.createElement('div');
+        hintDiv.className = 'hint';
+        hintDiv.id = `hint-${index}`;
+        hintDiv.textContent = q.hint;
+        questionDiv.appendChild(hintDiv);
+      }
+
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'result';
+      resultDiv.id = `result-${index}`;
+      questionDiv.appendChild(resultDiv);
+
+      container.appendChild(questionDiv);
+    });
+  }
+
+  function restoreInputs() {
+    questions.forEach((_, i) => {
+      const saved = localStorage.getItem(`${storageKeyPrefix}-input-${i}`);
+      if (saved) {
+        const inputField = document.getElementById(`input-${i}`);
+        inputField.value = saved;
+        checkAnswer(i, false);
+      }
+    });
+  }
+
+  function startVictoryConfetti() {
+    const interval = setInterval(() => {
+      confetti({ particleCount: 300, spread: 150, origin: { x: 0, y: 0.5 } });
+      confetti({ particleCount: 300, spread: 150, origin: { x: 1, y: 0.5 } });
+    }, 300);
+    setTimeout(() => clearInterval(interval), 10000);
+  }
+
+  function showVictoryOverlay() {
+    const overlay = document.getElementById('victoryOverlay');
+    overlay.style.opacity = '1';
+    setTimeout(() => overlay.style.opacity = '0', 3000);
+  }
+
+  function openCertificateModal() {
+    document.getElementById('nameInputModal').style.display = 'block';
+  }
+
+  function downloadCertificate() {
+    const userName = document.getElementById('userNameInput').value || '[Your Name]';
+    const certificateDate = new Date().toLocaleDateString();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [11, 8.5] });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.setFillColor(255, 245, 157);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+    doc.setDrawColor(241, 196, 15);
+    doc.setLineWidth(0.3);
+    doc.rect(0.25, 0.25, pageWidth - 0.5, pageHeight - 0.5);
+
+    doc.setDrawColor(231, 76, 60);
+    doc.setLineWidth(0.15);
+    doc.rect(0.5, 0.5, pageWidth - 1, pageHeight - 1);
+
+    doc.setFont("times", "bolditalic");
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(28);
+    doc.text("Certificate of Mastery", pageWidth / 2, 1.5, { align: "center" });
+
+    doc.setFontSize(18);
+    doc.text("This certifies that", pageWidth / 2, 2.5, { align: "center" });
+
+    doc.setFontSize(24);
+    doc.text(userName, pageWidth / 2, 3.5, { align: "center" });
+
+    doc.setFontSize(18);
+    doc.text("has successfully completed", pageWidth / 2, 4.5, { align: "center" });
+    doc.text("CypherStick: MEDIUM - The Vanishing Journalist Challenge", pageWidth / 2, 5, { align: "center" });
+
+    doc.setFontSize(16);
+    doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: "center" });
+    doc.text("Awarded by: CypherStick Team", pageWidth / 2, 6.5, { align: "center" });
+
+    doc.setFontSize(14);
+    doc.text("This achievement recognizes your outstanding investigative skills and mastery of open-source intelligence techniques.", pageWidth / 2, 7.5, { align: "center" });
+
+    doc.save("USB-OSINT-Medium-Certificate.pdf");
+    document.getElementById('nameInputModal').style.display = 'none';
+  }
+
+  function loadIntroText() {
+  let prefixInfo = "";
+  if (prefixEnabled) {
+    prefixInfo = `<p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>`;
+  }
+  const introHTML = `
+    <p>Welcome to the CypherStick Challenge Quiz! In this interactive investigation, you'll put your open-source intelligence (OSINT) skills to the test as you follow the digital trail left by a missing journalist, Emma (aka <strong>EmmaTruthSeeker</strong>). Use techniques such as metadata extraction, the inspect tool, social media reconnaissance, and more to uncover hidden clues.</p>
+    <p>The investigation begins at: <a href="https://emmatruthseeker.wordpress.com" target="_blank">emmatruthseeker.wordpress.com</a>. Password: emmaseekstruth</p>
+
+<p>If you are new to OSINT, I reccomend <a href="https://www.youtube.com/watch?v=Sa5LbKqCmFI" target="_blank">this video</a> to familiarize yourself with it</p>
+
+    ${prefixInfo}
+    <p>This quiz will challenge you to analyze digital evidence and leverage OSINT techniques to solve the mystery. Good luck!</p>
+  `;
+  document.getElementById("introText").innerHTML = introHTML;
+}
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadIntroText();
+    generateQuestions();
+    restoreInputs();
+    if (testMode) {
+      const enableTestMode = confirm("Enable Test Mode? This will fill in the answer boxes for you. Click OK to proceed.");
+      if (enableTestMode) {
+        questions.forEach((q, i) => {
+          const input = document.getElementById(`input-${i}`);
+          input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+          localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
+        });
+        restoreInputs();
+      }
+    }
+  });
+</script>
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasavocado" data-description="Support me on Buy me a coffee!" data-message="" data-color="white" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+</body>
+</html>
