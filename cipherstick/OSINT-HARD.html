@@ -377,7 +377,9 @@
 </script>
 <body>
   <header>
-    <img src="HARD.png" alt="CypherStick: Hard" />
+    <a href="index.html">
+    <img src="HARD.png" alt="CypherStick: Hard"/>
+  </a>
   </header>
 
   <div class="container">
@@ -691,6 +693,12 @@ function downloadCertificate() {
   doc.text("This achievement recognizes your elite investigative ability and OSINT expertise.", pageWidth / 2, 7.5, { align: "center" });
 
   doc.save("DigitalEnigma-Certificate.pdf");
+  setTimeout(() => {
+    for (let i = 0; i < questions.length; i++) {
+      localStorage.removeItem("OSINT-HARD-input-" + i);
+    }
+  }, 200);
+
   document.getElementById('nameInputModal').style.display = 'none';
 }
 

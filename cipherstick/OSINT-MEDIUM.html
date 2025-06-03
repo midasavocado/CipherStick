@@ -304,7 +304,9 @@
 </script>
 <body>
   <header style="padding: 0; border: none; box-shadow: none; margin-bottom: 1rem;">
+    <a href="index.html">
   <img src="OSINT_MEDIUM.png" alt="CypherStick: Medium" style="width: 100%; height: auto; display: block;" />
+</a>
 </header>
   <div class="container">
     <div class="intro" id="introText">
@@ -585,6 +587,12 @@ const requiredPrefix = "";
     doc.text("This achievement recognizes your outstanding investigative skills and mastery of open-source intelligence techniques.", pageWidth / 2, 7.5, { align: "center" });
 
     doc.save("USB-OSINT-Medium-Certificate.pdf");
+  setTimeout(() => {
+    for (let i = 0; i < questions.length; i++) {
+      localStorage.removeItem("OSINT-MEDIUM-input-" + i);
+    }
+  }, 200);
+
     document.getElementById('nameInputModal').style.display = 'none';
   }
 
