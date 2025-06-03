@@ -564,37 +564,38 @@ const requiredPrefix = "";
     doc.setLineWidth(0.15);
     doc.rect(0.5, 0.5, pageWidth - 1, pageHeight - 1);
 
-    doc.setFont("times", "bolditalic");
+    doc.setFont('times', 'bolditalic');
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(28);
-    doc.text("Certificate of Mastery", pageWidth / 2, 1.5, { align: "center" });
+    doc.text('Certificate of Mastery', pageWidth / 2, 1.5, { align: 'center' });
 
     doc.setFontSize(18);
-    doc.text("This certifies that", pageWidth / 2, 2.5, { align: "center" });
+    doc.text('This certifies that', pageWidth / 2, 2.5, { align: 'center' });
 
     doc.setFontSize(24);
-    doc.text(userName, pageWidth / 2, 3.5, { align: "center" });
+    doc.text(userName, pageWidth / 2, 3.5, { align: 'center' });
 
     doc.setFontSize(18);
-    doc.text("has successfully completed", pageWidth / 2, 4.5, { align: "center" });
-    doc.text("CypherStick: MEDIUM - The Vanishing Journalist Challenge", pageWidth / 2, 5, { align: "center" });
+    doc.text('has successfully completed', pageWidth / 2, 4.5, { align: 'center' });
+    doc.text('CypherStick: MEDIUM - The Vanishing Journalist Challenge', pageWidth / 2, 5, { align: 'center' });
 
     doc.setFontSize(16);
-    doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: "center" });
-    doc.text("Awarded by: CypherStick Team", pageWidth / 2, 6.5, { align: "center" });
+    doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: 'center' });
+    doc.text('Awarded by: CypherStick Team', pageWidth / 2, 6.5, { align: 'center' });
 
     doc.setFontSize(14);
-    doc.text("This achievement recognizes your outstanding investigative skills and mastery of open-source intelligence techniques.", pageWidth / 2, 7.5, { align: "center" });
+    doc.text('This achievement recognizes your outstanding investigative skills and mastery of open-source intelligence techniques.', pageWidth / 2, 7.5, { align: 'center' });
 
-    doc.save("USB-OSINT-Medium-Certificate.pdf");
-  setTimeout(() => {
+    // Trigger download
+    doc.save('USB-OSINT-Medium-Certificate.pdf');
+
+    // Clear localStorage entries after saving
     for (let i = 0; i < questions.length; i++) {
-      localStorage.removeItem("OSINT-MEDIUM-input-" + i);
+        localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
     }
-  }, 200);
 
     document.getElementById('nameInputModal').style.display = 'none';
-  }
+}
 
   function loadIntroText() {
   let prefixInfo = "";

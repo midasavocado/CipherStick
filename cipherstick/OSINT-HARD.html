@@ -670,33 +670,37 @@ function downloadCertificate() {
   doc.setLineWidth(0.25);
   doc.rect(0.25, 0.25, pageWidth - 0.5, pageHeight - 0.5);
 
-  doc.setFont("times", "bolditalic");
+  doc.setFont('times', 'bolditalic');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(28);
-  doc.text("Certificate of Mastery", pageWidth / 2, 1.5, { align: "center" });
+  doc.text('Certificate of Mastery', pageWidth / 2, 1.5, { align: 'center' });
 
   doc.setFontSize(18);
-  doc.text("This certifies that", pageWidth / 2, 2.5, { align: "center" });
+  doc.text('This certifies that', pageWidth / 2, 2.5, { align: 'center' });
 
   doc.setFontSize(24);
-  doc.text(userName, pageWidth / 2, 3.5, { align: "center" });
+  doc.text(userName, pageWidth / 2, 3.5, { align: 'center' });
 
   doc.setFontSize(18);
-  doc.text("has successfully completed", pageWidth / 2, 4.5, { align: "center" });
-  doc.text("CypherStick: HARD - The Digital Enigma", pageWidth / 2, 5, { align: "center" });
+  doc.text('has successfully completed', pageWidth / 2, 4.5, { align: 'center' });
+  doc.text('CypherStick: HARD - The Digital Enigma', pageWidth / 2, 5, { align: 'center' });
 
   doc.setFontSize(16);
-  doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: "center" });
-  doc.text("Awarded by: CypherStick Team", pageWidth / 2, 6.5, { align: "center" });
+  doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: 'center' });
+  doc.text('Awarded by: CypherStick Team', pageWidth / 2, 6.5, { align: 'center' });
 
   doc.setFontSize(14);
-  doc.text("This achievement recognizes your elite investigative ability and OSINT expertise.", pageWidth / 2, 7.5, { align: "center" });
+  doc.text('This achievement recognizes your elite investigative ability and OSINT expertise.', pageWidth / 2, 7.5, { align: 'center' });
 
-  doc.save(
-  // Clear localStorage entries after saving
+  // Trigger download
+  doc.save("DigitalEnigma-Certificate.pdf");
+// Clear localStorage entries after saving (slight delay gives browsers time to start the download)
+setTimeout(() => {
   for (let i = 0; i < questions.length; i++) {
-    localStorage.removeItem("OSINT-HARD-input-" + i);
-  }"DigitalEnigma-Certificate.pdf");
+    localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
+  }
+}, 200);
+
   document.getElementById('nameInputModal').style.display = 'none';
 }
 

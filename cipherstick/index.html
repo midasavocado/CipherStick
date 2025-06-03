@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Train your OSINT skills with free browser-based puzzles that include automatic answer checking.">
   <meta property="og:title" content="CipherStick OSINT Puzzles">
-<meta property="og:description" content="Train your OSINT skills through interactive, browser-based investigations.">
-<meta property="og:image" content="https://cipherstick.tech/hero.png">
-<meta property="og:url" content="https://cipherstick.tech">
-<meta name="twitter:card" content="summary_large_image">
+  <meta property="og:description" content="Train your OSINT skills through interactive, browser-based investigations.">
+  <meta property="og:image" content="https://cipherstick.tech/hero.png">
+  <meta property="og:url" content="https://cipherstick.tech">
+  <meta name="twitter:card" content="summary_large_image">
 
   <title>CipherStick OSINT Puzzles</title>
 
@@ -29,6 +29,7 @@
 </script>
 <body>
   <p style="display:none;">Train your OSINT skills with free browser-based puzzles that include automatic answer checking.</p>
+
   <!-- ═════ HEADER ═════ -->
   <header class="site-header">
     <div class="container flex-between">
@@ -49,21 +50,21 @@
     </div>
   </header>
 
-<!-- ═════ HERO IMAGE (78 vh) ═════ -->
-<section class="hero image-hero"><h1 style="display:none">Browser-Based OSINT Challenges for Digital Detectives</h1></section>
+  <!-- ═════ HERO IMAGE (78 vh) ═════ -->
+  <section class="hero image-hero"><h1 style="display:none">Browser-Based OSINT Challenges for Digital Detectives</h1></section>
 
-<!-- ═════ WHAT IS OSINT ═════ -->
-<section class="section alt-bg">
-  <div class="container">
-    <h2 class="section-title">What is OSINT?</h2>
-    <p style="max-width: 900px; margin: auto; color: #ccc; font-size: 1.1rem;">
-      OSINT—short for <strong>Open Source Intelligence</strong>—is the art of gathering powerful information from public sources. Think <em>detective work</em> without a badge. It's used by journalists to verify facts, by cybersecurity experts to track threats, and by curious minds to uncover hidden stories in plain sight.
-    </p>
-    <p style="max-width: 900px; margin: 1rem auto 0; color: #ccc; font-size: 1.1rem;">
-      With OSINT, your browser becomes your lab. You inspect websites, decode data, analyze metadata, and follow digital breadcrumbs—all with tools anyone can access. No hacking. No scripts. Just skill.
-    </p>
-  </div>
-</section>
+  <!-- ═════ WHAT IS OSINT ═════ -->
+  <section class="section alt-bg">
+    <div class="container">
+      <h2 class="section-title">What is OSINT?</h2>
+      <p style="max-width: 900px; margin: auto; color: #ccc; font-size: 1.1rem;">
+        OSINT—short for <strong>Open Source Intelligence</strong>—is the art of gathering powerful information from public sources. Think <em>detective work</em> without a badge. It's used by journalists to verify facts, by cybersecurity experts to track threats, and by curious minds to uncover hidden stories in plain sight.
+      </p>
+      <p style="max-width: 900px; margin: 1rem auto 0; color: #ccc; font-size: 1.1rem;">
+        With OSINT, your browser becomes your lab. You inspect websites, decode data, analyze metadata, and follow digital breadcrumbs—all with tools anyone can access. No hacking. No scripts. Just skill.
+      </p>
+    </div>
+  </section>
 
   <!-- ═════ ABOUT ═════ -->
   <section id="about" class="section">
@@ -126,6 +127,15 @@
     </div>
   </section>
 
+  <!-- ═════ DISCLAIMER (added) ═════ -->
+  <section class="section">
+    <div class="container">
+      <p style="max-width: 900px; margin: 1.5rem auto 0; color: #ccc; font-size: 0.95rem; text-align: center;">
+        <strong>Disclaimer&nbsp;&mdash;&nbsp;</strong>All characters, organizations, and events featured in these puzzles are entirely fictional. They are crafted to <em>simulate</em> real-world OSINT investigations for educational purposes only.
+      </p>
+    </div>
+  </section>
+
   <!-- ═════ QUIET AD SLOT ═════ -->
   <div class="ad-banner"><!-- ad snippet here --></div>
 
@@ -134,28 +144,24 @@
     <div class="container contact-container">
       <h2 class="section-title">Questions? Contact Us.</h2>
 
-      
+      <form id="contactForm" class="contact-form" action="https://formspree.io/f/mvgabewp" method="POST">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input id="name" type="text" name="name" required />
+        </div>
 
-<form id="contactForm" class="contact-form" action="https://formspree.io/f/mvgabewp" method="POST">
-  <div class="form-group">
-    <label for="name">Name</label>
-    <input id="name" type="text" name="name" required />
-  </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" required />
+        </div>
 
-  <div class="form-group">
-    <label for="email">Email</label>
-    <input id="email" type="email" name="email" required />
-  </div>
+        <div class="form-group">
+          <label for="msg">Message</label>
+          <textarea id="msg" name="message" rows="5" required></textarea>
+        </div>
 
-  <div class="form-group">
-    <label for="msg">Message</label>
-    <textarea id="msg" name="message" rows="5" required></textarea>
-  </div>
-
-  <button type="submit" class="btn">Send Message</button>
-</form>
-
-
+        <button type="submit" class="btn">Send Message</button>
+      </form>
     </div>
   </section>
 
@@ -163,12 +169,15 @@
   <footer class="site-footer">
     <div class="container flex-between">
       <p>© <span id="year"></span> CypherStick</p>
-      
     </div>
   </footer>
 
   <!-- simple handler -->
   <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasavocado" data-description="Support me on Buy me a coffee!" data-message="" data-color="white" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
-  
+
+  <script>
+    // Set current year in footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
