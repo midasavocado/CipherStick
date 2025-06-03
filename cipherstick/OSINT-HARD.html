@@ -692,13 +692,11 @@ function downloadCertificate() {
   doc.setFontSize(14);
   doc.text("This achievement recognizes your elite investigative ability and OSINT expertise.", pageWidth / 2, 7.5, { align: "center" });
 
-  doc.save("DigitalEnigma-Certificate.pdf");
-  setTimeout(() => {
-    for (let i = 0; i < questions.length; i++) {
-      localStorage.removeItem("OSINT-HARD-input-" + i);
-    }
-  }, 200);
-
+  doc.save(
+  // Clear localStorage entries after saving
+  for (let i = 0; i < questions.length; i++) {
+    localStorage.removeItem("OSINT-HARD-input-" + i);
+  }"DigitalEnigma-Certificate.pdf");
   document.getElementById('nameInputModal').style.display = 'none';
 }
 
