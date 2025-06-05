@@ -694,12 +694,31 @@ function downloadCertificate() {
 
   // Trigger download
   doc.save("DigitalEnigma-Certificate.pdf");
-// Clear localStorage entries after saving (slight delay gives browsers time to start the download)
-setTimeout(() => {
-  for (let i = 0; i < questions.length; i++) {
-    localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
+  // Firebase certificate completion logging (runs only when certificate is generated)
+  {
+    const challenge = "hard"; // Change to "medium" if on the medium page
+    const userId = localStorage.getItem("userId") || crypto.randomUUID();
+    localStorage.setItem("userId", userId);
+    const completionPath = `https://cipherstick-default-rtdb.firebaseio.com/completions/${challenge}/${userId}.json`;
+    fetch(completionPath, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timestamp: Date.now() }),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Unauthorized");
+        console.log("✅ Completion logged");
+      })
+      .catch(err => {
+        console.warn("❌ Failed to log completion:", err.message);
+      });
   }
-}, 200);
+  // Clear localStorage entries after saving (slight delay gives browsers time to start the download)
+  setTimeout(() => {
+    for (let i = 0; i < questions.length; i++) {
+      localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
+    }
+  }, 200);
 
   document.getElementById('nameInputModal').style.display = 'none';
 }

@@ -251,9 +251,9 @@ function setupStats(cardId, difficulty) {
   const completionsRef = ref(db, `completions/${difficulty}`);
   const attemptsRef = ref(db, `attempts/${difficulty}`);
 
-  const popup = document.querySelector(`#${cardId} .challenge-popup`);
-  const completionEl = popup.querySelector('.completion-count');
-  const attemptEl = popup.querySelector('.attempt-count');
+  const card = document.getElementById(cardId);
+  const completionEl = card.querySelector('.completion-count');
+  const attemptEl = card.querySelector('.attempt-count');
 
   onValue(completionsRef, (snap) => {
     completionEl.textContent = snap.val() ?? 0;
