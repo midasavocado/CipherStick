@@ -16,6 +16,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="style.css" />
+  <style>
+  .challenge-stats-corner {
+    position: absolute;
+    bottom: 18px;
+    right: 24px;
+    background-color: #00074f;
+    color: rgb(255, 255, 255);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    padding: 8px 14px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    text-align: right;
+    z-index: 2;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0, 21, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .challenge-card {
+    position: relative;
+  }
+
+  .challenge-stats-corner div {
+    margin: 0;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+  </style>
   <link rel="canonical" href="https://cipherstick.tech/" />
   <script defer src="script.js"></script>
 
@@ -119,24 +148,32 @@
 
       <div class="card-wrapper">
         <!-- Medium -->
-        <article class="challenge-card">
-          <img src="OSINT_MEDIUM.png" alt="Medium banner">
-          <div class="card-content">
-            <h4>Medium — <em>The Vanishing Journalist</em></h4>
-            <p>Metadata sleuthing, social breadcrumbs, and more</p>
-            <a href="OSINT-MEDIUM.html" class="btn">Launch</a>
-          </div>
-        </article>
+       <article class="challenge-card" id="card-medium">
+  <img src="OSINT_MEDIUM.png" alt="Medium banner">
+  <div class="card-content">
+    <h4>Medium — <em>The Vanishing Journalist</em></h4>
+    <p>Metadata sleuthing, social breadcrumbs, and more</p>
+    <a href="OSINT-MEDIUM.html" class="btn">Launch</a>
+  </div>
+  <div class="challenge-stats-corner">
+    <div>Total Attempts: <span class="attempt-count">0</span></div>
+    <div>Total Completions: <span class="completion-count">0</span></div>
+  </div>
+</article>
 
         <!-- Hard -->
-        <article class="challenge-card">
-          <img src="HARD.png" alt="Hard banner">
-          <div class="card-content">
-            <h4>Hard — <em>The Digital Enigma</em></h4>
-            <p>GPS triangulation, repo forensics, hidden Morse, and more</p>
-            <a href="OSINT-HARD.html" class="btn danger">Launch</a>
-          </div>
-        </article>
+        <article class="challenge-card" id="card-hard">
+  <img src="HARD.png" alt="Hard banner">
+  <div class="card-content">
+    <h4>Hard — <em>The Vanishing Journalist</em></h4>
+    <p>Metadata sleuthing, social breadcrumbs, and more</p>
+    <a href="OSINT-HARD.html" class="btn">Launch</a>
+  </div>
+  <div class="challenge-stats-corner">
+    <div>Total Attempts: <span class="attempt-count">0</span></div>
+    <div>Total Completions: <span class="completion-count">0</span></div>
+  </div>
+</article>
       </div>
     </div>
   </section>
@@ -193,5 +230,49 @@
     // Set current year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
+  authDomain: "cipherstick.firebaseapp.com",
+  databaseURL: "https://cipherstick-default-rtdb.firebaseio.com/",
+  projectId: "cipherstick",
+  storageBucket: "cipherstick.firebasestorage.app",
+  messagingSenderId: "827207706323",
+  appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+function setupStats(cardId, difficulty) {
+  const completionsRef = ref(db, `completions/${difficulty}`);
+  const attemptsRef = ref(db, `attempts/${difficulty}`);
+
+  const popup = document.querySelector(`#${cardId} .challenge-popup`);
+  const completionEl = popup.querySelector('.completion-count');
+  const attemptEl = popup.querySelector('.attempt-count');
+
+  onValue(completionsRef, (snap) => {
+    completionEl.textContent = snap.val() ?? 0;
+  });
+  onValue(attemptsRef, (snap) => {
+    attemptEl.textContent = snap.val() ?? 0;
+  });
+
+  // Register attempt if not done in 7 days
+  const localKey = `attempted-${difficulty}`;
+  const lastAttempt = localStorage.getItem(localKey);
+  const now = Date.now();
+  if (!lastAttempt || now - Number(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
+    localStorage.setItem(localKey, now.toString());
+  }
+}
+
+setupStats("card-medium", "medium");
+setupStats("card-hard", "hard");
+</script>
 </body>
 </html>

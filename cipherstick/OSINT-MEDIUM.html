@@ -641,5 +641,52 @@ const requiredPrefix = "";
   });
 </script>
 <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="white" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+
+<!-- CipherStick index.html visit tracking JavaScript -->
+<script>
+  // Firebase logging script for user attempts (HARD challenge)
+const FIREBASE_DB = "https://cipherstick-default-rtdb.firebaseio.com";
+const CHALLENGE = "medium"; // change to "hard" dynamically if needed
+const ACTION = "attempts"; // or "completions"
+const UID_KEY = "cipher_uid";
+const LAST_ATTEMPT_KEY = `last_attempt_${ACTION}_${CHALLENGE}`;
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+// Get or generate a user ID
+let uid = localStorage.getItem(UID_KEY);
+if (!uid) {
+  uid = crypto.randomUUID();
+  localStorage.setItem(UID_KEY, uid);
+}
+
+const now = Date.now();
+const last = parseInt(localStorage.getItem(LAST_ATTEMPT_KEY), 10);
+
+// If user is eligible to log
+if (!last || now - last > SEVEN_DAYS) {
+  console.log("WAITNG 60 SECONDS")
+  setTimeout(() => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const url = `${FIREBASE_DB}/${ACTION}/${CHALLENGE}/${uid}.json`;
+
+    fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timestamp })
+    }).then(res => {
+      if (res.ok) {
+        localStorage.setItem(LAST_ATTEMPT_KEY, Date.now().toString());
+        console.log("Successfully logged", ACTION, CHALLENGE);
+      } else {
+        console.warn("Failed to log:", res.statusText);
+      }
+    }).catch(err => {
+      console.error("Network error:", err);
+    });
+  }, 60000); // 60 seconds delay
+} else {
+  console.log("Attempt already logged within the last 7 days");
+}
+</script>
 </body>
 </html>
