@@ -460,7 +460,7 @@ const requiredPrefix = "";
       const completionPath = `https://cipherstick-default-rtdb.firebaseio.com/completions/${challenge}/${userId}.json`;
 
       fetch(completionPath, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ timestamp: Date.now() }),
       })
