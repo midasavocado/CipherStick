@@ -339,27 +339,6 @@
     <div id="finalMessage">
       <h2 style="color: #f1c40f;">You beat it!</h2>
       <button class="btn-certificate" onclick="openCertificateModal()">Claim Your Certificate</button>
-      <script>
-      // Log completion to Firebase (one per user per difficulty)
-      const challenge = "medium"; // Change to "hard" if you copy this elsewhere
-      const userId = localStorage.getItem("userId") || crypto.randomUUID();
-      localStorage.setItem("userId", userId);
-
-      const completionPath = `https://cipherstick-default-rtdb.firebaseio.com/completions/${challenge}/${userId}.json`;
-
-      fetch(completionPath, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timestamp: Date.now() }),
-      })
-        .then(res => {
-          if (!res.ok) throw new Error("Unauthorized");
-          console.log("✅ Completion logged");
-        })
-        .catch(err => {
-          console.warn("❌ Failed to log completion:", err.message);
-        });
-      </script>
     </div>
   </div>
   <!-- Victory overlay -->
@@ -472,6 +451,26 @@ const requiredPrefix = "";
       finalMessage.style.display = 'block';
       startVictoryConfetti();
       showVictoryOverlay();
+
+      // Log completion to Firebase
+      const challenge = "medium";
+      const userId = localStorage.getItem("userId") || crypto.randomUUID();
+      localStorage.setItem("userId", userId);
+
+      const completionPath = `https://cipherstick-default-rtdb.firebaseio.com/completions/${challenge}/${userId}.json`;
+
+      fetch(completionPath, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timestamp: Date.now() }),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Unauthorized");
+          console.log("✅ Completion logged");
+        })
+        .catch(err => {
+          console.warn("❌ Failed to log completion:", err.message);
+        });
     } else if (!allCorrect) {
       finalMessage.style.display = 'none';
       quizCompleted = false;
