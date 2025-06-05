@@ -256,10 +256,15 @@ function setupStats(cardId, difficulty) {
   const attemptEl = card.querySelector('.attempt-count');
 
   onValue(completionsRef, (snap) => {
-    completionEl.textContent = snap.val() ?? 0;
+    const data = snap.val();
+    const count = data ? Object.keys(data).length : 0;
+    completionEl.textContent = count;
   });
+
   onValue(attemptsRef, (snap) => {
-    attemptEl.textContent = snap.val() ?? 0;
+    const data = snap.val();
+    const count = data ? Object.keys(data).length : 0;
+    attemptEl.textContent = count;
   });
 
   // Register attempt if not done in 7 days
