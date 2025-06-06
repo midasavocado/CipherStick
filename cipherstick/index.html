@@ -232,7 +232,7 @@
   </script>
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
@@ -266,14 +266,6 @@ function setupStats(cardId, difficulty) {
     const count = data ? Object.keys(data).length : 0;
     attemptEl.textContent = count;
   });
-
-  // Register attempt if not done in 7 days
-  const localKey = `attempted-${difficulty}`;
-  const lastAttempt = localStorage.getItem(localKey);
-  const now = Date.now();
-  if (!lastAttempt || now - Number(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
-    localStorage.setItem(localKey, now.toString());
-  }
 }
 
 setupStats("card-medium", "medium");
