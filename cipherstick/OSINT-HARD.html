@@ -13,7 +13,35 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- Firebase Modular SDK for logging attempts (for new logging system) -->
+  <script type="module">
+    // Modular Firebase for logging attempts (new system)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+    import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+    // Modular initialization (does not interfere with compat)
+    const app = initializeApp(firebaseConfig, "modular");
+    const db = getDatabase(app);
+
+    function logAttempt(difficulty) {
+      const attemptRef = ref(db, `attempts/${difficulty}`);
+      const newAttemptRef = push(attemptRef);
+      set(newAttemptRef, {
+        timestamp: Date.now()
+      })
+      .then(() => {
+        console.log(`✅ Attempt logged for ${difficulty}`);
+      })
+      .catch((error) => {
+        console.error(`❌ Failed to log attempt for ${difficulty}:`, error.message);
+      });
+    }
+
+    // Log attempts for "medium" and "hard" after 60 seconds on the page
+    console.log('WAITING 60 SECONDS FOR ATTEMPT')
+    setTimeout(() => logAttempt("hard"), 60000);
+  </script>
   <script>
+    // Firebase compat initialization and anonymous auth
     const firebaseConfig = {
       apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
       authDomain: "cipherstick-default-rtdb.firebaseapp.com",
@@ -23,8 +51,23 @@
       messagingSenderId: "827207706323",
       appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
     };
-    firebase.initializeApp(firebaseConfig);
-    firebase.auth().signInAnonymously().catch(console.error);
+    try {
+      firebase.initializeApp(firebaseConfig);
+      console.log("✅ Firebase initialized");
+    } catch (err) {
+      console.warn("❌ Firebase initialization failed:", err.message);
+    }
+    firebase.auth().signInAnonymously()
+      .then(userCredential => {
+        if (userCredential && userCredential.user) {
+          console.log("✅ Signed in anonymously:", userCredential.user.uid);
+        } else {
+          console.warn("❌ Anonymous sign-in: No user object returned.");
+        }
+      })
+      .catch(err => {
+        console.warn("❌ Anonymous sign-in failed:", err.message);
+      });
   </script>
 
   <style>
@@ -743,16 +786,18 @@ firebase.auth().onAuthStateChanged(function(user) {
     try {
       // Use a unique key so multiple attempts are possible, but only one per week in localStorage
       const uniqueKey = firebase.database().ref().push().key;
-      firebase.database().ref(`/attempts/hard/${userAttemptId}/${uniqueKey}`).set({
-        timestamp: now
-      }).then(function() {
-        console.log("✅ Logged attempt");
-        localStorage.setItem(userAttemptIdKey, now.toString());
-      }).catch(function(err) {
-        console.warn("❌ Failed to log attempt:", err.message);
-      });
+      const attemptData = { timestamp: now };
+      console.log("📡 Attempting to save attempt to Firebase...", attemptData);
+      firebase.database().ref(`/attempts/hard/${userAttemptId}/${uniqueKey}`).set(attemptData)
+        .then(function() {
+          console.log("✅ Attempt saved:", attemptData);
+          localStorage.setItem(userAttemptIdKey, now.toString());
+        })
+        .catch(function(err) {
+          console.warn("❌ Failed to save attempt:", err.message);
+        });
     } catch (err) {
-      console.warn("❌ Failed to log attempt:", err.message);
+      console.warn("❌ Failed to save attempt:", err.message);
     }
   }
 });
@@ -761,15 +806,16 @@ firebase.auth().onAuthStateChanged(function(user) {
 function logCompletion(difficulty) {
   const user = firebase.auth().currentUser;
   if (!user) {
-    console.warn("User not authenticated for logging completion.");
+    console.warn("❌ User not authenticated for logging completion.");
     return;
   }
   const uid = user.uid;
   // Only log completion if attempts exist for this user/difficulty
+  console.log("📡 Checking attempts before logging completion...");
   firebase.database().ref(`/attempts/${difficulty}/${uid}`).once('value')
     .then(function(attemptSnap) {
       if (!attemptSnap.exists()) {
-        console.warn("No attempts found for this user/difficulty; skipping completion log.");
+        console.warn("❌ No attempts found for this user/difficulty; skipping completion log.");
         return;
       }
       // Only log a new completion if completions < attempts
@@ -780,17 +826,25 @@ function logCompletion(difficulty) {
           if (completionsCount < attemptsCount) {
             // Use a unique key for each completion
             const uniqueKey = firebase.database().ref().push().key;
-            firebase.database().ref(`/completions/${difficulty}/${uid}/${uniqueKey}`).set({
-              timestamp: firebase.database.ServerValue.TIMESTAMP
-            }).then(function() {
-              console.log("✅ Completion logged");
-            }).catch(function(err) {
-              console.warn("❌ Failed to log completion:", err.message);
-            });
+            const completionData = { timestamp: firebase.database.ServerValue.TIMESTAMP };
+            console.log("📡 Attempting to save completion to Firebase...", completionData);
+            firebase.database().ref(`/completions/${difficulty}/${uid}/${uniqueKey}`).set(completionData)
+              .then(function() {
+                console.log("✅ Completion saved:", completionData);
+              })
+              .catch(function(err) {
+                console.warn("❌ Failed to save completion:", err.message);
+              });
           } else {
             console.warn("🛑 Already logged same number of completions as attempts");
           }
+        })
+        .catch(function(err) {
+          console.warn("❌ Failed to check completions:", err.message);
         });
+    })
+    .catch(function(err) {
+      console.warn("❌ Failed to check attempts before completion log:", err.message);
     });
 }
 // Make available globally for downloadCertificate

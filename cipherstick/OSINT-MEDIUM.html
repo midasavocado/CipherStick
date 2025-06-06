@@ -310,6 +310,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M2NFQ1M6LR"></script>
 <script>
   // Firebase config and initialization
+  console.log("📦 Initializing Firebase...");
   const firebaseConfig = {
     apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
     authDomain: "cipherstick.firebaseapp.com",
@@ -320,15 +321,43 @@
     appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
   };
   const app = firebase.initializeApp(firebaseConfig);
+  console.log("✅ Firebase initialized.");
 
-  firebase.auth().signInAnonymously().then(userCredential => {
-    const uid = userCredential.user.uid;
-    window.authUID = uid;
-    console.log("✅ Authenticated as:", uid);
-    // Log attempt after auth
-    firebase.database().ref("attempts/medium/" + uid).set({ timestamp: Date.now() });
-  }).catch(error => {
-    console.warn("❌ Auth error:", error.message);
+  // Wait for Firebase Auth state and ensure anonymous login before attempt/completion logging
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // User is signed in
+      const uid = user.uid;
+      window.authUID = uid;
+      console.info("✅ Signed in anonymously:", uid);
+      // Set timer to log attempt after 60 seconds on the page
+      console.info("WAITING 60 SECONDS FOR ATTEMPT TO LOG")
+      setTimeout(function() {
+        // Use "medium" as database record path, matching naming convention
+        const attemptRef = firebase.database().ref(`attempts/medium/${uid}`);
+        // Save with a timestamp (push for multiple attempts)
+        attemptRef.once('value').then(snap => {
+          let attempts = snap.val();
+          if (!attempts) attempts = {};
+          // Add a new attempt with a timestamp key
+          const newAttemptKey = firebase.database().ref().push().key;
+          const updateData = {};
+          updateData[newAttemptKey] = { timestamp: firebase.database.ServerValue.TIMESTAMP };
+          attemptRef.update(updateData)
+            .then(() => {
+              console.log("✅ Attempt logged");
+            })
+            .catch((error) => {
+              console.warn("❌ Attempt logging failed:", error);
+            });
+        });
+      }, 60000); // 60 seconds
+    } else {
+      // Not signed in, try to sign in anonymously
+      firebase.auth().signInAnonymously().catch(error => {
+        console.warn("❌ Auth error:", error.message);
+      });
+    }
   });
 </script>
 <script>
@@ -481,23 +510,51 @@ const requiredPrefix = "";
 
       // Log completion to Firebase using Firebase Auth state
       function writeCompletion() {
-        if (!window.authUID) {
-          setTimeout(writeCompletion, 200);
-          return;
-        }
-        const uid = window.authUID;
-        const attemptsRef = firebase.database().ref("attempts/medium/" + uid);
-        const completionsRef = firebase.database().ref("completions/medium/" + uid);
-        attemptsRef.once("value").then((attemptSnap) => {
-          if (!attemptSnap.exists()) return console.warn("❌ No attempt recorded");
-          completionsRef.once("value").then((completionSnap) => {
-            if (!completionSnap.exists()) {
-              completionsRef.set({ timestamp: Date.now() });
-            } else {
-              console.log("✅ Completion already recorded");
+        function innerWrite() {
+          if (!window.authUID) {
+            setTimeout(innerWrite, 200);
+            return;
+          }
+          const uid = window.authUID;
+          // Use "medium" as database record path, matching naming convention
+          const attemptsRef = firebase.database().ref("attempts/medium/" + uid);
+          const completionsRef = firebase.database().ref("completions/medium/" + uid);
+          console.log("🔄 Checking completions and attempts for user...");
+          // Fetch attempts and completions
+          attemptsRef.once("value").then((attemptSnap) => {
+            const attemptsVal = attemptSnap.val();
+            let attemptsCount = 0;
+            if (attemptsVal && typeof attemptsVal === 'object') {
+              attemptsCount = Object.keys(attemptsVal).length;
             }
+            completionsRef.once("value").then((completionSnap) => {
+              const completionsVal = completionSnap.val();
+              let completionsCount = 0;
+              if (completionsVal && typeof completionsVal === 'object') {
+                completionsCount = Object.keys(completionsVal).length;
+              } else if (completionSnap.exists()) {
+                completionsCount = 1;
+              }
+              // If completions >= attempts, prevent saving and log warning
+              if (completionsCount >= attemptsCount) {
+                console.warn("⚠️ Not saving completion: completions >= attempts");
+                return;
+              }
+              // Save completion (allow multiple completions, use push for consistency)
+              const newCompletionKey = firebase.database().ref().push().key;
+              const updateData = {};
+              updateData[newCompletionKey] = { timestamp: Date.now() };
+              completionsRef.update(updateData)
+                .then(() => {
+                  console.log("✅ Completion logged");
+                })
+                .catch(error => {
+                  console.warn("❌ Completion logging failed:", error);
+                });
+            });
           });
-        });
+        }
+        innerWrite();
       }
       writeCompletion();
     } else if (!allCorrect) {
