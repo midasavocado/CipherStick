@@ -694,25 +694,8 @@ function downloadCertificate() {
 
   // Trigger download
   doc.save("DigitalEnigma-Certificate.pdf");
-  // Firebase certificate completion logging (runs only when certificate is generated)
-  {
-    const challenge = "hard"; // Change to "medium" if on the medium page
-    const userId = localStorage.getItem("userId") || crypto.randomUUID();
-    localStorage.setItem("userId", userId);
-    const completionPath = `https://cipherstick-default-rtdb.firebaseio.com/completions/${challenge}/${userId}.json`;
-    fetch(completionPath, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ timestamp: Date.now() }),
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Unauthorized");
-        console.log("✅ Completion logged");
-      })
-      .catch(err => {
-        console.warn("❌ Failed to log completion:", err.message);
-      });
-  }
+  // Firebase completion logging (runs only when certificate is generated)
+  logCompletion("hard");
   // Clear localStorage entries after saving (slight delay gives browsers time to start the download)
   setTimeout(() => {
     for (let i = 0; i < questions.length; i++) {
@@ -732,8 +715,13 @@ document.addEventListener('DOMContentLoaded', () => {
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getDatabase, ref, set, get, child } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+  import { getDatabase, ref, set, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
+  // --- New universal completion logging code ---
+  import { getDatabase as getDb10, ref as ref10, set as set10, get as get10, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+  import { getAuth as getAuth10, onAuthStateChanged as onAuthStateChanged10 } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+  // Firebase config and initialization (keep for main logic)
   const firebaseConfig = {
     apiKey: "AIzaSyC2t1-gWlbc1KrrjeVFt7I7EZ1DpD4NRVU",
     authDomain: "cipherstick.firebaseapp.com",
@@ -748,17 +736,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+  // For logging attempts (keep the attempt logging)
   const userAttemptIdKey = 'cipherstick_attempt_hard';
-
   signInAnonymously(auth).catch(err => console.warn("Auth error:", err.message));
-
   onAuthStateChanged(auth, async user => {
     if (!user) return;
-
     const userAttemptId = user.uid;
     const now = Date.now();
     const lastAttempt = localStorage.getItem(userAttemptIdKey);
-
     if (!lastAttempt || now - parseInt(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
       try {
         await set(ref(db, `attempts/hard/${userAttemptId}`), { timestamp: now });
@@ -768,21 +753,47 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("❌ Failed to log attempt:", err.message);
       }
     }
-
-    window.logCompletion = async () => {
-      try {
-        const snap = await get(child(ref(db), `attempts/hard/${userAttemptId}`));
-        if (snap.exists()) {
-          await set(ref(db, `completions/hard/${userAttemptId}`), { timestamp: Date.now() });
-          console.log("✅ Logged completion");
-        } else {
-          console.warn("❌ Cannot log completion: no attempt found.");
-        }
-      } catch (err) {
-        console.warn("❌ Failed to log completion:", err.message);
-      }
-    };
   });
+
+  // --- Universal completion logging function ---
+  const database = getDb10();
+  const auth10 = getAuth10();
+
+  // difficulty: "hard" for this page
+  function logCompletion(difficulty) {
+    const user = auth10.currentUser;
+    if (!user) {
+      console.warn("User not authenticated for logging completion.");
+      return;
+    }
+
+    const userId = user.uid;
+    const attemptsRef = ref10(database, `attempts/${difficulty}/${userId}`);
+    const completionsRef = ref10(database, `completions/${difficulty}/${userId}`);
+
+    get10(attemptsRef).then((attemptSnap) => {
+      const attemptCount = attemptSnap.exists() ? attemptSnap.size : 0;
+
+      get10(completionsRef).then((completionSnap) => {
+        const completionCount = completionSnap.exists() ? completionSnap.size : 0;
+
+        if (completionCount < attemptCount) {
+          const newRef = push(completionsRef);
+          set10(newRef, {
+            timestamp: serverTimestamp()
+          }).then(() => {
+            console.log("✅ Completion logged");
+          }).catch((err) => {
+            console.warn("❌ Failed to log completion:", err.message);
+          });
+        } else {
+          console.warn("🛑 Already logged same number of completions as attempts");
+        }
+      });
+    });
+  }
+  // Make available globally for downloadCertificate
+  window.logCompletion = logCompletion;
 </script>
 </body>
 </html>
