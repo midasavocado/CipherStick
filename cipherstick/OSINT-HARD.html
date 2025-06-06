@@ -812,11 +812,13 @@ function downloadCertificate() {
       el.readOnly = true;
     });
     console.log('🔒 All input and textarea fields set to readOnly');
-    // Disable all buttons
+    // Disable all buttons except download/print buttons
     document.querySelectorAll("button").forEach(btn => {
-      btn.disabled = true;
+      if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
+        btn.disabled = true;
+      }
     });
-    console.log('🔒 All buttons disabled');
+    console.log('🔒 All buttons disabled except certificate download/print');
     // Clear all localStorage and sessionStorage except userId
     // Try to preserve userId (from localStorage or sessionStorage)
     let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
