@@ -305,27 +305,73 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M2NFQ1M6LR"></script>
 <script type="module">
-  import { firebaseConfig } from './firebase-config.js';
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
 
-  const app = initializeApp(firebaseConfig);
+  const firebaseConfig = {
+    apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
+    authDomain: "cipherstick.firebaseapp.com",
+    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
+    projectId: "cipherstick",
+    storageBucket: "cipherstick.appspot.com",
+    messagingSenderId: "827207706323",
+    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+  };
 
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
   const auth = getAuth(app);
+
+  let uid = null;
+  let hasAttempted = false;
+
   signInAnonymously(auth)
     .then(() => {
-      console.log("✅ Signed in anonymously");
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          uid = user.uid;
+          window.firebaseUserId = user.uid;
+          logAttempt();
+        }
+      });
     })
     .catch((error) => {
-      console.warn("❌ Failed to sign in anonymously:", error.code, error.message);
+      console.warn("❌ Auth error:", error.message);
     });
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      window.firebaseUserId = user.uid;
-      console.log("🔐 Authenticated UID:", user.uid);
-    }
-  });
+  function logAttempt() {
+    const now = Date.now();
+    const userAttemptId = uid;
+    const attemptRef = ref(database, `attempts/medium/${userAttemptId}`);
+
+    get(attemptRef).then(snapshot => {
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      if (!snapshot.exists() || (now - snapshot.val().timestamp > sevenDays)) {
+        set(attemptRef, { timestamp: now })
+          .then(() => console.log("✅ Attempt logged."))
+          .catch(err => console.warn("❌ Failed to log attempt:", err.message));
+        setTimeout(() => {
+          logCompletion(userAttemptId, now);
+        }, 60000);
+      } else {
+        console.log("⏳ Attempt already logged within 7 days.");
+      }
+    });
+  }
+
+  function logCompletion(userAttemptId, timestamp) {
+    const completionRef = ref(database, `completions/medium/${userAttemptId}`);
+    get(completionRef).then(snapshot => {
+      if (!snapshot.exists()) {
+        set(completionRef, { timestamp })
+          .then(() => console.log("🏁 Completion logged."))
+          .catch(err => console.warn("❌ Failed to log completion:", err.message));
+      } else {
+        console.log("⏳ Completion already recorded.");
+      }
+    });
+  }
 </script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -690,48 +736,6 @@ const requiredPrefix = "";
 </script>
 <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="white" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 
-<!-- CipherStick index.html visit tracking JavaScript -->
-<script>
-// Firebase logging script for user attempts (MEDIUM challenge) using Anonymous Auth
-const FIREBASE_DB = "https://cipherstick-default-rtdb.firebaseio.com";
-const CHALLENGE = "medium";
-const ACTION = "attempts";
-const LAST_ATTEMPT_KEY = `last_attempt_${ACTION}_${CHALLENGE}`;
-const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-
-const now = Date.now();
-const last = parseInt(localStorage.getItem(LAST_ATTEMPT_KEY), 10);
-
-if (!last || now - last > SEVEN_DAYS) {
-  setTimeout(() => {
-    const tryLogAttempt = () => {
-      const userId = window.firebaseUserId;
-      if (!userId) {
-        setTimeout(tryLogAttempt, 250);
-        return;
-      }
-      const timestamp = Math.floor(Date.now() / 1000);
-      const url = `${FIREBASE_DB}/${ACTION}/${CHALLENGE}/${userId}.json`;
-      fetch(url, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timestamp })
-      }).then(res => {
-        if (res.ok) {
-          localStorage.setItem(LAST_ATTEMPT_KEY, Date.now().toString());
-          console.log("Successfully logged", ACTION, CHALLENGE);
-        } else {
-          console.warn("Failed to log:", res.statusText);
-        }
-      }).catch(err => {
-        console.error("Network error:", err);
-      });
-    };
-    tryLogAttempt();
-  }, 60000); // 60 seconds delay
-} else {
-  console.log("Attempt already logged within the last 7 days");
-}
-</script>
+<!-- Firebase logging handled above -->
 </body>
 </html>
