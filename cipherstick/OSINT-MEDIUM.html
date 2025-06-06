@@ -516,12 +516,12 @@ const requiredPrefix = "";
       showVictoryOverlay();
 
       // Freeze all inputs and buttons after completion, except certificate buttons
-      document.querySelectorAll('input[type="text"]').forEach(input => {
-        input.setAttribute("readonly", true);
-      });
+   //   document.querySelectorAll('input[type="text"]').forEach(input => {
+    //    input.setAttribute("readonly", true);
+    //  });
       document.querySelectorAll("input, button").forEach(el => {
         if (el.id !== "downloadBtn" && el.id !== "printBtn") {
-          el.disabled = true;
+        //  el.disabled = true;
         }
       });
       console.log("✅ Inputs and buttons frozen after completion (certificate buttons remain enabled).");
