@@ -279,25 +279,6 @@ try {
   setupStats("card-medium", "medium");
   setupStats("card-hard", "hard");
 
-  // Challenge Completion Handler Example (for reference to challenge HTMLs)
-  // This code block should be inserted in challenge HTML files
-  // immediately after verifying all answers are correct and marking the challenge as complete.
-  window.handleChallengeCompletion = function() {
-    // Freeze all input fields and buttons
-    document.querySelectorAll('input[type="text"], textarea').forEach(el => {
-      el.disabled = true;
-    });
-    document.querySelectorAll('button').forEach(btn => {
-      btn.disabled = true;
-    });
-    // Clear all localStorage/sessionStorage except Firebase anonymous UID
-    const preservedUid = localStorage.getItem('firebase_uid');
-    localStorage.clear();
-    sessionStorage.clear();
-    if (preservedUid) {
-      localStorage.setItem('firebase_uid', preservedUid);
-    }
-  };
 } catch (err) {
   console.error("❌ Firebase setup failed in index.html:", err);
 }

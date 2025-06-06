@@ -711,7 +711,19 @@ const requiredPrefix = "";
     // Trigger download
     doc.save('USB-OSINT-Medium-Certificate.pdf');
 
-    // Clear localStorage entries after saving
+    // Disable all input fields and buttons within the quiz section
+    document.querySelectorAll("input, button").forEach(el => el.disabled = true);
+
+    // Clear local and session storage while preserving the Firebase UID
+    const uid = localStorage.getItem("firebaseUID") || sessionStorage.getItem("firebaseUID");
+    localStorage.clear();
+    sessionStorage.clear();
+    if (uid) {
+      localStorage.setItem("firebaseUID", uid);
+      sessionStorage.setItem("firebaseUID", uid);
+    }
+
+    // Clear localStorage entries after saving (redundant after clear, but kept for compatibility)
     for (let i = 0; i < questions.length; i++) {
         localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
     }
