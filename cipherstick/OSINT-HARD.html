@@ -730,7 +730,35 @@ function showVictoryOverlay() {
 }
 
 function openCertificateModal() {
-  document.getElementById('nameInputModal').style.display = 'block';
+  const modal = document.getElementById('nameInputModal');
+  // Insert close button if not already present
+  if (!modal.querySelector('.close-btn')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.textContent = 'X';
+    closeBtn.setAttribute('aria-label', 'Close');
+    // Style: position absolute, top right, white background, border-radius, etc.
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '0.5rem';
+    closeBtn.style.right = '0.5rem';
+    closeBtn.style.background = '#fff';
+    closeBtn.style.color = '#b30000';
+    closeBtn.style.border = 'none';
+    closeBtn.style.borderRadius = '50%';
+    closeBtn.style.width = '2rem';
+    closeBtn.style.height = '2rem';
+    closeBtn.style.fontSize = '1.2rem';
+    closeBtn.style.fontWeight = 'bold';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.zIndex = '10';
+    closeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    closeBtn.addEventListener('click', function() {
+      modal.style.display = 'none';
+      console.log('❌ Certificate modal closed');
+    });
+    modal.appendChild(closeBtn);
+  }
+  modal.style.display = 'block';
 }
 
 function downloadCertificate() {
@@ -777,27 +805,29 @@ function downloadCertificate() {
   // Firebase completion logging (runs only when certificate is generated)
   logCompletion("hard");
 
-  // --- Disable all inputs, textareas, and buttons except print/download after completion ---
+  // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
   setTimeout(() => {
-    // Disable all input and textarea fields
+    // Freeze all input and textarea fields
     document.querySelectorAll("input, textarea").forEach(el => {
-      el.disabled = true;
+      el.readOnly = true;
     });
-    // Disable all buttons except those with class print-btn or download-btn
+    console.log('🔒 All input and textarea fields set to readOnly');
+    // Disable all buttons
     document.querySelectorAll("button").forEach(btn => {
-      if (!btn.classList.contains("print-btn") && !btn.classList.contains("download-btn")) {
-        btn.disabled = true;
-      }
+      btn.disabled = true;
     });
-    // Clear all localStorage and sessionStorage except firebase_uid
-    const preserveKey = "firebase_uid";
-    // Try both storages for firebase_uid
-    const uidValue = localStorage.getItem(preserveKey) || sessionStorage.getItem(preserveKey);
+    console.log('🔒 All buttons disabled');
+    // Clear all localStorage and sessionStorage except userId
+    // Try to preserve userId (from localStorage or sessionStorage)
+    let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
     localStorage.clear();
     sessionStorage.clear();
-    if (uidValue) {
-      localStorage.setItem(preserveKey, uidValue);
+    if (userId) {
+      localStorage.setItem('userId', userId);
+      sessionStorage.setItem('userId', userId);
+      console.log('🗝️ userId preserved in localStorage/sessionStorage');
     }
+    console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
   }, 200); // slight delay to ensure download triggers before disabling
 
   document.getElementById('nameInputModal').style.display = 'none';

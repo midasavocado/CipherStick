@@ -515,6 +515,25 @@ const requiredPrefix = "";
       startVictoryConfetti();
       showVictoryOverlay();
 
+      // Freeze all inputs and buttons after completion
+      document.querySelectorAll('input[type="text"]').forEach(input => {
+        input.setAttribute("readonly", true);
+      });
+      document.querySelectorAll('button').forEach(button => {
+        button.disabled = true;
+      });
+      console.log("✅ Inputs and buttons frozen after completion.");
+
+      // Clear local/session storage except Firebase userId
+      const userId =
+        localStorage.getItem("userId") || sessionStorage.getItem("userId");
+      localStorage.clear();
+      sessionStorage.clear();
+      if (userId) {
+        localStorage.setItem("userId", userId);
+      }
+      console.log("🧹 Cleared local/session storage except user ID.");
+
       // Log completion to Firebase using Firebase Auth state
       function writeCompletion() {
         function innerWrite() {
@@ -711,25 +730,8 @@ const requiredPrefix = "";
     // Trigger download
     doc.save('USB-OSINT-Medium-Certificate.pdf');
 
-    // Disable all input fields and buttons within the quiz section
-    document.querySelectorAll("input, button").forEach(el => el.disabled = true);
-
-    // Clear local and session storage while preserving the Firebase UID
-    const uid = localStorage.getItem("firebaseUID") || sessionStorage.getItem("firebaseUID");
-    localStorage.clear();
-    sessionStorage.clear();
-    if (uid) {
-      localStorage.setItem("firebaseUID", uid);
-      sessionStorage.setItem("firebaseUID", uid);
-    }
-
-    // Clear localStorage entries after saving (redundant after clear, but kept for compatibility)
-    for (let i = 0; i < questions.length; i++) {
-        localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
-    }
-
     document.getElementById('nameInputModal').style.display = 'none';
-}
+  }
 
   function loadIntroText() {
   let prefixInfo = "";
@@ -752,6 +754,36 @@ const requiredPrefix = "";
     loadIntroText();
     generateQuestions();
     restoreInputs();
+    // Add certificate popup if not present
+    if (!document.getElementById('certificateContainer')) {
+      const certDiv = document.createElement('div');
+      certDiv.id = 'certificateContainer';
+      certDiv.style.display = 'none';
+      certDiv.style.position = 'fixed';
+      certDiv.style.top = '50%';
+      certDiv.style.left = '50%';
+      certDiv.style.transform = 'translate(-50%, -50%)';
+      certDiv.style.background = '#fff';
+      certDiv.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3)';
+      certDiv.style.padding = '2rem';
+      certDiv.style.borderRadius = '12px';
+      certDiv.style.zIndex = '3000';
+      certDiv.innerHTML = `
+        <button id="closeCertificate" style="position:absolute;top:10px;right:14px;font-size:18px;background:none;border:none;color:#888;cursor:pointer;">×</button>
+        <div id="certificateContent"></div>
+      `;
+      document.body.appendChild(certDiv);
+    }
+    // Add close event for certificate popup
+    setTimeout(() => {
+      const closeBtn = document.getElementById("closeCertificate");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+          document.getElementById("certificateContainer").style.display = "none";
+          console.log("❌ Certificate popup closed.");
+        });
+      }
+    }, 100);
     if (testMode) {
       const enableTestMode = confirm("Enable Test Mode? This will fill in the answer boxes for you. Click OK to proceed.");
       if (enableTestMode) {
