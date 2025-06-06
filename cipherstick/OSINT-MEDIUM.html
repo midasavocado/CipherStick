@@ -8,6 +8,8 @@
   <!-- Using canvas-confetti and jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Firebase config (MUST be loaded before any Firebase code) -->
+  <script type="module" src="firebase-config.js"></script>
   <style>
       :root {
       --primary-color: #007bff;
@@ -305,10 +307,12 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M2NFQ1M6LR"></script>
 <script type="module">
+  // Ensure firebase-config.js is loaded before this runs
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
-  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+  import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
 
+  // Firebase config (duplicated here for now, but ideally in firebase-config.js)
   const firebaseConfig = {
     apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
     authDomain: "cipherstick.firebaseapp.com",
@@ -323,55 +327,51 @@
   const database = getDatabase(app);
   const auth = getAuth(app);
 
-  let uid = null;
-  let hasAttempted = false;
+  // Auth ready promise
+  let authReadyResolve;
+  const authReady = new Promise(res => authReadyResolve = res);
 
   signInAnonymously(auth)
     .then(() => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          uid = user.uid;
-          window.firebaseUserId = user.uid;
-          logAttempt();
-        }
-      });
+      console.log("✅ Signed in anonymously");
+      authReadyResolve();
     })
     .catch((error) => {
       console.warn("❌ Auth error:", error.message);
     });
 
-  function logAttempt() {
-    const now = Date.now();
-    const userAttemptId = uid;
-    const attemptRef = ref(database, `attempts/medium/${userAttemptId}`);
+  // Logging attempt on page load (after auth ready)
+  authReady.then(() => {
+    if (!auth.currentUser) return;
 
-    get(attemptRef).then(snapshot => {
-      const sevenDays = 7 * 24 * 60 * 60 * 1000;
-      if (!snapshot.exists() || (now - snapshot.val().timestamp > sevenDays)) {
-        set(attemptRef, { timestamp: now })
-          .then(() => console.log("✅ Attempt logged."))
-          .catch(err => console.warn("❌ Failed to log attempt:", err.message));
-        setTimeout(() => {
-          logCompletion(userAttemptId, now);
-        }, 60000);
+    const userId = auth.currentUser.uid;
+    const timestamp = Date.now();
+    const attemptRef = ref(database, `attempts/medium/${userId}`);
+    const completionRef = ref(database, `completions/medium/${userId}`);
+
+    // Attempt Logging
+    set(attemptRef, { timestamp }).then(() => {
+      console.log("✅ Attempt logged");
+    }).catch((error) => {
+      console.warn("❌ Failed to log attempt:", error.message);
+    });
+
+    // Completion Logging (not at page load, but for demo, show logic here)
+    // Uncomment below if you want to log completion right after attempt
+    /*
+    get(attemptRef).then((attemptSnap) => {
+      if (attemptSnap.exists()) {
+        set(completionRef, { timestamp }).then(() => {
+          console.log("✅ Completion logged");
+        }).catch((error) => {
+          console.warn("❌ Failed to log completion:", error.message);
+        });
       } else {
-        console.log("⏳ Attempt already logged within 7 days.");
+        console.warn("❌ Not logging completion because no attempt was found");
       }
     });
-  }
-
-  function logCompletion(userAttemptId, timestamp) {
-    const completionRef = ref(database, `completions/medium/${userAttemptId}`);
-    get(completionRef).then(snapshot => {
-      if (!snapshot.exists()) {
-        set(completionRef, { timestamp })
-          .then(() => console.log("🏁 Completion logged."))
-          .catch(err => console.warn("❌ Failed to log completion:", err.message));
-      } else {
-        console.log("⏳ Completion already recorded.");
-      }
-    });
-  }
+    */
+  });
 </script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -521,30 +521,37 @@ const requiredPrefix = "";
       startVictoryConfetti();
       showVictoryOverlay();
 
-      // Log completion to Firebase using Anonymous Auth UID
-      const challenge = "medium";
-      // Wait for anonymous authentication
-      const tryLogCompletion = () => {
-        const userId = window.firebaseUserId;
-        if (!userId) {
-          setTimeout(tryLogCompletion, 250);
-          return;
-        }
-        const completionPath = `https://cipherstick-default-rtdb.firebaseio.com/completions/${challenge}/${userId}.json`;
-        fetch(completionPath, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ timestamp: Date.now() }),
-        })
-          .then(res => {
-            if (!res.ok) throw new Error("Unauthorized");
-            console.log("✅ Completion logged");
-          })
-          .catch(err => {
-            console.warn("❌ Failed to log completion:", err.message);
-          });
-      };
-      tryLogCompletion();
+      // Log completion to Firebase using Firebase Auth state
+      authReady.then(() => {
+        if (!window.firebaseAuth || !window.firebaseAuth.currentUser) return;
+
+        const auth = window.firebaseAuth;
+        const database = window.firebaseDatabase;
+        const userId = auth.currentUser.uid;
+        const timestamp = Date.now();
+        const attemptRef = window.firebaseDatabaseRef(database, `attempts/medium/${userId}`);
+        const completionRef = window.firebaseDatabaseRef(database, `completions/medium/${userId}`);
+
+        // Attempt Logging
+        window.firebaseSet(attemptRef, { timestamp }).then(() => {
+          console.log("✅ Attempt logged");
+        }).catch((error) => {
+          console.warn("❌ Failed to log attempt:", error.message);
+        });
+
+        // Completion Logging
+        window.firebaseGet(attemptRef).then((attemptSnap) => {
+          if (attemptSnap.exists()) {
+            window.firebaseSet(completionRef, { timestamp }).then(() => {
+              console.log("✅ Completion logged");
+            }).catch((error) => {
+              console.warn("❌ Failed to log completion:", error.message);
+            });
+          } else {
+            console.warn("❌ Not logging completion because no attempt was found");
+          }
+        });
+      });
     } else if (!allCorrect) {
       finalMessage.style.display = 'none';
       quizCompleted = false;

@@ -730,51 +730,58 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script type="module">
-  import { firebaseConfig }               from './firebase-config.js';
-  import { initializeApp }                from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js';
-  import { getAuth, signInAnonymously,
-           onAuthStateChanged }           from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js';
-  import { getDatabase, ref, set, get }   from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js';
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getDatabase, ref, set, get, child } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
-  /* ─── Firebase bootstrap ──────────────────────────────────────── */
-  const app  = initializeApp(firebaseConfig);
+  const firebaseConfig = {
+    apiKey: "AIzaSyC2t1-gWlbc1KrrjeVFt7I7EZ1DpD4NRVU",
+    authDomain: "cipherstick.firebaseapp.com",
+    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
+    projectId: "cipherstick",
+    storageBucket: "cipherstick.appspot.com",
+    messagingSenderId: "827207706323",
+    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+  };
+
+  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db   = getDatabase(app);
-  const WEEK = 7 * 24 * 60 * 60 * 1000;   // ms in a week
+  const db = getDatabase(app);
 
-  /* ─── attempt + completion helpers ─────────────────────────────── */
-  async function logAttempt(uid) {
-    const r = ref(db, `attempts/hard/${uid}`);
-    const s = await get(r);
-    if (!s.exists() || Date.now() - s.val().timestamp >= WEEK) {
-      await set(r, { timestamp: Date.now() });
-      console.log('📝 attempt logged (hard)');
-    }
-  }
+  const userAttemptIdKey = 'cipherstick_attempt_hard';
 
-  async function logCompletion(uid) {
-    const attemptSnap = await get(ref(db, `attempts/hard/${uid}`));
-    if (!attemptSnap.exists()) return;                 // must have attempt first
+  signInAnonymously(auth).catch(err => console.warn("Auth error:", err.message));
 
-    const compRef = ref(db, `completions/hard/${uid}`);
-    const compSnap = await get(compRef);
-    if (!compSnap.exists()) {                          // only once per user
-      await set(compRef, { timestamp: Date.now() });
-      console.log('🏆 completion logged (hard)');
-    }
-  }
-
-  /* ─── sign-in + hooks ──────────────────────────────────────────── */
-  signInAnonymously(auth).catch(console.error);
-
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
     if (!user) return;
 
-    // After 60-second dwell on page → attempt
-    setTimeout(() => logAttempt(user.uid), 60_000);
+    const userAttemptId = user.uid;
+    const now = Date.now();
+    const lastAttempt = localStorage.getItem(userAttemptIdKey);
 
-    // Expose a global fn so certificate code can log completion:
-    window.__logHardCompletion = () => logCompletion(user.uid);
+    if (!lastAttempt || now - parseInt(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
+      try {
+        await set(ref(db, `attempts/hard/${userAttemptId}`), { timestamp: now });
+        console.log("✅ Logged attempt");
+        localStorage.setItem(userAttemptIdKey, now.toString());
+      } catch (err) {
+        console.warn("❌ Failed to log attempt:", err.message);
+      }
+    }
+
+    window.logCompletion = async () => {
+      try {
+        const snap = await get(child(ref(db), `attempts/hard/${userAttemptId}`));
+        if (snap.exists()) {
+          await set(ref(db, `completions/hard/${userAttemptId}`), { timestamp: Date.now() });
+          console.log("✅ Logged completion");
+        } else {
+          console.warn("❌ Cannot log completion: no attempt found.");
+        }
+      } catch (err) {
+        console.warn("❌ Failed to log completion:", err.message);
+      }
+    };
   });
 </script>
 </body>
