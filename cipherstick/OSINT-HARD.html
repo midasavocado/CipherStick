@@ -22,42 +22,34 @@
     const app = initializeApp(firebaseConfig, "modular");
     const db = getDatabase(app);
 
-    // Only log a new attempt if one hasn't been logged in the last 24 hours for this user
-    function logAttempt(difficulty) {
-      // Try to get the user from compat auth
-      let compatUser = null;
-      try {
-        if (window.firebase && window.firebase.auth) {
-          compatUser = window.firebase.auth().currentUser;
+    // Log attempt to Firebase after compat auth is ready and user is authenticated
+    function logAttemptAfterAuth() {
+      // Wait until firebase.auth().currentUser is set
+      function tryLog() {
+        if (
+          window.firebase &&
+          window.firebase.auth &&
+          window.firebase.auth().currentUser &&
+          window.firebase.auth().currentUser.uid
+        ) {
+          // Use the provided set() call for logging attempts
+          firebase.database().ref('attempts/hard/' + firebase.auth().currentUser.uid).set({
+            timestamp: Date.now()
+          }).then(() => {
+            console.log("✅ Attempt logged");
+          }).catch((err) => {
+            console.warn("❌ Attempt logging failed:", err);
+          });
+        } else {
+          // Try again in 500ms
+          setTimeout(tryLog, 500);
         }
-      } catch (e) {}
-      // If not available, skip logging
-      if (!compatUser) {
-        console.warn("❌ No user available for modular attempt logging.");
-        return;
       }
-      const user = compatUser;
-      const attemptKey = `attempts/${difficulty}/${user.uid}`;
-      const attemptRef = ref(db, attemptKey);
-      const now = Date.now();
-
-      get(attemptRef).then((snapshot) => {
-        const data = snapshot.val();
-        if (data && data.timestamp && (now - data.timestamp < 86400000)) {
-          console.log("⏳ Attempt already logged in the last 24 hours.");
-          return; // Do not log again
-        }
-
-        console.log("🆕 Logging new attempt...");
-        set(attemptRef, { timestamp: now })
-          .then(() => console.log("✅ Attempt logged"))
-          .catch((error) => console.warn("❌ Attempt logging failed:", error));
-      });
+      tryLog();
     }
-
-    // Wait for compat auth to be ready before trying to log attempt
-    console.log('WAITING 60 SECONDS FOR ATTEMPT')
-    setTimeout(() => logAttempt("hard"), 60000);
+    // Run after 60 seconds to match previous logic
+    console.log('WAITING 60 SECONDS FOR ATTEMPT');
+    setTimeout(logAttemptAfterAuth, 60000);
   </script>
   <script>
     // Firebase compat initialization and anonymous auth
