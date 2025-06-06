@@ -9,6 +9,24 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <!-- Firebase compat SDK setup (required before any Firebase usage) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBiUtNGoMLD4LOloL1aQ36kGcz-h0pYbQY",
+      authDomain: "cipherstick-default-rtdb.firebaseapp.com",
+      databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
+      projectId: "cipherstick-default-rtdb",
+      storageBucket: "cipherstick-default-rtdb.appspot.com",
+      messagingSenderId: "827207706323",
+      appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().signInAnonymously().catch(console.error);
+  </script>
+
   <style>
      :root {
       --accent-color: #ff0000; /* Dark red accent */
@@ -712,88 +730,71 @@ document.addEventListener('DOMContentLoaded', () => {
   restoreInputs();
 });
 </script>
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getDatabase, ref, set, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-
-  // --- New universal completion logging code ---
-  import { getDatabase as getDb10, ref as ref10, set as set10, get as get10, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
-  import { getAuth as getAuth10, onAuthStateChanged as onAuthStateChanged10 } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
-  // Firebase config and initialization (keep for main logic)
-  const firebaseConfig = {
-    apiKey: "AIzaSyC2t1-gWlbc1KrrjeVFt7I7EZ1DpD4NRVU",
-    authDomain: "cipherstick.firebaseapp.com",
-    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
-    projectId: "cipherstick",
-    storageBucket: "cipherstick.appspot.com",
-    messagingSenderId: "827207706323",
-    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
-
-  // For logging attempts (keep the attempt logging)
-  const userAttemptIdKey = 'cipherstick_attempt_hard';
-  signInAnonymously(auth).catch(err => console.warn("Auth error:", err.message));
-  onAuthStateChanged(auth, async user => {
-    if (!user) return;
-    const userAttemptId = user.uid;
-    const now = Date.now();
-    const lastAttempt = localStorage.getItem(userAttemptIdKey);
-    if (!lastAttempt || now - parseInt(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
-      try {
-        await set(ref(db, `attempts/hard/${userAttemptId}`), { timestamp: now });
+<script>
+// --- Firebase compat attempt and completion logging ---
+// For logging attempts (one per week per user)
+const userAttemptIdKey = 'cipherstick_attempt_hard';
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) return;
+  const userAttemptId = user.uid;
+  const now = Date.now();
+  const lastAttempt = localStorage.getItem(userAttemptIdKey);
+  if (!lastAttempt || now - parseInt(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
+    try {
+      // Use a unique key so multiple attempts are possible, but only one per week in localStorage
+      const uniqueKey = firebase.database().ref().push().key;
+      firebase.database().ref(`/attempts/hard/${userAttemptId}/${uniqueKey}`).set({
+        timestamp: now
+      }).then(function() {
         console.log("✅ Logged attempt");
         localStorage.setItem(userAttemptIdKey, now.toString());
-      } catch (err) {
+      }).catch(function(err) {
         console.warn("❌ Failed to log attempt:", err.message);
-      }
-    }
-  });
-
-  // --- Universal completion logging function ---
-  const database = getDb10();
-  const auth10 = getAuth10();
-
-  // difficulty: "hard" for this page
-  function logCompletion(difficulty) {
-    const user = auth10.currentUser;
-    if (!user) {
-      console.warn("User not authenticated for logging completion.");
-      return;
-    }
-
-    const userId = user.uid;
-    const attemptsRef = ref10(database, `attempts/${difficulty}/${userId}`);
-    const completionsRef = ref10(database, `completions/${difficulty}/${userId}`);
-
-    get10(attemptsRef).then((attemptSnap) => {
-      const attemptCount = attemptSnap.exists() ? attemptSnap.size : 0;
-
-      get10(completionsRef).then((completionSnap) => {
-        const completionCount = completionSnap.exists() ? completionSnap.size : 0;
-
-        if (completionCount < attemptCount) {
-          const newRef = push(completionsRef);
-          set10(newRef, {
-            timestamp: serverTimestamp()
-          }).then(() => {
-            console.log("✅ Completion logged");
-          }).catch((err) => {
-            console.warn("❌ Failed to log completion:", err.message);
-          });
-        } else {
-          console.warn("🛑 Already logged same number of completions as attempts");
-        }
       });
-    });
+    } catch (err) {
+      console.warn("❌ Failed to log attempt:", err.message);
+    }
   }
-  // Make available globally for downloadCertificate
-  window.logCompletion = logCompletion;
+});
+
+// Universal completion logging function
+function logCompletion(difficulty) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    console.warn("User not authenticated for logging completion.");
+    return;
+  }
+  const uid = user.uid;
+  // Only log completion if attempts exist for this user/difficulty
+  firebase.database().ref(`/attempts/${difficulty}/${uid}`).once('value')
+    .then(function(attemptSnap) {
+      if (!attemptSnap.exists()) {
+        console.warn("No attempts found for this user/difficulty; skipping completion log.");
+        return;
+      }
+      // Only log a new completion if completions < attempts
+      firebase.database().ref(`/completions/${difficulty}/${uid}`).once('value')
+        .then(function(completionSnap) {
+          const attemptsCount = attemptSnap.numChildren();
+          const completionsCount = completionSnap.exists() ? completionSnap.numChildren() : 0;
+          if (completionsCount < attemptsCount) {
+            // Use a unique key for each completion
+            const uniqueKey = firebase.database().ref().push().key;
+            firebase.database().ref(`/completions/${difficulty}/${uid}/${uniqueKey}`).set({
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(function() {
+              console.log("✅ Completion logged");
+            }).catch(function(err) {
+              console.warn("❌ Failed to log completion:", err.message);
+            });
+          } else {
+            console.warn("🛑 Already logged same number of completions as attempts");
+          }
+        });
+    });
+}
+// Make available globally for downloadCertificate
+window.logCompletion = logCompletion;
 </script>
 </body>
 </html>

@@ -8,10 +8,10 @@
   <!-- Using canvas-confetti and jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <!-- Firebase UMD compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
       :root {
       --primary-color: #007bff;
@@ -309,47 +309,27 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M2NFQ1M6LR"></script>
 <script>
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
-  authDomain: "cipherstick.firebaseapp.com",
-  databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
-  projectId: "cipherstick",
-  storageBucket: "cipherstick.appspot.com",
-  messagingSenderId: "827207706323",
-  appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
-};
+  // Firebase config and initialization
+  const firebaseConfig = {
+    apiKey: "AIzaSyBRTSl9V6kpS6lBFqzCacVamw8JvqlnDQ4",
+    authDomain: "cipherstick.firebaseapp.com",
+    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
+    projectId: "cipherstick",
+    storageBucket: "cipherstick.appspot.com",
+    messagingSenderId: "827207706323",
+    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+  };
+  const app = firebase.initializeApp(firebaseConfig);
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Set up Firebase Auth and Database
-const auth = firebase.auth();
-const database = firebase.database();
-
-// Promise for auth ready
-let authReadyResolve;
-const authReady = new Promise(res => { authReadyResolve = res; });
-
-// Anonymous auth logic
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (user) {
-    authReadyResolve();
-  } else {
-    try {
-      await firebase.auth().signInAnonymously();
-    } catch (authError) {
-      console.warn("❌ Auth error:", authError.message);
-    }
-  }
-});
-
-// Attempt logging on page load (after auth ready)
-authReady.then(() => {
-  const uid = firebase.auth().currentUser?.uid;
-  if (!uid) return console.warn("❌ Not authenticated");
-  firebase.database().ref("attempts/medium/" + uid).set({ timestamp: Date.now() });
-});
+  firebase.auth().signInAnonymously().then(userCredential => {
+    const uid = userCredential.user.uid;
+    window.authUID = uid;
+    console.log("✅ Authenticated as:", uid);
+    // Log attempt after auth
+    firebase.database().ref("attempts/medium/" + uid).set({ timestamp: Date.now() });
+  }).catch(error => {
+    console.warn("❌ Auth error:", error.message);
+  });
 </script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -500,9 +480,12 @@ const requiredPrefix = "";
       showVictoryOverlay();
 
       // Log completion to Firebase using Firebase Auth state
-      authReady.then(() => {
-        const uid = firebase.auth().currentUser?.uid;
-        if (!uid) return console.warn("❌ Not authenticated");
+      function writeCompletion() {
+        if (!window.authUID) {
+          setTimeout(writeCompletion, 200);
+          return;
+        }
+        const uid = window.authUID;
         const attemptsRef = firebase.database().ref("attempts/medium/" + uid);
         const completionsRef = firebase.database().ref("completions/medium/" + uid);
         attemptsRef.once("value").then((attemptSnap) => {
@@ -515,7 +498,8 @@ const requiredPrefix = "";
             }
           });
         });
-      });
+      }
+      writeCompletion();
     } else if (!allCorrect) {
       finalMessage.style.display = 'none';
       quizCompleted = false;
