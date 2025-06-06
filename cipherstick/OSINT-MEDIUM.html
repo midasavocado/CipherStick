@@ -335,22 +335,29 @@
       setTimeout(function() {
         // Use "medium" as database record path, matching naming convention
         const attemptRef = firebase.database().ref(`attempts/medium/${uid}`);
-        // Save with a timestamp (push for multiple attempts)
         attemptRef.once('value').then(snap => {
-          let attempts = snap.val();
-          if (!attempts) attempts = {};
-          // Add a new attempt with a timestamp key
-          const newAttemptKey = firebase.database().ref().push().key;
-          const updateData = {};
-          updateData[newAttemptKey] = { timestamp: firebase.database.ServerValue.TIMESTAMP };
-          attemptRef.update(updateData)
-            .then(() => {
-              console.log("✅ Attempt logged");
-            })
-            .catch((error) => {
-              console.warn("❌ Attempt logging failed:", error);
-            });
-        });
+          const data = snap.val();
+          const now = Date.now();
+          let lastTimestamp = null;
+          if (data && data.timestamp) {
+            // Firebase stores timestamp as number (ms since epoch) or as ServerValue.TIMESTAMP (number), or as ISO string if set that way.
+            // Try to parse as number first, fallback to Date parse.
+            if (typeof data.timestamp === "number") {
+              lastTimestamp = data.timestamp;
+            } else {
+              // Try to parse as date string
+              lastTimestamp = new Date(data.timestamp).getTime();
+            }
+          }
+          if (!lastTimestamp || (now - lastTimestamp) > 86400000) {
+            console.log("🆕 Logging new attempt...");
+            attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
+              .then(() => console.log("✅ Attempt logged"))
+              .catch((err) => console.warn("❌ Failed to log attempt:", err));
+          } else {
+            console.log("⏳ Attempt already logged in the last 24 hours.");
+          }
+        }).catch((err) => console.warn("❌ Error checking attempt timestamp:", err));
       }, 60000); // 60 seconds
     } else {
       // Not signed in, try to sign in anonymously

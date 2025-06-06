@@ -234,42 +234,53 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
-  authDomain: "cipherstick.firebaseapp.com",
-  databaseURL: "https://cipherstick-default-rtdb.firebaseio.com/",
-  projectId: "cipherstick",
-  storageBucket: "cipherstick.firebasestorage.app",
-  messagingSenderId: "827207706323",
-  appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
-};
+try {
+  const firebaseConfig = {
+    apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
+    authDomain: "cipherstick.firebaseapp.com",
+    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com/",
+    projectId: "cipherstick",
+    storageBucket: "cipherstick.firebasestorage.app",
+    messagingSenderId: "827207706323",
+    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  console.log("✅ Firebase initialized in index.html");
 
-function setupStats(cardId, difficulty) {
-  const completionsRef = ref(db, `completions/${difficulty}`);
-  const attemptsRef = ref(db, `attempts/${difficulty}`);
+  function setupStats(cardId, difficulty) {
+    const completionsRef = ref(db, `completions/${difficulty}`);
+    const attemptsRef = ref(db, `attempts/${difficulty}`);
 
-  const card = document.getElementById(cardId);
-  const completionEl = card.querySelector('.completion-count');
-  const attemptEl = card.querySelector('.attempt-count');
+    const card = document.getElementById(cardId);
+    const completionEl = card.querySelector('.completion-count');
+    const attemptEl = card.querySelector('.attempt-count');
 
-  onValue(completionsRef, (snap) => {
-    const data = snap.val();
-    const count = data ? Object.keys(data).length : 0;
-    completionEl.textContent = count;
-  });
+    onValue(completionsRef, (snap) => {
+      const data = snap.val();
+      const count = data ? Object.keys(data).length : 0;
+      console.log(`✅ Completions (${difficulty}): ${count}`);
+      completionEl.textContent = count;
+    }, (error) => {
+      console.error(`❌ Failed to fetch completions for ${difficulty}:`, error);
+    });
 
-  onValue(attemptsRef, (snap) => {
-    const data = snap.val();
-    const count = data ? Object.keys(data).length : 0;
-    attemptEl.textContent = count;
-  });
+    onValue(attemptsRef, (snap) => {
+      const data = snap.val();
+      const count = data ? Object.keys(data).length : 0;
+      console.log(`✅ Attempts (${difficulty}): ${count}`);
+      attemptEl.textContent = count;
+    }, (error) => {
+      console.error(`❌ Failed to fetch attempts for ${difficulty}:`, error);
+    });
+  }
+
+  setupStats("card-medium", "medium");
+  setupStats("card-hard", "hard");
+} catch (err) {
+  console.error("❌ Firebase setup failed in index.html:", err);
 }
-
-setupStats("card-medium", "medium");
-setupStats("card-hard", "hard");
 </script>
 </body>
 </html>

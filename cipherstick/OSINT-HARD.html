@@ -17,26 +17,45 @@
   <script type="module">
     // Modular Firebase for logging attempts (new system)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
     // Modular initialization (does not interfere with compat)
     const app = initializeApp(firebaseConfig, "modular");
     const db = getDatabase(app);
 
+    // Only log a new attempt if one hasn't been logged in the last 24 hours for this user
     function logAttempt(difficulty) {
-      const attemptRef = ref(db, `attempts/${difficulty}`);
-      const newAttemptRef = push(attemptRef);
-      set(newAttemptRef, {
-        timestamp: Date.now()
-      })
-      .then(() => {
-        console.log(`✅ Attempt logged for ${difficulty}`);
-      })
-      .catch((error) => {
-        console.error(`❌ Failed to log attempt for ${difficulty}:`, error.message);
+      // Try to get the user from compat auth
+      let compatUser = null;
+      try {
+        if (window.firebase && window.firebase.auth) {
+          compatUser = window.firebase.auth().currentUser;
+        }
+      } catch (e) {}
+      // If not available, skip logging
+      if (!compatUser) {
+        console.warn("❌ No user available for modular attempt logging.");
+        return;
+      }
+      const user = compatUser;
+      const attemptKey = `attempts/${difficulty}/${user.uid}`;
+      const attemptRef = ref(db, attemptKey);
+      const now = Date.now();
+
+      get(attemptRef).then((snapshot) => {
+        const data = snapshot.val();
+        if (data && data.timestamp && (now - data.timestamp < 86400000)) {
+          console.log("⏳ Attempt already logged in the last 24 hours.");
+          return; // Do not log again
+        }
+
+        console.log("🆕 Logging new attempt...");
+        set(attemptRef, { timestamp: now })
+          .then(() => console.log("✅ Attempt logged"))
+          .catch((error) => console.warn("❌ Attempt logging failed:", error));
       });
     }
 
-    // Log attempts for "medium" and "hard" after 60 seconds on the page
+    // Wait for compat auth to be ready before trying to log attempt
     console.log('WAITING 60 SECONDS FOR ATTEMPT')
     setTimeout(() => logAttempt("hard"), 60000);
   </script>
@@ -774,33 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-// --- Firebase compat attempt and completion logging ---
-// For logging attempts (one per week per user)
-const userAttemptIdKey = 'cipherstick_attempt_hard';
-firebase.auth().onAuthStateChanged(function(user) {
-  if (!user) return;
-  const userAttemptId = user.uid;
-  const now = Date.now();
-  const lastAttempt = localStorage.getItem(userAttemptIdKey);
-  if (!lastAttempt || now - parseInt(lastAttempt) > 7 * 24 * 60 * 60 * 1000) {
-    try {
-      // Use a unique key so multiple attempts are possible, but only one per week in localStorage
-      const uniqueKey = firebase.database().ref().push().key;
-      const attemptData = { timestamp: now };
-      console.log("📡 Attempting to save attempt to Firebase...", attemptData);
-      firebase.database().ref(`/attempts/hard/${userAttemptId}/${uniqueKey}`).set(attemptData)
-        .then(function() {
-          console.log("✅ Attempt saved:", attemptData);
-          localStorage.setItem(userAttemptIdKey, now.toString());
-        })
-        .catch(function(err) {
-          console.warn("❌ Failed to save attempt:", err.message);
-        });
-    } catch (err) {
-      console.warn("❌ Failed to save attempt:", err.message);
-    }
-  }
-});
+// --- Firebase compat completion logging (modular attempt logging is now in <script type="module">) ---
 
 // Universal completion logging function
 function logCompletion(difficulty) {
