@@ -776,12 +776,29 @@ function downloadCertificate() {
   doc.save("DigitalEnigma-Certificate.pdf");
   // Firebase completion logging (runs only when certificate is generated)
   logCompletion("hard");
-  // Clear localStorage entries after saving (slight delay gives browsers time to start the download)
+
+  // --- Disable all inputs, textareas, and buttons except print/download after completion ---
   setTimeout(() => {
-    for (let i = 0; i < questions.length; i++) {
-      localStorage.removeItem(`${storageKeyPrefix}-input-${i}`);
+    // Disable all input and textarea fields
+    document.querySelectorAll("input, textarea").forEach(el => {
+      el.disabled = true;
+    });
+    // Disable all buttons except those with class print-btn or download-btn
+    document.querySelectorAll("button").forEach(btn => {
+      if (!btn.classList.contains("print-btn") && !btn.classList.contains("download-btn")) {
+        btn.disabled = true;
+      }
+    });
+    // Clear all localStorage and sessionStorage except firebase_uid
+    const preserveKey = "firebase_uid";
+    // Try both storages for firebase_uid
+    const uidValue = localStorage.getItem(preserveKey) || sessionStorage.getItem(preserveKey);
+    localStorage.clear();
+    sessionStorage.clear();
+    if (uidValue) {
+      localStorage.setItem(preserveKey, uidValue);
     }
-  }, 200);
+  }, 200); // slight delay to ensure download triggers before disabling
 
   document.getElementById('nameInputModal').style.display = 'none';
 }
