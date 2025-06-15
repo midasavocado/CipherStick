@@ -834,9 +834,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-// --- Firebase compat completion logging ---
-
+// Firebase-based completion logger – logs ONLY for "hard" difficulty
 function logCompletion(difficulty) {
+  if (difficulty !== "hard") {
+    console.warn(`⛔ Completion logging disabled for difficulty: ${difficulty}`);
+    return;
+  }
+
   const user = firebase.auth().currentUser;
   if (!user) {
     console.warn("❌ User not authenticated for logging completion.");
@@ -844,21 +848,25 @@ function logCompletion(difficulty) {
   }
 
   const uid = user.uid;
-  const uniqueKey = firebase.database().ref().push().key;
-  const completionData = { timestamp: firebase.database.ServerValue.TIMESTAMP };
+  const completionsRef = firebase.database().ref(`completions/hard/${uid}`);
+  const newKey = firebase.database().ref().push().key;
+  const completionData = { timestamp: Date.now() };
 
-  console.log("📡 Logging completion to Firebase...", completionData);
+  console.log("📡 Logging HARD completion to Firebase...", completionData);
 
-  firebase.database().ref(`/completions/${difficulty}/${uid}/${uniqueKey}`).set(completionData)
-    .then(function() {
-      console.log("✅ Completion logged:", completionData);
+  const updateObj = {};
+  updateObj[newKey] = completionData;
+
+  completionsRef.update(updateObj)
+    .then(() => {
+      console.log("✅ HARD completion logged:", completionData);
     })
-    .catch(function(err) {
-      console.warn("❌ Failed to log completion:", err.message);
+    .catch((error) => {
+      console.warn("❌ HARD completion logging failed:", error.message);
     });
 }
 
-// Make available globally
+// Globally accessible
 window.logCompletion = logCompletion;
 </script>
 </body>
