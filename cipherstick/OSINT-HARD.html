@@ -602,6 +602,31 @@ function checkAllAnswers() {
     startVictoryConfetti();
     showVictoryOverlay();
     logCompletion();
+    setTimeout(() => {
+    // Freeze all input and textarea fields
+    document.querySelectorAll("input, textarea").forEach(el => {
+  //    el.readOnly = true;
+    });
+    console.log('🔒 All input and textarea fields set to readOnly');
+    // Disable all buttons except download/print buttons
+    document.querySelectorAll("button").forEach(btn => {
+      if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
+      //  btn.disabled = true;
+      }
+    });
+    console.log('🔒 All buttons disabled except certificate download/print');
+    // Clear all localStorage and sessionStorage except userId
+    // Try to preserve userId (from localStorage or sessionStorage)
+    let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    localStorage.clear();
+    sessionStorage.clear();
+    if (userId) {
+      localStorage.setItem('userId', userId);
+      sessionStorage.setItem('userId', userId);
+      console.log('🗝️ userId preserved in localStorage/sessionStorage');
+    }
+    console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
+  }, 200); // slight delay to ensure download triggers before disabling
   } else if (!allCorrect) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
@@ -776,31 +801,7 @@ function downloadCertificate() {
 
 
   // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
-  setTimeout(() => {
-    // Freeze all input and textarea fields
-    document.querySelectorAll("input, textarea").forEach(el => {
-  //    el.readOnly = true;
-    });
-    console.log('🔒 All input and textarea fields set to readOnly');
-    // Disable all buttons except download/print buttons
-    document.querySelectorAll("button").forEach(btn => {
-      if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
-      //  btn.disabled = true;
-      }
-    });
-    console.log('🔒 All buttons disabled except certificate download/print');
-    // Clear all localStorage and sessionStorage except userId
-    // Try to preserve userId (from localStorage or sessionStorage)
-    let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-    localStorage.clear();
-    sessionStorage.clear();
-    if (userId) {
-      localStorage.setItem('userId', userId);
-      sessionStorage.setItem('userId', userId);
-      console.log('🗝️ userId preserved in localStorage/sessionStorage');
-    }
-    console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
-  }, 200); // slight delay to ensure download triggers before disabling
+  
 
   document.getElementById('nameInputModal').style.display = 'none';
 }
