@@ -834,52 +834,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-// --- Firebase compat completion logging (modular attempt logging is now in <script type="module">) ---
+// --- Firebase compat completion logging ---
 
-// Universal completion logging function
 function logCompletion(difficulty) {
   const user = firebase.auth().currentUser;
   if (!user) {
     console.warn("❌ User not authenticated for logging completion.");
     return;
   }
+
   const uid = user.uid;
-  // Only log completion if attempts exist for this user/difficulty
-  console.log("📡 Checking attempts before logging completion...");
-  firebase.database().ref(`/attempts/${difficulty}/${uid}`).once('value')
-    .then(function(attemptSnap) {
-      if (!attemptSnap.exists()) {
-        console.warn("❌ No attempts found for this user/difficulty; skipping completion log.");
-        return;
-      }
-      // Only log a new completion if completions < attempts
-      firebase.database().ref(`/completions/${difficulty}/${uid}`).once('value')
-        .then(function(completionSnap) {
-          const attemptsCount = attemptSnap.numChildren();
-          const completionsCount = completionSnap.exists() ? completionSnap.numChildren() : 0;
-            // Use a unique key for each completion
-            const uniqueKey = firebase.database().ref().push().key;
-            const completionData = { timestamp: firebase.database.ServerValue.TIMESTAMP };
-            console.log("📡 Attempting to save completion to Firebase...", completionData);
-            firebase.database().ref(`/completions/${difficulty}/${uid}/${uniqueKey}`).set(completionData)
-              .then(function() {
-                console.log("✅ Completion saved:", completionData);
-              })
-              .catch(function(err) {
-                console.warn("❌ Failed to save completion:", err.message);
-              });
-           else {
-            console.warn("🛑 Already logged same number of completions as attempts");
-          }
-        })
-        .catch(function(err) {
-          console.warn("❌ Failed to check completions:", err.message);
-        });
+  const uniqueKey = firebase.database().ref().push().key;
+  const completionData = { timestamp: firebase.database.ServerValue.TIMESTAMP };
+
+  console.log("📡 Logging completion to Firebase...", completionData);
+
+  firebase.database().ref(`/completions/${difficulty}/${uid}/${uniqueKey}`).set(completionData)
+    .then(function() {
+      console.log("✅ Completion logged:", completionData);
+    })
     .catch(function(err) {
-      console.warn("❌ Failed to check attempts before completion log:", err.message);
+      console.warn("❌ Failed to log completion:", err.message);
     });
 }
-// Make available globally for downloadCertificate
+
+// Make available globally
 window.logCompletion = logCompletion;
 </script>
 </body>
