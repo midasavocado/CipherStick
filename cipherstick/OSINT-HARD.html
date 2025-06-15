@@ -497,6 +497,50 @@
   </footer>
 
 <script>
+  function logCompletion() {
+        function innerWrite() {
+          if (!window.authUID) {
+            setTimeout(innerWrite, 200);
+            return;
+          }
+          const uid = window.authUID;
+          // Use "medium" as database record path, matching naming convention
+          const completionsRef = firebase.database().ref("completions/hard/" + uid);
+          console.log("🔄 Checking completions and attempts for user...");
+          // Fetch attempts and completions
+          attemptsRef.once("value").then((attemptSnap) => {
+            const attemptsVal = attemptSnap.val();
+            let attemptsCount = 0;
+            if (attemptsVal && typeof attemptsVal === 'object') {
+              attemptsCount = Object.keys(attemptsVal).length;
+            }
+            completionsRef.once("value").then((completionSnap) => {
+              const completionsVal = completionSnap.val();
+              let completionsCount = 0;
+              if (completionsVal && typeof completionsVal === 'object') {
+                completionsCount = Object.keys(completionsVal).length;
+              } else if (completionSnap.exists()) {
+                completionsCount = 1;
+              }
+              // If completions >= attempts, prevent saving and log warning
+      
+              // Save completion (allow multiple completions, use push for consistency)
+              const newCompletionKey = firebase.database().ref().push().key;
+              const updateData = {};
+              updateData[newCompletionKey] = { timestamp: Date.now() };
+              completionsRef.update(updateData)
+                .then(() => {
+                  console.log("✅ Completion logged");
+                })
+                .catch(error => {
+                  console.warn("❌ Completion logging failed:", error);
+                });
+            });
+          });
+        }
+        innerWrite();
+      }
+      
 function loadIntroText() {
 
   let prefixInfo = "";
@@ -795,7 +839,7 @@ function downloadCertificate() {
   // Trigger download
   doc.save("DigitalEnigma-Certificate.pdf");
   // Firebase completion logging (runs only when certificate is generated)
-  logCompletion("hard");
+  logCompletion();
 
   // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
   setTimeout(() => {
@@ -834,73 +878,63 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-// ─────────────────────────────────────────────────────────────
-//  HARD-MODE Firebase attempt + completion logging
-//  • Attempts: one-time object { timestamp: ServerValue.TIMESTAMP }
-//  • Completions: .push().key with { timestamp: Date.now() }
-// ─────────────────────────────────────────────────────────────
+  // Firebase config and initialization
+  console.log("📦 Initializing Firebase...");
+  const firebaseConfig = {
+    apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
+    authDomain: "cipherstick.firebaseapp.com",
+    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
+    projectId: "cipherstick",
+    storageBucket: "cipherstick.appspot.com",
+    messagingSenderId: "827207706323",
+    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+  };
+  const app = firebase.initializeApp(firebaseConfig);
+  console.log("✅ Firebase initialized.");
 
-// 1️⃣  Attempt logging (identical logic to MEDIUM but path = hard)
-firebase.auth().onAuthStateChanged(function (user) {
-  if (!user) {
-    firebase.auth().signInAnonymously().catch(err =>
-      console.warn("❌ Auth error:", err.message)
-    );
-    return;
-  }
-
-  const uid = user.uid;
-  window.authUID = uid;           // keep for later
-
-  // Wait 60 s on the page before logging an attempt
-  console.info("WAITING 60 SECONDS TO LOG HARD ATTEMPT…");
-  setTimeout(function () {
-    const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
-
-    attemptRef.once('value').then(snap => {
-      if (snap.exists()) {
-        console.log("⏳ HARD attempt already logged; skipping.");
-        return;
-      }
-
-      attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
-        .then(() => console.log("✅ HARD attempt logged."))
-        .catch(err => console.warn("❌ Attempt logging failed:", err.message));
-    }).catch(err =>
-      console.warn("❌ Error checking HARD attempt:", err.message)
-    );
-  }, 60000); // 60 000 ms
-});
-
-// 2️⃣  Completion logger – **only** active for difficulty === "hard"
-function logCompletion(difficulty) {
-  if (difficulty !== "hard") {
-    console.warn(`⛔ Completion logging disabled for difficulty: ${difficulty}`);
-    return;
-  }
-
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    console.warn("❌ User not authenticated for completion logging.");
-    return;
-  }
-
-  const uid          = user.uid;
-  const completions  = firebase.database().ref(`completions/hard/${uid}`);
-  const uniqueKey    = firebase.database().ref().push().key;
-  const completion   = { timestamp: Date.now() };
-  const updateObject = {};
-  updateObject[uniqueKey] = completion;
-
-  console.log("📡 Logging HARD completion…", completion);
-
-  completions.update(updateObject)
-    .then(() => console.log("✅ HARD completion logged."))
-    .catch(err => console.warn("❌ Completion logging failed:", err.message));
-}
-
-// Expose globally (e.g., downloadCertificate → logCompletion("hard"))
-window.logCompletion = logCompletion;
+  // Wait for Firebase Auth state and ensure anonymous login before attempt/completion logging
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // User is signed in
+      const uid = user.uid;
+      window.authUID = uid;
+      console.info("✅ Signed in anonymously:", uid);
+      // Set timer to log attempt after 60 seconds on the page
+      console.info("WAITING 60 SECONDS FOR ATTEMPT TO LOG")
+      setTimeout(function() {
+        // Use "medium" as database record path, matching naming convention
+        const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
+        attemptRef.once('value').then(snap => {
+          const data = snap.val();
+          const now = Date.now();
+          let lastTimestamp = null;
+          if (data && data.timestamp) {
+            // Firebase stores timestamp as number (ms since epoch) or as ServerValue.TIMESTAMP (number), or as ISO string if set that way.
+            // Try to parse as number first, fallback to Date parse.
+            if (typeof data.timestamp === "number") {
+              lastTimestamp = data.timestamp;
+            } else {
+              // Try to parse as date string
+              lastTimestamp = new Date(data.timestamp).getTime();
+            }
+          }
+          if (!lastTimestamp || (now - lastTimestamp) > 86400000) {
+            console.log("🆕 Logging new attempt...");
+            attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
+              .then(() => console.log("✅ Attempt logged"))
+              .catch((err) => console.warn("❌ Failed to log attempt:", err));
+          } else {
+            console.log("⏳ Attempt already logged in the last 24 hours.");
+          }
+        }).catch((err) => console.warn("❌ Error checking attempt timestamp:", err));
+      }, 60000); // 60 seconds
+    } else {
+      // Not signed in, try to sign in anonymously
+      firebase.auth().signInAnonymously().catch(error => {
+        console.warn("❌ Auth error:", error.message);
+      });
+    }
+  });
 </script>
 </body>
 </html>
