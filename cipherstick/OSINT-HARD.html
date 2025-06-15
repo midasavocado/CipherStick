@@ -13,7 +13,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  
   <style>
      :root {
       --accent-color: #ff0000; /* Dark red accent */
@@ -439,6 +438,7 @@
           const uid = window.authUID;
           // Use "medium" as database record path, matching naming convention
           const completionsRef = firebase.database().ref("completions/hard/" + uid);
+           const attemptsRef = firebase.database().ref("attempts/hard/" + uid);
           console.log("🔄 Checking completions and attempts for user...");
           // Fetch attempts and completions
           attemptsRef.once("value").then((attemptSnap) => {
@@ -601,6 +601,7 @@ function checkAllAnswers() {
     finalMessage.style.display = 'block';
     startVictoryConfetti();
     showVictoryOverlay();
+    logCompletion();
   } else if (!allCorrect) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
@@ -772,7 +773,7 @@ function downloadCertificate() {
   // Trigger download
   doc.save("DigitalEnigma-Certificate.pdf");
   // Firebase completion logging (runs only when certificate is generated)
-  logCompletion();
+
 
   // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
   setTimeout(() => {
@@ -851,14 +852,12 @@ document.addEventListener('DOMContentLoaded', () => {
               lastTimestamp = new Date(data.timestamp).getTime();
             }
           }
-          if (!lastTimestamp || (now - lastTimestamp) > 86400000) {
+
             console.log("🆕 Logging new attempt...");
             attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
               .then(() => console.log("✅ Attempt logged"))
               .catch((err) => console.warn("❌ Failed to log attempt:", err));
-          } else {
-            console.log("⏳ Attempt already logged in the last 24 hours.");
-          }
+         
         }).catch((err) => console.warn("❌ Error checking attempt timestamp:", err));
       }, 60000); // 60 seconds
     } else {
