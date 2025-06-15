@@ -792,6 +792,84 @@ const requiredPrefix = "";
     }
   });
 </script>
+<!-- Add (or replace the old patch) near the very end of your page -->
+<!-- Drop this at the very end of the page (after all other scripts) -->
+<script>
+(function () {
+  const BTN_W = '200px';
+  const TITLE = 'CipherStick: MEDIUM - The Vanishing Journalist';
+  const MSG   = 'Try to solve this OSINT challenge!';
+  const LINK  = location.href;
+
+  function showNativeShare() {
+    if (navigator.share && window.isSecureContext) {
+      navigator.share({
+        title: TITLE,
+        text: `${TITLE} — ${MSG}\n\n${LINK}`,
+        url: LINK
+      }).catch(err => {
+        if (err.name !== "AbortError") {
+          console.warn('Share failed:', err);
+          alert('Sharing not supported or failed.');
+        }
+      });
+    } else {
+      alert('Sharing is not supported on this browser.\nTry on a phone or in Safari/Chrome on macOS.');
+    }
+  }
+
+  function closeFeedback() {
+    const fm = document.getElementById('feedbackModal');
+    if (fm) fm.style.display = 'none';
+  }
+
+  function ensureModal() {
+    const html = `
+      <div id="feedbackModal" class="name-input-modal" style="display:none;">
+        <h2 style="margin-bottom:.75rem;">Did you enjoy the challenge?</h2>
+        <p style="margin-bottom:1rem;">Share it with friends to spread the word!</p>
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.2rem;">
+          <button onclick="showNativeShare()" style="width:${BTN_W};padding:.6rem 0;background:#007bff;color:#fff;border:none;border-radius:6px;
+                  cursor:pointer;font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:.6rem;">
+            Share Challenge
+          </button>
+          <a href="https://buymeacoffee.com/midasthecoder" target="_blank"
+             style="width:${BTN_W};padding:.6rem 0;background:#FFDD00;color:#000;border:none;border-radius:6px;
+                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
+                    margin-bottom:1.2rem;">
+            ☕ Buy Me a Coffee
+          </a>
+          <button onclick="closeFeedback()" style="width:${BTN_W};padding:.6rem 0;background:#ccc;color:#333;border:none;border-radius:6px;
+                  cursor:pointer;font-family:'Poppins',sans-serif;">
+            Close
+          </button>
+        </div>
+      </div>`;
+    const existing = document.getElementById('feedbackModal');
+    if (existing) existing.outerHTML = html;
+    else document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  function patchDownload() {
+    if (typeof window.downloadCertificate !== 'function') return;
+    const original = window.downloadCertificate;
+    window.downloadCertificate = function () {
+      original.apply(this, arguments);
+      setTimeout(() => {
+        ensureModal();
+        document.getElementById('feedbackModal').style.display = 'block';
+      }, 300);
+    };
+  }
+
+  ensureModal();
+  patchDownload();
+
+  // expose for buttons
+  window.showNativeShare = showNativeShare;
+  window.closeFeedback = closeFeedback;
+})();
+</script>
 <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="white" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 
 <!-- Firebase logging handled above -->
