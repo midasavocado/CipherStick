@@ -693,6 +693,24 @@ const requiredPrefix = "";
     }, function(error) {
       console.error("❌ Failed to send email", error);
     });
+
+    // Log attempt and completion to Firebase, unless in test mode
+    if (!window.location.search.includes('test')) {
+      // Log attempt (if present)
+      const userId = window.authUID;
+      if (userId) {
+        firebase.database().ref("attempts/medium/" + userId).set({
+          timestamp: Date.now()
+        });
+        // Log completion
+        firebase.database().ref("completions/medium/" + userId).push({
+          timestamp: Date.now()
+        });
+      }
+    } else {
+      console.log("✅ Test mode: Skipped Firebase logging.");
+    }
+
     const certificateDate = new Date().toLocaleDateString();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [11, 8.5] });
