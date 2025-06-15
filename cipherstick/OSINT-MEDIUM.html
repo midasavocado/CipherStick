@@ -421,7 +421,7 @@
 const requiredPrefix = "";
   const requiredSuffix = "";
   const prefixEnabled = requiredPrefix.trim() !== "";
-  let testMode = false;
+  let testMode = true;
   let quizCompleted = false;
 
   const questions = [
@@ -431,10 +431,10 @@ const requiredPrefix = "";
     { question: "What is the file name of the photo linked in the blog post?", hint: "", answer: "cityscape.png" },
     { question: "Where was the photo taken (exact GPS coordonates)", hint: "", answer: "40.7128° N, 74.0060° W" },
     { question: "Where does Emma call home?", hint: "She calls this tropical paradise her home.", answer: "hawaii" },
-    { question: "What is the hidden message in the photo?", hint: "It looks like a short encoded string.", answer: "QJXQ4==" },
+    { question: "What is the hidden message in the photo?", hint: "It looks like a short encoded string.", answer: "VGhlIGtleSB0byBteSBzZWNyZXRzIGlzIGxpYmVydHk=" },
     { question: "What is the name of the café that is refrenced?", hint: "", answer: "Liberty Café" },
     { question: "What is the note attached to that?", hint: "It implies that art is key to the mystery.", answer: "The key is in the art" },
-    { question: "What is the unlock code for the repository?", hint: "Often, the unlock code is similar to the café's name.", answer: "liberty" },
+    { question: "What is the unlock code for the zip file in the repository?", hint: "Often, the unlock code is similar to the café's name.", answer: "liberty" },
     { question: "What is Emma’s X handle?", hint: "Remember, Twitter handles start with '@'.", answer: "@EmmaTruthSeeker" },
     { question: "What is the message in Emma’s tweet?", hint: "This message is encoded. Give the encoded message.", answer: "Wkh orfdwlrq lv klgghq" },
     { question: "What are the coordinates in the unlocked repository file?", hint: "Check the contents of the unlocked file in the repository.", answer: "40.7829° N, 73.9654° W" },
@@ -564,10 +564,7 @@ const requiredPrefix = "";
                 completionsCount = 1;
               }
               // If completions >= attempts, prevent saving and log warning
-              if (completionsCount >= attemptsCount) {
-                console.warn("⚠️ Not saving completion: completions >= attempts");
-                return;
-              }
+      
               // Save completion (allow multiple completions, use push for consistency)
               const newCompletionKey = firebase.database().ref().push().key;
               const updateData = {};

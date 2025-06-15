@@ -857,7 +857,6 @@ function logCompletion(difficulty) {
         .then(function(completionSnap) {
           const attemptsCount = attemptSnap.numChildren();
           const completionsCount = completionSnap.exists() ? completionSnap.numChildren() : 0;
-          if (completionsCount < attemptsCount) {
             // Use a unique key for each completion
             const uniqueKey = firebase.database().ref().push().key;
             const completionData = { timestamp: firebase.database.ServerValue.TIMESTAMP };
@@ -876,7 +875,6 @@ function logCompletion(difficulty) {
         .catch(function(err) {
           console.warn("❌ Failed to check completions:", err.message);
         });
-    })
     .catch(function(err) {
       console.warn("❌ Failed to check attempts before completion log:", err.message);
     });
