@@ -417,7 +417,8 @@
 const requiredPrefix = "";
   const requiredSuffix = "";
   const prefixEnabled = requiredPrefix.trim() !== "";
-  let testMode = false;
+    const urlParams = new URLSearchParams(window.location.search);
+  const testMode = urlParams.has('test');
   let quizCompleted = false;
 
   const questions = [
@@ -683,6 +684,15 @@ const requiredPrefix = "";
 
   function downloadCertificate() {
     const userName = document.getElementById('userNameInput').value || '[Your Name]';
+    // Send email via EmailJS
+    emailjs.send("service_mpx4p0t", "certificate_claimed", {
+      user_name: userName,
+      quiz_difficulty: "MEDIUM"
+    }).then(function(response) {
+      console.log("✅ Email sent!", response.status, response.text);
+    }, function(error) {
+      console.error("❌ Failed to send email", error);
+    });
     const certificateDate = new Date().toLocaleDateString();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [11, 8.5] });
@@ -794,6 +804,12 @@ const requiredPrefix = "";
 </script>
 <!-- Add (or replace the old patch) near the very end of your page -->
 <!-- Drop this at the very end of the page (after all other scripts) -->
+<script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+<script type="text/javascript">
+  (function(){
+    emailjs.init("vuIOVGmElOjK_aUJK");
+  })();
+</script>
 <script>
 (function () {
   const BTN_W = '200px';

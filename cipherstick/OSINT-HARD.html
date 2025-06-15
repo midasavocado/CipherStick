@@ -740,6 +740,17 @@ function openCertificateModal() {
 
 function downloadCertificate() {
   const userName = document.getElementById('userNameInput').value || '[Your Name]';
+
+  // Send email via EmailJS
+  emailjs.send("service_mpx4p0t", "certificate_claimed", {
+    user_name: userName,
+    quiz_difficulty: "HARD"
+  }).then(function(response) {
+    console.log("✅ Email sent!", response.status, response.text);
+  }, function(error) {
+    console.error("❌ Failed to send email", error);
+  });
+
   const certificateDate = new Date().toLocaleDateString();
   const { jsPDF } = window.jspdf;
 
@@ -952,5 +963,12 @@ if (!testMode) {
 })();
 </script>
 <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+<!-- EmailJS integration -->
+<script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+<script type="text/javascript">
+  (function(){
+    emailjs.init("vuIOVGmElOjK_aUJK");
+  })();
+</script>
 </body>
 </html>
