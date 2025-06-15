@@ -964,10 +964,10 @@ if (!testMode) {
 </script>
 <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 </script>
-<!-- EmailJS integration (module-based) -->
-<script type="module">
-  import * as emailjs from 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-  window.emailjs = emailjs;
+</script>
+<!-- EmailJS integration (universal compatible) -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
   emailjs.init("vuIOVGmElOjK_aUJK");
 </script>
 </body>
