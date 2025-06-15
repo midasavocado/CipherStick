@@ -834,7 +834,45 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-// Firebase-based completion logger – logs ONLY for "hard" difficulty
+// ─────────────────────────────────────────────────────────────
+//  HARD-MODE Firebase attempt + completion logging
+//  • Attempts: one-time object { timestamp: ServerValue.TIMESTAMP }
+//  • Completions: .push().key with { timestamp: Date.now() }
+// ─────────────────────────────────────────────────────────────
+
+// 1️⃣  Attempt logging (identical logic to MEDIUM but path = hard)
+firebase.auth().onAuthStateChanged(function (user) {
+  if (!user) {
+    firebase.auth().signInAnonymously().catch(err =>
+      console.warn("❌ Auth error:", err.message)
+    );
+    return;
+  }
+
+  const uid = user.uid;
+  window.authUID = uid;           // keep for later
+
+  // Wait 60 s on the page before logging an attempt
+  console.info("WAITING 60 SECONDS TO LOG HARD ATTEMPT…");
+  setTimeout(function () {
+    const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
+
+    attemptRef.once('value').then(snap => {
+      if (snap.exists()) {
+        console.log("⏳ HARD attempt already logged; skipping.");
+        return;
+      }
+
+      attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
+        .then(() => console.log("✅ HARD attempt logged."))
+        .catch(err => console.warn("❌ Attempt logging failed:", err.message));
+    }).catch(err =>
+      console.warn("❌ Error checking HARD attempt:", err.message)
+    );
+  }, 60000); // 60 000 ms
+});
+
+// 2️⃣  Completion logger – **only** active for difficulty === "hard"
 function logCompletion(difficulty) {
   if (difficulty !== "hard") {
     console.warn(`⛔ Completion logging disabled for difficulty: ${difficulty}`);
@@ -843,30 +881,25 @@ function logCompletion(difficulty) {
 
   const user = firebase.auth().currentUser;
   if (!user) {
-    console.warn("❌ User not authenticated for logging completion.");
+    console.warn("❌ User not authenticated for completion logging.");
     return;
   }
 
-  const uid = user.uid;
-  const completionsRef = firebase.database().ref(`completions/hard/${uid}`);
-  const newKey = firebase.database().ref().push().key;
-  const completionData = { timestamp: Date.now() };
+  const uid          = user.uid;
+  const completions  = firebase.database().ref(`completions/hard/${uid}`);
+  const uniqueKey    = firebase.database().ref().push().key;
+  const completion   = { timestamp: Date.now() };
+  const updateObject = {};
+  updateObject[uniqueKey] = completion;
 
-  console.log("📡 Logging HARD completion to Firebase...", completionData);
+  console.log("📡 Logging HARD completion…", completion);
 
-  const updateObj = {};
-  updateObj[newKey] = completionData;
-
-  completionsRef.update(updateObj)
-    .then(() => {
-      console.log("✅ HARD completion logged:", completionData);
-    })
-    .catch((error) => {
-      console.warn("❌ HARD completion logging failed:", error.message);
-    });
+  completions.update(updateObject)
+    .then(() => console.log("✅ HARD completion logged."))
+    .catch(err => console.warn("❌ Completion logging failed:", err.message));
 }
 
-// Globally accessible
+// Expose globally (e.g., downloadCertificate → logCompletion("hard"))
 window.logCompletion = logCompletion;
 </script>
 </body>
