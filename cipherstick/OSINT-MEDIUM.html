@@ -349,14 +349,10 @@
               lastTimestamp = new Date(data.timestamp).getTime();
             }
           }
-          if (!lastTimestamp || (now - lastTimestamp) > 86400000) {
             console.log("🆕 Logging new attempt...");
             attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
               .then(() => console.log("✅ Attempt logged"))
               .catch((err) => console.warn("❌ Failed to log attempt:", err));
-          } else {
-            console.log("⏳ Attempt already logged in the last 24 hours.");
-          }
         }).catch((err) => console.warn("❌ Error checking attempt timestamp:", err));
       }, 60000); // 60 seconds
     } else {
