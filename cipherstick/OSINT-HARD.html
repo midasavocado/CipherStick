@@ -13,74 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <!-- Firebase Modular SDK for logging attempts (for new logging system) -->
-  <script type="module">
-    // Modular Firebase for logging attempts (new system)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
-    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
-    // Modular initialization (does not interfere with compat)
-    const app = initializeApp(firebaseConfig, "modular");
-    const db = getDatabase(app);
-
-    // Log attempt to Firebase after compat auth is ready and user is authenticated
-    function logAttemptAfterAuth() {
-      // Wait until firebase.auth().currentUser is set
-      function tryLog() {
-        if (
-          window.firebase &&
-          window.firebase.auth &&
-          window.firebase.auth().currentUser &&
-          window.firebase.auth().currentUser.uid
-        ) {
-          // Use the provided set() call for logging attempts
-          firebase.database().ref('attempts/hard/' + firebase.auth().currentUser.uid).set({
-            timestamp: Date.now()
-          }).then(() => {
-            console.log("✅ Attempt logged");
-          }).catch((err) => {
-            console.warn("❌ Attempt logging failed:", err);
-          });
-        } else {
-          // Try again in 500ms
-          setTimeout(tryLog, 500);
-        }
-      }
-      tryLog();
-    }
-    // Run after 60 seconds to match previous logic
-    console.log('WAITING 60 SECONDS FOR ATTEMPT');
-    setTimeout(logAttemptAfterAuth, 60000);
-  </script>
-  <script>
-    // Firebase compat initialization and anonymous auth
-    const firebaseConfig = {
-      apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
-      authDomain: "cipherstick-default-rtdb.firebaseapp.com",
-      databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
-      projectId: "cipherstick-default-rtdb",
-      storageBucket: "cipherstick-default-rtdb.appspot.com",
-      messagingSenderId: "827207706323",
-      appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
-    };
-    try {
-      firebase.initializeApp(firebaseConfig);
-      console.log("✅ Firebase initialized");
-    } catch (err) {
-      console.warn("❌ Firebase initialization failed:", err.message);
-    }
-    firebase.auth().signInAnonymously()
-      .then(userCredential => {
-        if (userCredential && userCredential.user) {
-          console.log("✅ Signed in anonymously:", userCredential.user.uid);
-        } else {
-          console.warn("❌ Anonymous sign-in: No user object returned.");
-        }
-      })
-      .catch(err => {
-        console.warn("❌ Anonymous sign-in failed:", err.message);
-      });
-  </script>
-
+  
   <style>
      :root {
       --accent-color: #ff0000; /* Dark red accent */
@@ -540,7 +473,7 @@
         }
         innerWrite();
       }
-      
+
 function loadIntroText() {
 
   let prefixInfo = "";
