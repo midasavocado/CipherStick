@@ -540,7 +540,7 @@ const questions = [
   { question: "What's the second hidden message in the video?", hint: "Listen closely and look for Morse code.", answer: "My site /cipher" },
   { question: "What is Taylor's X (Twitter) handle?", hint: "Check the profile linked from the GitHub readme.", answer: "@taylorartx" },
   { question: "What is the second repository unlock code?", hint: "Decode the hex or base64 string posted on X.", answer: "bridge" },
-  { question: "Which site is referenced in his X post (hex encoded)?", hint: "Convert the hex code to readable text.", answer: "pastebin" },
+  { question: "Which site is referenced in his X post?", hint: "Convert the hex code to readable text.", answer: "pastebin" },
   { question: "Where was Taylor on April 8th? (exact coordinates)", hint: "Clue found in the second repo secret.", answer: "37.7833° N, 122.4167° W" },
   { question: "What is Taylor's email address?", hint: "Found in the hidden page; decode the message.", answer: "taylorpaints@proton.me" }
 ];
@@ -868,7 +868,7 @@ function logCompletion(difficulty) {
               .catch(function(err) {
                 console.warn("❌ Failed to save completion:", err.message);
               });
-          } else {
+           else {
             console.warn("🛑 Already logged same number of completions as attempts");
           }
         })
