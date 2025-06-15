@@ -804,11 +804,10 @@ const requiredPrefix = "";
 </script>
 <!-- Add (or replace the old patch) near the very end of your page -->
 <!-- Drop this at the very end of the page (after all other scripts) -->
-<script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
-<script type="text/javascript">
-  (function(){
-    emailjs.init("vuIOVGmElOjK_aUJK");
-  })();
+<script type="module">
+  import emailjs from 'https://cdn.emailjs.com/dist/email.min.mjs';
+  window.emailjs = emailjs;
+  emailjs.init("vuIOVGmElOjK_aUJK");
 </script>
 <script>
 (function () {

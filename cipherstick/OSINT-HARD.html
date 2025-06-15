@@ -963,12 +963,12 @@ if (!testMode) {
 })();
 </script>
 <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
-<!-- EmailJS integration -->
-<script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
-<script type="text/javascript">
-  (function(){
-    emailjs.init("vuIOVGmElOjK_aUJK");
-  })();
+</script>
+<!-- EmailJS integration (module-based) -->
+<script type="module">
+  import emailjs from 'https://cdn.emailjs.com/dist/email.min.mjs';
+  window.emailjs = emailjs;
+  emailjs.init("vuIOVGmElOjK_aUJK");
 </script>
 </body>
 </html>
