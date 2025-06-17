@@ -196,8 +196,73 @@
     </div>
   </section>
 
-  <!-- ═════ QUIET AD SLOT ═════ -->
-  <div class="ad-banner" style="font-size: 10px; color: rgb(58, 63, 71);"></div>
+  <!-- ═════ EMAIL SIGNUP SECTION ═════ -->
+  <section class="section alt-bg">
+    <div class="container">
+      <h2 class="section-title">Want Updates When New Puzzles Drop?</h2>
+      <p style="color: #ccc; max-width: 600px; margin: 0 auto 1.5rem; font-size: 1.1rem;">
+        Enter your email and we'll let you know whenever a new CipherStick challenge goes live. No spam. Ever.
+      </p>
+      <form
+        action="https://buttondown.com/api/emails/embed-subscribe/cipherstick"
+        method="post"
+        target="popupwindow"
+        onsubmit="window.open('https://cipherstick.tech', 'popupwindow')"
+        style="display: flex; flex-direction: column; gap: 1rem; align-items: center; max-width: 500px; margin: 0 auto;"
+      >
+        <input
+          type="email"
+          name="email"
+          id="bd-email"
+          required
+          placeholder="you@example.com"
+          style="padding: 14px; width: 100%; border: none; border-radius: 6px; font-size: 1rem;"
+        />
+        <input
+          type="submit"
+          value="Notify Me"
+          style="background-color: #0d00ff; color: white; padding: 14px 28px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 12px;"
+        />
+      </form>
+    </div>
+  </section>
+
+  <!-- ═════ FAQ SECTION (replaces ad-banner) ═════ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <div class="faq-item">
+        <button class="faq-question">Is this really free?</button>
+        <div class="faq-answer">
+          <p>Yep! Every puzzle is 100% free to play—no account, no signup!</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Do I need to install anything?</button>
+        <div class="faq-answer">
+          <p>Nope. Everything runs right in your browser. Just click and start the challenge.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Is this suitable for classrooms or workshops?</button>
+        <div class="faq-answer">
+          <p>Absolutely. It's perfect for OSINT demos, CTF warmups, and even homeschool use.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+    <button class="faq-question">How can I support this?</button>
+    <div class="faq-answer">
+      <p>You can <a href="https://www.buymeacoffee.com/midasthecoder" target="_blank" style="color: #44aaff; font-weight: bold; text-decoration: underline;">buy me a coffee</a> or <a href="#" onclick="event.preventDefault(); navigator.share({ title: 'CipherStick', text: 'Train your OSINT skills with these free browser puzzles!', url: window.location.href });" style="color: #44aaff; font-weight: bold; text-decoration: underline;">share CipherStick</a> with a friend!</p>
+    </div>
+  </div>
+  <button class="faq-question">How often do new puzzles come out?</button>
+    <div class="faq-answer">
+      <p>It depends! Sometimes I will drop one in a week, sometimes it takes longer. Follow us or check back often to catch the newest drops.</p>
+    </div>
+      <div class="faq-item">
+  </div>
+    </div>
+  </section>
 
   <!-- ═════ CONTACT ═════ -->
   <section id="contact" class="section">
@@ -293,4 +358,46 @@ try {
 }
 </script>
 </body>
+  <style>
+  .faq-item {
+    margin: 1rem 0;
+  }
+
+  .faq-question {
+    background-color: #1a1a2a;
+    color: white;
+    padding: 12px 16px;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+
+  .faq-answer {
+    display: none;
+    padding: 10px 16px;
+    background: #1a1a1a;
+    color: white;
+    border-radius: 0 0 8px 8px;
+    font-size: 0.95rem;
+  }
+
+  .faq-question.active + .faq-answer {
+    display: block;
+  }
+  </style>
+
+  <script>
+    document.querySelectorAll('.faq-question').forEach(button => {
+      button.addEventListener('click', () => {
+        button.classList.toggle('active');
+        const answer = button.nextElementSibling;
+        answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+      });
+    });
+  </script>
 </html>
