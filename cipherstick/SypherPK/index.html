@@ -446,8 +446,9 @@
   <dialog id="loginModal">
     <form id="loginForm" method="dialog" autocomplete="off">
       <h2>Admin Login</h2>
+      <input type="hidden" id="emailInput" value="sypher@sypherpk.com">
       <label>Password:
-        <input type="password" id="passwordInput" required autofocus>
+        <input type="password" id="passwordInput" required>
       </label>
       <menu>
         <button value="cancel" onclick="document.getElementById('loginModal').close()">Cancel</button>
@@ -492,6 +493,7 @@
       loginModal: $('loginModal'),
       loginForm: $('loginForm'),
       loginError: $('loginError'),
+      emailInput: $('emailInput'),
       passwordInput: $('passwordInput'),
       addUserForm: $('addUserForm'),
       twitchUsername: $('twitchUsername'),
@@ -711,6 +713,7 @@ ui.adminNotice.textContent = manual
     ui.logoutBtn.onclick = () => setAdminMode(false);
     ui.loginForm.onsubmit = (e) => {
       e.preventDefault();
+      const email = ui.emailInput.value;
       const password = ui.passwordInput.value;
       if (password === '12345') {
         setAdminMode(true, true); // manual login
