@@ -444,7 +444,7 @@
     </div>
   </main>
   <dialog id="loginModal">
-    <form id="loginForm" method="dialog" autocomplete="off">
+    <form id="loginForm" method="dialog" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();}">
       <h2>Admin Login</h2>
       <label>Password:
         <input type="password" id="passwordInput" required>
@@ -461,7 +461,6 @@
     // Firebase imports and initialization
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getDatabase, ref, set, get, onValue, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBxQTPd-xZy-Iyid3Wxw4i9_TdYUXd543o",
@@ -476,7 +475,6 @@
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-    const auth = getAuth(app);
 
     // State and admin logic
     const STATE = {
@@ -713,16 +711,25 @@ ui.adminNotice.textContent = manual
     ui.logoutBtn.onclick = () => setAdminMode(false);
     ui.loginForm.onsubmit = async (e) => {
       e.preventDefault();
-      const email = "66.drowsy.helpful@icloud.com";
       const password = ui.passwordInput.value;
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        setAdminMode(true, true); // authenticated
-        ui.loginModal.close();
-      } catch (error) {
-        console.error(error);
-        ui.loginError.textContent = '❌ Incorrect login';
+        const res = await fetch("https://sypherpk.mwsaulsbury.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        });
+
+        const result = await res.json();
+        if (result.ok) {
+          setAdminMode(true, true);
+          ui.loginModal.close();
+        } else {
+          ui.loginError.textContent = "❌ Incorrect password";
+        }
+      } catch (err) {
+        console.error(err);
+        ui.loginError.textContent = "⚠️ Server error";
       }
     };
 
