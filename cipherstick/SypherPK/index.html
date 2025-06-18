@@ -446,7 +446,6 @@
   <dialog id="loginModal">
     <form id="loginForm" method="dialog" autocomplete="off">
       <h2>Admin Login</h2>
-      <input type="hidden" id="emailInput" value="sypher@sypherpk.com">
       <label>Password:
         <input type="password" id="passwordInput" required>
       </label>
@@ -462,6 +461,7 @@
     // Firebase imports and initialization
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getDatabase, ref, set, get, onValue, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBxQTPd-xZy-Iyid3Wxw4i9_TdYUXd543o",
@@ -476,6 +476,7 @@
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
+    const auth = getAuth(app);
 
     // State and admin logic
     const STATE = {
@@ -493,7 +494,6 @@
       loginModal: $('loginModal'),
       loginForm: $('loginForm'),
       loginError: $('loginError'),
-      emailInput: $('emailInput'),
       passwordInput: $('passwordInput'),
       addUserForm: $('addUserForm'),
       twitchUsername: $('twitchUsername'),
@@ -711,15 +711,18 @@ ui.adminNotice.textContent = manual
       ui.passwordInput.value = '';
     });
     ui.logoutBtn.onclick = () => setAdminMode(false);
-    ui.loginForm.onsubmit = (e) => {
+    ui.loginForm.onsubmit = async (e) => {
       e.preventDefault();
-      const email = ui.emailInput.value;
+      const email = "66.drowsy.helpful@icloud.com";
       const password = ui.passwordInput.value;
-      if (password === '12345') {
-        setAdminMode(true, true); // manual login
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        setAdminMode(true, true); // authenticated
         ui.loginModal.close();
-      } else {
-        ui.loginError.textContent = '❌ Incorrect password';
+      } catch (error) {
+        console.error(error);
+        ui.loginError.textContent = '❌ Incorrect login';
       }
     };
 
