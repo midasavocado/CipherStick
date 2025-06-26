@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CipherStick: Hard - The Digital Enigma</title>
+  <title>CipherStick: The Fall of Enoch Hayes</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
   <!-- Confetti + jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -14,13 +14,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
-     :root {
-      --accent-color: #ff0000; /* Dark red accent */
-      --text-color: #ffffff;   /* Primary text color */
-      --border-hover: rgba(255, 0, 0, 0.4);
-      --warning-color: #f1c40f;
-      --danger-color: #e74c3c;
-      --success-color: #28a745;
+    :root {
+      --accent-color: #00ff00; /* Neon green */
+      --text-color: #d5ffd5;
+      --border-hover: rgba(0, 255, 0, 0.4);
+      --warning-color: #39ff14;
+      --danger-color: #ff5555;
+      --success-color: #00ff00;
     }
 
     /* Reset & Box Sizing */
@@ -33,7 +33,7 @@
     /* BODY: With background image + an optional subtle black overlay */
     body {
       font-family: 'Open Sans', sans-serif;
-      background: url('HARD_BG.png') no-repeat center center fixed;
+      background: url('EXTREME_BG.png') no-repeat center center fixed;
       background-size: cover;
       min-height: 100vh;
       display: flex;
@@ -191,10 +191,10 @@
       transform: translateY(-3px);
     }
     .btn-check {
-      background: linear-gradient(135deg, #b30000, #7a0000);
+      background: linear-gradient(135deg, #00aa00, #006600);
     }
     .btn-check:hover {
-      background: linear-gradient(135deg, #ff0000, #990000);
+      background: linear-gradient(135deg, #00ff00, #009900);
       transform: translateY(-3px);
     }
 
@@ -328,7 +328,7 @@
     .btn-certificate {
       margin-top: 1rem;
       padding: 0.75rem 1.5rem;
-      background: linear-gradient(135deg, #b30000, #7a0000);
+      background: linear-gradient(135deg, #00b11b, #00b11b);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -342,7 +342,7 @@
       text-shadow: none;
     }
     .btn-certificate:hover {
-      background: linear-gradient(135deg, #ff0000, #990000);
+      background: linear-gradient(135deg, #00b11b, #00b11b);
       transform: translateY(-3px);
     }
 
@@ -382,7 +382,7 @@
 <body>
   <header>
     <a href="index.html">
-    <img src="HARD.png" alt="CipherStick: Hard"/>
+    <img src="EXTREME.png" alt="CipherStick: Extreme"/>
   </a>
   </header>
 
@@ -406,11 +406,27 @@
       </ul>
     </details>
 
+    <details style="margin: 1rem 0; background: rgba(0, 0, 0, 0.6); border-left: 5px solid var(--accent-color); padding: 1rem; border-radius: 8px;">
+      <summary style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">📝 Feedback Form</summary>
+      <div style="margin-top: 1rem; text-align: center;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLScpWzrqjo04XjBt5hx0YuHGTICWWRn9C_gRoF_vRHaO13cTCg/viewform?usp=sharing&ouid=114401666501663284939"
+           target="_blank"
+           style="background:#00aa00; color:#fff; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; text-decoration: none;
+                  box-shadow: 0 4px 10px rgba(0,0,0,0.3); display:inline-block;">
+          📝 Submit Feedback on This New Challenge
+        </a>
+      </div>
+    </details>
+
     <div id="questionsContainer"></div>
 
     <div id="finalMessage">
       <h2 style="color: #ffcc00;">You beat it!</h2>
       <button class="btn-certificate" onclick="openCertificateModal()">Claim Your Certificate</button>
+    </div>
+    <div id="formReminder" style="text-align:center; margin-top:1rem; display:none;">
+      <p style="color:#0f0; font-weight:bold;">New Challenge! Before you go, please fill out our short feedback form:</p>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScpWzrqjo04XjBt5hx0YuHGTICWWRn9C_gRoF_vRHaO13cTCg/viewform?usp=sharing&ouid=114401666501663284939" target="_blank" style="color:#00ff00; text-decoration:underline;">Submit Feedback Form</a>
     </div>
   </div>
 
@@ -429,7 +445,7 @@
   </footer>
 
 <script>
-  function logCompletion() {
+function logCompletion() {
     if (testMode) {
       console.warn("🚫 Test mode active — skipping completion logging.");
       return;
@@ -440,9 +456,9 @@
         return;
       }
       const uid = window.authUID;
-      // Use "medium" as database record path, matching naming convention
-      const completionsRef = firebase.database().ref("completions/hard/" + uid);
-      const attemptsRef = firebase.database().ref("attempts/hard/" + uid);
+      // Use "extreme" as database record path, matching naming convention
+      const completionsRef = firebase.database().ref("completions/extreme/" + uid);
+      const attemptsRef = firebase.database().ref("attempts/extreme/" + uid);
       console.log("🔄 Checking completions and attempts for user...");
       // Fetch attempts and completions
       attemptsRef.once("value").then((attemptSnap) => {
@@ -466,7 +482,6 @@
           completionsRef.update(updateData)
             .then(() => {
               console.log("✅ Completion logged");
-
             })
             .catch(error => {
               console.warn("❌ Completion logging failed:", error);
@@ -478,33 +493,28 @@
   }
 
 function loadIntroText() {
-
   let prefixInfo = "";
-
   if (prefixEnabled) {
     prefixInfo = `<p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>`;
   }
-
   const introHTML = `
-    <p>Welcome to <strong>The Digital Enigma</strong>, an advanced open-source intelligence (OSINT) challenge designed to push your skills to their limits. You'll investigate the mysterious disappearance of Taylor, a digital artist whose final clues lie scattered across social media, images, and hidden data trails.</p>
-    <p>Your investigation begins at: <a href="https://taylorartx.wordpress.com" target="_blank" style="color:#fff;">taylorartx.wordpress.com</a><br>Password: <code style="background:rgba(0,0,0,0.5);">TaylorPaints</code></p>
-    <p>Use your wits, curiosity, and OSINT tools to uncover secrets buried in metadata, inspect source code, decode messages, and follow digital footprints to uncover the truth.</p>
-    <p>If you are new to OSINT, I reccomend <a href="https://www.youtube.com/watch?v=Sa5LbKqCmFI" target="_blank">this video</a> to familiarize yourself with it</p>
-
-    ` + prefixInfo + `
-
-    <p>Good luck, Agent.</p>
-  `;
+      <p>Welcome to <strong>The Fall of Enoch Hayes</strong>, the most advanced Cipherstick challenge yet. Security consultant Enoch Hayes vanished after exposing a backdoor in the <em>Sentinel-9</em> satellite. He scattered clues across dead blogs, glitched images, and forgotten files. Retrace his trail and learn why he was silenced.</p>
+      <p>Your investigation begins at: <a href="https://enochfiles.netlify.app" target="_blank" style="color:#0f0;">enochfiles.netlify.app</a></p>
+      ${prefixInfo} All link answers must be in the format hx{https://example.com/}<br><br>
+      <p>Good luck, Agent.</p>
+    `;
   document.getElementById("introText").innerHTML = introHTML;
 }
 
 
-const q = `W3sicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgVVJMIG9mIHRoZSB3ZWJzaXRlIHdoZXJlIHRoZSBpbnZlc3RpZ2F0aW9uIGJlZ2lucz8iLCAiaGludCI6ICJUaGUgV29yZFByZXNzIHNpdGUgbWVudGlvbmVkIGluIHRoZSBjYXNlIGJyaWVmaW5nLiIsICJhbnN3ZXIiOiAidGF5bG9yYXJ0eC53b3JkcHJlc3MuY29tIn0sIHsicXVlc3Rpb24iOiAiRG9lcyBUYXlsb3IgaGF2ZSBhIGJvc3M/IiwgImhpbnQiOiAiIiwgImFuc3dlciI6ICJubyJ9LCB7InF1ZXN0aW9uIjogIldoZW4gd2FzIFRheWxvcidzIG1vc3QgcmVjZW50IGJsb2cgcG9zdCBwdWJsaXNoZWQ/IiwgImhpbnQiOiAiQ2hlY2sgdGhlIHBvc3QgZGF0ZS4gRm9ybWF0OiBNTS9ERC9ZWSIsICJhbnN3ZXIiOiAiMDQvMDgvMjUifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIFRheWxvcidzIFdvcmRQcmVzcyB1c2VybmFtZT8iLCAiaGludCI6ICJMb29rIHVuZGVyIHRoZSBwb3N0IHRpdGxlIGZvciBhdXRob3IgaW5mby4iLCAiYW5zd2VyIjogInRheWxvcmlzZ29vZGF0YXJ0In0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgZmlsZW5hbWUgb2YgdGhlIHVwbG9hZGVkIHBhaW50aW5nPyIsICJoaW50IjogIkNoZWNrIHRoZSBpbWFnZSBVUkwgZm9yIGZpbGVuYW1lICsgZXh0ZW5zaW9uLiIsICJhbnN3ZXIiOiAiYnJpZGdlLmpwZWcifSwgeyJxdWVzdGlvbiI6ICJXaGVyZSBpcyB0aGUgaW1hZ2UgaG9zdGVkPyIsICJoaW50IjogIkNoZWNrIHRoZSBpbWFnZSBzb3VyY2UgbGluay4iLCAiYW5zd2VyIjogIkdpdEh1YiJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgVGF5bG9yJ3MgR2l0SHViIHVzZXJuYW1lPyIsICJoaW50IjogIkl0J3MgaW4gdGhlIGltYWdlIFVSTCBhbmQgcmVwbyBuYW1lLiIsICJhbnN3ZXIiOiAiVGF5bG9yQXJ0WCJ9LCB7InF1ZXN0aW9uIjogIldoYXQncyB0aGUgaGlkZGVuIG1lc3NhZ2UgaW4gdGhlIHBob3RvPyIsICJoaW50IjogIkV4dHJhY3QgbWV0YWRhdGEgYW5kIGRlY29kZSBhbnkgYmFzZTY0IHRleHQuIiwgImFuc3dlciI6ICJhcnQgaXMgdGhlIGtleSJ9LCB7InF1ZXN0aW9uIjogIldoZXJlIHdhcyB0aGUgcGhvdG8gcGFpbnRlZD8iLCAiaGludCI6ICJNZXRhZGF0YSBtYXkgY29udGFpbiBHUFMgY29vcmRpbmF0ZXMuIiwgImFuc3dlciI6ICIzNy43NzQ5XHUwMGIwIE4sIDEyMi40MTk0XHUwMGIwIFcifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSB1bmxvY2sgY29kZSBmb3IgdGhlIGZpcnN0IHNlY3JldCBpbiB0aGUgcmVwbz8iLCAiaGludCI6ICJJdCBsb29rZWQgZW5jb2RlZCwgYnV0IGlzIGl0IHJlYWxseT8iLCAiYW5zd2VyIjogIklGWlhJPT09In0sIHsicXVlc3Rpb24iOiAiV2hhdFx1MjAxOXMgdGhlIHBhc3N3b3JkIHRvIHRoZSBXb3JkUHJlc3Mgc2l0ZT8iLCAiaGludCI6ICJDaGVjayB0aGUgY2FzZSBicmllZmluZyBhYm92ZS4iLCAiYW5zd2VyIjogIlRheWxvclBhaW50cyJ9LCB7InF1ZXN0aW9uIjogIldoYXQgcGxhdGZvcm0gaXMgdGhlIGVtYmVkZGVkIHZpZGVvIGhvc3RlZCBvbj8iLCAiaGludCI6ICJIb3ZlciBvdmVyIHRoZSBlbWJlZGRlZCB2aWRlbyBvciBjaGVjayBzb3VyY2UgY29kZS4iLCAiYW5zd2VyIjogIlZpbWVvIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBkYXRlIHdhcyB0aGUgdmlkZW8gcmVjb3JkZWQ/IiwgImhpbnQiOiAiVXNlIE1NL0REL1lZLiIsICJhbnN3ZXIiOiAiMDQvMDgvMjUifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGFpcmxpbmUgaXMgVGF5bG9yIGZseWluZyBiYWNrIHdpdGg/IiwgImhpbnQiOiAiU2VhcmNoIHRoZSBmbGlnaHQgbnVtYmVyLCB1c2UgMy1sZXR0ZXIgYWlybGluZSBjb2RlIChlLmcuIFVBTCkuIiwgImFuc3dlciI6ICJVQUwifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIFRheWxvclx1MjAxOXMgZnVsbCBmbGlnaHQgbnVtYmVyPyIsICJoaW50IjogIkZvcm1hdDogQUJDMTIzNCIsICJhbnN3ZXIiOiAiVUFMMTUxNyJ9LCB7InF1ZXN0aW9uIjogIldoYXQgc3RhdGUgZG9lcyBUYXlsb3IgbGl2ZSBpbj8iLCAiaGludCI6ICJGaW5kIHRoZSBkZXN0aW5hdGlvbiBhaXJwb3J0IGFuZCBkZWR1Y2UgdGhlIHN0YXRlLiIsICJhbnN3ZXIiOiAidGV4YXMifSwgeyJxdWVzdGlvbiI6ICJXaGljaCBhaXJwb3J0IGRpZCB0aGUgZmxpZ2h0IGxhbmQgYXQ/IiwgImhpbnQiOiAiVXNlIHRoZSBmbGlnaHQgaW5mbyB0byBkZXRlcm1pbmUgdGhlIElBVEEgY29kZS4iLCAiYW5zd2VyIjogIkRGVyJ9LCB7InF1ZXN0aW9uIjogIldoYXQncyB0aGUgc2Vjb25kIGhpZGRlbiBtZXNzYWdlIGluIHRoZSB2aWRlbz8iLCAiaGludCI6ICJMaXN0ZW4gY2xvc2VseSBhbmQgbG9vayBmb3IgTW9yc2UgY29kZS4iLCAiYW5zd2VyIjogIk15IHNpdGUgL2NpcGhlciJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgVGF5bG9yJ3MgWCAoVHdpdHRlcikgaGFuZGxlPyIsICJoaW50IjogIkNoZWNrIHRoZSBwcm9maWxlIGxpbmtlZCBmcm9tIHRoZSBHaXRIdWIgcmVhZG1lLiIsICJhbnN3ZXIiOiAiQHRheWxvcmFydHgifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBzZWNvbmQgcmVwb3NpdG9yeSB1bmxvY2sgY29kZT8iLCAiaGludCI6ICJEZWNvZGUgdGhlIGhleCBvciBiYXNlNjQgc3RyaW5nIHBvc3RlZCBvbiBYLiIsICJhbnN3ZXIiOiAiYnJpZGdlIn0sIHsicXVlc3Rpb24iOiAiV2hpY2ggc2l0ZSBpcyByZWZlcmVuY2VkIGluIGhpcyBYIHBvc3Q/IiwgImhpbnQiOiAiQ29udmVydCB0aGUgaGV4IGNvZGUgdG8gcmVhZGFibGUgdGV4dC4iLCAiYW5zd2VyIjogInBhc3RlYmluIn0sIHsicXVlc3Rpb24iOiAiV2hlcmUgd2FzIFRheWxvciBvbiBBcHJpbCA4dGg/IChleGFjdCBjb29yZGluYXRlcykiLCAiaGludCI6ICJDbHVlIGZvdW5kIGluIHRoZSBzZWNvbmQgcmVwbyBzZWNyZXQuIiwgImFuc3dlciI6ICIzNy43ODMzXHUwMGIwIE4sIDEyMi40MTY3XHUwMGIwIFcifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIFRheWxvcidzIGVtYWlsIGFkZHJlc3M/IiwgImhpbnQiOiAiRm91bmQgaW4gdGhlIGhpZGRlbiBwYWdlOyBkZWNvZGUgdGhlIG1lc3NhZ2UuIiwgImFuc3dlciI6ICJ0YXlsb3JwYWludHNAcHJvdG9uLm1lIn1d`;
-const questions = JSON.parse(atob(q));
+const q = `WwogIHsKICAgICJxdWVzdGlvbiI6ICJXaGVuIGRpZCBFbm9jaCBIYXllcyBwb3N0IHRoZSBibG9nIGVudHJ5IHRoYXQgc3RhcnRzIHRoZSBwdXp6bGU/IiwKICAgICJoaW50IjogIlR5cGUgaXQgaW4gZXhhY3RseSBhcyBpdCBpcyBvbiB0aGUgd2Vic2l0ZSIsCiAgICAiYW5zd2VyIjogIkFwcmlsIDEzLCAyMDIzIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgd2FzIHRoZSBwYXNzd29yZCB0byB0aGUgWklQIGZpbGU/IiwKICAgICJoaW50IjogIlRyeSBjb252ZXJ0aW5nIHRoZSBiYXNlNjQgaW4gL2NvZGUgdG8gYW4gaW1hZ2UiLAogICAgImFuc3dlciI6ICJmYU4yd3EhIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgbGluayBkb2VzIHRoZSB1bmxvY2tlZCBaSVAgZmlsZSBwb2ludCB0bz8iLAogICAgImhpbnQiOiAiRG9u4oCZdCBoYXZlIGEgY2x1ZSB3aGljaCBaSVAgZmlsZSBJ4oCZbSB0YWxraW5nIGFib3V0PyBVc2UgYSB0b29sIGxpa2UgaHR0cHM6Ly9iYXNlNjQuZ3VydS9jb252ZXJ0ZXIvZGVjb2RlL2ZpbGUgdG8gZGlyZWN0bHkgY29udmVydCB0aGUgYmFzZTY0IGdpdmVuIGluIDExOS50eHQgdG8gYSBmaWxlLCB0aGVuIHVubG9jayBpdC4iLAogICAgImFuc3dlciI6ICJodHRwczovL3guY29tL0Vub2NoSGF5ZXMxMTkiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyBFbm9jaOKAmXMgcHJvZmlsZSBhIHBpY3R1cmUgb2Y/IiwKICAgICJoaW50IjogIiIsCiAgICAiYW5zd2VyIjogIkNhcHliYXJhIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgd2Vic2l0ZSBkb2VzIHRoZSBpbWFnZSBoZSBwb3N0ZWQgcG9pbnQgdG8/IiwKICAgICJoaW50IjogIkluc3BlY3QgdGhlIGltYWdlIGZvciBpdHMgbWV0YWRhdGEuIENvcHkgdGhlIGxpbmsgZXhhY3RseSBpbnRvIHRoZSBhbnN3ZXIgYm94IiwKICAgICJhbnN3ZXIiOiAiaHR0cHM6Ly9naG9zdC1vZi1oYXllcy5uZXRsaWZ5LmFwcCIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IHdhcyB0aGUgbmFtZSBvZiB0aGUgZmlsZSBpbiB3aGljaCB5b3UgZm91bmQgdGhlIG5leHQgbGluaz8iLAogICAgImhpbnQiOiAiUm9ib3RzIiwKICAgICJhbnN3ZXIiOiAicm9ib3RzLnR4dCIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IHdhcyB0aGUgVVJMIHRoYXQgdGhhdCBwYWdlIHBvaW50ZWQgdG8/IiwKICAgICJoaW50IjogIi4iLAogICAgImFuc3dlciI6ICJodHRwczovL2dob3N0LW9mLWhheWVzLm5ldGxpZnkuYXBwL3dhdGNoZXIuIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIHVubG9jayBjb2RlIHRvIHRoZSB3YXRjaGVyX2xvZ3MuemlwIGZpbGU/IiwKICAgICJoaW50IjogIkVub2NoIHR3ZWV0ZWQgdGhpcyB3b3JkLiBPbmUgd29yZC4iLAogICAgImFuc3dlciI6ICJhbmVtb2lhIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoaWNoIGZpbGUgaXMgbm90IGFzIGl0IHNlZW1zPyIsCiAgICAiaGludCI6ICJQcm92aWRlIHRoZSBlbnRpcmUgZmlsZW5hbWUiLAogICAgImFuc3dlciI6ICJGbGFnLmdpZiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSB0cnVlIGV4dGVuc2lvbiBvZiB0aGF0IGZpbGU/IiwKICAgICJoaW50IjogIiIsCiAgICAiYW5zd2VyIjogIi56aXAiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgbWVzc2FnZSBpbiB0aGUgdW5kZXJjb3ZlciBmaWxlPyIsCiAgICAiaGludCI6ICJEZWNvZGUgaXQiLAogICAgImFuc3dlciI6ICJUaGUgbXAzIHNwZWFrcyB2b2x1bWVzLCBidXQgbm90IHRocm91Z2ggeW91ciBlYXJzLiBZb3XigJlsbCBuZWVkIHRvIGNoYW5nZSBob3cgeW91IHNlZSBpdC4iCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgbmFtZSBvZiB0aGUgc2Vjb25kIHVuZGVyY292ZXIgZmlsZT8iLAogICAgImhpbnQiOiAiIiwKICAgICJhbnN3ZXIiOiAiQXVkaW8ubXAzIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgRW5vY2jigJlzIGVtYWlsPyIsCiAgICAiaGludCI6ICJMb29rIGF0IHRoZSBpbWFnZSIsCiAgICAiYW5zd2VyIjogImVub2NoLnNlY0Bwcm90b24ubWUiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyBFbm9jaOKAmXMgR2l0SHViIHVzZXJuYW1lPyIsCiAgICAiaGludCI6ICIiLAogICAgImFuc3dlciI6ICJaZXJvU2NoZW1hIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIFVSTCBvZiB0aGUgZmluYWwgcGFnZT8iLAogICAgImhpbnQiOiAiUHJvdmlkZSB0aGUgZnVsbCBsaW5rIiwKICAgICJhbnN3ZXIiOiAiaHR0cHM6Ly9lbm9jaGZpbGVzLm5ldGxpZnkuYXBwL3RoZXJlYWxpdHkiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hpY2ggc2l0ZSBkaWQgeW91IHVzZSB0byBhY2Nlc3MgdGhlIGRlbGV0ZWQgcGFnZT8iLAogICAgImhpbnQiOiAiUHJvdmlkZSBvbmx5IHRoZSBwYXJlbnQgd2Vic2l0ZSAoZWcuIGh0dHBzOi8vZW5vY2hmaWxlcy5uZXRsaWZ5LmFwcC90aGVyZWFsaXR5ID0gbmV0bGlmeS5hcHApIiwKICAgICJhbnN3ZXIiOiAiYXJjaGl2ZS5vcmciCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hpY2ggY29tbWFuZCBkaWQgeW91IHVzZSB0byBnZXQgdGhlIGZpbmFsIG1lc3NhZ2U/IiwKICAgICJoaW50IjogIiIsCiAgICAiYW5zd2VyIjogImN1cmwgLWQgJ2F1dGg9ZGV2X0FFVEhFUi5wZW0mdGFyZ2V0PVNlbnRpbmVsLTkmbW9kZT1LSU5FVElDJyBodHRwczovL3NpdGUtYmx4ay5vbnJlbmRlci5jb20vdXBsaW5rIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIHNlY29uZCBzdGF0ZW1lbnQgeW91IGdvdCB3aGVuIHJ1bm5pbmcgdGhhdCBjb21tYW5kPyIsCiAgICAiaGludCI6ICIiLAogICAgImFuc3dlciI6ICJJdCdzIGEgd2VhcG9uLiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJCT05VUyBRVUVTVElPTjogQmFzZWQgb24gYWxsIHlvdSBrbm93LCB3aGF0IGlzIEVub2No4oCZcyBmYXZvcml0ZSBudW1iZXI/IiwKICAgICJoaW50IjogIiIsCiAgICAiYW5zd2VyIjogIjExOSIKICB9Cl0=`;
+const decoder = new TextDecoder('utf-8');
+const jsonString = decoder.decode(Uint8Array.from(atob(q), c => c.charCodeAt(0)));
+const questions = JSON.parse(jsonString);
 
 
-const storageKeyPrefix = "OSINT-HARD";
-const requiredPrefix = "pr{";
+const storageKeyPrefix = "OSINT-EXTREME";
+const requiredPrefix = "hx{";
 const requiredSuffix = "}";
 const prefixEnabled = requiredPrefix.trim() !== "";
 let quizCompleted = false;
@@ -579,6 +589,7 @@ function checkAllAnswers() {
   if (allCorrect && !quizCompleted) {
     quizCompleted = true;
     finalMessage.style.display = 'block';
+    document.getElementById("formReminder").style.display = "block";
     startVictoryConfetti();
     showVictoryOverlay();
     logCompletion();
@@ -616,6 +627,7 @@ function checkAllAnswers() {
   } else if (!allCorrect) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
+    document.getElementById("formReminder").style.display = "none";
   }
 }
 
@@ -722,7 +734,7 @@ function downloadCertificate() {
   // Send email via EmailJS
   emailjs.send("service_mpx4p0t", "certificate_claimed", {
     user_name: userName,
-    quiz_difficulty: "HARD"
+    quiz_difficulty: "EXTREME"
   }).then(function(response) {
     console.log("✅ Email sent!", response.status, response.text);
   }, function(error) {
@@ -736,18 +748,18 @@ function downloadCertificate() {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Simple red-themed certificate
-  doc.setFillColor(70, 0, 0);
+  // Green-themed certificate
+  doc.setFillColor(0, 40, 0);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  doc.setDrawColor(241, 196, 15);
+  doc.setDrawColor(0, 255, 0);
   doc.setLineWidth(0.25);
   doc.rect(0.25, 0.25, pageWidth - 0.5, pageHeight - 0.5);
 
   doc.setFont('times', 'bolditalic');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(28);
-  doc.text('Certificate of Mastery', pageWidth / 2, 1.5, { align: 'center' });
+  doc.text('Certificate of Achievement', pageWidth / 2, 1.5, { align: 'center' });
 
   doc.setFontSize(18);
   doc.text('This certifies that', pageWidth / 2, 2.5, { align: 'center' });
@@ -757,7 +769,7 @@ function downloadCertificate() {
 
   doc.setFontSize(18);
   doc.text('has successfully completed', pageWidth / 2, 4.5, { align: 'center' });
-  doc.text('CipherStick: HARD - The Digital Enigma', pageWidth / 2, 5, { align: 'center' });
+  doc.text('CipherStick: EXTREME - The Fall of Enoch Hayes', pageWidth / 2, 5, { align: 'center' });
 
   doc.setFontSize(16);
   doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: 'center' });
@@ -770,9 +782,7 @@ function downloadCertificate() {
   doc.save("DigitalEnigma-Certificate.pdf");
   // Firebase completion logging (runs only when certificate is generated)
 
-
   // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
-  
 
   document.getElementById('nameInputModal').style.display = 'none';
 }
@@ -833,8 +843,8 @@ if (!testMode) {
       // Set timer to log attempt after 60 seconds on the page
       console.info("WAITING 60 SECONDS FOR ATTEMPT TO LOG")
       setTimeout(function() {
-        // Use "medium" as database record path, matching naming convention
-        const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
+        // Use "extreme" as database record path, matching naming convention
+        const attemptRef = firebase.database().ref(`attempts/extreme/${uid}`);
         attemptRef.once('value').then(snap => {
           const data = snap.val();
           const now = Date.now();
@@ -868,7 +878,7 @@ if (!testMode) {
 <script>
 (function () {
   const BTN_W = '200px';
-  const TITLE = 'CipherStick: HARD - The Digital Enigma';
+  const TITLE = 'CipherStick: EXTREME - THE FALL OF ENOCH HAYES';
   const MSG   = 'Try to solve this OSINT challenge!';
   const LINK  = location.href;
 
@@ -898,7 +908,7 @@ if (!testMode) {
     const html = `
       <div id="feedbackModal" class="name-input-modal" style="display:none;background:rgba(0,0,0,1);">
         <h2 style="margin-bottom:.75rem; color: white">Did you enjoy the challenge?</h2>
-        <p style="margin-bottom:1rem; color: white">Share it with friends to spread the word!</p>
+        <p style="margin-bottom:1rem; color: white">Share it with friends to spread the word! Or fill out the feedback form below to let us know what you thought.</p>
         <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.2rem;">
           <button onclick="showNativeShare()" style="width:${BTN_W};padding:.6rem 0;background:#b30000;color:#fff;border:none;border-radius:6px;
                   cursor:pointer;font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:.6rem;">
@@ -909,6 +919,12 @@ if (!testMode) {
                     cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
                     margin-bottom:1.2rem;">
             📬 Sign Up for More Challenges
+          </a>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLScpWzrqjo04XjBt5hx0YuHGTICWWRn9C_gRoF_vRHaO13cTCg/viewform?usp=sharing&ouid=114401666501663284939" target="_blank"
+             style="width:200px;padding:.6rem 0;background:#00aa00;color:#fff;border:none;border-radius:6px;
+                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
+                    margin-bottom:1.2rem;">
+            📝 Give Feedback
           </a>
           <a href="https://buymeacoffee.com/midasthecoder" target="_blank"
              style="width:${BTN_W};padding:.6rem 0;background:#FFDD00;color:#000;border:none;border-radius:6px;
@@ -946,7 +962,7 @@ if (!testMode) {
   window.closeFeedback = closeFeedback;
 })();
 </script>
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="rgb(0,150,0)" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 </script>
 </script>
 <!-- EmailJS integration (universal compatible) -->

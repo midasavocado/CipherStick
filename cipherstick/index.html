@@ -25,7 +25,26 @@
   
 </style>
   <style>
-    
+    .new-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #00ff00;
+  color: black;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  animation: pulse 2.5s infinite ease-in-out;
+  box-shadow: 0 0 10px #00ff00;
+  z-index: 10;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 8px #00ff00; }
+  50% { transform: scale(1.15); box-shadow: 0 0 20px #00ff00; }
+  100% { transform: scale(1); box-shadow: 0 0 8px #00ff00; }
+}
   .challenge-stats-corner {
     position: absolute;
     bottom: 18px;
@@ -154,8 +173,23 @@
   <section id="challenges" class="section alt-bg">
     <div class="container">
       <h2 class="section-title">Choose&nbsp;Your&nbsp;Challenge</h2>
-
+<article class="challenge-card" id="card-extreme">
+  <div class="new-badge">NEW!</div>
+          <img src="EXTREME.png" alt="Extreme banner">
+          <div class="card-content">
+            <h4><em>The Fall of Enoch Hayes</em>&nbsp;&nbsp;<span style="color: #ffffff; font-weight: bold;">(Extreme)</span></h4>
+            <p>Encrypted zips, metadata sleuthing, and web forensics—no mercy</p>
+            <a href="OSINT-EXTREME.html" class="btn" target="_blank">Launch</a>
+          </div>
+          <div class="challenge-stats-corner">
+            <div>Total Attempts: <span class="attempt-count">0</span></div>
+            <div>Total Completions: <span class="completion-count">0</span></div>
+          </div>
+        </article>
+        <br>
       <div class="card-wrapper">
+         <!-- Extreme (NEW) -->
+        
         <!-- Medium -->
        <article class="challenge-card" id="card-medium">
   <img src="OSINT_MEDIUM.png" alt="Medium banner">
@@ -350,6 +384,7 @@ try {
     });
   }
 
+  setupStats("card-extreme", "extreme");
   setupStats("card-medium", "medium");
   setupStats("card-hard", "hard");
 
