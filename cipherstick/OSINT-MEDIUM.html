@@ -446,46 +446,72 @@ const requiredPrefix = "";
     setTimeout(() => toast.style.display = 'none', 3000);
   }
 
-  function checkAnswer(index, showBanner = true) {
+  // Remove any local answers.medium logic; now use remote validation
+  async function checkAnswer(index, showBanner = true) {
     const inputField = document.getElementById(`input-${index}`);
     const userInputRaw = inputField.value;
     const userInput = normalizeInput(userInputRaw);
-    const expected = normalizeInput(`${requiredPrefix}${questions[index].answer}${requiredSuffix}`);
     const questionDiv = document.getElementById(`question-${index}`);
-
     localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
 
     if (userInput !== "") {
       checkedQuestions[index] = true;
     }
 
-    if (userInput === expected) {
-      if (!answeredCorrectly[index]) {
-        answeredCorrectly[index] = true;
-        questionDiv.style.borderColor = 'var(--success-color)';
-        inputField.style.backgroundColor = "#d4edda";
+    // Use remote validation for medium challenge
+    try {
+      const isCorrect = await validateAnswerRemotely({
+        challenge: "medium",
+        questionIndex: index,
+        answer: userInputRaw
+      });
+      if (isCorrect) {
+        if (!answeredCorrectly[index]) {
+          answeredCorrectly[index] = true;
+          questionDiv.style.borderColor = 'var(--success-color)';
+          inputField.style.backgroundColor = "#d4edda";
+          if (showBanner) {
+            showToastMessage("Correct!", "correct");
+            confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+          }
+        }
+      } else {
+        questionDiv.style.borderColor = 'var(--danger-color)';
+        inputField.style.backgroundColor = "#f8d7da";
         if (showBanner) {
-          showToastMessage("Correct!", "correct");
-          confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+          showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
         }
       }
-    } else {
+    } catch (e) {
       questionDiv.style.borderColor = 'var(--danger-color)';
       inputField.style.backgroundColor = "#f8d7da";
-      if (showBanner) {
-        showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
-      }
+      showToastMessage(`Validation error for question ${index + 1}`, "incorrect");
     }
 
     checkAllAnswers();
   }
 
-  function checkAllAnswers() {
+  // Update checkAllAnswers to use remote validation for correctness
+  async function checkAllAnswers() {
     let allCorrect = true;
     for (let i = 0; i < questions.length; i++) {
-      const inputVal = normalizeInput(document.getElementById(`input-${i}`).value);
-      const expected = normalizeInput(`${requiredPrefix}${questions[i].answer}${requiredSuffix}`);
-      if (inputVal !== expected || !checkedQuestions[i]) {
+      const inputVal = document.getElementById(`input-${i}`).value;
+      // Only check if the user has checked this question
+      if (!checkedQuestions[i]) {
+        allCorrect = false;
+        break;
+      }
+      try {
+        const isCorrect = await validateAnswerRemotely({
+          challenge: "medium",
+          questionIndex: i,
+          answer: inputVal
+        });
+        if (!isCorrect) {
+          allCorrect = false;
+          break;
+        }
+      } catch (e) {
         allCorrect = false;
         break;
       }
@@ -499,12 +525,9 @@ const requiredPrefix = "";
       showVictoryOverlay();
 
       // Freeze all inputs and buttons after completion, except certificate buttons
-   //   document.querySelectorAll('input[type="text"]').forEach(input => {
-    //    input.setAttribute("readonly", true);
-    //  });
       document.querySelectorAll("input, button").forEach(el => {
         if (el.id !== "downloadBtn" && el.id !== "printBtn") {
-        //  el.disabled = true;
+          //  el.disabled = true;
         }
       });
       console.log("✅ Inputs and buttons frozen after completion (certificate buttons remain enabled).");
@@ -546,8 +569,6 @@ const requiredPrefix = "";
               } else if (completionSnap.exists()) {
                 completionsCount = 1;
               }
-              // If completions >= attempts, prevent saving and log warning
-      
               // Save completion (allow multiple completions, use push for consistency)
               const newCompletionKey = firebase.database().ref().push().key;
               const updateData = {};
@@ -639,16 +660,37 @@ const requiredPrefix = "";
     });
   }
 
-  function restoreInputs() {
-    questions.forEach((_, i) => {
+  async function restoreInputs() {
+    for (let i = 0; i < questions.length; i++) {
       const saved = localStorage.getItem(`${storageKeyPrefix}-input-${i}`);
       if (saved) {
         const inputField = document.getElementById(`input-${i}`);
         inputField.value = saved;
-        checkAnswer(i, false);
+        await checkAnswer(i, false);
       }
-    });
+    }
   }
+// Remote answer validation for "medium" challenge
+async function validateAnswerRemotely({ challenge, questionIndex, answer }) {
+  const endpoint = "https://validate-answer.mwsaulsbury.workers.dev/";
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        challenge,
+        questionIndex,
+        answer
+      })
+    });
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+    return !!data.correct;
+  } catch (e) {
+    console.error("❌ Remote validation error:", e);
+    throw e;
+  }
+}
 
   function startVictoryConfetti() {
     const interval = setInterval(() => {

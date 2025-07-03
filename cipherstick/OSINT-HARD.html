@@ -511,6 +511,28 @@ let quizCompleted = false;
 let checkedQuestions = new Array(questions.length).fill(false);
 let answeredCorrectly = new Array(questions.length).fill(false);
 
+// --- Remote validation for HARD answers ---
+const VALIDATION_URL = "https://validate-answer.mwsaulsbury.workers.dev/";
+
+function validateAnswerRemotely({ challenge, questionIndex, answer }) {
+  return fetch(VALIDATION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ challenge, questionIndex, answer })
+  })
+    .then(res => res.json())
+    .then(result => {
+      console.log("🧠 Remote validation result:", result);
+      return result.correct === true;
+    })
+    .catch(err => {
+      console.error("🌩️ Server error validating:", err);
+      return false;
+    });
+}
+
 function normalizeInput(str) {
   return str.toLowerCase()
     .replace(/[’‘]/g, "'")
@@ -527,18 +549,29 @@ function showToastMessage(message, type) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-function checkAnswer(index, showBanner = true) {
+async function checkAnswer(index, showBanner = true) {
   const inputField = document.getElementById(`input-${index}`);
   const userInputRaw = inputField.value;
   const userInput = normalizeInput(userInputRaw);
-  const expected = normalizeInput(`${requiredPrefix}${questions[index].answer}${requiredSuffix}`);
   const questionDiv = document.getElementById(`question-${index}`);
-  const questionText = questionDiv.firstChild
+  const questionText = questionDiv.firstChild;
 
   localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
   if (userInput !== "") checkedQuestions[index] = true;
 
-  if (userInput === expected) {
+  // Use remote validation for HARD challenge
+  let isCorrect = false;
+  try {
+    isCorrect = await validateAnswerRemotely({
+      challenge: "hard",
+      questionIndex: index,
+      answer: userInputRaw
+    });
+  } catch (e) {
+    isCorrect = false;
+  }
+
+  if (isCorrect) {
     if (!answeredCorrectly[index]) {
       answeredCorrectly[index] = true;
       questionDiv.style.borderColor = 'green';
@@ -557,7 +590,6 @@ function checkAnswer(index, showBanner = true) {
     questionText.style.color = "rgb(255,0,0)"
     inputField.style.borderColor = "rgb(255,0,0)"
 
-
     if (showBanner) {
       showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
     }
@@ -565,13 +597,23 @@ function checkAnswer(index, showBanner = true) {
   checkAllAnswers();
 }
 
-function checkAllAnswers() {
+async function checkAllAnswers() {
   const finalMessage = document.getElementById('finalMessage');
   let allCorrect = true;
   for (let i = 0; i < questions.length; i++) {
-    const inputVal = normalizeInput(document.getElementById(`input-${i}`).value);
-    const expected = normalizeInput(`${requiredPrefix}${questions[i].answer}${requiredSuffix}`);
-    if (inputVal !== expected || !checkedQuestions[i]) {
+    const inputVal = document.getElementById(`input-${i}`).value;
+    // Use remote validation for each answer
+    let correct = false;
+    try {
+      correct = await validateAnswerRemotely({
+        challenge: "hard",
+        questionIndex: i,
+        answer: inputVal
+      });
+    } catch (e) {
+      correct = false;
+    }
+    if (!correct || !checkedQuestions[i]) {
       allCorrect = false;
       break;
     }
@@ -582,37 +624,37 @@ function checkAllAnswers() {
     startVictoryConfetti();
     showVictoryOverlay();
     logCompletion();
-     Object.keys(localStorage).forEach(key => {
-  if (!key.includes("cipherstick-anon")) {
-    localStorage.removeItem(key);
-    console.log("REMOVED LOCALSTORAGE")
-  }
-});
-    setTimeout(() => {
-    // Freeze all input and textarea fields
-    document.querySelectorAll("input, textarea").forEach(el => {
-  //    el.readOnly = true;
-    });
-    console.log('🔒 All input and textarea fields set to readOnly');
-    // Disable all buttons except download/print buttons
-    document.querySelectorAll("button").forEach(btn => {
-      if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
-      //  btn.disabled = true;
+    Object.keys(localStorage).forEach(key => {
+      if (!key.includes("cipherstick-anon")) {
+        localStorage.removeItem(key);
+        console.log("REMOVED LOCALSTORAGE")
       }
     });
-    console.log('🔒 All buttons disabled except certificate download/print');
-    // Clear all localStorage and sessionStorage except userId
-    // Try to preserve userId (from localStorage or sessionStorage)
-    let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-    localStorage.clear();
-    sessionStorage.clear();
-    if (userId) {
-      localStorage.setItem('userId', userId);
-      sessionStorage.setItem('userId', userId);
-      console.log('🗝️ userId preserved in localStorage/sessionStorage');
-    }
-    console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
-  }, 200); // slight delay to ensure download triggers before disabling
+    setTimeout(() => {
+      // Freeze all input and textarea fields
+      document.querySelectorAll("input, textarea").forEach(el => {
+        //    el.readOnly = true;
+      });
+      console.log('🔒 All input and textarea fields set to readOnly');
+      // Disable all buttons except download/print buttons
+      document.querySelectorAll("button").forEach(btn => {
+        if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
+          //  btn.disabled = true;
+        }
+      });
+      console.log('🔒 All buttons disabled except certificate download/print');
+      // Clear all localStorage and sessionStorage except userId
+      // Try to preserve userId (from localStorage or sessionStorage)
+      let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      localStorage.clear();
+      sessionStorage.clear();
+      if (userId) {
+        localStorage.setItem('userId', userId);
+        sessionStorage.setItem('userId', userId);
+        console.log('🗝️ userId preserved in localStorage/sessionStorage');
+      }
+      console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
+    }, 200); // slight delay to ensure download triggers before disabling
   } else if (!allCorrect) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
@@ -691,6 +733,7 @@ function restoreInputs() {
     if (saved) {
       const inputField = document.getElementById(`input-${i}`);
       inputField.value = saved;
+      // Don't await here, just fire and forget for restoration
       checkAnswer(i, false);
     }
   });
@@ -791,12 +834,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmed) {
       questions.forEach((q, i) => {
         const input = document.getElementById(`input-${i}`);
-       input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
-if (!testMode) {
-  localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
-}
-        checkAnswer(i, false);
+        input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+        if (!testMode) {
+          localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
+        }
+        // For test mode, bypass remote validation, mark as correct directly
+        answeredCorrectly[i] = true;
+        checkedQuestions[i] = true;
+        const questionDiv = document.getElementById(`question-${i}`);
+        const questionText = questionDiv.firstChild;
+        questionDiv.style.borderColor = 'green';
+        input.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+        questionText.style.color = "rgb(0,255,0)"
+        input.style.borderColor = "rgb(0,255,0)"
       });
+      checkAllAnswers();
       console.log("✅ Test mode: answers filled and logging skipped.");
     }
   }

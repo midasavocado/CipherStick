@@ -537,43 +537,62 @@ function showToastMessage(message, type) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-function checkAnswer(index, showBanner = true) {
-  const inputField = document.getElementById(`input-${index}`);
-  const userInputRaw = inputField.value;
-  const userInput = normalizeInput(userInputRaw);
-  const expected = normalizeInput(`${requiredPrefix}${questions[index].answer}${requiredSuffix}`);
-  const questionDiv = document.getElementById(`question-${index}`);
-  const questionText = questionDiv.firstChild
+  function checkAnswer(index, showBanner = true) {
+    const inputField = document.getElementById(`input-${index}`);
+    const userInputRaw = inputField.value;
+    const userInput = normalizeInput(userInputRaw);
+    const expected = normalizeInput(`${requiredPrefix}${questions[index].answer}${requiredSuffix}`);
+    const questionDiv = document.getElementById(`question-${index}`);
+    const questionText = questionDiv.firstChild
 
-  localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
-  if (userInput !== "") checkedQuestions[index] = true;
+    localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
+    if (userInput !== "") checkedQuestions[index] = true;
 
-  if (userInput === expected) {
-    if (!answeredCorrectly[index]) {
-      answeredCorrectly[index] = true;
-      questionDiv.style.borderColor = 'green';
-      inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
-      questionText.style.color = "rgb(0,255,0)"
-      inputField.style.borderColor = "rgb(0,255,0)"
-
-      if (showBanner) {
-        showToastMessage("Correct!", "correct");
-        confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
-      }
-    }
-  } else {
-    questionDiv.style.borderColor = 'red';
-    inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
-    questionText.style.color = "rgb(255,0,0)"
-    inputField.style.borderColor = "rgb(255,0,0)"
-
-
-    if (showBanner) {
-      showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
-    }
+    // Support for batch validation (single or array)
+    // Here we keep single validation, but if you want to batch, call with array
+    fetch('https://validate-answer.mwsaulsbury.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge: "extreme",
+        questionIndex: index,
+        answer: `${userInput}`
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        // If API returns array, pick the first item (for backward compatibility)
+        const result = Array.isArray(data) ? data[0] : data;
+        if (result.correct) {
+          if (!answeredCorrectly[index]) {
+            answeredCorrectly[index] = true;
+            questionDiv.style.borderColor = 'green';
+            inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+            questionText.style.color = "rgb(0,255,0)";
+            inputField.style.borderColor = "rgb(0,255,0)";
+            if (showBanner) {
+              showToastMessage("Correct!", "correct");
+              confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+            }
+          }
+        } else {
+          questionDiv.style.borderColor = 'red';
+          inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+          questionText.style.color = "rgb(255,0,0)";
+          inputField.style.borderColor = "rgb(255,0,0)";
+          if (showBanner) {
+            showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
+          }
+        }
+        checkAllAnswers();
+      })
+      .catch(err => {
+        console.error("Validation error:", err);
+        showToastMessage("Error validating answer with server", "incorrect");
+        // Still call checkAllAnswers to keep UI logic consistent
+        checkAllAnswers();
+      });
   }
-  checkAllAnswers();
-}
 
 function checkAllAnswers() {
   const finalMessage = document.getElementById('finalMessage');
