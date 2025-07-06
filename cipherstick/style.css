@@ -42,7 +42,7 @@
   .btn:hover { background: var(--clr-primary-dark); }
   .btn.danger { background: #d6336c; }
   .btn.danger:hover { background: #c2185b; }
-  
+
   /* ====== HEADER ====== */
 .site-header {
   height: 60px; /* or whatever height you want */
