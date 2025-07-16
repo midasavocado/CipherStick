@@ -422,7 +422,7 @@ const requiredPrefix = "";
   const testMode = urlParams.has('test');
   let quizCompleted = false;
   
-  const q = `W3sicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgVVJMIG9mIHRoZSB3ZWJzaXRlIHdoZXJlIEVtbWFcdTIwMTlzIGludmVzdGlnYXRpb24gYmVnaW5zPyIsICJoaW50IjogIkxvb2sgYXQgdGhlIGRvbWFpbiBuYW1lIHByb3ZpZGVkIGluIHRoZSBpbnN0cnVjdGlvbnMuIiwgImFuc3dlciI6ICJlbW1hdHJ1dGhzZWVrZXIud29yZHByZXNzLmNvbSJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIHRpdGxlIG9mIHRoZSBibG9nIHBvc3QgdGhhdCBzdGFydHMgdGhlIHRyYWlsPyIsICJoaW50IjogIkl0XHUyMDE5cyB0aGUgb3BlbmluZyBwb3N0IHRpdGxlIG9uIEVtbWEncyB3ZWJzaXRlLiIsICJhbnN3ZXIiOiAiVGhlIENpdHkncyBTZWNyZXRzIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBwaHJhc2UgaW4gdGhlIGJsb2cgcG9zdCBoaW50cyBhdCBFbW1hXHUyMDE5cyBzb2NpYWwgbWVkaWEgYWN0aXZpdHk/IiwgImhpbnQiOiAiVGhlIHBocmFzZSBtZW50aW9ucyB0d2VldGluZyBhYm91dCBoaWRkZW4gdHJ1dGhzLiIsICJhbnN3ZXIiOiAiSSBvZnRlbiB0d2VldCBhYm91dCBoaWRkZW4gdHJ1dGhzIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgZmlsZSBuYW1lIG9mIHRoZSBwaG90byBsaW5rZWQgaW4gdGhlIGJsb2cgcG9zdD8iLCAiaGludCI6ICIiLCAiYW5zd2VyIjogImNpdHlzY2FwZS5wbmcifSwgeyJxdWVzdGlvbiI6ICJXaGVyZSB3YXMgdGhlIHBob3RvIHRha2VuIChleGFjdCBHUFMgY29vcmRvbmF0ZXMpIiwgImhpbnQiOiAiIiwgImFuc3dlciI6ICI0MC43MTI4XHUwMGIwIE4sIDc0LjAwNjBcdTAwYjAgVyJ9LCB7InF1ZXN0aW9uIjogIldoZXJlIGRvZXMgRW1tYSBjYWxsIGhvbWU/IiwgImhpbnQiOiAiU2hlIGNhbGxzIHRoaXMgdHJvcGljYWwgcGFyYWRpc2UgaGVyIGhvbWUuIiwgImFuc3dlciI6ICJoYXdhaWkifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBoaWRkZW4gbWVzc2FnZSBpbiB0aGUgcGhvdG8/IiwgImhpbnQiOiAiSXQgbG9va3MgbGlrZSBhIHNob3J0IGVuY29kZWQgc3RyaW5nLiIsICJhbnN3ZXIiOiAiVkdobElHdGxlU0IwYnlCdGVTQnpaV055WlhSeklHbHpJR3hwWW1WeWRIaz0ifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBuYW1lIG9mIHRoZSBjYWZcdTAwZTkgdGhhdCBpcyByZWZyZW5jZWQ/IiwgImhpbnQiOiAiIiwgImFuc3dlciI6ICJMaWJlcnR5IENhZlx1MDBlOSJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIG5vdGUgYXR0YWNoZWQgdG8gdGhhdD8iLCAiaGludCI6ICJJdCBpbXBsaWVzIHRoYXQgYXJ0IGlzIGtleSB0byB0aGUgbXlzdGVyeS4iLCAiYW5zd2VyIjogIlRoZSBrZXkgaXMgaW4gdGhlIGFydCJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIHVubG9jayBjb2RlIGZvciB0aGUgemlwIGZpbGUgaW4gdGhlIHJlcG9zaXRvcnk/IiwgImhpbnQiOiAiT2Z0ZW4sIHRoZSB1bmxvY2sgY29kZSBpcyBzaW1pbGFyIHRvIHRoZSBjYWZcdTAwZTkncyBuYW1lLiIsICJhbnN3ZXIiOiAibGliZXJ0eSJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgRW1tYVx1MjAxOXMgWCBoYW5kbGU/IiwgImhpbnQiOiAiUmVtZW1iZXIsIFR3aXR0ZXIgaGFuZGxlcyBzdGFydCB3aXRoICdAJy4iLCAiYW5zd2VyIjogIkBFbW1hVHJ1dGhTZWVrZXIifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBtZXNzYWdlIGluIEVtbWFcdTIwMTlzIHR3ZWV0PyIsICJoaW50IjogIlRoaXMgbWVzc2FnZSBpcyBlbmNvZGVkLiBHaXZlIHRoZSBlbmNvZGVkIG1lc3NhZ2UuIiwgImFuc3dlciI6ICJXa2ggb3JmZHdscnEgbHYga2xnZ2hxIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBhcmUgdGhlIGNvb3JkaW5hdGVzIGluIHRoZSB1bmxvY2tlZCByZXBvc2l0b3J5IGZpbGU/IiwgImhpbnQiOiAiQ2hlY2sgdGhlIGNvbnRlbnRzIG9mIHRoZSB1bmxvY2tlZCBmaWxlIGluIHRoZSByZXBvc2l0b3J5LiIsICJhbnN3ZXIiOiAiNDAuNzgyOVx1MDBiMCBOLCA3My45NjU0XHUwMGIwIFcifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGxvY2F0aW9uIGRvIHRoZXNlIGNvb3JkaW5hdGVzIHBvaW50IHRvPyIsICJoaW50IjogIiIsICJhbnN3ZXIiOiAiQ2VudHJhbCBQYXJrIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyBFbW1hJ3MgZW1haWwgKGVuY29kZWQgaW4gQmFzZTY0KT8iLCAiaGludCI6ICJJdCBzaG91bGQgbWF0Y2ggdGhlIEJhc2U2NCBmb3JtYXQgZW5kaW5nIHdpdGggJz09Jy4iLCAiYW5zd2VyIjogIlpXMXRZWFJ5ZFhSb2MyVmxhMlZ5UUhCeWIzUnZiaTV0WlE9PSJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgRW1tYVx1MjAxOXMgZW1haWwgYWRkcmVzcz8iLCAiaGludCI6ICJEZWNvZGluZyB0aGUgc3RyaW5nIGZyb20gdGhlIHByZXZpb3VzIHF1ZXN0aW9uIHdpbGwgZ2l2ZSB5b3UgdGhlIGVtYWlsIGFkZHJlc3MuIiwgImFuc3dlciI6ICJlbW1hdHJ1dGhzZWVrZXJAcHJvdG9uLm1lIn1d`;
+  const q = `W3sicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgVVJMIG9mIHRoZSB3ZWJzaXRlIHdoZXJlIEVtbWFcdTIwMTlzIGludmVzdGlnYXRpb24gYmVnaW5zPyIsICJoaW50IjogIkxvb2sgYXQgdGhlIGRvbWFpbiBuYW1lIHByb3ZpZGVkIGluIHRoZSBpbnN0cnVjdGlvbnMuIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgdGl0bGUgb2YgdGhlIGJsb2cgcG9zdCB0aGF0IHN0YXJ0cyB0aGUgdHJhaWw/IiwgImhpbnQiOiAiSXRcdTIwMTlzIHRoZSBvcGVuaW5nIHBvc3QgdGl0bGUgb24gRW1tYSdzIHdlYnNpdGUuIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBwaHJhc2UgaW4gdGhlIGJsb2cgcG9zdCBoaW50cyBhdCBFbW1hXHUyMDE5cyBzb2NpYWwgbWVkaWEgYWN0aXZpdHk/IiwgImhpbnQiOiAiVGhlIHBocmFzZSBtZW50aW9ucyB0d2VldGluZyBhYm91dCBoaWRkZW4gdHJ1dGhzLiJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIGZpbGUgbmFtZSBvZiB0aGUgcGhvdG8gbGlua2VkIGluIHRoZSBibG9nIHBvc3Q/IiwgImhpbnQiOiAiIn0sIHsicXVlc3Rpb24iOiAiV2hlcmUgd2FzIHRoZSBwaG90byB0YWtlbiAoZXhhY3QgR1BTIGNvb3Jkb25hdGVzKSIsICJoaW50IjogIiJ9LCB7InF1ZXN0aW9uIjogIldoZXJlIGRvZXMgRW1tYSBjYWxsIGhvbWU/IiwgImhpbnQiOiAiU2hlIGNhbGxzIHRoaXMgdHJvcGljYWwgcGFyYWRpc2UgaGVyIGhvbWUuIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgaGlkZGVuIG1lc3NhZ2UgaW4gdGhlIHBob3RvPyIsICJoaW50IjogIkl0IGxvb2tzIGxpa2UgYSBzaG9ydCBlbmNvZGVkIHN0cmluZy4ifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBuYW1lIG9mIHRoZSBjYWZcdTAwZTkgdGhhdCBpcyByZWZyZW5jZWQ/IiwgImhpbnQiOiAiIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgbm90ZSBhdHRhY2hlZCB0byB0aGF0PyIsICJoaW50IjogIkl0IGltcGxpZXMgdGhhdCBhcnQgaXMga2V5IHRvIHRoZSBteXN0ZXJ5LiIsICJhbnN3ZXIiOiAiVGhlIGtleSBpcyBpbiB0aGUgYXJ0In0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgdW5sb2NrIGNvZGUgZm9yIHRoZSB6aXAgZmlsZSBpbiB0aGUgcmVwb3NpdG9yeT8iLCAiaGludCI6ICJPZnRlbiwgdGhlIHVubG9jayBjb2RlIGlzIHNpbWlsYXIgdG8gdGhlIGNhZlx1MDBlOSdzIG5hbWUuIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBpcyBFbW1hXHUyMDE5cyBYIGhhbmRsZT8iLCAiaGludCI6ICJSZW1lbWJlciwgVHdpdHRlciBoYW5kbGVzIHN0YXJ0IHdpdGggJ0AnLiJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIG1lc3NhZ2UgaW4gRW1tYVx1MjAxOXMgdHdlZXQ/IiwgImhpbnQiOiAiVGhpcyBtZXNzYWdlIGlzIGVuY29kZWQuIEdpdmUgdGhlIGVuY29kZWQgbWVzc2FnZS4ifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGFyZSB0aGUgY29vcmRpbmF0ZXMgaW4gdGhlIHVubG9ja2VkIHJlcG9zaXRvcnkgZmlsZT8iLCAiaGludCI6ICJDaGVjayB0aGUgY29udGVudHMgb2YgdGhlIHVubG9ja2VkIGZpbGUgaW4gdGhlIHJlcG9zaXRvcnkuIn0sIHsicXVlc3Rpb24iOiAiV2hhdCBsb2NhdGlvbiBkbyB0aGVzZSBjb29yZGluYXRlcyBwb2ludCB0bz8iLCAiaGludCI6ICIifSwgeyJxdWVzdGlvbiI6ICJXaGF0IGlzIEVtbWEncyBlbWFpbCAoZW5jb2RlZCBpbiBCYXNlNjQpPyIsICJoaW50IjogIkl0IHNob3VsZCBtYXRjaCB0aGUgQmFzZTY0IGZvcm1hdCBlbmRpbmcgd2l0aCAnPT0nLiJ9LCB7InF1ZXN0aW9uIjogIldoYXQgaXMgRW1tYVx1MjAxOXMgZW1haWwgYWRkcmVzcz8iLCAiaGludCI6ICJEZWNvZGluZyB0aGUgc3RyaW5nIGZyb20gdGhlIHByZXZpb3VzIHF1ZXN0aW9uIHdpbGwgZ2l2ZSB5b3UgdGhlIGVtYWlsIGFkZHJlc3MuIn1d`;
   const questions = JSON.parse(atob(q));
 
 
@@ -593,6 +593,23 @@ const requiredPrefix = "";
   }
 
   function generatePlaceholder(answer) {
+    // Keep required prefix/suffix visible and only mask the core answer
+    const prefix = requiredPrefix || "";
+    const suffix = requiredSuffix || "";
+    if (!answer) return "";
+
+    // If no prefix/suffix defined, keep braces visible but mask everything else (old behaviour)
+    if (!prefix && !suffix) {
+      return answer.replace(/[^{} ]/g, '*');
+    }
+
+    if (answer.startsWith(prefix) && answer.endsWith(suffix)) {
+      const core = answer.slice(prefix.length, answer.length - suffix.length);
+      const maskedCore = core.replace(/[^{} ]/g, '*');
+      return `${prefix}${maskedCore}${suffix}`;
+    }
+
+    // Fallback: just mask everything except braces/spaces
     return answer.replace(/[^{} ]/g, '*');
   }
 
@@ -803,49 +820,85 @@ async function validateAnswerRemotely({ challenge, questionIndex, answer }) {
 
   document.addEventListener('DOMContentLoaded', () => {
     loadIntroText();
-    generateQuestions();
-    restoreInputs();
-    // Add certificate popup if not present
-    if (!document.getElementById('certificateContainer')) {
-      const certDiv = document.createElement('div');
-      certDiv.id = 'certificateContainer';
-      certDiv.style.display = 'none';
-      certDiv.style.position = 'fixed';
-      certDiv.style.top = '50%';
-      certDiv.style.left = '50%';
-      certDiv.style.transform = 'translate(-50%, -50%)';
-      certDiv.style.background = '#fff';
-      certDiv.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3)';
-      certDiv.style.padding = '2rem';
-      certDiv.style.borderRadius = '12px';
-      certDiv.style.zIndex = '3000';
-      certDiv.innerHTML = `
-        <button id="closeCertificate" style="position:absolute;top:10px;right:14px;font-size:18px;background:none;border:none;color:#888;cursor:pointer;">×</button>
-        <div id="certificateContent"></div>
-      `;
-      document.body.appendChild(certDiv);
-    }
-    // Add close event for certificate popup
-    setTimeout(() => {
-      const closeBtn = document.getElementById("closeCertificate");
-      if (closeBtn) {
-        closeBtn.addEventListener("click", () => {
-          document.getElementById("certificateContainer").style.display = "none";
-          console.log("❌ Certificate popup closed.");
+
+    // Prefetch all answers and then generate questions and restore inputs
+    async function fetchAllAnswers() {
+      try {
+        const res = await fetch("https://validate-answer.mwsaulsbury.workers.dev/all", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ challenge: "medium" })
         });
-      }
-    }, 100);
-    if (testMode) {
-      const enableTestMode = confirm("Enable Test Mode? This will fill in the answer boxes for you. Click OK to proceed.");
-      if (enableTestMode) {
-        questions.forEach((q, i) => {
-          const input = document.getElementById(`input-${i}`);
-          input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
-          localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const data = await res.json();
+        console.info("🛈 Prefetched answers payload:", data);
+
+        // The worker might return either an array or an object with an `answers` prop.
+        const answersArr = Array.isArray(data) ? data
+                          : (Array.isArray(data.answers) ? data.answers : []);
+
+        if (!answersArr.length) {
+          console.warn("❌ Prefetch returned empty answers array.");
+          return;
+        }
+        if (answersArr.length !== questions.length) {
+          console.warn(`⚠️ Answer count (${answersArr.length}) ≠ question count (${questions.length}).`);
+        }
+
+        answersArr.forEach((ans, i) => {
+          if (questions[i]) questions[i].answer = ans;
         });
-        restoreInputs();
+      } catch (err) {
+        console.warn("❌ Failed to prefetch answers:", err);
       }
     }
+
+    fetchAllAnswers().then(() => {
+      generateQuestions();
+      restoreInputs();
+      // Add certificate popup if not present
+      if (!document.getElementById('certificateContainer')) {
+        const certDiv = document.createElement('div');
+        certDiv.id = 'certificateContainer';
+        certDiv.style.display = 'none';
+        certDiv.style.position = 'fixed';
+        certDiv.style.top = '50%';
+        certDiv.style.left = '50%';
+        certDiv.style.transform = 'translate(-50%, -50%)';
+        certDiv.style.background = '#fff';
+        certDiv.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3)';
+        certDiv.style.padding = '2rem';
+        certDiv.style.borderRadius = '12px';
+        certDiv.style.zIndex = '3000';
+        certDiv.innerHTML = `
+          <button id="closeCertificate" style="position:absolute;top:10px;right:14px;font-size:18px;background:none;border:none;color:#888;cursor:pointer;">×</button>
+          <div id="certificateContent"></div>
+        `;
+        document.body.appendChild(certDiv);
+      }
+      // Add close event for certificate popup
+      setTimeout(() => {
+        const closeBtn = document.getElementById("closeCertificate");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", () => {
+            document.getElementById("certificateContainer").style.display = "none";
+            console.log("❌ Certificate popup closed.");
+          });
+        }
+      }, 100);
+      if (testMode) {
+        const enableTestMode = confirm("Enable Test Mode? This will fill in the answer boxes for you. Click OK to proceed.");
+        if (enableTestMode) {
+          questions.forEach((q, i) => {
+            const input = document.getElementById(`input-${i}`);
+            input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+            localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
+          });
+          restoreInputs();
+        }
+      }
+    });
+    // restoreInputs(); // (Removed: now called after generateQuestions in fetchAllAnswers().then(...))
   });
 </script>
 <!-- Add (or replace the old patch) near the very end of your page -->

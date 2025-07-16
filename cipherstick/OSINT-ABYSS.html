@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CipherStick: Hard - The Digital Enigma</title>
+  <title>CipherStick: The Abyss Protocol</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
   <!-- Confetti + jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -14,13 +14,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
-     :root {
-      --accent-color: #ff0000; /* Dark red accent */
-      --text-color: #ffffff;   /* Primary text color */
-      --border-hover: rgba(255, 0, 0, 0.4);
-      --warning-color: #f1c40f;
-      --danger-color: #e74c3c;
-      --success-color: #28a745;
+    :root {
+      --accent-color: #00bfff; /* Deep blue for abyss theme */
+      --text-color: #d5ffd5;
+      --border-hover: rgba(0, 255, 0, 0.4);
+      --warning-color: #39ff14;
+      --danger-color: #ff5555;
+      --success-color: #00ff00;
     }
 
     /* Reset & Box Sizing */
@@ -33,7 +33,7 @@
     /* BODY: With background image + an optional subtle black overlay */
     body {
       font-family: 'Open Sans', sans-serif;
-      background: url('HARD_BG.png') no-repeat center center fixed;
+      background: url('abyss_BG.png') no-repeat center center fixed;
       background-size: cover;
       min-height: 100vh;
       display: flex;
@@ -191,10 +191,10 @@
       transform: translateY(-3px);
     }
     .btn-check {
-      background: linear-gradient(135deg, #b30000, #7a0000);
+      background: linear-gradient(135deg, #00aa00, #006600);
     }
     .btn-check:hover {
-      background: linear-gradient(135deg, #ff0000, #990000);
+      background: linear-gradient(135deg, #00ff00, #009900);
       transform: translateY(-3px);
     }
 
@@ -328,7 +328,7 @@
     .btn-certificate {
       margin-top: 1rem;
       padding: 0.75rem 1.5rem;
-      background: linear-gradient(135deg, #b30000, #7a0000);
+      background: linear-gradient(135deg, #00b11b, #00b11b);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -342,7 +342,7 @@
       text-shadow: none;
     }
     .btn-certificate:hover {
-      background: linear-gradient(135deg, #ff0000, #990000);
+      background: linear-gradient(135deg, #00b11b, #00b11b);
       transform: translateY(-3px);
     }
 
@@ -382,7 +382,7 @@
 <body>
   <header>
     <a href="index.html">
-    <img src="HARD.png" alt="CipherStick: Hard"/>
+    <img src="ABYSS.png" alt="CipherStick: Abyss"/>
   </a>
   </header>
 
@@ -406,11 +406,27 @@
       </ul>
     </details>
 
+    <details style="margin: 1rem 0; background: rgba(0, 0, 0, 0.6); border-left: 5px solid var(--accent-color); padding: 1rem; border-radius: 8px;">
+      <summary style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">📝 Feedback Form</summary>
+      <div style="margin-top: 1rem; text-align: center;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLScpWzrqjo04XjBt5hx0YuHGTICWWRn9C_gRoF_vRHaO13cTCg/viewform?usp=sharing&ouid=114401666501663284939"
+           target="_blank"
+           style="background:#00aa00; color:#fff; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; text-decoration: none;
+                  box-shadow: 0 4px 10px rgba(0,0,0,0.3); display:inline-block;">
+          📝 Submit Feedback on This New Challenge
+        </a>
+      </div>
+    </details>
+
     <div id="questionsContainer"></div>
 
     <div id="finalMessage">
       <h2 style="color: #ffcc00;">You beat it!</h2>
       <button class="btn-certificate" onclick="openCertificateModal()">Claim Your Certificate</button>
+    </div>
+    <div id="formReminder" style="text-align:center; margin-top:1rem; display:none;">
+      <p style="color:#0f0; font-weight:bold;">New Challenge! Before you go, please fill out our short feedback form:</p>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScpWzrqjo04XjBt5hx0YuHGTICWWRn9C_gRoF_vRHaO13cTCg/viewform?usp=sharing&ouid=114401666501663284939" target="_blank" style="color:#00ff00; text-decoration:underline;">Submit Feedback Form</a>
     </div>
   </div>
 
@@ -429,7 +445,7 @@
   </footer>
 
 <script>
-  function logCompletion() {
+function logCompletion() {
     if (testMode) {
       console.warn("🚫 Test mode active — skipping completion logging.");
       return;
@@ -440,9 +456,9 @@
         return;
       }
       const uid = window.authUID;
-      // Use "medium" as database record path, matching naming convention
-      const completionsRef = firebase.database().ref("completions/hard/" + uid);
-      const attemptsRef = firebase.database().ref("attempts/hard/" + uid);
+      // Use "abyss" as database record path
+      const completionsRef = firebase.database().ref("completions/abyss/" + uid);
+      const attemptsRef = firebase.database().ref("attempts/abyss/" + uid);
       console.log("🔄 Checking completions and attempts for user...");
       // Fetch attempts and completions
       attemptsRef.once("value").then((attemptSnap) => {
@@ -466,7 +482,6 @@
           completionsRef.update(updateData)
             .then(() => {
               console.log("✅ Completion logged");
-
             })
             .catch(error => {
               console.warn("❌ Completion logging failed:", error);
@@ -478,43 +493,54 @@
   }
 
 function loadIntroText() {
-
-  let prefixInfo = "";
-
-  if (prefixEnabled) {
-    prefixInfo = `<p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>`;
-  }
-
   const introHTML = `
-    <p>Welcome to <strong>The Digital Enigma</strong>, an advanced open-source intelligence (OSINT) challenge designed to push your skills to their limits. You'll investigate the mysterious disappearance of Taylor, a digital artist whose final clues lie scattered across social media, images, and hidden data trails.</p>
-    <p>Your investigation begins at: <a href="https://taylorartx.wordpress.com" target="_blank" style="color:#fff;">taylorartx.wordpress.com</a><br>Password: <code style="background:rgba(0,0,0,0.5);">TaylorPaints</code></p>
-    <p>Use your wits, curiosity, and OSINT tools to uncover secrets buried in metadata, inspect source code, decode messages, and follow digital footprints to uncover the truth.</p>
-    <p>If you are new to OSINT, I reccomend <a href="https://www.youtube.com/watch?v=Sa5LbKqCmFI" target="_blank">this video</a> to familiarize yourself with it</p>
+    <p>Welcome to <strong>The Abyss Protocol</strong>, a CipherStick challenge surrounding a lost submarine, a hidden satellite uplink, and a leak nobody saw coming. <br><br>In late-spring 2024, a classified submarine codenamed USS Acheron slipped off naval tracking grids during a clandestine Arctic run. Nothing hit the news—until 98 days later, when a disgraced SEAL cryptologist named Commander Rylan “Ghost” Vance leaked a lone link: 
 
-    ` + prefixInfo + `
+AcheronLeaks.netlify.app
 
+That’s where your investigation begins. Your briefing is simple:
+<br><br>
+Uncover why Acheron went dark, how it kept phoning an unknown satellite, and who now holds the kill-switch.
+<br><br>
+Your investigation begins at:</p>
+    <p><a href="https://acheronLeaks.netlify.app" target="_blank" style="color:#0f0;">AcheronLeaks.netlify.app</a></p>
+    <p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>
+    All link answers must be in the format ab{https://example.com/}<br><br>
     <p>Good luck, Agent.</p>
+    
   `;
   document.getElementById("introText").innerHTML = introHTML;
 }
 
 
-const q = 'W3sicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBVUkwgb2YgdGhlIHdlYnNpdGUgd2hlcmUgdGhlIGludmVzdGlnYXRpb24gYmVnaW5zPyIsImhpbnQiOiJUaGUgV29yZFByZXNzIHNpdGUgbWVudGlvbmVkIGluIHRoZSBjYXNlIGJyaWVmaW5nLiJ9LHsicXVlc3Rpb24iOiJEb2VzIFRheWxvciBoYXZlIGEgYm9zcz8iLCJoaW50IjoiIn0seyJxdWVzdGlvbiI6IldoZW4gd2FzIFRheWxvcidzIG1vc3QgcmVjZW50IGJsb2cgcG9zdCBwdWJsaXNoZWQ/IiwiaGludCI6IkNoZWNrIHRoZSBwb3N0IGRhdGUuIEZvcm1hdDogTU0vREQvWVkifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBXb3JkUHJlc3MgdXNlcm5hbWU/IiwiaGludCI6Ikxvb2sgdW5kZXIgdGhlIHBvc3QgdGl0bGUgZm9yIGF1dGhvciBpbmZvLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBmaWxlbmFtZSBvZiB0aGUgdXBsb2FkZWQgcGFpbnRpbmc/IiwiaGludCI6IkNoZWNrIHRoZSBpbWFnZSBVUkwgZm9yIGZpbGVuYW1lICsgZXh0ZW5zaW9uLiJ9LHsicXVlc3Rpb24iOiJXaGVyZSBpcyB0aGUgaW1hZ2UgaG9zdGVkPyIsImhpbnQiOiJDaGVjayB0aGUgaW1hZ2Ugc291cmNlIGxpbmsuIn0seyJxdWVzdGlvbiI6IldoYXQgaXMgVGF5bG9yJ3MgR2l0SHViIHVzZXJuYW1lPyIsImhpbnQiOiJJdCdzIGluIHRoZSBpbWFnZSBVUkwgYW5kIHJlcG8gbmFtZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCdzIHRoZSBoaWRkZW4gbWVzc2FnZSBpbiB0aGUgcGhvdG8/IiwiaGludCI6IkV4dHJhY3QgbWV0YWRhdGEgYW5kIGRlY29kZSBhbnkgYmFzZTY0IHRleHQuIn0seyJxdWVzdGlvbiI6IldoZXJlIHdhcyB0aGUgcGhvdG8gcGFpbnRlZD8iLCJoaW50IjoiTWV0YWRhdGEgbWF5IGNvbnRhaW4gR1BTIGNvb3JkaW5hdGVzLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSB1bmxvY2sgY29kZSBmb3IgdGhlIGZpcnN0IHNlY3JldCBpbiB0aGUgcmVwbz8iLCJoaW50IjoiVHJ5IGNsaWNraW5nIG9uIHRoZSBoZWFkZXIgdGV4dCBvZiB0aGUgaW1hZ2UuLi4gSXQgbG9va2VkIGVuY29kZWQsIGJ1dCBpcyBpdCByZWFsbHk/In0seyJxdWVzdGlvbiI6IldoYXQncyB0aGUgcGFzc3dvcmQgdG8gdGhlIFdvcmRQcmVzcyBzaXRlPyIsImhpbnQiOiJDaGVjayB0aGUgY2FzZSBicmllZmluZyBhYm92ZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBwbGF0Zm9ybSBpcyB0aGUgZW1iZWRkZWQgdmlkZW8gaG9zdGVkIG9uPyIsImhpbnQiOiJIb3ZlciBvdmVyIHRoZSBlbWJlZGRlZCB2aWRlbyBvciBjaGVjayBzb3VyY2UgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBkYXRlIHdhcyB0aGUgdmlkZW8gcmVjb3JkZWQ/IiwiaGludCI6IlVzZSBNTS9ERC9ZWS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBhaXJsaW5lIGlzIFRheWxvciBmbHlpbmcgYmFjayB3aXRoPyIsImhpbnQiOiJTZWFyY2ggdGhlIGZsaWdodCBudW1iZXIsIHVzZSAzLWxldHRlciBhaXJsaW5lIGNvZGUgKGUuZy4gVUFMKS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBmdWxsIGZsaWdodCBudW1iZXI/IiwiaGludCI6IkZvcm1hdDogQUJDMTIzNCJ9LHsicXVlc3Rpb24iOiJXaGF0IHN0YXRlIGRvZXMgVGF5bG9yIGxpdmUgaW4/IiwiaGludCI6IkZpbmQgdGhlIGRlc3RpbmF0aW9uIGFpcnBvcnQgYW5kIGRlZHVjZSB0aGUgc3RhdGUuIn0seyJxdWVzdGlvbiI6IldoaWNoIGFpcnBvcnQgZGlkIHRoZSBmbGlnaHQgbGFuZCBhdD8iLCJoaW50IjoiVXNlIHRoZSBmbGlnaHQgaW5mbyB0byBkZXRlcm1pbmUgdGhlIElBVEEgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCdzIHRoZSBzZWNvbmQgaGlkZGVuIG1lc3NhZ2UgaW4gdGhlIHZpZGVvPyIsImhpbnQiOiJMaXN0ZW4gY2xvc2VseSBhbmQgbG9vayBmb3IgTW9yc2UgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBYIChUd2l0dGVyKSBoYW5kbGU/IiwiaGludCI6IkNoZWNrIHRoZSBwcm9maWxlIGxpbmtlZCBmcm9tIHRoZSBHaXRIdWIgcmVhZG1lLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBzZWNvbmQgcmVwb3NpdG9yeSB1bmxvY2sgY29kZT8iLCJoaW50IjoiRGVjb2RlIHRoZSBoZXggb3IgYmFzZTY0IHN0cmluZyBwb3N0ZWQgb24gWC4ifSx7InF1ZXN0aW9uIjoiV2hpY2ggc2l0ZSBpcyByZWZlcmVuY2VkIGluIGhpcyBYIHBvc3Q/IiwiaGludCI6IkNvbnZlcnQgdGhlIGhleCBjb2RlIHRvIHJlYWRhYmxlIHRleHQuIn0seyJxdWVzdGlvbiI6IldoZXJlIHdhcyBUYXlsb3Igb24gQXByaWwgOHRoPyAoZXhhY3QgY29vcmRpbmF0ZXMpIiwiaGludCI6IkNsdWUgZm91bmQgaW4gdGhlIHNlY29uZCByZXBvIHNlY3JldC4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBlbWFpbCBhZGRyZXNzPyIsImhpbnQiOiJGb3VuZCBpbiB0aGUgaGlkZGVuIHBhZ2U7IGRlY29kZSB0aGUgbWVzc2FnZS4ifV0=';
-const questions = JSON.parse(atob(q));
+// New Abyss Protocol question data (base64-encoded)
+const q = `WwogIHsKICAgICJxdWVzdGlvbiI6ICJIb3cgbWFueSBmcmFtZXMgYXJlIGluIHRoZSBmaXJzdCB2aWRlbyB5b3UgY29tZSBhY3Jvc3M/IiwKICAgICJoaW50IjogIiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGljaCB3ZWJzaXRlIGRvZXMgdGhhdCB2aWRlbyBwb2ludCB0bz8iLAogICAgImhpbnQiOiAiVHJ5IHZpZXdpbmcgdGhlIHZpZGVvIGZyYW1lIGJ5IGZyYW1lLiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBmaWxlbmFtZSBvZiB0aGUgZmlsZSB0aGF0IHRoZSB3ZWJzaXRlIGdpdmVzIHlvdT8iLAogICAgImhpbnQiOiAiSW5zdGVhZCBvZiB2aWV3aW5nIHRoZSBwYWdlIGRpcmVjdGx5LCB0cnkgY3VybGluZyBpdC4iCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hlcmUgZG9lcyB0aGF0IHBpY3R1cmUgdGFrZSB5b3UgdG8/IiwKICAgICJoaW50IjogIlNjYW4gdGhlIFFSIGNvZGUiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgaGlkZGVuLCBlbmNvZGVkIG1lc3NhZ2Ugb24gdGhhdCBzaXRlPyIsCiAgICAiaGludCI6ICJUcnkgY29udmVydGluZyB0aGUgYmFzZTY0IGZyb20gUGFzdGVCaW4gaW50byBhbiBpbWFnZSIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGRvZXMgdGhlIGltYWdlIHRoYXQgd2FzIHNoYXJlZCB3aXRoIHlvdSB0ZWxsIHlvdSB0byBkbz8iLAogICAgImhpbnQiOiAiRW1haWwgdGhlIGVtYWlsIHRoYXQgeW91IGZvdW5kIGluIHRoZSBiYXNlNjQgZW5jb2RlZCBpbWFnZSwgYW5kIHdhaXQgZm9yIGEgcmVwbHkuIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIkhvdyBtYW55IGZpbGVzIGFyZSBpbnNpZGUgdGhlIGhpZGRlbiBaSVA/IiwKICAgICJoaW50IjogIk9wZW4gdGhlIGltYWdlIGluIGEgdGV4dCBlZGl0b3IsIHRoZW4gc2Nyb2xsIGRvd24gdG8gZmluZCBzb21lIGVuY29kZWQgYmFzZTY0LiBEZWNvZGUgdGhhdCB0byBhIGZpbGUuIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgZG9lcyBrZXkudHh0IHRlbGwgeW91IHRvIGRvPyIsCiAgICAiaGludCI6ICJQYXN0ZSB0aGUgZW50aXJlIGRlY29kZWQgYmFzZTY0IHN0cmluZyBpbnRvIHRoZSBhbnN3ZXIuIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgbGluayBkb2VzIHRoZSBhdWRpbyBmaWxlIGhpZGU/IiwKICAgICJoaW50IjogIk9wZW4gaGlkZGVuLndhdiBpbiBhbiBhdWRpbyBlZGl0b3IgYXBwbGljYXRpb24gc3VjaCBhcyBBdWRhY2l0eSBhbmQgc2V0IHRoZSB2aWV3aW5nIHR5cGUgdG8g4oCcc3BlY3Ryb2dyYW3igJ0gdG8gdmlldyB0aGUgaGlkZGVuIGxpbmsiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgdXBsaW5rIHN0YXR1cz8iLAogICAgImhpbnQiOiAiIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIHNhdGVsbGl0ZSB0aGF0IHRoZSBzdWJtYXJpbmUgd2FzIGxpbmtpbmcgdG8/IiwKICAgICJoaW50IjogIiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaG8gc2Fib3RhZ2VkIHRoZSBzdWJtYXJpbmU/IiwKICAgICJoaW50IjogIlRoZSBhbnN3ZXIgaXMgaW4gYW5vdGhlciBwdXp6bGUuIgogIH0KXQ==`;
+const decoder = new TextDecoder('utf-8');
+const jsonString = decoder.decode(Uint8Array.from(atob(q), c => c.charCodeAt(0)));
+const questions = JSON.parse(jsonString);
 
-// Prefetch all answers for HARD challenge
+
+const storageKeyPrefix = "OSINT-ABYSS";
+const requiredPrefix = "ab{";
+const requiredSuffix = "}";
+const prefixEnabled = requiredPrefix.trim() !== "";
+let quizCompleted = false;
+let checkedQuestions = new Array(questions.length).fill(false);
+let answeredCorrectly = new Array(questions.length).fill(false);
+
+// --- Prefetch all answers for placeholders ---
 async function fetchAllAnswers() {
   try {
     const res = await fetch("https://validate-answer.mwsaulsbury.workers.dev/all", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ challenge: "hard" })
+      body: JSON.stringify({ challenge: "abyss" })
     });
     if (!res.ok) throw new Error(`status ${res.status}`);
     const { answers } = await res.json();
     answers.forEach((ans, i) => (questions[i].answer = ans));
   } catch (err) {
-    console.warn("❌ Prefetch HARD answers failed:", err);
+    console.warn("❌ Prefetch ABYSS answers failed:", err);
   }
 }
 
@@ -523,38 +549,7 @@ function generatePlaceholder(answer) {
   const suffix = requiredSuffix || "";
   if (!answer) return "";
   const core = answer.slice(prefix.length, answer.length - suffix.length);
-  return `${prefix}${core.replace(/[^{} ]/g, "*")}${suffix}`;
-}
-
-
-const storageKeyPrefix = "OSINT-HARD";
-const requiredPrefix = "pr{";
-const requiredSuffix = "}";
-const prefixEnabled = requiredPrefix.trim() !== "";
-let quizCompleted = false;
-let checkedQuestions = new Array(questions.length).fill(false);
-let answeredCorrectly = new Array(questions.length).fill(false);
-
-// --- Remote validation for HARD answers ---
-const VALIDATION_URL = "https://validate-answer.mwsaulsbury.workers.dev/";
-
-function validateAnswerRemotely({ challenge, questionIndex, answer }) {
-  return fetch(VALIDATION_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ challenge, questionIndex, answer })
-  })
-    .then(res => res.json())
-    .then(result => {
-      console.log("🧠 Remote validation result:", result);
-      return result.correct === true;
-    })
-    .catch(err => {
-      console.error("🌩️ Server error validating:", err);
-      return false;
-    });
+  return `**{${core.replace(/[^{} ]/g, "*")}}`;
 }
 
 function normalizeInput(str) {
@@ -573,71 +568,70 @@ function showToastMessage(message, type) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-async function checkAnswer(index, showBanner = true) {
-  const inputField = document.getElementById(`input-${index}`);
-  const userInputRaw = inputField.value;
-  const userInput = normalizeInput(userInputRaw);
-  const questionDiv = document.getElementById(`question-${index}`);
-  const questionText = questionDiv.firstChild;
+  function checkAnswer(index, showBanner = true) {
+    const inputField = document.getElementById(`input-${index}`);
+    const userInputRaw = inputField.value;
+    const userInput = normalizeInput(userInputRaw);
+    const expected = normalizeInput(`${requiredPrefix}${questions[index].answer}${requiredSuffix}`);
+    const questionDiv = document.getElementById(`question-${index}`);
+    const questionText = questionDiv.firstChild
 
-  localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
-  if (userInput !== "") checkedQuestions[index] = true;
+    localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
+    if (userInput !== "") checkedQuestions[index] = true;
 
-  // Use remote validation for HARD challenge
-  let isCorrect = false;
-  try {
-    isCorrect = await validateAnswerRemotely({
-      challenge: "hard",
-      questionIndex: index,
-      answer: userInputRaw
-    });
-  } catch (e) {
-    isCorrect = false;
+    // Support for batch validation (single or array)
+    // Here we keep single validation, but if you want to batch, call with array
+    fetch('https://validate-answer.mwsaulsbury.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge: "abyss",
+        questionIndex: index,
+        answer: `${userInput}`
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        // If API returns array, pick the first item (for backward compatibility)
+        const result = Array.isArray(data) ? data[0] : data;
+        if (result.correct) {
+          if (!answeredCorrectly[index]) {
+            answeredCorrectly[index] = true;
+            questionDiv.style.borderColor = 'green';
+            inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+            questionText.style.color = "rgb(0,255,0)";
+            inputField.style.borderColor = "rgb(0,255,0)";
+            if (showBanner) {
+              showToastMessage("Correct!", "correct");
+              confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+            }
+          }
+        } else {
+          questionDiv.style.borderColor = 'red';
+          inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+          questionText.style.color = "rgb(255,0,0)";
+          inputField.style.borderColor = "rgb(255,0,0)";
+          if (showBanner) {
+            showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
+          }
+        }
+        checkAllAnswers();
+      })
+      .catch(err => {
+        console.error("Validation error:", err);
+        showToastMessage("Error validating answer with server", "incorrect");
+        // Still call checkAllAnswers to keep UI logic consistent
+        checkAllAnswers();
+      });
   }
 
-  if (isCorrect) {
-    if (!answeredCorrectly[index]) {
-      answeredCorrectly[index] = true;
-      questionDiv.style.borderColor = 'green';
-      inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
-      questionText.style.color = "rgb(0,255,0)"
-      inputField.style.borderColor = "rgb(0,255,0)"
-
-      if (showBanner) {
-        showToastMessage("Correct!", "correct");
-        confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
-      }
-    }
-  } else {
-    questionDiv.style.borderColor = 'red';
-    inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
-    questionText.style.color = "rgb(255,0,0)"
-    inputField.style.borderColor = "rgb(255,0,0)"
-
-    if (showBanner) {
-      showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
-    }
-  }
-  checkAllAnswers();
-}
-
-async function checkAllAnswers() {
+function checkAllAnswers() {
   const finalMessage = document.getElementById('finalMessage');
   let allCorrect = true;
   for (let i = 0; i < questions.length; i++) {
-    const inputVal = document.getElementById(`input-${i}`).value;
-    // Use remote validation for each answer
-    let correct = false;
-    try {
-      correct = await validateAnswerRemotely({
-        challenge: "hard",
-        questionIndex: i,
-        answer: inputVal
-      });
-    } catch (e) {
-      correct = false;
-    }
-    if (!correct || !checkedQuestions[i]) {
+    const inputVal = normalizeInput(document.getElementById(`input-${i}`).value);
+    const expected = normalizeInput(`${requiredPrefix}${questions[i].answer}${requiredSuffix}`);
+    if (inputVal !== expected || !checkedQuestions[i]) {
       allCorrect = false;
       break;
     }
@@ -645,43 +639,45 @@ async function checkAllAnswers() {
   if (allCorrect && !quizCompleted) {
     quizCompleted = true;
     finalMessage.style.display = 'block';
+    document.getElementById("formReminder").style.display = "block";
     startVictoryConfetti();
     showVictoryOverlay();
     logCompletion();
-    Object.keys(localStorage).forEach(key => {
-      if (!key.includes("cipherstick-anon")) {
-        localStorage.removeItem(key);
-        console.log("REMOVED LOCALSTORAGE")
+     Object.keys(localStorage).forEach(key => {
+  if (!key.includes("cipherstick-anon")) {
+    localStorage.removeItem(key);
+    console.log("REMOVED LOCALSTORAGE")
+  }
+});
+    setTimeout(() => {
+    // Freeze all input and textarea fields
+    document.querySelectorAll("input, textarea").forEach(el => {
+  //    el.readOnly = true;
+    });
+    console.log('🔒 All input and textarea fields set to readOnly');
+    // Disable all buttons except download/print buttons
+    document.querySelectorAll("button").forEach(btn => {
+      if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
+      //  btn.disabled = true;
       }
     });
-    setTimeout(() => {
-      // Freeze all input and textarea fields
-      document.querySelectorAll("input, textarea").forEach(el => {
-        //    el.readOnly = true;
-      });
-      console.log('🔒 All input and textarea fields set to readOnly');
-      // Disable all buttons except download/print buttons
-      document.querySelectorAll("button").forEach(btn => {
-        if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
-          //  btn.disabled = true;
-        }
-      });
-      console.log('🔒 All buttons disabled except certificate download/print');
-      // Clear all localStorage and sessionStorage except userId
-      // Try to preserve userId (from localStorage or sessionStorage)
-      let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-      localStorage.clear();
-      sessionStorage.clear();
-      if (userId) {
-        localStorage.setItem('userId', userId);
-        sessionStorage.setItem('userId', userId);
-        console.log('🗝️ userId preserved in localStorage/sessionStorage');
-      }
-      console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
-    }, 200); // slight delay to ensure download triggers before disabling
+    console.log('🔒 All buttons disabled except certificate download/print');
+    // Clear all localStorage and sessionStorage except userId
+    // Try to preserve userId (from localStorage or sessionStorage)
+    let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    localStorage.clear();
+    sessionStorage.clear();
+    if (userId) {
+      localStorage.setItem('userId', userId);
+      sessionStorage.setItem('userId', userId);
+      console.log('🗝️ userId preserved in localStorage/sessionStorage');
+    }
+    console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
+  }, 200); // slight delay to ensure download triggers before disabling
   } else if (!allCorrect) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
+    document.getElementById("formReminder").style.display = "none";
   }
 }
 
@@ -709,8 +705,8 @@ function generateQuestions() {
     input.type = 'text';
     input.id = `input-${index}`;
     // A simple placeholder that hides actual text:
-    const answer = requiredPrefix + q.answer + requiredSuffix
-    input.placeholder = answer.replace(/[^{} ]/g, '*');
+    const answer = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+    input.placeholder = generatePlaceholder(answer);
     input.oninput = () => localStorage.setItem(`${storageKeyPrefix}-input-${index}`, input.value);
     inputGroup.appendChild(input);
 
@@ -757,7 +753,6 @@ function restoreInputs() {
     if (saved) {
       const inputField = document.getElementById(`input-${i}`);
       inputField.value = saved;
-      // Don't await here, just fire and forget for restoration
       checkAnswer(i, false);
     }
   });
@@ -789,7 +784,7 @@ function downloadCertificate() {
   // Send email via EmailJS
   emailjs.send("service_mpx4p0t", "certificate_claimed", {
     user_name: userName,
-    quiz_difficulty: "HARD"
+    quiz_difficulty: "ABYSS"
   }).then(function(response) {
     console.log("✅ Email sent!", response.status, response.text);
   }, function(error) {
@@ -803,18 +798,18 @@ function downloadCertificate() {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Simple red-themed certificate
-  doc.setFillColor(70, 0, 0);
+  // Abyss-themed certificate (deep blue)
+  doc.setFillColor(0, 20, 60);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  doc.setDrawColor(241, 196, 15);
+  doc.setDrawColor(0, 191, 255);
   doc.setLineWidth(0.25);
   doc.rect(0.25, 0.25, pageWidth - 0.5, pageHeight - 0.5);
 
   doc.setFont('times', 'bolditalic');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(28);
-  doc.text('Certificate of Mastery', pageWidth / 2, 1.5, { align: 'center' });
+  doc.text('Certificate of Achievement', pageWidth / 2, 1.5, { align: 'center' });
 
   doc.setFontSize(18);
   doc.text('This certifies that', pageWidth / 2, 2.5, { align: 'center' });
@@ -824,7 +819,7 @@ function downloadCertificate() {
 
   doc.setFontSize(18);
   doc.text('has successfully completed', pageWidth / 2, 4.5, { align: 'center' });
-  doc.text('CipherStick: HARD - The Digital Enigma', pageWidth / 2, 5, { align: 'center' });
+  doc.text('CipherStick: ABYSS - The Abyss Protocol', pageWidth / 2, 5, { align: 'center' });
 
   doc.setFontSize(16);
   doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: 'center' });
@@ -834,12 +829,10 @@ function downloadCertificate() {
   doc.text('This achievement recognizes your elite investigative ability and OSINT expertise.', pageWidth / 2, 7.5, { align: 'center' });
 
   // Trigger download
-  doc.save("DigitalEnigma-Certificate.pdf");
+  doc.save("AbyssProtocol-Certificate.pdf");
   // Firebase completion logging (runs only when certificate is generated)
 
-
   // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
-  
 
   document.getElementById('nameInputModal').style.display = 'none';
 }
@@ -859,21 +852,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirmed) {
         questions.forEach((q, i) => {
           const input = document.getElementById(`input-${i}`);
-          input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
-          if (!testMode) {
-            localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
-          }
-          // For test mode, bypass remote validation, mark as correct directly
-          answeredCorrectly[i] = true;
-          checkedQuestions[i] = true;
-          const questionDiv = document.getElementById(`question-${i}`);
-          const questionText = questionDiv.firstChild;
-          questionDiv.style.borderColor = 'green';
-          input.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
-          questionText.style.color = "rgb(0,255,0)"
-          input.style.borderColor = "rgb(0,255,0)"
+         input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+  if (!testMode) {
+    localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
+  }
+          checkAnswer(i, false);
         });
-        checkAllAnswers();
         console.log("✅ Test mode: answers filled and logging skipped.");
       }
     }
@@ -911,8 +895,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Set timer to log attempt after 60 seconds on the page
       console.info("WAITING 60 SECONDS FOR ATTEMPT TO LOG")
       setTimeout(function() {
-        // Use "medium" as database record path, matching naming convention
-        const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
+        // Use "abyss" as database record path
+        const attemptRef = firebase.database().ref(`attempts/abyss/${uid}`);
         attemptRef.once('value').then(snap => {
           const data = snap.val();
           const now = Date.now();
@@ -946,12 +930,9 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function () {
   const BTN_W = '200px';
-  const TITLE = 'CipherStick: HARD - The Digital Enigma';
+  const TITLE = 'CipherStick: ABYSS - THE ABYSS PROTOCOL';
   const MSG   = 'Try to solve this OSINT challenge!';
   const LINK  = location.href;
-
-  // --- TEST MODE DETECTION ---
-  // (Handled in main script; do not redeclare testMode here)
 
   function showNativeShare() {
     if (navigator.share && window.isSecureContext) {
@@ -976,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const html = `
       <div id="feedbackModal" class="name-input-modal" style="display:none;background:rgba(0,0,0,1);">
         <h2 style="margin-bottom:.75rem; color: white">Did you enjoy the challenge?</h2>
-        <p style="margin-bottom:1rem; color: white">Share it with friends to spread the word!</p>
+        <p style="margin-bottom:1rem; color: white">Share it with friends to spread the word! Or fill out the feedback form below to let us know what you thought.</p>
         <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.2rem;">
           <button onclick="showNativeShare()" style="width:${BTN_W};padding:.6rem 0;background:#b30000;color:#fff;border:none;border-radius:6px;
                   cursor:pointer;font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:.6rem;">
@@ -988,8 +969,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     margin-bottom:1.2rem;">
             📬 Sign Up for More Challenges
           </a>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSf6Au1H3w5a0FtKkBG1M3t9H8KDCL79WsZBvCVVZCOihMdFrQ/viewform?usp=sharing&ouid=114401666501663284939" target="_blank"
+             style="width:200px;padding:.6rem 0;background:#00aa00;color:#fff;border:none;border-radius:6px;
+                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
+                    margin-bottom:1.2rem;">
+            📝 Give Feedback
+          </a>
           <a href="https://buymeacoffee.com/midasthecoder" target="_blank"
-             style="width:${BTN_W};padding:.6rem 0;background:#FFDD00;color:#000;border:none;border-radius:6px;
+             style="width:${BTN_W};padding:.6rem 0;background:#273FF1;color:#000;border:none;border-radius:6px;
                     cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
                     margin-bottom:1.2rem;">
             ☕ Buy Me A Coffee
@@ -1024,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeFeedback = closeFeedback;
 })();
 </script>
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="#273FF1" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 </script>
 </script>
 <!-- EmailJS integration (universal compatible) -->
