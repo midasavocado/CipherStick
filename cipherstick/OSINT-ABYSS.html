@@ -830,6 +830,24 @@ function downloadCertificate() {
 
   // Trigger download
   doc.save("AbyssProtocol-Certificate.pdf");
+  // Display certificate as image on the page
+  try {
+    const dataUrl = doc.output('dataurlstring');
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = 'Your Certificate';
+    img.style.maxWidth = '100%';
+    img.style.marginTop = '2rem';
+
+    const certDisplay = document.createElement('div');
+    certDisplay.id = 'certificateDisplay';
+    certDisplay.style.textAlign = 'center';
+    certDisplay.appendChild(img);
+
+    document.body.appendChild(certDisplay);
+  } catch (e) {
+    console.warn("Could not display certificate as image:", e);
+  }
   // Firebase completion logging (runs only when certificate is generated)
 
   // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---

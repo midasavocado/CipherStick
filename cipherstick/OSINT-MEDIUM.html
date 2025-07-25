@@ -798,6 +798,25 @@ async function validateAnswerRemotely({ challenge, questionIndex, answer }) {
     // Trigger download
     doc.save('CipherStick-MEDIUM-Certificate.pdf');
 
+    // Dynamically append the certificate as an image to the bottom of the body
+    try {
+      const dataUrl = doc.output('dataurlstring');
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.alt = 'Your Certificate';
+      img.style.maxWidth = '100%';
+      img.style.marginTop = '2rem';
+
+      const certDisplay = document.createElement('div');
+      certDisplay.id = 'certificateDisplay';
+      certDisplay.style.textAlign = 'center';
+      certDisplay.appendChild(img);
+
+      document.body.appendChild(certDisplay);
+    } catch (e) {
+      console.warn("Could not display certificate as image:", e);
+    }
+
     document.getElementById('nameInputModal').style.display = 'none';
   }
 
