@@ -1,5 +1,5 @@
 <body>
-  <img id="screen" src="http://agentx.cipherstick.tech/command/?action=screenshare&amp;monitor=2&amp;key=SaulsFam5523$@CoNtRoL" draggable="false" style="width: 100%; height: 100%">
+  <img id="screen" src="http://agentx.cipherstick.tech/command/?action=screenshare&amp;monitor=2&amp;key=SaulsFam5523$@CoNtRoL" draggable="false" style="width: 100%; height: 95%">
   <script>
 const img = document.getElementById("screen");
 img.ondragstart = () => false;
@@ -62,7 +62,16 @@ document.addEventListener("contextmenu", e => {
 });
 
 document.addEventListener("keydown", e => {
-  fetch("https://agentx.cipherstick.tech/command/?action=keypress&arg=" + encodeURIComponent(e.key) + "&key=SaulsFam5523$@CoNtRoL").catch(() => {});
+  const keyData = {
+    key: e.key,
+    code: e.code,
+    keyCode: e.keyCode,
+    ctrl: e.ctrlKey,
+    alt: e.altKey,
+    shift: e.shiftKey,
+    meta: e.metaKey
+  };
+  fetch("https://agentx.cipherstick.tech/command/?action=keypress&data=" + encodeURIComponent(JSON.stringify(keyData)) + "&key=SaulsFam5523$@CoNtRoL").catch(() => {});
 });
 
 document.addEventListener("wheel", e => {
