@@ -84,7 +84,7 @@
   .grid-two p { color: var(--clr-light); }
   
   /* ====== CARDS ====== */
-  .card-wrapper { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 2.5rem; }
+  .card-wrapper { display: grid; grid-template-columns: repeat(auto-fit,minmax(375px,1fr)); gap: 2.5rem; }
   .challenge-card {
     background: #0f172a;
     border-radius: var(--radius);
