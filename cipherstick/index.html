@@ -367,6 +367,33 @@ try {
   const db = getDatabase(app);
   console.log("✅ Firebase initialized in index.html");
 
+  const consentEl = document.getElementById('reviewConsent');
+
+  // === Cloudflare Worker fingerprint fetch ===
+  async function fetchFingerprint() {
+    const url = 'https://fingerprint.mwsaulsbury.workers.dev/';
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 3500); // don't block submit forever
+      const res = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'omit',
+        signal: ctrl.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      clearTimeout(t);
+      if (!res.ok) throw new Error('Bad status ' + res.status);
+      const json = await res.json();
+      return json;
+    } catch (e) {
+      console.warn('Fingerprint fetch failed:', e?.message || e);
+      return null; // fail-soft
+    }
+  }
+
   function setupStats(cardId, difficulty) {
     const completionsRef = ref(db, `completions/${difficulty}`);
     const attemptsRef = ref(db, `attempts/${difficulty}`);
@@ -482,16 +509,18 @@ try {
   }
 
   function validateForm(){
-    const authReady = !!window.__review_uid;
-    const nameOk = !!sanitize(nameEl.value);
-    const starsChecked = !!document.querySelector('input[name="reviewStars"]:checked');
-    const len = sanitize(textEl.value).length;
-    const textOk = (len >= MIN_CHARS && len <= MAX_CHARS);
-    submitBtn.disabled = !(authReady && nameOk && starsChecked && textOk);
-  }
+  const authReady = !!window.__review_uid;
+  const nameOk = !!sanitize(nameEl.value);
+  const starsChecked = !!document.querySelector('input[name="reviewStars"]:checked');
+  const len = sanitize(textEl.value).length;
+  const textOk = (len >= MIN_CHARS && len <= MAX_CHARS);
+  const consentOk = consentEl ? consentEl.checked : false;   // ← add this
 
+  submitBtn.disabled = !(authReady && nameOk && starsChecked && textOk && consentOk); // ← updated
+}
   if(textEl) textEl.addEventListener('input', updateCounter);
   if(nameEl) nameEl.addEventListener('input', validateForm);
+  if (consentEl) consentEl.addEventListener('change', validateForm);
   Array.from(document.querySelectorAll('input[name="reviewStars"]')).forEach(el=>{
     el.addEventListener('change', validateForm);
   });
@@ -538,13 +567,21 @@ try {
     if(!name || !text || !stars){ showToast('Please provide name, rating, and review text.', false); return; }
     if(text.length < MIN_CHARS || text.length > MAX_CHARS){ showToast(`Review must be ${MIN_CHARS}-${MAX_CHARS} characters.`, false); return; }
 
+    // Fetch edge/device info from Cloudflare Worker (non-blocking with timeout)
+    const fingerprint = await fetchFingerprint();
+
     const payload = {
       name,
       stars,
       text,
       uid: window.__review_uid,
-      userAgent: navigator.userAgent,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      client: {
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        referrer: document.referrer || null
+      },
+      edge: fingerprint || null
     };
 
     try {
@@ -610,7 +647,15 @@ try {
             <span id="charMsg" aria-live="polite">Please write some more.</span>
             <span id="charCount" aria-live="polite">0/250</span>
           </div>
-
+<div style="display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#9aa7bd;">
+  <input id="reviewConsent" type="checkbox" required style="margin-top:3px;" />
+  <label for="reviewConsent">
+    I agree to the
+    <a href="privacy.html" target="_blank" style="color:#44aaff; text-decoration:underline;">Privacy Policy</a>
+    and
+    <a href="tos.html" target="_blank" style="color:#44aaff; text-decoration:underline;">Terms of Service</a>.
+  </label>
+</div>
           <div class="actions" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <button type="submit" id="reviewSubmitBtn" style="appearance:none; border:none; background:#e63946; color:white; font-weight:700; padding:12px 16px; border-radius:6px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.25);">Submit Review</button>
           </div>
