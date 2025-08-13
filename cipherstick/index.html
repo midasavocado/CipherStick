@@ -76,15 +76,6 @@
   <link rel="canonical" href="https://cipherstick.tech/" />
   <script defer src="script.js"></script>
 
-  <!-- Google tag -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-M2NFQ1M6LR"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-M2NFQ1M6LR');
-  </script>
-
   <!-- Structured Data -->
   <script type="application/ld+json">
   {
@@ -358,7 +349,8 @@
   </script>
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
 
 try {
   const firebaseConfig = {
@@ -407,10 +399,226 @@ try {
   setupStats("card-medium", "medium");
   setupStats("card-hard", "hard");
 
+  // ===== Review Modal Logic =====
+  const overlay = document.getElementById('reviewOverlay');
+  const closeBtn = document.getElementById('reviewCloseBtn');
+  const form = document.getElementById('reviewForm');
+  const submitBtn = document.getElementById('reviewSubmitBtn');
+  const toast = document.getElementById('reviewToast');
+  const nameEl = document.getElementById('reviewName');
+  const textEl = document.getElementById('reviewText');
+  const charCount = document.getElementById('charCount');
+  const charMsg = document.getElementById('charMsg');
+
+  const MIN_CHARS = 50;
+  const MAX_CHARS = 250;
+
+  function sanitize(str){
+    return String(str).replace(/[\u0000-\u001F\u007F]/g,'').trim();
+  }
+
+  function showToast(msg, ok=true){
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    toast.style.borderColor = ok ? '#1e2432' : '#8b2c2c';
+    clearTimeout(window.__review_t);
+    window.__review_t = setTimeout(()=>{ toast.style.display='none'; }, 3000);
+  }
+
+  function openReview(){
+    if(!overlay) return;
+    overlay.style.display = 'flex';
+    // keep page scroll enabled
+  }
+  function stripReviewParam(){
+    try{
+      const url = new URL(window.location.href);
+      if(url.searchParams.has('review')){
+        url.searchParams.delete('review');
+        const qs = url.searchParams.toString();
+        const next = url.pathname + (qs ? `?${qs}` : '') + url.hash;
+        history.replaceState({}, '', next);
+      }
+    }catch(_e){}
+  }
+  function closeReview(){
+    if(!overlay) return;
+    overlay.style.display = 'none';
+    stripReviewParam();
+  }
+
+  // Star painting
+  (function(){
+    const labels = Array.from(document.querySelectorAll('#reviewForm [data-star]'));
+    function paint(n){
+      labels.forEach(l => {
+        const val = Number(l.getAttribute('data-star'));
+        l.style.background = (val <= n) ? '#172036' : 'transparent';
+        l.style.borderColor = (val <= n) ? '#2f3a53' : '#232a3a';
+        l.style.color = (val <= n) ? '#ffd166' : '#9aa7bd';
+      });
+    }
+    labels.forEach(l => {
+      l.addEventListener('click', ()=>{
+        const n = Number(l.getAttribute('data-star'));
+        const input = document.getElementById('reviewStar'+n);
+        if(input) input.checked = true;
+        paint(n);
+        validateForm();
+      });
+    });
+    const checked = document.querySelector('input[name="reviewStars"]:checked');
+    if(checked) paint(Number(checked.value));
+  })();
+
+  function updateCounter(){
+    const len = sanitize(textEl.value).length;
+    charCount.textContent = `${len}/${MAX_CHARS}`;
+    const okMin = len >= MIN_CHARS;
+    const okMax = len <= MAX_CHARS;
+    textEl.style.borderColor = (okMin && okMax) ? '#2f3a53' : '#8b2c2c';
+    charMsg.textContent = okMin ? (okMax ? 'Looks good.' : 'Too long – trim it to 250.') : 'Please write some more.';
+    validateForm();
+  }
+
+  function validateForm(){
+    const authReady = !!window.__review_uid;
+    const nameOk = !!sanitize(nameEl.value);
+    const starsChecked = !!document.querySelector('input[name="reviewStars"]:checked');
+    const len = sanitize(textEl.value).length;
+    const textOk = (len >= MIN_CHARS && len <= MAX_CHARS);
+    submitBtn.disabled = !(authReady && nameOk && starsChecked && textOk);
+  }
+
+  if(textEl) textEl.addEventListener('input', updateCounter);
+  if(nameEl) nameEl.addEventListener('input', validateForm);
+  Array.from(document.querySelectorAll('input[name="reviewStars"]')).forEach(el=>{
+    el.addEventListener('change', validateForm);
+  });
+
+  if(closeBtn){
+    closeBtn.addEventListener('click', closeReview);
+  }
+  if(overlay){
+    overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeReview(); });
+  }
+  window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeReview(); });
+
+  // Open if ?review is present
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if(params.has('review')) openReview();
+  } catch(_e) {}
+
+  // Firebase Auth (anonymous) using the same app
+  const auth = getAuth(app);
+  onAuthStateChanged(auth, (user)=>{
+    if(user){
+      window.__review_uid = user.uid;
+      validateForm();
+    } else {
+      submitBtn.disabled = true;
+    }
+  });
+  signInAnonymously(auth).catch(err=>{
+    console.warn('Auth error:', err);
+    showToast('Auth failed. Try reloading.', false);
+  });
+
+  // Submit handler -> Realtime DB /reviews
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(!window.__review_uid){ showToast('Not connected yet. One sec…', false); return; }
+
+    const name = sanitize(nameEl.value).slice(0,80);
+    const text = sanitize(textEl.value).slice(0,250);
+    const starsInput = document.querySelector('input[name="reviewStars"]:checked');
+    const stars = starsInput ? Number(starsInput.value) : 0;
+
+    if(!name || !text || !stars){ showToast('Please provide name, rating, and review text.', false); return; }
+    if(text.length < MIN_CHARS || text.length > MAX_CHARS){ showToast(`Review must be ${MIN_CHARS}-${MAX_CHARS} characters.`, false); return; }
+
+    const payload = {
+      name,
+      stars,
+      text,
+      uid: window.__review_uid,
+      userAgent: navigator.userAgent,
+      timestamp: Date.now()
+    };
+
+    try {
+      await push(ref(db, 'reviews'), payload);
+      showToast('Thanks! Your review was submitted.');
+      form.reset();
+      updateCounter();
+      validateForm();
+      setTimeout(closeReview, 350);
+    } catch(err){
+      console.error('DB write failed:', err);
+      showToast('Could not submit. Try again.', false);
+    }
+  });
+
+  // Initialize counters
+  updateCounter();
+
 } catch (err) {
   console.error("❌ Firebase setup failed in index.html:", err);
 }
 </script>
+  <!-- ===== REVIEW MODAL (opens with ?review) ===== -->
+  <div id="reviewOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:flex-start; justify-content:center; overflow:auto;">
+    <main aria-hidden="true" style="width:100%; display:flex; align-items:flex-start; justify-content:center; padding:8px 12px; box-sizing:border-box; min-height:100%;">
+      <section class="card" role="dialog" aria-modal="true" aria-labelledby="review-title" style="width:clamp(320px, 92vw, 560px); max-height:90vh; overflow:auto; background:#0f1320; color:#e6edf3; border:1px solid #1e2432; border-radius:8px; box-shadow:0 18px 50px rgba(0,0,0,0.55); position:relative; margin:100px auto;">
+        <style>
+          #reviewOverlay h1, #reviewOverlay h2, #reviewOverlay h3, #reviewOverlay p { margin-top: 0; margin-bottom: 10px; }
+        </style>
+        <div class="card-header" style="padding:10px 14px; border-bottom:1px solid #1e2432;">
+            <h1 id="review-title" class="title" style="margin:0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:0.2px; text-align: center; margin: 15px;">Leave a Review</h1>
+          <button id="reviewCloseBtn" type="button" aria-label="Close" style="position:absolute; right:16px; top:16px; cursor:pointer; color:#9aa7bd; font-size:20px; background:none; border:none;">&times;</button>
+        </div>
+
+        <form id="reviewForm" class="form" aria-describedby="review-help" style="padding:20px 22px 22px; display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="reviewName" style="font-weight:600; font-size:14px;">Name (can be a nickname)</label>
+            <input id="reviewName" name="name" type="text" placeholder="Your display name" autocomplete="name" required style="width:100%; box-sizing:border-box; padding:12px 14px; background:#0b1020; color:#e6edf3; border:1px solid #232a3a; border-radius:6px; outline:none; font-size:14px;" />
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label style="font-weight:600; font-size:14px;">Rating</label>
+            <div class="stars" role="radiogroup" aria-label="Star rating" style="display:flex; gap:8px; align-items:center;">
+              <input type="radio" id="reviewStar1" name="reviewStars" value="1" required style="display:none;" />
+              <label for="reviewStar1" title="1 star" aria-label="1 star" data-star="1" style="cursor:pointer; font-size:26px; line-height:1; user-select:none; padding:6px 8px; border:1px solid #232a3a; border-radius:6px; color:#9aa7bd;">★</label>
+              <input type="radio" id="reviewStar2" name="reviewStars" value="2" style="display:none;" />
+              <label for="reviewStar2" title="2 stars" aria-label="2 stars" data-star="2" style="cursor:pointer; font-size:26px; line-height:1; user-select:none; padding:6px 8px; border:1px solid #232a3a; border-radius:6px; color:#9aa7bd;">★</label>
+              <input type="radio" id="reviewStar3" name="reviewStars" value="3" style="display:none;" />
+              <label for="reviewStar3" title="3 stars" aria-label="3 stars" data-star="3" style="cursor:pointer; font-size:26px; line-height:1; user-select:none; padding:6px 8px; border:1px solid #232a3a; border-radius:6px; color:#9aa7bd;">★</label>
+              <input type="radio" id="reviewStar4" name="reviewStars" value="4" style="display:none;" />
+              <label for="reviewStar4" title="4 stars" aria-label="4 stars" data-star="4" style="cursor:pointer; font-size:26px; line-height:1; user-select:none; padding:6px 8px; border:1px solid #232a3a; border-radius:6px; color:#9aa7bd;">★</label>
+              <input type="radio" id="reviewStar5" name="reviewStars" value="5" style="display:none;" />
+              <label for="reviewStar5" title="5 stars" aria-label="5 stars" data-star="5" style="cursor:pointer; font-size:26px; line-height:1; user-select:none; padding:6px 8px; border:1px solid #232a3a; border-radius:6px; color:#9aa7bd;">★</label>
+            </div>
+            <p class="help" id="review-help" style="margin:0; font-size:12px; color:#9aa7bd;">Rate the puzzle you took</p>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="reviewText" style="font-weight:600; font-size:14px;">Your Review</label>
+            <textarea id="reviewText" name="text" placeholder="Please include which puzzle you did, and what you liked/disliked about it." required minlength="50" maxlength="250" style="width:100%; min-height:120px; box-sizing:border-box; padding:12px 14px; background:#0b1020; color:#e6edf3; border:1px solid #232a3a; border-radius:6px; resize:vertical; outline:none; font-size:14px;"></textarea>
+          </div>
+          <div id="charRow" style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:12px; color:#9aa7bd;">
+            <span id="charMsg" aria-live="polite">Please write some more.</span>
+            <span id="charCount" aria-live="polite">0/250</span>
+          </div>
+
+          <div class="actions" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <button type="submit" id="reviewSubmitBtn" style="appearance:none; border:none; background:#e63946; color:white; font-weight:700; padding:12px 16px; border-radius:6px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.25);">Submit Review</button>
+          </div>
+        </form>
+      </section>
+      <div id="reviewToast" aria-live="polite" style="position:fixed; left:50%; bottom:28px; transform:translateX(-50%); display:none; background:#111828; color:#e6edf3; border:1px solid #1e2432; border-radius:8px; padding:10px 14px; box-shadow:0 12px 30px rgba(0,0,0,0.4); font-size:14px; z-index:10001;">👍 Done</div>
+    </main>
+  </div>
 </body>
   <style>
   .faq-item {
