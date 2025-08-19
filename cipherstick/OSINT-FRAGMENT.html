@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CipherStick: Hard - The Digital Enigma</title>
+  <title>CipherStick: The Lazarus Fragment</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
   <!-- Confetti + jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -14,13 +14,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
-     :root {
-      --accent-color: #ff0000; /* Dark red accent */
-      --text-color: #ffffff;   /* Primary text color */
-      --border-hover: rgba(255, 0, 0, 0.4);
-      --warning-color: #f1c40f;
-      --danger-color: #e74c3c;
-      --success-color: #28a745;
+    :root {
+      --accent-color: #00c8ff; /* Cyan */
+      --text-color: #d6f2ff;
+      --border-hover: rgba(0, 200, 255, 0.4);
+      --warning-color: #80eaff; /* Light cyan for emphasis */
+      --danger-color: #ff5555;
+      --success-color: #00c8ff;
     }
 
     /* Reset & Box Sizing */
@@ -33,7 +33,7 @@
     /* BODY: With background image + an optional subtle black overlay */
     body {
       font-family: 'Open Sans', sans-serif;
-      background: url('HARD_BG.png') no-repeat center center fixed;
+      background: url('FRAGMENT_BG.png') no-repeat center center fixed;
       background-size: cover;
       min-height: 100vh;
       display: flex;
@@ -191,10 +191,10 @@
       transform: translateY(-3px);
     }
     .btn-check {
-      background: linear-gradient(135deg, #b30000, #7a0000);
+      background: linear-gradient(135deg, #0077ff, #004c99);
     }
     .btn-check:hover {
-      background: linear-gradient(135deg, #ff0000, #990000);
+      background: linear-gradient(135deg, #33aaff, #0066cc);
       transform: translateY(-3px);
     }
 
@@ -328,7 +328,7 @@
     .btn-certificate {
       margin-top: 1rem;
       padding: 0.75rem 1.5rem;
-      background: linear-gradient(135deg, #b30000, #7a0000);
+      background: linear-gradient(135deg, #0a84ff, #0a5fe0);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -342,7 +342,7 @@
       text-shadow: none;
     }
     .btn-certificate:hover {
-      background: linear-gradient(135deg, #ff0000, #990000);
+      background: linear-gradient(135deg, #4fb0ff, #1574ff);
       transform: translateY(-3px);
     }
 
@@ -382,7 +382,7 @@
 <body>
   <header>
     <a href="index.html">
-    <img src="HARD.png" alt="CipherStick: Hard"/>
+    <img src="FRAGMENT.png" alt="CipherStick: FRAGMENT"/>
   </a>
   </header>
 
@@ -401,10 +401,12 @@
         <li><a href="https://dnsdumpster.com/" target="_blank" style="color: #fff;">🌐 DNSDumpster</a> – DNS recon & infrastructure mapping</li>
         <li><a href="https://www.shodan.io/" target="_blank" style="color: #fff;">🛰️ Shodan</a> – Scan internet-connected devices</li>
         <li><a href="https://exif.tools/" target="_blank" style="color: #fff;">🧬 EXIF.tools</a> – Analyze hidden metadata in images</li>
-        <li><a href="https://haveibeenpwned.com/" target="_blank" style="color: #fff;">🕵️‍♂️ Have I Been Pwned</a> – Check for compromised emails</li>      
+        <li><a href="https://futureboy.us/stegano/decinput.html" target="_blank" style="color: #fff;">🔍 Steganographic Decoder</a> – Find hidden messages in images</li>      
+        <li><a href="" target="_blank" style="color: #fff;">🕵️‍♂️ Have I Been Pwned</a> – Check for compromised emails</li>      
         <li>IMPORTANT NOTE: Some of these sites may not be used in this puzzle, and there may be some other sites needed throught the challenge. With OSINT, you have to be prepared for everything.</li>
       </ul>
     </details>
+
 
     <div id="questionsContainer"></div>
 
@@ -422,6 +424,28 @@
     <button onclick="downloadCertificate()">Download Certificate</button>
   </div>
 
+  <div id="feedbackModal" class="name-input-modal" style="display:none;background:rgba(0,0,0,0.95);">
+    <h2 style="margin-bottom:.75rem; color: white">Did you enjoy the challenge?</h2>
+    <p style="margin-bottom:1rem; color: #ddd">Share it, sign up for more, or leave a review.</p>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:.6rem;">
+      <button onclick="showNativeShare()" style="width:220px;padding:.6rem 0;background:#0a5fe0;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:1rem;">
+        🔗 Share
+      </button>
+      <a href="https://cipherstick.tech/#email" target="_blank" style="width:220px;padding:.6rem 0;background:#0a84ff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;">
+        📬 Sign Up for More Challenges
+      </a>
+      <a href="https://cipherstick.tech/index.html?review" target="_blank" style="width:220px;padding:.6rem 0;background:#00aa00;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;">
+        ⭐ Leave a Review
+      </a>
+      <a href="https://buymeacoffee.com/midasthecoder" target="_blank" style="width:220px;padding:.6rem 0;background:#FFDD00;color:#000;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;">
+        ☕ Buy Me A Coffee
+      </a>
+      <button onclick="closeFeedback()" style="width:220px;padding:.6rem 0;background:#333;color:#ccc;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;">
+        Close
+      </button>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <footer>
@@ -429,8 +453,11 @@
   </footer>
 
 <script>
-  function logCompletion() {
-    if (testMode) {
+// --- Global test mode flag (available everywhere) ---
+window.TEST_MODE = new URLSearchParams(window.location.search).has('test');
+
+function logCompletion() {
+    if (window.TEST_MODE) {
       console.warn("🚫 Test mode active — skipping completion logging.");
       return;
     }
@@ -440,9 +467,9 @@
         return;
       }
       const uid = window.authUID;
-      // Use "medium" as database record path, matching naming convention
-      const completionsRef = firebase.database().ref("completions/hard/" + uid);
-      const attemptsRef = firebase.database().ref("attempts/hard/" + uid);
+      // Use "FRAGMENT" as database record path, matching naming convention
+      const completionsRef = firebase.database().ref("completions/FRAGMENT/" + uid);
+      const attemptsRef = firebase.database().ref("attempts/FRAGMENT/" + uid);
       console.log("🔄 Checking completions and attempts for user...");
       // Fetch attempts and completions
       attemptsRef.once("value").then((attemptSnap) => {
@@ -466,7 +493,6 @@
           completionsRef.update(updateData)
             .then(() => {
               console.log("✅ Completion logged");
-
             })
             .catch(error => {
               console.warn("❌ Completion logging failed:", error);
@@ -478,88 +504,37 @@
   }
 
 function loadIntroText() {
-
   let prefixInfo = "";
-
   if (prefixEnabled) {
     prefixInfo = `<p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>`;
   }
-
   const introHTML = `
-    <p>Welcome to <strong>The Digital Enigma</strong>, an advanced open-source intelligence (OSINT) challenge designed to push your skills to their limits. You'll investigate the mysterious disappearance of Taylor, a digital artist whose final clues lie scattered across social media, images, and hidden data trails.</p>
-    <p>Your investigation begins at: <a href="https://taylorartx.wordpress.com" target="_blank" style="color:#fff;">taylorartx.wordpress.com</a><br>Password: <code style="background:rgba(0,0,0,0.5);">TaylorPaints</code></p>
-    <p>Use your wits, curiosity, and OSINT tools to uncover secrets buried in metadata, inspect source code, decode messages, and follow digital footprints to uncover the truth.</p>
-    <p>If you are new to OSINT, I reccomend <a href="https://www.youtube.com/watch?v=Sa5LbKqCmFI" target="_blank">this video</a> to familiarize yourself with it</p>
-
-    ` + prefixInfo + `
-
-    <p>Good luck, Agent.</p>
-
-     <br><br>
-      If you are unable to solve the puzzle due to a possible error, please contact us <a href="https://cipherstick.tech/#contact" target="_blank">here</a>
-      </p>
-  `;
+  <p>Welcome to <strong>The Lazarus Fragment</strong>, an elite CipherStick investigation. In winter 2025, a DARPA neural resilience program called <em>Lazarus</em> was shuttered after rumors it could fracture a human mind into digital shards. Someone kept a shard. Someone wants you to find it.</p>
+  <p>A trail of dead blogs, glitched images, and forgotten files hints at a keeper who hid the fragment "in transit" — between origin and arrival — where archives never look the same twice.</p>
+  <p>Your investigation begins with this image:</p>
+  <img src="/xpost.png">
+  ${prefixInfo} All link answers must be in the format fr{https://example.com/}<br><br>
+  <p>Good luck, Agent.</p>
+  <br><br>
+  If you are unable to solve the puzzle due to a possible error, please contact us <a href="https://cipherstick.tech/#contact" target="_blank">here</a>
+`;
   document.getElementById("introText").innerHTML = introHTML;
 }
 
 
-const q = 'W3sicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBVUkwgb2YgdGhlIHdlYnNpdGUgd2hlcmUgdGhlIGludmVzdGlnYXRpb24gYmVnaW5zPyIsImhpbnQiOiJUaGUgV29yZFByZXNzIHNpdGUgbWVudGlvbmVkIGluIHRoZSBjYXNlIGJyaWVmaW5nLiJ9LHsicXVlc3Rpb24iOiJEb2VzIFRheWxvciBoYXZlIGEgYm9zcz8iLCJoaW50IjoiIn0seyJxdWVzdGlvbiI6IldoZW4gd2FzIFRheWxvcidzIG1vc3QgcmVjZW50IGJsb2cgcG9zdCBwdWJsaXNoZWQ/IiwiaGludCI6IkNoZWNrIHRoZSBwb3N0IGRhdGUuIEZvcm1hdDogTU0vREQvWVkifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBXb3JkUHJlc3MgdXNlcm5hbWU/IiwiaGludCI6Ikxvb2sgdW5kZXIgdGhlIHBvc3QgdGl0bGUgZm9yIGF1dGhvciBpbmZvLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBmaWxlbmFtZSBvZiB0aGUgdXBsb2FkZWQgcGFpbnRpbmc/IiwiaGludCI6IkNoZWNrIHRoZSBpbWFnZSBVUkwgZm9yIGZpbGVuYW1lICsgZXh0ZW5zaW9uLiJ9LHsicXVlc3Rpb24iOiJXaGVyZSBpcyB0aGUgaW1hZ2UgaG9zdGVkPyIsImhpbnQiOiJDaGVjayB0aGUgaW1hZ2Ugc291cmNlIGxpbmsuIn0seyJxdWVzdGlvbiI6IldoYXQgaXMgVGF5bG9yJ3MgR2l0TGFiIHVzZXJuYW1lPyIsImhpbnQiOiJJdCdzIGluIHRoZSBpbWFnZSBVUkwgYW5kIHJlcG8gbmFtZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCdzIHRoZSBoaWRkZW4gbWVzc2FnZSBpbiB0aGUgcGhvdG8/IiwiaGludCI6IkV4dHJhY3QgbWV0YWRhdGEgYW5kIGRlY29kZSBhbnkgYmFzZTY0IHRleHQuIn0seyJxdWVzdGlvbiI6IldoZXJlIHdhcyB0aGUgcGhvdG8gcGFpbnRlZD8iLCJoaW50IjoiTWV0YWRhdGEgbWF5IGNvbnRhaW4gR1BTIGNvb3JkaW5hdGVzLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSB1bmxvY2sgY29kZSBmb3IgdGhlIGZpcnN0IHNlY3JldCBpbiB0aGUgcmVwbz8iLCJoaW50IjoiVHJ5IGNsaWNraW5nIG9uIHRoZSBoZWFkZXIgdGV4dCBvZiB0aGUgaW1hZ2UuLi4gSXQgbG9va2VkIGVuY29kZWQsIGJ1dCBpcyBpdCByZWFsbHk/In0seyJxdWVzdGlvbiI6IldoYXQncyB0aGUgcGFzc3dvcmQgdG8gdGhlIFdvcmRQcmVzcyBzaXRlPyIsImhpbnQiOiJDaGVjayB0aGUgY2FzZSBicmllZmluZyBhYm92ZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBwbGF0Zm9ybSBpcyB0aGUgZW1iZWRkZWQgdmlkZW8gaG9zdGVkIG9uPyIsImhpbnQiOiJIb3ZlciBvdmVyIHRoZSBlbWJlZGRlZCB2aWRlbyBvciBjaGVjayBzb3VyY2UgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBkYXRlIHdhcyB0aGUgdmlkZW8gcmVjb3JkZWQ/IiwiaGludCI6IlVzZSBNTS9ERC9ZWS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBhaXJsaW5lIGlzIFRheWxvciBmbHlpbmcgYmFjayB3aXRoPyIsImhpbnQiOiJTZWFyY2ggdGhlIGZsaWdodCBudW1iZXIsIHVzZSAzLWxldHRlciBhaXJsaW5lIGNvZGUgKGUuZy4gVUFMKS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBmdWxsIGZsaWdodCBudW1iZXI/IiwiaGludCI6IkZvcm1hdDogQUJDMTIzNCJ9LHsicXVlc3Rpb24iOiJXaGF0IHN0YXRlIGRvZXMgVGF5bG9yIGxpdmUgaW4/IiwiaGludCI6IkZpbmQgdGhlIGRlc3RpbmF0aW9uIGFpcnBvcnQgYW5kIGRlZHVjZSB0aGUgc3RhdGUuIn0seyJxdWVzdGlvbiI6IldoaWNoIGFpcnBvcnQgZGlkIHRoZSBmbGlnaHQgbGFuZCBhdD8iLCJoaW50IjoiVXNlIHRoZSBmbGlnaHQgaW5mbyB0byBkZXRlcm1pbmUgdGhlIElBVEEgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCdzIHRoZSBzZWNvbmQgaGlkZGVuIG1lc3NhZ2UgaW4gdGhlIHZpZGVvPyIsImhpbnQiOiJMaXN0ZW4gY2xvc2VseSBhbmQgbG9vayBmb3IgTW9yc2UgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBYIChUd2l0dGVyKSBoYW5kbGU/IiwiaGludCI6IiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBzZWNvbmQgcmVwb3NpdG9yeSB1bmxvY2sgY29kZT8iLCJoaW50IjoiRGVjb2RlIHRoZSBoZXggb3IgYmFzZTY0IHN0cmluZyBwb3N0ZWQgb24gWC4ifSx7InF1ZXN0aW9uIjoiV2hpY2ggc2l0ZSBpcyByZWZlcmVuY2VkIGluIGhpcyBYIHBvc3Q/IiwiaGludCI6IkNvbnZlcnQgdGhlIGhleCBjb2RlIHRvIHJlYWRhYmxlIHRleHQuIn0seyJxdWVzdGlvbiI6IldoZXJlIHdhcyBUYXlsb3Igb24gQXByaWwgOHRoPyAoZXhhY3QgY29vcmRpbmF0ZXMpIiwiaGludCI6IkNsdWUgZm91bmQgaW4gdGhlIHNlY29uZCByZXBvIHNlY3JldC4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBlbWFpbCBhZGRyZXNzPyIsImhpbnQiOiJGb3VuZCBpbiB0aGUgaGlkZGVuIHBhZ2U7IGRlY29kZSB0aGUgbWVzc2FnZS4ifV0=';
-const questions = JSON.parse(atob(q));
-
-// Prefetch all answers for HARD challenge
-async function fetchAllAnswers() {
-  try {
-    const res = await fetch("https://validate-answer.mwsaulsbury.workers.dev/all", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ challenge: "hard" })
-    });
-    if (!res.ok) throw new Error(`status ${res.status}`);
-    const { answers } = await res.json();
-    answers.forEach((ans, i) => (questions[i].answer = ans));
-  } catch (err) {
-    console.warn("❌ Prefetch HARD answers failed:", err);
-  }
-}
-
-function generatePlaceholder(answer) {
-  const prefix = requiredPrefix || "";
-  const suffix = requiredSuffix || "";
-  if (!answer) return "";
-  const core = answer.slice(prefix.length, answer.length - suffix.length);
-  return `${prefix}${core.replace(/[^{} ]/g, "*")}${suffix}`;
-}
+const q = `WwogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBsaW5rIHRvIHRoZSBYIHByb2ZpbGUgb2Yg4oCcVGhlIFdhdGNoZXLigJ0/IiwKICAgICJoaW50IjogIiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IHdlYnNpdGUgZG9lcyB0aGVpciBtb3N0IHJlY2VudCBwb3N0IGxlYWQgdG8/IiwKICAgICJoaW50IjogIiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBoaWRkZW4gbWVzc2FnZSBvbiB0aGF0IHdlYnNpdGUgKGRlY29kZWQpIiwKICAgICJoaW50IjogIkRlY29kZSB0aGUgYmFzZSA2NCBhcyBtYW55IHRpbWVzIGFzIG5lZWRlZCB0byBjb21lIGFjcm9zcyBtb3JzZSBjb2RlLiBUaGVuLCBkZWNvZGUgdGhhdCBtb3JzZSBjb2RlLiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBmaXJzdCBuYW1lIG9mIHRoZSBwZXJzb24gd2hvIHNpbmdzIHRoZSBzb25nIHRoYXQgeW91IGp1c3Qgc2F3PyIsCiAgICAiaGludCI6ICLwn6Sj8J+ko/CfpKPwn6Sj8J+ko/CfpKPwn6SjIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIFggaGFuZGxlIGhpZGRlbiBvbiB0aGF0IHBhZ2U/IiwKICAgICJoaW50IjogIlRyeSBjdXJsaW5nIHRoZSBvcmlnaW5hbCBwYWdlLiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGljaCBjb3VudHJ5IHdhcyB0aGUgbW9zdCByZWNlbnRseSBwb3N0ZWQgcGhvdG8gdGFrZW4gaW4/IiwKICAgICJoaW50IjogIkZpcnN0LCB1bi1pbnZlcnQgdGhlIGNvbG9ycyBhbmQgdW5kbyBhbGwgdHJhbnNmb3JtYXRpb25zLCB0aGVuIHVzZSB5b3VyIGdlb2xvY2F0aW9uIHNraWxscyB0byBmaW5kIG91dCB3aGljaCBjb3VudHJ5IHRoYXQgcGljdHVyZSB3YXMgdGFrZW4gaW4uIEl0cyBub3QgRnJhbmNlLiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSAyLWxldHRlciBhbmQgMy1kaWdpdCBmbGlnaHQgY29kZSBvZiB0aGUgZmxpZ2h0IHRoZSBtYW4gd2FzIG9uPyIsCiAgICAiaGludCI6ICJGaW5kIG91dCB3aGljaCBhaXJwb3J0IHRoZSBtYW4gbGFuZGVkIGF0IGJ5IG1hcHBpbmcgZnJvbSB0aGUgbG9jYXRpb24gb2YgdGhlIGxhbmRtYXJrIGhlIHNhaWQgaGUgd2FzIGF0IHRvIHdoaWNoZXZlciBhaXJwb3J0IGlzIDMgaG91cnMgYXdheSBmcm9tIHRoYXQuIFRoZW4sIHVzZSBhIGZsaWdodCB0cmFja2luZyB0b29sIHN1Y2ggYXMgZmxpZ2h0ZXJhLm5ldCB0byBsb29rIGZvciB0aGUgZXhhY3QgZGF0ZSBhbmQgdGltZSBvZiB0aGUgZmxpZ2h0LCBhcyB3ZWxsIGFzIHRoZSBhaXJsaW5lIChmb3VuZCBmcm9tIHRoZSBmaXJzdCBpbWFnZSBzZW50IG9uIHRoZSBYIGFjY291bnQpIGFuZCBmaW5kIHRoZSBmbGlnaHQgY29kZS4iCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyB0aGUgbGluayB0byB0aGUgR2l0SHViIHJlcG9zaXRvcnkgdGhhdCB3b3cxLnBuZyByZWZlcmVuY2VzPyIsCiAgICAiaGludCI6ICJJbnNwZWN0IHRoYXQgaW1hZ2XigJlzIG1ldGFkYXRhLiIKICB9LAogIHsKICAgICJxdWVzdGlvbiI6ICJXaGF0IGlzIHRoZSBwYXNzd29yZCB0byB0aGUgWklQIGZpbGUgaW4gdGhlIHJlcG9zaXRvcnk/IiwKICAgICJoaW50IjogIkluc3BlY3QgdGhlIG1ldGFkYXRhIG9mIHBsYW5lMi5qcGcgdG8gY29tcGxldGUgdGhlIG1lc3NhZ2UuIFRoZW4gZmluZCBvdXQgd2hhdCBpdCBtZWFucyBieSDigJxDT0RFU1RBUlRDT0RFRU5E4oCdIGFuZCDigJzwn5ur8J+brOKAnS4gRXh0cmEgaGludDogQWlycG9ydCBjb2Rlcy4gTm8gZGFzaGVzLCBqdXN0IHRoZSB0d28sIHJpZ2h0IG5leHQgdG8gZWFjaCBvdGhlci4iCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hhdCBpcyBoaWRkZW4gaW4gdGhlIEpQRUc/IiwKICAgICJoaW50IjogIlB1dCBhdWRpb19ub3RlLndhdiB0aHJvdWdoIGFueSBzcGVjdHJvZ3JhbSB2aWV3ZXIsIGFuZCB0aGUgNXRoIHdvcmQgdGhhdCBzaG93cyB1cCBpcyBrZXkuIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIHdlYnNpdGUgaW4gd2hpY2ggdGhlIHRleHQgaGlkZGVuIGluIHRoZSBpbWFnZSBpcyBwdXQgdG8gZ29vZCB1c2U/IiwKICAgICJoaW50IjogIlB1dCBoaWRkZW4uanBlZyB0aHJvdWdoIGEgdG9vbCBzdWNoIGFzIGh0dHBzOi8vZnV0dXJlYm95LnVzL3N0ZWdhbm8vZGVjaW5wdXQuaHRtbCBhbmQgZmluZCB0aGUgaGlkZGVuIHRleHQuIFRvIHB1dCBpdCB0byBnb29kIHVzZSwgc2VhcmNoIGZvciB3aGF0IHdlYnNpdGUgcHV0IDMgd29yZHMgdG8gZ29vZCB1c2UuIgogIH0sCiAgewogICAgInF1ZXN0aW9uIjogIldoYXQgaXMgdGhlIFVSTCBvZiB0aGUgZmluYWwgcGFnZT8iLAogICAgImhpbnQiOiAiRG9jdW1lbnQgdGhlIGxvY2F0aW9ucyBvZiBlYWNoIG9mIHRoZSAzIHdvcmQgY29tYmluYXRpb25zLCBhbmQgdGhleSB3aWxsIHNwZWxsIHNvbWV0aGluZyBvdXQuIElmIHlvdSBrbm93IHdoYXQgeW91IG5lZWQgdG8gZG8gYnV0IHJlYWxseSBkb250IHdhbnQgdG8gZG9jdW1lbnQgYWxsIHRoZSBwb3NpdGlvbnMsIGl0IHNwZWxscyBvdXQgTDJacGJtRnMuIChUaGF04oCZcyB3aGF0IGl0IGlzIGluIGJhc2U2NCkiCiAgfSwKICB7CiAgICAicXVlc3Rpb24iOiAiV2hlcmUgaXMgdGhlIHNoYXJkIGhpZGRlbj8iLAogICAgImhpbnQiOiAiIgogIH0KXQ==`;
+const decoder = new TextDecoder('utf-8');
+const jsonString = decoder.decode(Uint8Array.from(atob(q), c => c.charCodeAt(0)));
+const questions = JSON.parse(jsonString);
 
 
-const storageKeyPrefix = "OSINT-HARD";
-const requiredPrefix = "pr{";
+const storageKeyPrefix = "OSINT-FRAGMENT";
+const requiredPrefix = "fr{";
 const requiredSuffix = "}";
 const prefixEnabled = requiredPrefix.trim() !== "";
 let quizCompleted = false;
 let checkedQuestions = new Array(questions.length).fill(false);
 let answeredCorrectly = new Array(questions.length).fill(false);
-
-// --- Remote validation for HARD answers ---
-const VALIDATION_URL = "https://validate-answer.mwsaulsbury.workers.dev/";
-
-function validateAnswerRemotely({ challenge, questionIndex, answer }) {
-  return fetch(VALIDATION_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ challenge, questionIndex, answer })
-  })
-    .then(res => res.json())
-    .then(result => {
-      console.log("🧠 Remote validation result:", result);
-      return result.correct === true;
-    })
-    .catch(err => {
-      console.error("🌩️ Server error validating:", err);
-      return false;
-    });
-}
 
 function normalizeInput(str) {
   return str.toLowerCase()
@@ -577,71 +552,70 @@ function showToastMessage(message, type) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-async function checkAnswer(index, showBanner = true) {
-  const inputField = document.getElementById(`input-${index}`);
-  const userInputRaw = inputField.value;
-  const userInput = normalizeInput(userInputRaw);
-  const questionDiv = document.getElementById(`question-${index}`);
-  const questionText = questionDiv.firstChild;
+  function checkAnswer(index, showBanner = true) {
+    const inputField = document.getElementById(`input-${index}`);
+    const userInputRaw = inputField.value;
+    const userInput = normalizeInput(userInputRaw);
+    // expected is derived server-side; local comparison happens in checkAllAnswers()
+    const questionDiv = document.getElementById(`question-${index}`);
+    const questionText = questionDiv.firstChild
 
-  localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
-  if (userInput !== "") checkedQuestions[index] = true;
+    localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
+    if (userInput !== "") checkedQuestions[index] = true;
 
-  // Use remote validation for HARD challenge
-  let isCorrect = false;
-  try {
-    isCorrect = await validateAnswerRemotely({
-      challenge: "hard",
-      questionIndex: index,
-      answer: userInputRaw
-    });
-  } catch (e) {
-    isCorrect = false;
+    // Support for batch validation (single or array)
+    // Here we keep single validation, but if you want to batch, call with array
+    fetch('https://validate-answer.mwsaulsbury.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge: "fragment",
+        questionIndex: index,
+        answer: `${userInput}`
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        // If API returns array, pick the first item (for backward compatibility)
+        const result = Array.isArray(data) ? data[0] : data;
+        if (result.correct) {
+          if (!answeredCorrectly[index]) {
+            answeredCorrectly[index] = true;
+            questionDiv.style.borderColor = 'green';
+            inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+            questionText.style.color = "rgb(0,255,0)";
+            inputField.style.borderColor = "rgb(0,255,0)";
+            if (showBanner) {
+              showToastMessage("Correct!", "correct");
+              confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+            }
+          }
+        } else {
+          questionDiv.style.borderColor = 'red';
+          inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+          questionText.style.color = "rgb(255,0,0)";
+          inputField.style.borderColor = "rgb(255,0,0)";
+          if (showBanner) {
+            showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
+          }
+        }
+        checkAllAnswers();
+      })
+      .catch(err => {
+        console.error("Validation error:", err);
+        showToastMessage("Error validating answer with server", "incorrect");
+        // Still call checkAllAnswers to keep UI logic consistent
+        checkAllAnswers();
+      });
   }
 
-  if (isCorrect) {
-    if (!answeredCorrectly[index]) {
-      answeredCorrectly[index] = true;
-      questionDiv.style.borderColor = 'green';
-      inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
-      questionText.style.color = "rgb(0,255,0)"
-      inputField.style.borderColor = "rgb(0,255,0)"
-
-      if (showBanner) {
-        showToastMessage("Correct!", "correct");
-        confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
-      }
-    }
-  } else {
-    questionDiv.style.borderColor = 'red';
-    inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
-    questionText.style.color = "rgb(255,0,0)"
-    inputField.style.borderColor = "rgb(255,0,0)"
-
-    if (showBanner) {
-      showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
-    }
-  }
-  checkAllAnswers();
-}
-
-async function checkAllAnswers() {
+function checkAllAnswers() {
   const finalMessage = document.getElementById('finalMessage');
   let allCorrect = true;
   for (let i = 0; i < questions.length; i++) {
-    const inputVal = document.getElementById(`input-${i}`).value;
-    // Use remote validation for each answer
-    let correct = false;
-    try {
-      correct = await validateAnswerRemotely({
-        challenge: "hard",
-        questionIndex: i,
-        answer: inputVal
-      });
-    } catch (e) {
-      correct = false;
-    }
-    if (!correct || !checkedQuestions[i]) {
+    const inputVal = normalizeInput(document.getElementById(`input-${i}`).value);
+    const expected = normalizeInput(`${requiredPrefix}${questions[i].answer}${requiredSuffix}`);
+    if (inputVal !== expected || !checkedQuestions[i]) {
       allCorrect = false;
       break;
     }
@@ -649,43 +623,46 @@ async function checkAllAnswers() {
   if (allCorrect && !quizCompleted) {
     quizCompleted = true;
     finalMessage.style.display = 'block';
+    // document.getElementById("formReminder").style.display = "block";
     startVictoryConfetti();
     showVictoryOverlay();
+    document.getElementById('feedbackModal').style.display = 'block';
     logCompletion();
-    Object.keys(localStorage).forEach(key => {
-      if (!key.includes("cipherstick-anon")) {
-        localStorage.removeItem(key);
-        console.log("REMOVED LOCALSTORAGE")
+     Object.keys(localStorage).forEach(key => {
+  if (!key.includes("cipherstick-anon")) {
+    localStorage.removeItem(key);
+    console.log("REMOVED LOCALSTORAGE")
+  }
+});
+    setTimeout(() => {
+    // Freeze all input and textarea fields
+    document.querySelectorAll("input, textarea").forEach(el => {
+  //    el.readOnly = true;
+    });
+    console.log('🔒 All input and textarea fields set to readOnly');
+    // Disable all buttons except download/print buttons
+    document.querySelectorAll("button").forEach(btn => {
+      if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
+      //  btn.disabled = true;
       }
     });
-    setTimeout(() => {
-      // Freeze all input and textarea fields
-      document.querySelectorAll("input, textarea").forEach(el => {
-        //    el.readOnly = true;
-      });
-      console.log('🔒 All input and textarea fields set to readOnly');
-      // Disable all buttons except download/print buttons
-      document.querySelectorAll("button").forEach(btn => {
-        if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
-          //  btn.disabled = true;
-        }
-      });
-      console.log('🔒 All buttons disabled except certificate download/print');
-      // Clear all localStorage and sessionStorage except userId
-      // Try to preserve userId (from localStorage or sessionStorage)
-      let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-      localStorage.clear();
-      sessionStorage.clear();
-      if (userId) {
-        localStorage.setItem('userId', userId);
-        sessionStorage.setItem('userId', userId);
-        console.log('🗝️ userId preserved in localStorage/sessionStorage');
-      }
-      console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
-    }, 200); // slight delay to ensure download triggers before disabling
+    console.log('🔒 All buttons disabled except certificate download/print');
+    // Clear all localStorage and sessionStorage except userId
+    // Try to preserve userId (from localStorage or sessionStorage)
+    let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    localStorage.clear();
+    sessionStorage.clear();
+    if (userId) {
+      localStorage.setItem('userId', userId);
+      sessionStorage.setItem('userId', userId);
+      console.log('🗝️ userId preserved in localStorage/sessionStorage');
+    }
+    console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
+  }, 200); // slight delay to ensure download triggers before disabling
   } else if (!allCorrect) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
+    // document.getElementById("formReminder").style.display = "none";
   }
 }
 
@@ -712,9 +689,9 @@ function generateQuestions() {
     const input = document.createElement('input');
     input.type = 'text';
     input.id = `input-${index}`;
-    // A simple placeholder that hides actual text:
-    const answer = requiredPrefix + q.answer + requiredSuffix
-    input.placeholder = answer.replace(/[^{} ]/g, '*');
+    // Use improved placeholder logic:
+    const answer = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+    input.placeholder = generatePlaceholder(answer);
     input.oninput = () => localStorage.setItem(`${storageKeyPrefix}-input-${index}`, input.value);
     inputGroup.appendChild(input);
 
@@ -761,7 +738,6 @@ function restoreInputs() {
     if (saved) {
       const inputField = document.getElementById(`input-${i}`);
       inputField.value = saved;
-      // Don't await here, just fire and forget for restoration
       checkAnswer(i, false);
     }
   });
@@ -793,7 +769,7 @@ function downloadCertificate() {
   // Send email via EmailJS
   emailjs.send("service_mpx4p0t", "certificate_claimed", {
     user_name: userName,
-    quiz_difficulty: "HARD"
+    quiz_difficulty: "fragment"
   }).then(function(response) {
     console.log("✅ Email sent!", response.status, response.text);
   }, function(error) {
@@ -807,44 +783,57 @@ function downloadCertificate() {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Simple red-themed certificate
-  doc.setFillColor(70, 0, 0);
+  // Blue/Cyan-themed certificate
+  // Background fill
+  doc.setFillColor(5, 12, 28); // deep navy
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  doc.setDrawColor(241, 196, 15);
+  // Border accent
+  doc.setDrawColor(0, 200, 255); // cyan
   doc.setLineWidth(0.25);
   doc.rect(0.25, 0.25, pageWidth - 0.5, pageHeight - 0.5);
 
+  // Title and text colors
   doc.setFont('times', 'bolditalic');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(28);
-  doc.text('Certificate of Mastery', pageWidth / 2, 1.5, { align: 'center' });
 
+  // Header Title
+  doc.setFontSize(30);
+  doc.text('The Lazarus Fragment — Certificate of Completion', pageWidth / 2, 1.45, { align: 'center' });
+
+  // Thin cyan divider
+  doc.setDrawColor(0, 200, 255);
+  doc.setLineWidth(0.02);
+  doc.line(0.75, 1.7, pageWidth - 0.75, 1.7);
+
+  // Body copy
+  doc.setFont('times', 'normal');
   doc.setFontSize(18);
-  doc.text('This certifies that', pageWidth / 2, 2.5, { align: 'center' });
+  doc.text('This certifies that', pageWidth / 2, 2.6, { align: 'center' });
 
-  doc.setFontSize(24);
-  doc.text(userName, pageWidth / 2, 3.5, { align: 'center' });
+  doc.setFont('times', 'bold');
+  doc.setFontSize(26);
+  doc.text(userName, pageWidth / 2, 3.6, { align: 'center' });
 
+  doc.setFont('times', 'normal');
   doc.setFontSize(18);
-  doc.text('has successfully completed', pageWidth / 2, 4.5, { align: 'center' });
-  doc.text('CipherStick: HARD - The Digital Enigma', pageWidth / 2, 5, { align: 'center' });
+  doc.text('has successfully completed the CipherStick OSINT investigation', pageWidth / 2, 4.6, { align: 'center' });
+  doc.text('THE LAZARUS FRAGMENT', pageWidth / 2, 5.1, { align: 'center' });
 
   doc.setFontSize(16);
-  doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: 'center' });
-  doc.text('Awarded by: CipherStick Team', pageWidth / 2, 6.5, { align: 'center' });
+  doc.text(`Awarded on ${certificateDate}`, pageWidth / 2, 5.9, { align: 'center' });
 
-  doc.setFontSize(14);
-  doc.text('This achievement recognizes your elite investigative ability and OSINT expertise.', pageWidth / 2, 7.5, { align: 'center' });
+  // Signature line and footer
+  doc.setLineWidth(0.02);
+  doc.line(pageWidth/2 - 2.2, 6.8, pageWidth/2 + 2.2, 6.8);
+  doc.setFontSize(12);
+  doc.text('CipherStick • cipherstick.tech', pageWidth / 2, 7.1, { align: 'center' });
 
-  // Trigger download
-  doc.save("DigitalEnigma-Certificate.pdf");
+  // Save with clearer filename
+  doc.save('Lazarus-Fragment-Certificate.pdf');
 
-  // Display certificate as image on the page
+  // Display the certificate as an image at the bottom of the page
   try {
-    // Remove any previous certificate display
-    const prev = document.getElementById('certificateDisplay');
-    if (prev) prev.remove();
     const dataUrl = doc.output('dataurlstring');
     const img = document.createElement('img');
     img.src = dataUrl;
@@ -869,45 +858,86 @@ function downloadCertificate() {
   document.getElementById('nameInputModal').style.display = 'none';
 }
 
+// Prefetch FRAGMENT answers for placeholders and answer injection
+async function fetchAllAnswers() {
+  try {
+    const res = await fetch("https://validate-answer.mwsaulsbury.workers.dev/all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge: "fragment" })
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const { answers } = await res.json();
+    answers.forEach((ans, i) => (questions[i].answer = ans));
+  } catch (err) {
+    console.warn("❌ Prefetch FRAGMENT answers failed:", err);
+  }
+}
+
+function generatePlaceholder(answer) {
+  const prefix = requiredPrefix || "";
+  const suffix = requiredSuffix || "";
+  if (!answer) return "";
+  const core = answer.slice(prefix.length, answer.length - suffix.length);
+  return `**{${core.replace(/[^{} ]/g, "*")}}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadIntroText();
-  fetchAllAnswers().then(() => {
-    generateQuestions();
-    restoreInputs();
 
-    // --- TEST MODE AUTOFILL (new logic) ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const testMode = urlParams.has('test');
+  // Ensure answers are fetched and fields are rendered before any autofill
+  fetchAllAnswers()
+    .then(() => {
+      generateQuestions();
+      restoreInputs();
 
-    if (testMode) {
-      const confirmed = confirm("Test mode is ON. All answers will be filled in automatically, and Firebase logging will be skipped.");
-      if (confirmed) {
-        questions.forEach((q, i) => {
-          const input = document.getElementById(`input-${i}`);
-          input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
-          if (!testMode) {
-            localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
-          }
-          // For test mode, bypass remote validation, mark as correct directly
-          answeredCorrectly[i] = true;
-          checkedQuestions[i] = true;
-          const questionDiv = document.getElementById(`question-${i}`);
-          const questionText = questionDiv.firstChild;
-          questionDiv.style.borderColor = 'green';
-          input.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
-          questionText.style.color = "rgb(0,255,0)"
-          input.style.borderColor = "rgb(0,255,0)"
-        });
-        checkAllAnswers();
-        console.log("✅ Test mode: answers filled and logging skipped.");
+      // --- TEST MODE AUTOFILL (runs AFTER rendering & answers ready) ---
+      if (window.TEST_MODE) {
+        const confirmed = confirm("Test mode is ON. All answers will be filled in automatically, and Firebase logging will be skipped.");
+        if (confirmed) {
+          questions.forEach((q, i) => {
+            const input = document.getElementById(`input-${i}`);
+            if (input && q && typeof q.answer === "string") {
+              input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+              // Do NOT persist in localStorage while in test mode
+              checkAnswer(i, false);
+            }
+          });
+          console.log("✅ Test mode: answers filled and logging skipped.");
+        }
       }
-    }
-  });
+    })
+    .catch(err => {
+      console.warn("❌ Prefetch/render sequence failed:", err);
+      // Fallback: render questions anyway
+      generateQuestions();
+    });
 });
+// --- Feedback modal helpers ---
 </script>
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-  const testMode = urlParams.has('test');
+function showNativeShare() {
+  if (navigator.share && window.isSecureContext) {
+    const title = 'CipherStick: The Lazarus Fragment';
+    const text = 'Try to solve this OSINT challenge!';
+    const url = location.href;
+    navigator.share({ title, text, url }).catch(err => {
+      if (err && err.name !== 'AbortError') {
+        console.warn('Share failed:', err);
+        alert('Sharing not supported or failed.');
+      }
+    });
+  } else {
+    alert('Sharing not supported on this device/browser.');
+  }
+}
+function closeFeedback() {
+  const fm = document.getElementById('feedbackModal');
+  if (fm) fm.style.display = 'none';
+}
+</script>
+<script>
+  const TEST_MODE = window.TEST_MODE === true;
   // Firebase config and initialization
   console.log("📦 Initializing Firebase...");
   const firebaseConfig = {
@@ -924,7 +954,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wait for Firebase Auth state and ensure anonymous login before attempt/completion logging
   firebase.auth().onAuthStateChanged(function(user) {
-    if (testMode) {
+    if (TEST_MODE) {
       console.warn("🚫 Test mode active — skipping attempt logging.");
       return;
     }
@@ -936,8 +966,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Set timer to log attempt after 60 seconds on the page
       console.info("WAITING 60 SECONDS FOR ATTEMPT TO LOG")
       setTimeout(function() {
-        // Use "medium" as database record path, matching naming convention
-        const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
+        // Use "FRAGMENT" as database record path, matching naming convention
+        const attemptRef = firebase.database().ref(`attempts/FRAGMENT/${uid}`);
         attemptRef.once('value').then(snap => {
           const data = snap.val();
           const now = Date.now();
@@ -967,95 +997,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-</script>
-<script>
-(function () {
-  const BTN_W = '200px';
-  const TITLE = 'CipherStick: HARD - The Digital Enigma';
-  const MSG   = 'Try to solve this OSINT challenge!';
-  const LINK  = location.href;
-
-  // --- TEST MODE DETECTION ---
-  // (Handled in main script; do not redeclare testMode here)
-
-  function showNativeShare() {
-    if (navigator.share && window.isSecureContext) {
-      navigator.share({ title: TITLE, text: `${TITLE} — ${MSG}`, url: LINK })
-        .catch(err => {
-          if (err.name !== "AbortError") {
-            console.warn('Share failed:', err);
-            alert('Sharing not supported or failed.');
-          }
-        });
-    } else {
-      alert('Sharing not supported. Try on a phone or secure browser.');
-    }
-  }
-
-  function closeFeedback() {
-    const fm = document.getElementById('feedbackModal');
-    if (fm) fm.style.display = 'none';
-  }
-
-  function ensureModal() {
-    const html = `
-      <div id="feedbackModal" class="name-input-modal" style="display:none;background:rgba(0,0,0,1);">
-        <h2 style="margin-bottom:.75rem; color: white">Did you enjoy the challenge?</h2>
-        <p style="margin-bottom:1rem; color: white">Share it with friends to spread the word!</p>
-        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.2rem;">
-          <button onclick="showNativeShare()" style="width:${BTN_W};padding:.6rem 0;background:#b30000;color:#fff;border:none;border-radius:6px;
-                  cursor:pointer;font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:.6rem;">
-            🔗 Share
-          </button>
-          <a href="https://cipherstick.tech/#email" target="_blank"
-             style="width:200px;padding:.6rem 0;background:#0d00ff;color:#fff;border:none;border-radius:6px;
-                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
-                    margin-bottom:1.2rem;">
-            📬 Sign Up for More Challenges
-          </a>
-          <a href="https://buymeacoffee.com/midasthecoder" target="_blank"
-             style="width:${BTN_W};padding:.6rem 0;background:#FFDD00;color:#000;border:none;border-radius:6px;
-                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
-                    margin-bottom:1.2rem;">
-            ☕ Buy Me A Coffee
-          </a>
-          <a href="https://cipherstick.tech/index.html?review" target="_blank"
-             style="width:200px;padding:.6rem 0;background:#00aa00;color:#fff;border:none;border-radius:6px;
-                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
-                    margin-bottom:1.2rem;">
-            ⭐ Leave a Review
-          </a>
-          <button onclick="closeFeedback()" style="width:${BTN_W};padding:.6rem 0;background:#333;color:#ccc;border:none;border-radius:6px;
-                  cursor:pointer;font-family:'Poppins',sans-serif;">
-            Close
-          </button>
-        </div>
-      </div>`;
-    const existing = document.getElementById('feedbackModal');
-    if (existing) existing.outerHTML = html;
-    else document.body.insertAdjacentHTML('beforeend', html);
-  }
-
-  function patchDownload() {
-    if (typeof window.downloadCertificate !== 'function') return;
-    const original = window.downloadCertificate;
-    window.downloadCertificate = function () {
-      original.apply(this, arguments);
-      setTimeout(() => {
-        ensureModal();
-        document.getElementById('feedbackModal').style.display = 'block';
-      }, 300);
-    };
-  }
-
-  ensureModal();
-  patchDownload();
-
-  window.showNativeShare = showNativeShare;
-  window.closeFeedback = closeFeedback;
-})();
-</script>
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 </script>
 </script>
 <!-- EmailJS integration (universal compatible) -->

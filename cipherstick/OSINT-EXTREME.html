@@ -406,17 +406,8 @@
       </ul>
     </details>
 
-    <details style="margin: 1rem 0; background: rgba(0, 0, 0, 0.6); border-left: 5px solid var(--accent-color); padding: 1rem; border-radius: 8px;">
-      <summary style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">📝 Feedback Form</summary>
-      <div style="margin-top: 1rem; text-align: center;">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLScpWzrqjo04XjBt5hx0YuHGTICWWRn9C_gRoF_vRHaO13cTCg/viewform?usp=sharing&ouid=114401666501663284939"
-           target="_blank"
-           style="background:#00aa00; color:#fff; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; text-decoration: none;
-                  box-shadow: 0 4px 10px rgba(0,0,0,0.3); display:inline-block;">
-          📝 Submit Feedback on This New Challenge
-        </a>
-      </div>
-    </details>
+
+     
 
     <div id="questionsContainer"></div>
 
@@ -502,6 +493,10 @@ function loadIntroText() {
       <p>Your investigation begins at: <a href="https://enochfiles.netlify.app" target="_blank" style="color:#0f0;">enochfiles.netlify.app</a></p>
       ${prefixInfo} All link answers must be in the format hx{https://example.com/}<br><br>
       <p>Good luck, Agent.</p>
+
+       <br><br>
+      If you are unable to solve the puzzle due to a possible error, please contact us <a href="https://cipherstick.tech/#contact" target="_blank">here</a>
+      </p>
     `;
   document.getElementById("introText").innerHTML = introHTML;
 }
