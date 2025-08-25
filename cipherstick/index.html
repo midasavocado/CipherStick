@@ -164,14 +164,30 @@
   <section id="challenges" class="section alt-bg">
     <div class="container">
       <h2 class="section-title">Choose&nbsp;Your&nbsp;Challenge</h2>
-       <!-- <div class="new-badge">NEW!</div> -->
+       
+        <article class="challenge-card" id="card-fragment">
+          <img src="FRAGMENT.png" alt="Extreme banner">
+          <div class="new-badge">NEW!</div>
+          <div class="card-content">
+            <h4><em>The Lazarus Fragment</em>&nbsp;&nbsp;<span style="color: #ffffff; font-weight: bold;">(Extreme)</span></h4>
+            <p>The hardest CipherStick challenge yet.</p>
+            <a href="
+            OSINT-FRAGMENT.html"
+            class="btn" target="_blank">
+              Launch</a>
+          </div>
+          <div class="challenge-stats-corner">
+            <div>Total Attempts: <span class="attempt-count">0</span></div>
+            <div>Total Completions: <span class="completion-count">0</span></div>
+          </div>
+        </article>
         <br>
       <div class="card-wrapper">
         <article class="challenge-card" id="card-extreme">
           <img src="EXTREME.png" alt="Extreme banner">
           <div class="card-content">
             <h4><em>The Fall of Enoch Hayes</em>&nbsp;&nbsp;<span style="color: #ffffff; font-weight: bold;">(Extreme)</span></h4>
-            <p>The hardest CipherStick challenge yet.</p>
+            <p>The first advanced puzzle.</p>
             <a href="
             OSINT-EXTREME.html"
             class="btn" target="_blank">
@@ -401,6 +417,7 @@ try {
   }
 
   setupStats("card-extreme", "extreme");
+  setupStats("card-fragment", "FRAGMENT");
   setupStats("card-abyss", "abyss");
   setupStats("card-medium", "medium");
   setupStats("card-hard", "hard");
