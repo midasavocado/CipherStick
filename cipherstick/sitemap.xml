@@ -1,27 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  <!-- updated 2025-08-30 -->
 
+  <url>
+    <loc>https://cipherstick.tech/</loc>
+    <lastmod>2025-08-30T00:00:00+00:00</lastmod>
+    <priority>1.00</priority>
+  </url>
 
-<url>
-  <loc>https://cipherstick.tech/</loc>
-  <lastmod>2025-06-03T17:40:55+00:00</lastmod>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://cipherstick.tech/osint-medium</loc>
-  <lastmod>2025-06-03T17:40:55+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://cipherstick.tech/osint-hard</loc>
-  <lastmod>2025-06-03T17:40:55+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
+  <url>
+    <loc>https://cipherstick.tech/OSINT-ABYSS.html</loc>
+    <lastmod>2025-08-30T00:00:00+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
 
+  <url>
+    <loc>https://cipherstick.tech/OSINT-EXTREME.html</loc>
+    <lastmod>2025-08-30T00:00:00+00:00</lastmod>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://cipherstick.tech/OSINT-FRAGMENT.html</loc>
+    <lastmod>2025-08-30T00:00:00+00:00</lastmod>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://cipherstick.tech/OSINT-HARD.html</loc>
+    <lastmod>2025-08-30T00:00:00+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://cipherstick.tech/OSINT-MEDIUM.html</loc>
+    <lastmod>2025-08-30T00:00:00+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
 
 </urlset>
