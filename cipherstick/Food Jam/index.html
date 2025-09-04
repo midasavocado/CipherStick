@@ -7,13 +7,46 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
 
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
+<!-- SEO, Social, and Favicon -->
+<meta name="description" content="Food Jam is a fast, family-friendly card & dice game. Collect ingredients, trade smart, and play spicy action cards to cook recipes and win.">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#ff9966">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Food Jam – The Tasty Card & Dice Game">
+<meta property="og:description" content="Race to collect ingredients, trade smart, and drop spicy action cards. Two-ingredient recipes score 2, three-ingredient score 3—if your friends don’t sabotage you first.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="/ogimage.webp">
+<meta property="og:image:alt" content="Food Jam rules sheet preview">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Food Jam – The Tasty Card & Dice Game">
+<meta name="twitter:description" content="Family-friendly card & dice chaos: collect, trade, and out-chef your friends.">
+<meta name="twitter:image" content="Rule1.webp">
+
+<!-- Favicon (SVG data URL; no extra files required) -->
+<link rel="icon" href="/ogimage.webp" type="image/png" sizes="512x512">
+<link rel="icon" href="/ogimage.webp" type="image/png" sizes="192x192">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/ogimage.webp">
+
 <style>
-  :root{
+  :root {
     --bg:#fff8f0; --ink:#2b2b2b; --accent:#ff9966; --accent-2:#ffcc66;
     --accent-ink:#7a2c00; --brand:#cc5500; --card:#ffffff; --soft:#fef0d9;
     --shadow:0 10px 24px rgba(0,0,0,.12); --radius:18px;
+  
+
   }
+
   *{box-sizing:border-box}
+
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Comic Neue',cursive;}
   img{max-width:100%;height:auto;display:block}
 
@@ -293,8 +326,8 @@
   </div>
   <p style="margin:14px 0 8px;font-weight:800;color:#7a2c00">Tap to zoom the full rule sheets:</p>
   <div class="rules-grid">
-    <img data-rule src="Rule2.png" alt="Food Jam Rules 1" />
-    <img data-rule src="Rule1.png" alt="Food Jam Rules 2" />
+    <img data-rule src="Rule2.webp" alt="Food Jam Rules 1" />
+    <img data-rule src="Rule1.webp" alt="Food Jam Rules 2" />
   </div>
 </section>
 
@@ -363,36 +396,36 @@
 /* ===== Card data ===== */
 const BASE = 'Food Jam Ingredient Cards (2)/';
 const BACKS = {
-  action: BASE + 'Actions Card Back.png',
-  recipe: BASE + 'Recipies Back.png',
-  ingredient: BASE + 'Ingridiants Back.png'
+  action: BASE + 'Actions Card Back.webp',
+  recipe: BASE + 'Recipies Back.webp',
+  ingredient: BASE + 'Ingridiants Back.webp'
 };
 const CARDS = [
-  {name:'Apple', type:'Ingredient', front:BASE+'Apple.png'},
-  {name:'Banana', type:'Ingredient', front:BASE+'Banana.png'},
-  {name:'Bread', type:'Ingredient', front:BASE+'Bread Card.png'},
-  {name:'Cheese', type:'Ingredient', front:BASE+'Cheese Card.png'},
-  {name:'Cherry', type:'Ingredient', front:BASE+'Cherry.png'},
-  {name:'Chocolate', type:'Ingredient', front:BASE+'Chocolate.png'},
-  {name:'Ice Cream', type:'Ingredient', front:BASE+'Ice Cream.png'},
-  {name:'Lettuce', type:'Ingredient', front:BASE+'Lettuce Card.png'},
-  {name:'Magic Berry', type:'Ingredient', front:BASE+'Magic Berry.png', note:'Counts as any ingredient'},
-  {name:'Orange', type:'Ingredient', front:BASE+'Orange.png'},
-  {name:'Tomato', type:'Ingredient', front:BASE+'Tomato Card.png'},
+  {name:'Apple', type:'Ingredient', front:BASE+'Apple.webp'},
+  {name:'Banana', type:'Ingredient', front:BASE+'Banana.webp'},
+  {name:'Bread', type:'Ingredient', front:BASE+'Bread Card.webp'},
+  {name:'Cheese', type:'Ingredient', front:BASE+'Cheese Card.webp'},
+  {name:'Cherry', type:'Ingredient', front:BASE+'Cherry.webp'},
+  {name:'Chocolate', type:'Ingredient', front:BASE+'Chocolate.webp'},
+  {name:'Ice Cream', type:'Ingredient', front:BASE+'Ice Cream.webp'},
+  {name:'Lettuce', type:'Ingredient', front:BASE+'Lettuce Card.webp'},
+  {name:'Magic Berry', type:'Ingredient', front:BASE+'Magic Berry.webp', note:'Counts as any ingredient'},
+  {name:'Orange', type:'Ingredient', front:BASE+'Orange.webp'},
+  {name:'Tomato', type:'Ingredient', front:BASE+'Tomato Card.webp'},
 
-  {name:'Fruit Basket', type:'Recipe', front:BASE+'Friut Basket (recipie).png'},
-  {name:'Fruit Salad', type:'Recipe', front:BASE+'Friut Salad (recipie).png'},
-  {name:'Grilled Cheese', type:'Recipe', front:BASE+'Grilled Cheese (recipie).png'},
-  {name:'Pizza', type:'Recipe', front:BASE+'Pizza (recipie).png'},
-  {name:'Salad', type:'Recipe', front:BASE+'Salad (recipie).png'},
-  {name:'Sundae', type:'Recipe', front:BASE+'Sundae (recipie).png'},
-  {name:'Veggie Sandwich', type:'Recipe', front:BASE+'Veggie Sandwich (recipie).png'},
+  {name:'Fruit Basket', type:'Recipe', front:BASE+'Friut Basket (recipie).webp'},
+  {name:'Fruit Salad', type:'Recipe', front:BASE+'Friut Salad (recipie).webp'},
+  {name:'Grilled Cheese', type:'Recipe', front:BASE+'Grilled Cheese (recipie).webp'},
+  {name:'Pizza', type:'Recipe', front:BASE+'Pizza (recipie).webp'},
+  {name:'Salad', type:'Recipe', front:BASE+'Salad (recipie).webp'},
+  {name:'Sundae', type:'Recipe', front:BASE+'Sundae (recipie).webp'},
+  {name:'Veggie Sandwich', type:'Recipe', front:BASE+'Veggie Sandwich (recipie).webp'},
 
-  {name:'Big Spoon', type:'Action', front:BASE+'Big Spoon (action).png'},
-  {name:'Magic Oven', type:'Action', front:BASE+'Magic Oven (action).png'},
-  {name:'Mix-Up', type:'Action', front:BASE+'Mix-Up (action).png'},
-  {name:'Oops, Spill', type:'Action', front:BASE+'Oops, Spill (action).png'},
-  {name:'Rotten', type:'Action', front:BASE+'Rotten (action).png'},
+  {name:'Big Spoon', type:'Action', front:BASE+'Big Spoon (action).webp'},
+  {name:'Magic Oven', type:'Action', front:BASE+'Magic Oven (action).webp'},
+  {name:'Mix-Up', type:'Action', front:BASE+'Mix-Up (action).webp'},
+  {name:'Oops, Spill', type:'Action', front:BASE+'Oops, Spill (action).webp'},
+  {name:'Rotten', type:'Action', front:BASE+'Rotten (action).webp'},
 
   {name:'Actions Back', type:'Backs', front:BACKS.action},
   {name:'Ingredients Back', type:'Backs', front:BACKS.ingredient},

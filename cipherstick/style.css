@@ -141,7 +141,7 @@ body { background: #1d1d1d; }
 
 /* ═════════  HERO IMAGE  ═════════ */
 .image-hero {
-  background-image: url('hero.png');
+  background-image: url('hero.webp');
   background-repeat: no-repeat;
   background-position: center center;
   background-size: 120% auto;
@@ -203,7 +203,7 @@ body { background: #1d1d1d; }
 /* contrast tweak for card blurbs */
 .card-content p { color: #ccc; }
 /* ═════ HERO HEIGHT (+30 %) ═════ */
-.image-hero{background:url('hero.png') center/60% no-repeat;min-height:78vh;background-color:#0d1117;}
+.image-hero{background:url('hero.webp') center/60% no-repeat;min-height:78vh;background-color:#0d1117;}
   
   /* ═════ CONTACT FORM ═════ */
   .contact-container { max-width: 680px; }
