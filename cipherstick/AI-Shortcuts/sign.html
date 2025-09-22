@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Shortcut Maker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
+    body { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 16px 0; }
+    textarea, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bbb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    button { padding: 10px 14px; border-radius: 10px; border: 0; background: black; color: white; cursor: pointer; }
+    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .hint { color: #666; font-size: 13px; }
+    pre { overflow: auto; white-space: pre-wrap; word-wrap: break-word; }
+    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #f0f0f0; font-size: 12px; margin-right: 8px; }
+    .ok { color: #0a7f2e; }
+    .bad { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>AI Shortcut Maker</h1>
+  <p class="hint">Describe the Shortcut you want. We’ll have AI draft the Shortcuts <code>.plist</code>, then we’ll sign it into a <code>.shortcut</code> file.</p>
+
+  <div class="card">
+    <label for="shortcutName">Shortcut name</label>
+    <input id="shortcutName" type="text" placeholder="E.g., 'Speak the weather'" />
+
+    <label for="prompt" style="margin-top:12px; display:block;">What should it do?</label>
+    <textarea id="prompt" rows="6" placeholder="Example: Ask for some text and then speak it out loud."></textarea>
+
+    <div class="row" style="margin-top:12px;">
+      <button id="btnGenerate">1) Generate .plist</button>
+      <span id="genStatus" class="pill">idle</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content: space-between;">
+      <strong>Generated .plist (editable):</strong>
+      <button id="btnCopy" title="Copy plist to clipboard">Copy</button>
+    </div>
+    <textarea id="plistBox" rows="14" spellcheck="false"></textarea>
+    <div class="hint">Edit if you like. Then sign it.</div>
+    <div class="row" style="margin-top:12px;">
+      <button id="btnSign" disabled>2) Sign &amp; Download .shortcut</button>
+      <span id="signStatus" class="pill">waiting</span>
+    </div>
+  </div>
+
+  <script>
+    // 👇 Point this to your Worker domain (the one with CORS allowing cipherstick.tech)
+    const WORKER_ORIGIN = 'secrets.mwsaulsbury.workers.dev';
+
+    const el = (id) => document.getElementById(id);
+    const btnGenerate = el('btnGenerate');
+    const btnSign = el('btnSign');
+    const btnCopy = el('btnCopy');
+    const genStatus = el('genStatus');
+    const signStatus = el('signStatus');
+    const promptBox = el('prompt');
+    const plistBox = el('plistBox');
+    const nameBox = el('shortcutName');
+
+    function setStatus(node, text, good=false, bad=false) {
+      node.textContent = text;
+      node.classList.remove('ok', 'bad');
+      if (good) node.classList.add('ok');
+      if (bad) node.classList.add('bad');
+    }
+
+    btnGenerate.addEventListener('click', async () => {
+      const prompt = promptBox.value.trim();
+      const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,40);
+      if (!prompt) { alert('Please describe the shortcut.'); return; }
+
+      setStatus(genStatus, 'generating…');
+      btnGenerate.disabled = true;
+      btnSign.disabled = true;
+
+      try {
+        const res = await fetch(`${WORKER_ORIGIN}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, name })
+        });
+        if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
+        const data = await res.json();
+        if (!data || !data.plist || !data.plist.startsWith('<?xml')) {
+          throw new Error('Worker returned invalid plist.');
+        }
+        plistBox.value = data.plist;
+        setStatus(genStatus, 'ready ✔', true, false);
+        btnSign.disabled = false;
+      } catch (e) {
+        console.error(e);
+        setStatus(genStatus, 'error', false, true);
+        alert(e.message || 'Generation failed');
+      } finally {
+        btnGenerate.disabled = false;
+      }
+    });
+
+    btnCopy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(plistBox.value || '');
+        btnCopy.textContent = 'Copied!';
+        setTimeout(() => btnCopy.textContent = 'Copy', 1000);
+      } catch { /* ignore */ }
+    });
+
+    btnSign.addEventListener('click', async () => {
+      const plist = plistBox.value.trim();
+      const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,40);
+      if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
+
+      setStatus(signStatus, 'uploading to signer…');
+      btnSign.disabled = true;
+
+      try {
+        // Build a file blob for the plist, send to Worker /sign (which forwards to your Mac signer)
+        const file = new File([plist], `${name}.plist`, { type: 'application/xml' });
+        const form = new FormData();
+        form.append('file', file);
+
+        const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
+        if (!res.ok) throw new Error(`Sign failed: ${res.status}`);
+
+        // Download the returned .shortcut
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${name}.signed.shortcut`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        setStatus(signStatus, 'downloaded ✔', true, false);
+      } catch (e) {
+        console.error(e);
+        setStatus(signStatus, 'error', false, true);
+        alert(e.message || 'Signing failed');
+      } finally {
+        btnSign.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
