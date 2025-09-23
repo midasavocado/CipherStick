@@ -123,7 +123,7 @@
 
       try {
         // Build a file blob for the plist, send to Worker /sign (which forwards to your Mac signer)
-       const file = new File([plist], `${name}.plist`, { type: 'application/xml' });
+        const file = new File([plist], `${name}.plist`);
         const form = new FormData();
         form.append('file', file);
 
