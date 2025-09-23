@@ -127,6 +127,10 @@
         const form = new FormData();
         form.append('file', file);
 
+        for (let [k, v] of form.entries()) {
+  console.log("form entry", k, v);
+}
+
         const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
         if (!res.ok) throw new Error(`Sign failed: ${res.status}`);
 
