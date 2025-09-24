@@ -90,9 +90,6 @@
         });
         if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
         const data = await res.json();
-        if (!data || !data.plist || !data.plist.startsWith('<?xml')) {
-          throw new Error('Worker returned invalid plist.');
-        }
         plistBox.value = data.plist;
         setStatus(genStatus, 'ready ✔', true, false);
         btnSign.disabled = false;
