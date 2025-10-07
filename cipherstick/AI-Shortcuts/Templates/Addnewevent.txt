@@ -1,0 +1,10 @@
+Addnewevent:
+  AlertTime: "TEXT"
+  CalendarDescriptor: {{OBJECT}}
+  CalendarItemAllDay: BOOLEAN
+  CalendarItemCalendar: "TEXT"
+  CalendarItemEndDate: "TEXT"
+  CalendarItemLocation: "TEXT"
+  CalendarItemNotes: "TEXT"
+  CalendarItemStartDate: "TEXT"
+  CalendarItemTitle: "TEXT"

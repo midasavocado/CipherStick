@@ -1,0 +1,2 @@
+Repeat.Each:
+  Input: {{DEVICE_DETAILS}}  # required

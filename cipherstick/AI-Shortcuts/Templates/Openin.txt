@@ -1,0 +1,4 @@
+Openin:
+  Input: {{OBJECT}}  # required
+  OpenInAppIdentifier: "TEXT"
+  OpenInAskWhenRun: BOOLEAN

@@ -1,0 +1,3 @@
+Tesla.HvacsetTemp:
+  Temperature: {{OBJECT}}
+  Vehicle: {{ASK_WHEN_RUN}}  # required

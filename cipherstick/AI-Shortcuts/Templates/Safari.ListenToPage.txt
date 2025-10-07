@@ -1,0 +1,2 @@
+Safari.ListenToPage:
+  # No parameters (runs with defaults)

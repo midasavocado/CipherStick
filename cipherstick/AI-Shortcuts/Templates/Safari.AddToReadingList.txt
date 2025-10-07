@@ -1,0 +1,2 @@
+Safari.AddToReadingList:
+  URL: "TEXT"  # required

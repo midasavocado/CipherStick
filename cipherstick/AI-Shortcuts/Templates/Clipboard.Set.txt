@@ -1,0 +1,4 @@
+Clipboard.Set:
+  Input: {{DEVICE_DETAILS}}  # required
+  ExpirationDate: "TEXT"
+  LocalOnly: BOOLEAN

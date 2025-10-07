@@ -1,0 +1,3 @@
+Ride.Requestride:
+  DropOffLocation: {{OBJECT}}
+  PartySize: NUMBER

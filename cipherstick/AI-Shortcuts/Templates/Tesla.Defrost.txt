@@ -1,0 +1,4 @@
+Tesla.Defrost:
+  Defrost: "Enable|Disable"
+  ShowWhenRun: BOOLEAN  # optional
+  Vehicle: {{ASK_WHEN_RUN}}  # required

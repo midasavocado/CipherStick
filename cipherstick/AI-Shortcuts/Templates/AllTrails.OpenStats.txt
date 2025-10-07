@@ -1,0 +1,2 @@
+AllTrails.OpenStats:
+  # No parameters (runs with defaults)

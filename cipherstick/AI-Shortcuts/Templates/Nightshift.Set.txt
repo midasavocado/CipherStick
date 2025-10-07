@@ -1,0 +1,2 @@
+Nightshift.Set:
+  # No parameters (runs with defaults)

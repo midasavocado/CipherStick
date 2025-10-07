@@ -1,0 +1,2 @@
+Music.AddToPlaylist:
+  Input: {{CLIPBOARD}}  # required

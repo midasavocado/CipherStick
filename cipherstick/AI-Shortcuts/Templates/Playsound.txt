@@ -1,0 +1,2 @@
+Playsound:
+  Input: {{CURRENT_APP}}  # required

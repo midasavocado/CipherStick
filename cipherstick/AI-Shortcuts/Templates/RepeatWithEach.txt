@@ -1,0 +1,4 @@
+RepeatWithEach:
+  Items: "{{LIST}}"
+  Do:
+    - {{ACTIONS}}

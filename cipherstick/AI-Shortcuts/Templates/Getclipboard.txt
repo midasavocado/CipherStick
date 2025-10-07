@@ -1,0 +1,2 @@
+Getclipboard:
+  # No parameters (runs with defaults)

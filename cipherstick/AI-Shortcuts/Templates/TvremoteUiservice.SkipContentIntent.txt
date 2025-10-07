@@ -1,0 +1,2 @@
+TvremoteUiservice.SkipContentIntent:
+  Device: {{OBJECT}}

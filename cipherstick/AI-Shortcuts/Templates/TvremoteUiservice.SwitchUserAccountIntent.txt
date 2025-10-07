@@ -1,0 +1,3 @@
+TvremoteUiservice.SwitchUserAccountIntent:
+  Account: {{ASK_WHEN_RUN}}
+  Device: {{OBJECT}}

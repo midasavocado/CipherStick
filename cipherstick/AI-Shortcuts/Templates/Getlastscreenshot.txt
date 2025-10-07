@@ -1,0 +1,2 @@
+Getlastscreenshot:
+  # No parameters (runs with defaults)

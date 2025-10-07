@@ -1,0 +1,5 @@
+List.Choose:
+  Input: {{CURRENT_DATE}}  # required
+  ChooseFromListActionPrompt: "TEXT"
+  ChooseFromListActionSelectAll: BOOLEAN
+  ChooseFromListActionSelectMultiple: BOOLEAN

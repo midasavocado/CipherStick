@@ -1,0 +1,3 @@
+VoiceMemos.CreateFolder:
+  Name: "TEXT"  # required
+  ShowWhenRun: BOOLEAN  # optional

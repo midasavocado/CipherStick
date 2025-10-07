@@ -1,0 +1,7 @@
+Addframetogif:
+  AutoSize: BOOLEAN
+  DelaySeconds: "TEXT"
+  Height: "TEXT"
+  Width: "TEXT"
+  Image: {{EXTENSION_INPUT}}
+  InputGIF: {{DEVICE_DETAILS}}

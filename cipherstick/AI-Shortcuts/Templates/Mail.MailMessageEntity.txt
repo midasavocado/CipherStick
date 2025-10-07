@@ -1,0 +1,4 @@
+Mail.MailMessageEntity:
+  ContentItemFilter: {{OBJECT}}
+  ContentItemLimitEnabled: BOOLEAN
+  ContentItemSortProperty: "TEXT"

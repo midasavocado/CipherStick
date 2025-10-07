@@ -1,0 +1,2 @@
+Home.Toggle:
+  # No parameters (runs with defaults)

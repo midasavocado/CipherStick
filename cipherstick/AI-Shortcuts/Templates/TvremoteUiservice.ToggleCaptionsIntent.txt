@@ -1,0 +1,2 @@
+TvremoteUiservice.ToggleCaptionsIntent:
+  Device: {{OBJECT}}

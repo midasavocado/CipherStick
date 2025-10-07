@@ -1,0 +1,2 @@
+Reminders.WfappSettingEntityUpdaterAction:
+  IncludeDueTodayEntity: {{OBJECT}}

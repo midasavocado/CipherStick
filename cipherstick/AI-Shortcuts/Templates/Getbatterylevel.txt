@@ -1,0 +1,2 @@
+Getbatterylevel:
+  # No parameters (runs with defaults)

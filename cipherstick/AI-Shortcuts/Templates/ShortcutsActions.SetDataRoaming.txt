@@ -1,0 +1,2 @@
+ShortcutsActions.SetDataRoaming:
+  Plan: {{ENTITY}}

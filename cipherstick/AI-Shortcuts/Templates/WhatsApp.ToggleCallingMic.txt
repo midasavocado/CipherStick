@@ -1,0 +1,2 @@
+WhatsApp.ToggleCallingMic:
+  # No parameters (runs with defaults)

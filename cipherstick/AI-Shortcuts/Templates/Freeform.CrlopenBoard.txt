@@ -1,0 +1,2 @@
+Freeform.CrlopenBoard:
+  Target: {{ENTITY}}  # optional

@@ -1,0 +1,2 @@
+Clock.GetCurrentTimerDetails:
+  # No parameters (runs with defaults)

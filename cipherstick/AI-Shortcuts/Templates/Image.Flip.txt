@@ -1,0 +1,2 @@
+Image.Flip:
+  Input: {{EXTENSION_INPUT}}  # required

@@ -1,0 +1,2 @@
+WhatsApp.EndCallingLiveActivity:
+  # No parameters (runs with defaults)

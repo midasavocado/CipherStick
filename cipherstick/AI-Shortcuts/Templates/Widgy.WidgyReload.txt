@@ -1,0 +1,2 @@
+Widgy.WidgyReload:
+  # No parameters (runs with defaults)

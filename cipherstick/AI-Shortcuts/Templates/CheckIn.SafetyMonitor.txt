@@ -1,0 +1,2 @@
+CheckIn.SafetyMonitor:
+  Receiver: {{OBJECT}}

@@ -1,0 +1,2 @@
+AllTrails.StartNavigation:
+  # No parameters (runs with defaults)

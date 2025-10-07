@@ -1,0 +1,2 @@
+Calendar.SetCalendarFocusConfiguration:
+  Calendars: {{ENTITY}}

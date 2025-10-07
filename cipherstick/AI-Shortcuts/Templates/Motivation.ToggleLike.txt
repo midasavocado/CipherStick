@@ -1,0 +1,7 @@
+Motivation.ToggleLike:
+  Quote: "TEXT"
+  QuoteId: "TEXT"
+  SelectedCategories: "TEXT"
+  SelectedThemeName: "TEXT"
+  UpdatesTimeline: BOOLEAN
+  WidgetIdentifier: "TEXT"

@@ -1,0 +1,5 @@
+Books.BookAppEntity:
+  ContentItemFilter: {{OBJECT}}
+  ContentItemLimitEnabled: BOOLEAN
+  ContentItemSortOrder: "TEXT"
+  ContentItemSortProperty: "TEXT"

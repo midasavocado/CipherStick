@@ -1,0 +1,2 @@
+Getitemtype:
+  Input: {{EXTENSION_INPUT}}  # required

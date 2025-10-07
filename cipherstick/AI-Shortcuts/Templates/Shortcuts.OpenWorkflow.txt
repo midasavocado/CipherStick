@@ -1,0 +1,2 @@
+Shortcuts.OpenWorkflow:
+  Target: {{ENTITY}}  # optional

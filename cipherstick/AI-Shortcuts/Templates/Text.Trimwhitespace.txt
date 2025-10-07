@@ -1,0 +1,2 @@
+Text.Trimwhitespace:
+  Input: "TEXT"  # required

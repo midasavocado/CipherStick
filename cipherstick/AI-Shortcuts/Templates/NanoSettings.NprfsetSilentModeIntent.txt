@@ -1,0 +1,2 @@
+NanoSettings.NprfsetSilentModeIntent:
+  # No parameters (runs with defaults)

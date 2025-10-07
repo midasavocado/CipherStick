@@ -1,0 +1,2 @@
+TvremoteUiservice.LaunchRemoteIntent:
+  Device: {{OBJECT}}

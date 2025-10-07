@@ -1,0 +1,3 @@
+Searchmaps:
+  Input: {{CURRENT_LOCATION}}  # required
+  SearchMapsActionApp: {{ASK_WHEN_RUN}}

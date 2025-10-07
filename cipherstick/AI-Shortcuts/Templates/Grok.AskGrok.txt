@@ -1,0 +1,3 @@
+Grok.AskGrok:
+  Message: "TEXT"
+  ShowWhenRun: BOOLEAN  # optional

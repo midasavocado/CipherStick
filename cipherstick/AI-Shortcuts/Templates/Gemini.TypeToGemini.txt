@@ -1,0 +1,2 @@
+Gemini.TypeToGemini:
+  # No parameters (runs with defaults)

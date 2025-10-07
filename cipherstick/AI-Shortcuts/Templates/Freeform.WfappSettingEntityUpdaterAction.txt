@@ -1,0 +1,2 @@
+Freeform.WfappSettingEntityUpdaterAction:
+  # No parameters (runs with defaults)

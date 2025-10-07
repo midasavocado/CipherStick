@@ -1,0 +1,2 @@
+Notes.RemoveTagsFromNotesLink:
+  Notes: {{ENTITY}}  # optional

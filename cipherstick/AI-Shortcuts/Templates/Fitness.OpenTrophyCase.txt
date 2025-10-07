@@ -1,0 +1,2 @@
+Fitness.OpenTrophyCase:
+  # No parameters (runs with defaults)

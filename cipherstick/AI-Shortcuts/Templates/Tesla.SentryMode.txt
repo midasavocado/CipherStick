@@ -1,0 +1,3 @@
+Tesla.SentryMode:
+  Vehicle: {{ASK_WHEN_RUN}}  # required
+  VehicleMode: "Enable|Disable"

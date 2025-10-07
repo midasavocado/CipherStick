@@ -1,0 +1,2 @@
+Scanbarcode:
+  # No parameters (runs with defaults)

@@ -1,0 +1,2 @@
+Imdb.StreamingGuideNextPage:
+  # No parameters (runs with defaults)

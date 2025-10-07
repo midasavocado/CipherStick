@@ -1,0 +1,3 @@
+Makezip:
+  Input: {{EXTENSION_INPUT}}  # required
+  ZIPName: "TEXT"

@@ -1,0 +1,4 @@
+Setters.Reminders:
+  Input: {{EXTENSION_INPUT}}  # required
+  Mode: "TEXT"
+  ContentItemPropertyName: "TEXT"

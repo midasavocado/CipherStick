@@ -1,0 +1,2 @@
+Google.SearchLive:
+  # No parameters (runs with defaults)

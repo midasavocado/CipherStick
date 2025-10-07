@@ -1,0 +1,2 @@
+Audio.SetPlaybackDestination:
+  # No parameters (runs with defaults)

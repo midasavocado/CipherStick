@@ -1,0 +1,3 @@
+Photos.CreateAlbum:
+  Input: {{DEVICE_DETAILS}}  # required
+  AlbumName: "TEXT"

@@ -1,0 +1,2 @@
+Pausemusic:
+  # No parameters (runs with defaults)

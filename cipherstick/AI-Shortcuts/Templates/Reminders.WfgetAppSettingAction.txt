@@ -1,0 +1,2 @@
+Reminders.WfgetAppSettingAction:
+  # No parameters (runs with defaults)

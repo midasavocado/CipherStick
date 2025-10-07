@@ -1,0 +1,2 @@
+Yelp.AddMediaApp:
+  # No parameters (runs with defaults)

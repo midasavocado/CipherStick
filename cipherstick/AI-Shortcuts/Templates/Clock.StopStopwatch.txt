@@ -1,0 +1,2 @@
+Clock.StopStopwatch:
+  # No parameters (runs with defaults)

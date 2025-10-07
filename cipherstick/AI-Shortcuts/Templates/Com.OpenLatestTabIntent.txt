@@ -1,0 +1,2 @@
+Com.OpenLatestTabIntent:
+  # No parameters (runs with defaults)

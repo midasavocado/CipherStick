@@ -1,0 +1,2 @@
+Compresspdf:
+  Input: {{OBJECT}}  # required

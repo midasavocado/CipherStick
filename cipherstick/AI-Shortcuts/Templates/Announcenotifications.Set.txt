@@ -1,0 +1,2 @@
+Announcenotifications.Set:
+  # No parameters (runs with defaults)

@@ -1,0 +1,4 @@
+Safari.TabGroupEntity:
+  ContentItemFilter: {{OBJECT}}
+  ContentItemLimitEnabled: BOOLEAN
+  ContentItemSortProperty: "TEXT"

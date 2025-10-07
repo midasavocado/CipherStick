@@ -1,0 +1,2 @@
+MusicRecognition.RecognizeMusic:
+  ErrorIfNotRecognized: BOOLEAN

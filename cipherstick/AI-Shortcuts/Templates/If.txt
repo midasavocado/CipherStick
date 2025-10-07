@@ -1,0 +1,6 @@
+If:
+  Condition: "TEXT + {{VARIABLES}}"
+  Then:
+    - {{ACTIONS}}
+  Else:
+    - {{ACTIONS}}  # optional

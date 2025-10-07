@@ -1,0 +1,2 @@
+Grok.VoiceModeMute:
+  # No parameters (runs with defaults)

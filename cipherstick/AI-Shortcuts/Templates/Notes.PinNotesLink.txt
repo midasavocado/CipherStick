@@ -1,0 +1,2 @@
+Notes.PinNotesLink:
+  Entities: {{ENTITY}}

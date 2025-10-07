@@ -1,0 +1,2 @@
+Books.BookReaderNavigatePages:
+  # No parameters (runs with defaults)

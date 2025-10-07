@@ -1,0 +1,3 @@
+Makegif:
+  Input: {{EXTENSION_INPUT}}  # required
+  MakeGIFActionDelayTime: "TEXT"

@@ -1,0 +1,7 @@
+Sendemail:
+  SendEmailActionBccRecipients: {{OBJECT}}
+  SendEmailActionCcRecipients: {{OBJECT}}
+  SendEmailActionFrom: "TEXT"
+  SendEmailActionInputAttachments: "TEXT"
+  SendEmailActionSubject: "TEXT"
+  SendEmailActionToRecipients: {{OBJECT}}

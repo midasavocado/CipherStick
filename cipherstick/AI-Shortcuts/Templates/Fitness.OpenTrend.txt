@@ -1,0 +1,2 @@
+Fitness.OpenTrend:
+  Target: {{ENTITY}}  # optional

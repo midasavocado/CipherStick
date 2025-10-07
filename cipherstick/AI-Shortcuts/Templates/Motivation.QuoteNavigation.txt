@@ -1,0 +1,6 @@
+Motivation.QuoteNavigation:
+  Quote: "TEXT"
+  SelectedCategories: "TEXT"
+  SelectedThemeName: "TEXT"
+  Value: "TEXT"
+  WidgetIdentifier: "TEXT"

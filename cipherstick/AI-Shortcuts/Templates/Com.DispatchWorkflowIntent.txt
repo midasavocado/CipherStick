@@ -1,0 +1,7 @@
+Com.DispatchWorkflowIntent:
+  Account: {{OBJECT}}
+  Inputs: "TEXT"
+  Owner: "TEXT"
+  Ref: "TEXT"
+  Repo: "TEXT"
+  WorkflowId: "TEXT"

@@ -1,0 +1,2 @@
+Safari.OpenTabGroupForFocus:
+  Type: "TEXT"

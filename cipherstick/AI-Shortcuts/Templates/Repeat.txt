@@ -1,0 +1,4 @@
+Repeat:
+  Count: NUMBER
+  Do:
+    - {{ACTIONS}}

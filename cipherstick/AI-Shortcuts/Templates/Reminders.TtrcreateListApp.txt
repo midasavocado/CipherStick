@@ -1,0 +1,3 @@
+Reminders.TtrcreateListApp:
+  Name: "TEXT"  # required
+  OpenWhenRun: BOOLEAN  # optional

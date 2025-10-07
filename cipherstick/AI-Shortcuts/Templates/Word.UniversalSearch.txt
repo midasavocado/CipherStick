@@ -1,0 +1,2 @@
+Word.UniversalSearch:
+  Criteria: "TEXT"

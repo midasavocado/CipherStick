@@ -1,0 +1,2 @@
+Google.SearchWithText:
+  # No parameters (runs with defaults)

@@ -1,0 +1,3 @@
+Searchlocalbusinesses:
+  SearchQuery: "TEXT"
+  SearchRadius: {{OBJECT}}

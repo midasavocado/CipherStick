@@ -1,0 +1,3 @@
+Tesla.RearTrunk:
+  RearTrunkAction: "TEXT"
+  Vehicle: {{ASK_WHEN_RUN}}  # required

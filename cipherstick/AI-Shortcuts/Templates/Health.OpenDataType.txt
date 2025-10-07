@@ -1,0 +1,2 @@
+Health.OpenDataType:
+  Target: {{ENTITY}}  # optional

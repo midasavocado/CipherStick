@@ -1,0 +1,2 @@
+Getvariable:
+  Variable: {{VARIABLE}}

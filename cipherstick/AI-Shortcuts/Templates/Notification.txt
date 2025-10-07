@@ -1,0 +1,4 @@
+Notification:
+  Input: {{EXTENSION_INPUT}}  # required
+  NotificationActionBody: "TEXT"
+  NotificationActionTitle: "TEXT"

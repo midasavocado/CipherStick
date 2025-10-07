@@ -1,0 +1,2 @@
+Safari.ChangeReaderModeState:
+  # No parameters (runs with defaults)

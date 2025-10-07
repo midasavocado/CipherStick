@@ -1,0 +1,2 @@
+Removeevents:
+  InputEvents: {{EXTENSION_INPUT}}

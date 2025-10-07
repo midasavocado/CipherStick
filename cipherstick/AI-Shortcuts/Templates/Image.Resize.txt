@@ -1,0 +1,3 @@
+Image.Resize:
+  Image: {{EXTENSION_INPUT}}  # optional
+  ImageResizeHeight: "TEXT"

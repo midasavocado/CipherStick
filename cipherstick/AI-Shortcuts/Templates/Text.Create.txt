@@ -1,0 +1,2 @@
+Text.Create:
+  Input: {{EXTENSION_INPUT}}  # required

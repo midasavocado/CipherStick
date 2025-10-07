@@ -1,0 +1,2 @@
+Intelligenceplatform.FindSportsEvents:
+  SportsTeamAppEntity: {{ENTITY}}

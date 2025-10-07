@@ -1,0 +1,2 @@
+Appearance:
+  # No parameters (runs with defaults)

@@ -1,0 +1,3 @@
+Setvariable:
+  Input: {{CLIPBOARD}}  # required
+  VariableName: "TEXT"

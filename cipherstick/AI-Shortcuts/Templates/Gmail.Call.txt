@@ -1,0 +1,3 @@
+Gmail.Call:
+  SendMessageActionRecipients: {{OBJECT}}
+  SendMessageContent: "TEXT"

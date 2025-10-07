@@ -1,0 +1,2 @@
+Google.SearchImageWithLens:
+  # No parameters (runs with defaults)

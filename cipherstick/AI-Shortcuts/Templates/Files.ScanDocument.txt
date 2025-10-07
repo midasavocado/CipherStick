@@ -1,0 +1,2 @@
+Files.ScanDocument:
+  # No parameters (runs with defaults)

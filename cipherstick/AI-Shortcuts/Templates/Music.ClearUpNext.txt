@@ -1,0 +1,2 @@
+Music.ClearUpNext:
+  # No parameters (runs with defaults)

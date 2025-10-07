@@ -1,0 +1,5 @@
+Text.Replace:
+  Input: "TEXT"  # required
+  ReplaceTextFind: "TEXT"
+  ReplaceTextRegularExpression: BOOLEAN
+  ReplaceTextReplace: "TEXT"

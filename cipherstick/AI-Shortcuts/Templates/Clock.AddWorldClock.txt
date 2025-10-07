@@ -1,0 +1,3 @@
+Clock.AddWorldClock:
+  City: {{ENTITY}}  # optional
+  OpenWhenRun: BOOLEAN  # optional

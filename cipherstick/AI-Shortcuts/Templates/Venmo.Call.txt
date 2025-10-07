@@ -1,0 +1,5 @@
+Venmo.Call:
+  VenmoActionAmount: {{OBJECT}}
+  VenmoActionAppSwitch: BOOLEAN
+  VenmoActionNote: "TEXT"
+  VenmoActionRecipients: {{OBJECT}}

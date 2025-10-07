@@ -1,0 +1,2 @@
+Notes.OpenNoteLink:
+  Input: {{ENTITY}}  # required

@@ -1,0 +1,3 @@
+Properties.Eventattendees:
+  Input: {{EXTENSION_INPUT}}  # required
+  ContentItemPropertyName: "TEXT"

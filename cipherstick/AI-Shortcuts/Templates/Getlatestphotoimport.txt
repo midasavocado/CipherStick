@@ -1,0 +1,2 @@
+Getlatestphotoimport:
+  # No parameters (runs with defaults)

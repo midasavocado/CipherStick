@@ -1,0 +1,3 @@
+Getdirections:
+  Destination: {{OBJECT}}
+  GetDirectionsActionApp: "TEXT"

@@ -1,0 +1,2 @@
+Detect.Emailaddress:
+  Input: "TEXT"  # required

@@ -1,0 +1,2 @@
+List.Count:
+  Input: {{CURRENT_DATE}}  # required

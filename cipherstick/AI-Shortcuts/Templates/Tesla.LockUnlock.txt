@@ -1,0 +1,3 @@
+Tesla.LockUnlock:
+  Vehicle: {{ASK_WHEN_RUN}}  # required
+  VehicleControlType: "TEXT"

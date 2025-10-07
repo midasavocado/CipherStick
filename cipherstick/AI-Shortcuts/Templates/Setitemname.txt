@@ -1,0 +1,4 @@
+Setitemname:
+  Input: {{EXTENSION_INPUT}}  # required
+  DontIncludeFileExtension: BOOLEAN
+  Name: "TEXT"  # required

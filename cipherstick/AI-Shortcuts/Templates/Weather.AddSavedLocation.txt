@@ -1,0 +1,3 @@
+Weather.AddSavedLocation:
+  OpenWhenRun: BOOLEAN  # optional
+  Place: {{CURRENT_LOCATION}}  # optional

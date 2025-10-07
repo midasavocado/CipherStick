@@ -1,0 +1,2 @@
+Amazon.OpenAmazon:
+  Destination: {{ENTITY}}

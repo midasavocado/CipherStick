@@ -1,0 +1,2 @@
+Getnameofemoji:
+  Input: "TEXT"  # required

@@ -1,0 +1,3 @@
+WritingTools.AdjustToneIntent:
+  Text: "TEXT"  # required
+  Tone: "friendly|professional|casual|formal|concise|custom"

@@ -1,0 +1,2 @@
+Widgy.WidgyReloadIntent2:
+  # No parameters (runs with defaults)

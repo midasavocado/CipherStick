@@ -1,0 +1,2 @@
+TvremoteUiservice.WakeAppleTvintent:
+  Device: {{OBJECT}}

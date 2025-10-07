@@ -1,0 +1,5 @@
+Music.CreatePlaylist:
+  PlaylistName: "TEXT"  # required
+  PlaylistAuthor: "TEXT"  # optional
+  PlaylistDescription: "TEXT"  # optional
+  PlaylistItems: {{CLIPBOARD}}

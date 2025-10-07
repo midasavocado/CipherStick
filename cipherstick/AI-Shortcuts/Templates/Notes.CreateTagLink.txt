@@ -1,0 +1,3 @@
+Notes.CreateTagLink:
+  Name: "TEXT"  # required
+  OpenWhenRun: BOOLEAN  # optional

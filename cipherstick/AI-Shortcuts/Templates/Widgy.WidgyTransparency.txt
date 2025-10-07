@@ -1,0 +1,2 @@
+Widgy.WidgyTransparency:
+  # No parameters (runs with defaults)

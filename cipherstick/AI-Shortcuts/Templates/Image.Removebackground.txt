@@ -1,0 +1,3 @@
+Image.Removebackground:
+  Input: {{EXTENSION_INPUT}}  # required
+  CropToBounds: BOOLEAN

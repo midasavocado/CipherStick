@@ -1,0 +1,2 @@
+Notes.OpenAccountLink:
+  Target: {{ENTITY}}  # optional

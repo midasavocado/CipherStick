@@ -1,0 +1,4 @@
+Freeform.CrlinsertFilesToBoard:
+  Board: {{ENTITY}}
+  Files: {{OBJECT}}
+  OpenWhenRun: BOOLEAN  # optional

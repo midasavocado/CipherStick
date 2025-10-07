@@ -1,0 +1,2 @@
+Wifi.Set:
+  # No parameters (runs with defaults)

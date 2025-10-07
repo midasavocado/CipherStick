@@ -1,0 +1,2 @@
+Savetocameraroll:
+  Input: {{EXTENSION_INPUT}}  # required

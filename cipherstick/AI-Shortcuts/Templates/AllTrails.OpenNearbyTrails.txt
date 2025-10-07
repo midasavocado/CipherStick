@@ -1,0 +1,2 @@
+AllTrails.OpenNearbyTrails:
+  # No parameters (runs with defaults)

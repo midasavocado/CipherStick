@@ -1,0 +1,2 @@
+Getmyworkflows:
+  # No parameters (runs with defaults)

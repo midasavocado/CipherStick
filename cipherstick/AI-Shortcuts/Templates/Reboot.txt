@@ -1,0 +1,2 @@
+Reboot:
+  # No parameters (runs with defaults)

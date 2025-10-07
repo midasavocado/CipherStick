@@ -1,0 +1,3 @@
+Properties.Parkedcar:
+  Input: {{EXTENSION_INPUT}}  # required
+  ContentItemPropertyName: "TEXT"

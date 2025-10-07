@@ -1,0 +1,2 @@
+NanoSettings.NprfsetSchoolTimeIntent:
+  # No parameters (runs with defaults)

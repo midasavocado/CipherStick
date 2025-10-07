@@ -1,0 +1,4 @@
+Setters.Calendarevents:
+  Input: {{EXTENSION_INPUT}}  # required
+  Mode: "TEXT"
+  ContentItemPropertyName: "TEXT"

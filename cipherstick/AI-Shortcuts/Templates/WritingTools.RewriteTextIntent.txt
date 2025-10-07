@@ -1,0 +1,2 @@
+WritingTools.RewriteTextIntent:
+  Text: "TEXT"  # required

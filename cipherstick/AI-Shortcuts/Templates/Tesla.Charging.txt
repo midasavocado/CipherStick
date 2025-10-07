@@ -1,0 +1,3 @@
+Tesla.Charging:
+  ChargeAction: "TEXT"
+  Vehicle: {{ASK_WHEN_RUN}}  # required

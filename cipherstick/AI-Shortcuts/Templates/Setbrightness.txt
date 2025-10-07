@@ -1,0 +1,2 @@
+Setbrightness:
+  # No parameters (runs with defaults)

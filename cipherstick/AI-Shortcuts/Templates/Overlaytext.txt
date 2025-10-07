@@ -1,0 +1,11 @@
+Overlaytext:
+  Image: {{EXTENSION_INPUT}}  # optional
+  PercentageFontSize: NUMBER
+  PercentageTextStrokeWidth: NUMBER
+  Text: "TEXT"  # required
+  TextAlignment: "TEXT"
+  TextColor: "#669D34"  # alpha 1.0
+  TextOutlineEnabled: BOOLEAN
+  TextPosition: "TEXT"
+  TextRotation: "TEXT"
+  TextStrokeColor: "#982ABC"  # alpha 1.0

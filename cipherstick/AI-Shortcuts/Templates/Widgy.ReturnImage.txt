@@ -1,0 +1,2 @@
+Widgy.ReturnImage:
+  WidgyFile: {{OBJECT}}

@@ -1,0 +1,2 @@
+Calendar.WfgetAppSettingAction:
+  # No parameters (runs with defaults)

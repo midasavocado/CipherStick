@@ -1,0 +1,3 @@
+Intercom:
+  Input: "TEXT"  # required
+  Home: {{ASK_WHEN_RUN}}

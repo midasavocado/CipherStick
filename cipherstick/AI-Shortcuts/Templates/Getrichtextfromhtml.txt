@@ -1,0 +1,2 @@
+Getrichtextfromhtml:
+  HTML: {{EXTENSION_INPUT}}

@@ -1,0 +1,2 @@
+Detect.Dictionary:
+  Input: {{EXTENSION_INPUT}}  # required

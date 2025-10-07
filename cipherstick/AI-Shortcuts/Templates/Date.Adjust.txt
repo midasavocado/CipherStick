@@ -1,0 +1,5 @@
+Date.Adjust:
+  Date: "TEXT"
+  Duration:
+    Magnitude: NUMBER
+    Unit: "sec|min|hour|day|week|month|year"

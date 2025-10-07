@@ -1,0 +1,3 @@
+Text.Combine:
+  Text: "TEXT"  # required
+  Separator: "TEXT"

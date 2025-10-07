@@ -1,0 +1,2 @@
+Siri.VisualIntelligenceCameraLaunch:
+  # No parameters (runs with defaults)

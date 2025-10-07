@@ -1,0 +1,5 @@
+ChatGpt.Ask:
+  Prompt: "TEXT"
+  Continuous: BOOLEAN
+  NewChat: BOOLEAN
+  ShowWhenRun: BOOLEAN  # optional

@@ -1,0 +1,2 @@
+Com.PlayDinoGameIntent:
+  # No parameters (runs with defaults)

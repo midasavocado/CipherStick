@@ -1,0 +1,6 @@
+Filter.Quantity:
+  ContentItemLimitEnabled: BOOLEAN
+  ContentItemSortOrder: "TEXT"
+  ContentItemSortProperty: "TEXT"
+  HKSampleFilteringGroupBy: "TEXT"
+  HKSampleFilteringUnit: "TEXT"

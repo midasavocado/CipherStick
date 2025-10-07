@@ -1,0 +1,2 @@
+VoiceMemos.OpenFolder:
+  Target: {{ENTITY}}  # optional

@@ -1,0 +1,2 @@
+Music.AddToUpNext:
+  MusicItem: {{CLIPBOARD}}

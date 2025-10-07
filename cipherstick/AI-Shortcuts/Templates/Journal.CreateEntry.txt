@@ -1,0 +1,8 @@
+Journal.CreateEntry:
+  Title: "TEXT"  # required
+  Bookmark: BOOLEAN  # optional
+  EntryDate: "TEXT"  # optional
+  Location: {{CURRENT_LOCATION}}
+  MediaItems: {{LIST}}  # optional
+  Message: "TEXT"
+  OpenWhenRun: BOOLEAN  # optional

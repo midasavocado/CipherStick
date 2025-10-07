@@ -1,0 +1,2 @@
+Com.ManageSettingsIntent:
+  # No parameters (runs with defaults)

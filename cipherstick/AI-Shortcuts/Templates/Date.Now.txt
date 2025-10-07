@@ -1,0 +1,2 @@
+Date.Now:
+  # No parameters (runs with defaults)

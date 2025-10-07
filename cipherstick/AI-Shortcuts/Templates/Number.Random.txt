@@ -1,0 +1,3 @@
+Number.Random:
+  RandomNumberMaximum: "TEXT"
+  RandomNumberMinimum: "TEXT"

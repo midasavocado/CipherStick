@@ -1,0 +1,6 @@
+Runsshscript:
+  Input: {{EXTENSION_INPUT}}  # required
+  SSHHost: "TEXT"
+  SSHPassword: "TEXT"
+  SSHScript: "TEXT"
+  SSHUser: "TEXT"

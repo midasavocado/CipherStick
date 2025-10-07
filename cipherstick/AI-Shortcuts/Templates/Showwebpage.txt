@@ -1,0 +1,3 @@
+Showwebpage:
+  EnterSafariReader: BOOLEAN
+  URL: "TEXT"  # required

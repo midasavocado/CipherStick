@@ -1,0 +1,2 @@
+NanoSettings.NprfsetWaterLockIntent:
+  # No parameters (runs with defaults)

@@ -1,0 +1,2 @@
+Clock.PauseTimer:
+  # No parameters (runs with defaults)

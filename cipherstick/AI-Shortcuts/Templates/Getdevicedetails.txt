@@ -1,0 +1,2 @@
+Getdevicedetails:
+  # No parameters (runs with defaults)

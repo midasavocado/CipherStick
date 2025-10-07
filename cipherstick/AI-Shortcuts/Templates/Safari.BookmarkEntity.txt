@@ -1,0 +1,5 @@
+Safari.BookmarkEntity:
+  ContentItemFilter: {{OBJECT}}
+  ContentItemLimitEnabled: BOOLEAN
+  ContentItemSortOrder: "TEXT"
+  ContentItemSortProperty: "TEXT"

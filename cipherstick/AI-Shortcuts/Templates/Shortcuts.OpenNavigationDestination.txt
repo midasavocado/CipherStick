@@ -1,0 +1,2 @@
+Shortcuts.OpenNavigationDestination:
+  Target: {{ENTITY}}  # optional

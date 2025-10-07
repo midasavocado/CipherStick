@@ -1,0 +1,3 @@
+Properties.Conditions:
+  Input: {{EXTENSION_INPUT}}  # required
+  ContentItemPropertyName: "TEXT"

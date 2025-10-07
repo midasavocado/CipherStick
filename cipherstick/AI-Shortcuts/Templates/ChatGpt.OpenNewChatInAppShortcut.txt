@@ -1,0 +1,4 @@
+ChatGpt.OpenNewChatInAppShortcut:
+  StartAction: "TEXT"
+  TemporaryChat: BOOLEAN
+  UseSearchGpt: BOOLEAN

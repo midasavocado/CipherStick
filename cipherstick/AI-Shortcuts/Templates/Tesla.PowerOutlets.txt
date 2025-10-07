@@ -1,0 +1,3 @@
+Tesla.PowerOutlets:
+  PowerOutletsAction: "TEXT"
+  Vehicle: {{ASK_WHEN_RUN}}  # required

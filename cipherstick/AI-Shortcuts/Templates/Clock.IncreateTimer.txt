@@ -1,0 +1,4 @@
+Clock.IncreateTimer:
+  Duration:
+    Magnitude: NUMBER
+    Unit: "sec|min|hour|day|week|month|year"

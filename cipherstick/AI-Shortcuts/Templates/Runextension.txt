@@ -1,0 +1,3 @@
+Runextension:
+  Input: {{EXTENSION_INPUT}}  # required
+  AppIdentifier: "TEXT"

@@ -1,0 +1,2 @@
+Detectlanguage:
+  Input: "TEXT"  # required

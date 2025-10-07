@@ -1,0 +1,3 @@
+Photos.RenameAlbum:
+  Title: "TEXT"  # required
+  Album: {{ENTITY}}

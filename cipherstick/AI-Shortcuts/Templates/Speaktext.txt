@@ -1,0 +1,4 @@
+Speaktext:
+  SpeakTextPitch: NUMBER
+  SpeakTextRate: NUMBER
+  Text: "TEXT"  # required

@@ -1,0 +1,2 @@
+Com.OpenBookmarksIntent:
+  # No parameters (runs with defaults)

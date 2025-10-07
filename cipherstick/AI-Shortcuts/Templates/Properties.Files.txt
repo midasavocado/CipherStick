@@ -1,0 +1,3 @@
+Properties.Files:
+  Input: {{EXTENSION_INPUT}}  # required
+  ContentItemPropertyName: "TEXT"

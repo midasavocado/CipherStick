@@ -1,0 +1,2 @@
+Searchweb:
+  InputText: "TEXT"

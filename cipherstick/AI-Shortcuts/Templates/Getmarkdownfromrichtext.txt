@@ -1,0 +1,2 @@
+Getmarkdownfromrichtext:
+  Input: {{EXTENSION_INPUT}}  # required

@@ -1,0 +1,2 @@
+Showdefinition:
+  Word: "TEXT"

@@ -1,0 +1,2 @@
+Safari.CloseTab:
+  Target: {{ENTITY}}  # optional

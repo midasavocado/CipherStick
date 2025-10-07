@@ -1,0 +1,4 @@
+Messages.Call:
+  VenmoActionAmount: {{OBJECT}}
+  VenmoActionNote: "TEXT"
+  VenmoActionRecipients: {{OBJECT}}

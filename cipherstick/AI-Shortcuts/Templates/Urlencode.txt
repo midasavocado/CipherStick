@@ -1,0 +1,2 @@
+Urlencode:
+  Input: "TEXT"  # required

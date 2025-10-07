@@ -1,0 +1,3 @@
+Tesla.MediaVolume:
+  Percent: "TEXT"
+  Vehicle: {{ASK_WHEN_RUN}}  # required

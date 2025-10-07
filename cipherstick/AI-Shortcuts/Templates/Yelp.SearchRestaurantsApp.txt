@@ -1,0 +1,2 @@
+Yelp.SearchRestaurantsApp:
+  # No parameters (runs with defaults)

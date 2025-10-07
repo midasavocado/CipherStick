@@ -1,0 +1,3 @@
+Notes.RenameFolderLink:
+  Name: "TEXT"  # required
+  Entity: {{ENTITY}}

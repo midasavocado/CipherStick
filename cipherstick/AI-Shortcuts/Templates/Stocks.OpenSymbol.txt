@@ -1,0 +1,2 @@
+Stocks.OpenSymbol:
+  # No parameters (runs with defaults)

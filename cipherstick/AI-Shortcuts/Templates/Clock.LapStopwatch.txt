@@ -1,0 +1,2 @@
+Clock.LapStopwatch:
+  # No parameters (runs with defaults)

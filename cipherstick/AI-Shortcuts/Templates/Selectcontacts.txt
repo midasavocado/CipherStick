@@ -1,0 +1,2 @@
+Selectcontacts:
+  SelectMultiple: BOOLEAN

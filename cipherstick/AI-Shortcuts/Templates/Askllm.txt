@@ -1,0 +1,4 @@
+Askllm:
+  FollowUp: BOOLEAN
+  LLMPrompt: "TEXT"
+  Model: "On-Device/ChatGPT/Private Cloud Compute"

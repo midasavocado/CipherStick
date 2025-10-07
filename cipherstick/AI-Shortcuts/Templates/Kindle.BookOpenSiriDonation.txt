@@ -1,0 +1,2 @@
+Kindle.BookOpenSiriDonation:
+  # No parameters (runs with defaults)

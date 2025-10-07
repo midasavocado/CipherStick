@@ -1,0 +1,5 @@
+Ask.Text:
+  Prompt: "TEXT" # optional
+  Multiline: BOOLEAN  # optional
+  DefaultAnswer: "TEXT"  # optional
+  AskFor: "Text/Number/URL/Date/Time/Date and Time"

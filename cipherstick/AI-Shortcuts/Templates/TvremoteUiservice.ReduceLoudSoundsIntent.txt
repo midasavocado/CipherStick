@@ -1,0 +1,2 @@
+TvremoteUiservice.ReduceLoudSoundsIntent:
+  Device: {{OBJECT}}

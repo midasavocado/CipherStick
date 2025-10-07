@@ -1,0 +1,2 @@
+WhatsApp.ToggleMetaAicallMic:
+  # No parameters (runs with defaults)

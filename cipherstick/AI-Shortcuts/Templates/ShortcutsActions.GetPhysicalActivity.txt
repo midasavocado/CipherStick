@@ -1,0 +1,2 @@
+ShortcutsActions.GetPhysicalActivity:
+  # No parameters (runs with defaults)

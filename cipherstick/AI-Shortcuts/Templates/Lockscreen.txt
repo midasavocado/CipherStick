@@ -1,0 +1,2 @@
+Lockscreen:
+  # No parameters (runs with defaults)

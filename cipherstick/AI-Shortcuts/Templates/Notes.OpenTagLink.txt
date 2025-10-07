@@ -1,0 +1,2 @@
+Notes.OpenTagLink:
+  # No parameters (runs with defaults)

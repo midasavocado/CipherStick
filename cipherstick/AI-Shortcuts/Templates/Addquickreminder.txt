@@ -1,0 +1,2 @@
+Addquickreminder:
+  # No parameters (runs with defaults)

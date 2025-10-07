@@ -1,0 +1,2 @@
+Wallet.OpenPass:
+  Target: {{ENTITY}}  # optional

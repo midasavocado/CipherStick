@@ -1,0 +1,2 @@
+Flashlight:
+  # No parameters (runs with defaults)

@@ -1,0 +1,4 @@
+Setvalueforkey:
+  Dictionary: {{EXTENSION_INPUT}}
+  DictionaryKey: "TEXT"
+  DictionaryValue: "TEXT"

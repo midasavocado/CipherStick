@@ -1,0 +1,3 @@
+Freeform.CrlcreateBoard:
+  Title: "TEXT"  # required
+  OpenWhenRun: BOOLEAN  # optional

@@ -1,0 +1,2 @@
+Com.ViewHistoryIntent:
+  # No parameters (runs with defaults)

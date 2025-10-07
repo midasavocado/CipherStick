@@ -1,0 +1,2 @@
+PbbridgeSupport.CossetGizmoFaceIntent:
+  Face: {{ASK_WHEN_RUN}}

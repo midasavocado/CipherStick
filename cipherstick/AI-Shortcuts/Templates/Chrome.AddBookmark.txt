@@ -1,0 +1,2 @@
+Chrome.AddBookmark:
+  URL: "URL"  # required

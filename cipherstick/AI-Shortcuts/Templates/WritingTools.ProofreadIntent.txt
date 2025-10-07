@@ -1,0 +1,2 @@
+WritingTools.ProofreadIntent:
+  Text: "TEXT"  # required

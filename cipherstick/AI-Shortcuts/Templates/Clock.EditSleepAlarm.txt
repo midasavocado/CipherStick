@@ -1,0 +1,2 @@
+Clock.EditSleepAlarm:
+  # No parameters (runs with defaults)

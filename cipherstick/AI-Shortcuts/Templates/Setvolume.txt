@@ -1,0 +1,2 @@
+Setvolume:
+  # No parameters (runs with defaults)

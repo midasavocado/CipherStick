@@ -1,0 +1,2 @@
+Avairyeditphoto:
+  Document: {{EXTENSION_INPUT}}

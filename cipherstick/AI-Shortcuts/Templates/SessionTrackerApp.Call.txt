@@ -1,0 +1,2 @@
+SessionTrackerApp.Call:
+  # No parameters (runs with defaults)

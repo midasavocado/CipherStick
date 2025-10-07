@@ -1,0 +1,4 @@
+Playmusic:
+  MediaItems: {{OBJECT}}  # optional
+  PlayMusicActionRepeat: "TEXT"
+  PlayMusicActionShuffle: "TEXT"

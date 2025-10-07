@@ -1,0 +1,2 @@
+Notes.DeleteNotesLink:
+  Entities: {{ENTITY}}

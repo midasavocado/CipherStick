@@ -1,0 +1,2 @@
+IBooks.Openin:
+  BooksInput: {{CURRENT_DATE}}

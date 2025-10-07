@@ -1,0 +1,2 @@
+Notes.ScanDocumentLink:
+  # No parameters (runs with defaults)

@@ -1,0 +1,2 @@
+Detect.Number:
+  Input: "TEXT"  # required

@@ -1,0 +1,2 @@
+Tesla.Honk:
+  Vehicle: {{ASK_WHEN_RUN}}  # required

@@ -1,0 +1,2 @@
+Fitness.OpenHistory:
+  # No parameters (runs with defaults)

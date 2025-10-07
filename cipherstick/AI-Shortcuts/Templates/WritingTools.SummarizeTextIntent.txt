@@ -1,0 +1,2 @@
+WritingTools.SummarizeTextIntent:
+  Text: "TEXT"  # required

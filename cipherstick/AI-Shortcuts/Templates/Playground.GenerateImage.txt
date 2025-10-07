@@ -1,0 +1,4 @@
+Playground.GenerateImage:
+  Prompt: "TEXT"
+  SaveToPlayground: "askWhenRun|always|never"  # optional
+  Style: {{ENTITY}}  # optional

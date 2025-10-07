@@ -1,0 +1,2 @@
+Share:
+  Input: {{EXTENSION_INPUT}}  # required

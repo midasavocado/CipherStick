@@ -1,0 +1,4 @@
+Giphy:
+  GiphyQuery: "TEXT"
+  GiphySelectMultiple: BOOLEAN
+  GiphyShowPicker: BOOLEAN

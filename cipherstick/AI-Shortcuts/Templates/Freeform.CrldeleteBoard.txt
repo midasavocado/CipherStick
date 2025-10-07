@@ -1,0 +1,2 @@
+Freeform.CrldeleteBoard:
+  Entities: {{ENTITY}}

@@ -1,0 +1,2 @@
+Facebook.FbwidgetSwitchTab:
+  TabKeys: {{LIST}}  # optional

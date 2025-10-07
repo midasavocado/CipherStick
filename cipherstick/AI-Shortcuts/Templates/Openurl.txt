@@ -1,0 +1,2 @@
+Openurl:
+  Input: "TEXT"  # required

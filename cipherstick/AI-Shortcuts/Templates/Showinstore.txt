@@ -1,0 +1,2 @@
+Showinstore:
+  Product: {{EXTENSION_INPUT}}
