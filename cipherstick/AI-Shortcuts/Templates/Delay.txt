@@ -1,2 +1,2 @@
 Delay:
-  # No parameters (runs with defaults)
+  - Time: "Number"
