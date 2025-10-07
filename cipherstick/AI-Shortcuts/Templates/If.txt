@@ -3,4 +3,4 @@ If:
   Then:
     - {{ACTIONS}}
   Else:
-    - {{ACTIONS}}  # optional
+    - {{ACTIONS}}
