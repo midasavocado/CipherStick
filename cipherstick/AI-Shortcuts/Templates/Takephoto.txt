@@ -1,2 +1,4 @@
 Takephoto:
-  # No parameters (runs with defaults)
+
+  Camera: Front/Back
+  ShowWhenRun: BOOLEAN
