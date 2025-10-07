@@ -579,7 +579,8 @@ function showToastMessage(message, type) {
   setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-async function checkAnswer(index, showBanner = true) {
+// --- UI-based validation for challenge completion ---
+function checkAnswer(index, showBanner = true) {
   const inputField = document.getElementById(`input-${index}`);
   const userInputRaw = inputField.value;
   const userInput = normalizeInput(userInputRaw);
@@ -589,103 +590,72 @@ async function checkAnswer(index, showBanner = true) {
   localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
   if (userInput !== "") checkedQuestions[index] = true;
 
-  // Use remote validation for HARD challenge
-  let isCorrect = false;
-  try {
-    isCorrect = await validateAnswerRemotely({
+  fetch('https://validate-answer.mwsaulsbury.workers.dev/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       challenge: "hard",
       questionIndex: index,
-      answer: userInputRaw
-    });
-  } catch (e) {
-    isCorrect = false;
-  }
-
-  if (isCorrect) {
-    if (!answeredCorrectly[index]) {
-      answeredCorrectly[index] = true;
-      questionDiv.style.borderColor = 'green';
-      inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
-      questionText.style.color = "rgb(0,255,0)"
-      inputField.style.borderColor = "rgb(0,255,0)"
-
-      if (showBanner) {
-        showToastMessage("Correct!", "correct");
-        confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+      answer: `${userInput}`
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result.correct) {
+        if (!answeredCorrectly[index]) {
+          answeredCorrectly[index] = true;
+          questionDiv.style.borderColor = 'limegreen';
+          inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+          questionText.style.color = "lime";
+          inputField.style.borderColor = "limegreen";
+          if (showBanner) {
+            showToastMessage("Correct!", "correct");
+            confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+          }
+        }
+      } else {
+        questionDiv.style.borderColor = 'red';
+        inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+        questionText.style.color = "rgb(255,0,0)";
+        inputField.style.borderColor = "rgb(255,0,0)";
+        answeredCorrectly[index] = false;
+        if (showBanner) {
+          showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
+        }
       }
-    }
-  } else {
-    questionDiv.style.borderColor = 'red';
-    inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
-    questionText.style.color = "rgb(255,0,0)"
-    inputField.style.borderColor = "rgb(255,0,0)"
-
-    if (showBanner) {
-      showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
-    }
-  }
-  checkAllAnswers();
+      checkAllAnswers();
+    })
+    .catch(err => {
+      console.error("Validation error:", err);
+      showToastMessage("Error validating answer with server", "incorrect");
+    });
 }
 
-async function checkAllAnswers() {
+function checkAllAnswers() {
   const finalMessage = document.getElementById('finalMessage');
-  let allCorrect = true;
-  for (let i = 0; i < questions.length; i++) {
-    const inputVal = document.getElementById(`input-${i}`).value;
-    // Use remote validation for each answer
-    let correct = false;
-    try {
-      correct = await validateAnswerRemotely({
-        challenge: "hard",
-        questionIndex: i,
-        answer: inputVal
-      });
-    } catch (e) {
-      correct = false;
-    }
-    if (!correct || !checkedQuestions[i]) {
-      allCorrect = false;
-      break;
-    }
-  }
-  if (allCorrect && !quizCompleted) {
+
+  // Check visual state of all question blocks
+  const allQuestions = document.querySelectorAll('.question');
+  const allGreen = [...allQuestions].every(q =>
+    q.style.borderColor === 'limegreen' || q.style.borderColor === 'green'
+  );
+
+  if (allGreen && !quizCompleted) {
     quizCompleted = true;
     finalMessage.style.display = 'block';
     startVictoryConfetti();
     showVictoryOverlay();
     logCompletion();
-    Object.keys(localStorage).forEach(key => {
-      if (!key.includes("cipherstick-anon")) {
-        localStorage.removeItem(key);
-        console.log("REMOVED LOCALSTORAGE")
-      }
-    });
+
+    // Clear local storage except anon IDs
     setTimeout(() => {
-      // Freeze all input and textarea fields
-      document.querySelectorAll("input, textarea").forEach(el => {
-        //    el.readOnly = true;
+      Object.keys(localStorage).forEach(key => {
+        if (!key.includes("cipherstick-anon")) localStorage.removeItem(key);
       });
-      console.log('🔒 All input and textarea fields set to readOnly');
-      // Disable all buttons except download/print buttons
-      document.querySelectorAll("button").forEach(btn => {
-        if (!btn.id.includes("downloadBtn") && !btn.id.includes("printBtn")) {
-          //  btn.disabled = true;
-        }
-      });
-      console.log('🔒 All buttons disabled except certificate download/print');
-      // Clear all localStorage and sessionStorage except userId
-      // Try to preserve userId (from localStorage or sessionStorage)
-      let userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-      localStorage.clear();
-      sessionStorage.clear();
-      if (userId) {
-        localStorage.setItem('userId', userId);
-        sessionStorage.setItem('userId', userId);
-        console.log('🗝️ userId preserved in localStorage/sessionStorage');
-      }
-      console.log('🧹 Cleared localStorage and sessionStorage (except userId)');
-    }, 200); // slight delay to ensure download triggers before disabling
-  } else if (!allCorrect) {
+      console.log("🧹 LocalStorage cleared (except anon keys)");
+    }, 500);
+  } else if (!allGreen) {
     finalMessage.style.display = 'none';
     quizCompleted = false;
   }

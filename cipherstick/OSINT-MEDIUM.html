@@ -448,147 +448,90 @@ const requiredPrefix = "";
     setTimeout(() => toast.style.display = 'none', 3000);
   }
 
-  // Remove any local answers.medium logic; now use remote validation
-  async function checkAnswer(index, showBanner = true) {
+  // UI-based checkAnswer and checkAllAnswers: visually green borders trigger completion
+  function checkAnswer(index, showBanner = true) {
     const inputField = document.getElementById(`input-${index}`);
     const userInputRaw = inputField.value;
     const userInput = normalizeInput(userInputRaw);
     const questionDiv = document.getElementById(`question-${index}`);
+    const questionText = questionDiv.firstChild;
+
     localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
+    if (userInput !== "") checkedQuestions[index] = true;
 
-    if (userInput !== "") {
-      checkedQuestions[index] = true;
-    }
-
-    // Use remote validation for medium challenge
-    try {
-      const isCorrect = await validateAnswerRemotely({
+    fetch('https://validate-answer.mwsaulsbury.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         challenge: "medium",
         questionIndex: index,
-        answer: userInputRaw
-      });
-      if (isCorrect) {
-        if (!answeredCorrectly[index]) {
-          answeredCorrectly[index] = true;
-          questionDiv.style.borderColor = 'var(--success-color)';
-          inputField.style.backgroundColor = "#d4edda";
+        answer: `${userInput}`
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        const result = Array.isArray(data) ? data[0] : data;
+        if (result.correct) {
+          if (!answeredCorrectly[index]) {
+            answeredCorrectly[index] = true;
+            questionDiv.style.borderColor = 'limegreen';
+            inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+            questionText.style.color = "lime";
+            inputField.style.borderColor = "limegreen";
+            if (showBanner) {
+              showToastMessage("Correct!", "correct");
+              confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+            }
+          }
+        } else {
+          questionDiv.style.borderColor = 'red';
+          inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+          questionText.style.color = "rgb(255,0,0)";
+          inputField.style.borderColor = "rgb(255,0,0)";
+          answeredCorrectly[index] = false;
           if (showBanner) {
-            showToastMessage("Correct!", "correct");
-            confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+            showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
           }
         }
-      } else {
-        questionDiv.style.borderColor = 'var(--danger-color)';
-        inputField.style.backgroundColor = "#f8d7da";
-        if (showBanner) {
-          showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
-        }
-      }
-    } catch (e) {
-      questionDiv.style.borderColor = 'var(--danger-color)';
-      inputField.style.backgroundColor = "#f8d7da";
-      showToastMessage(`Validation error for question ${index + 1}`, "incorrect");
-    }
-
-    checkAllAnswers();
+        checkAllAnswers();
+      })
+      .catch(err => {
+        console.error("Validation error:", err);
+        showToastMessage("Error validating answer with server", "incorrect");
+      });
   }
 
-  // Update checkAllAnswers to use remote validation for correctness
-  async function checkAllAnswers() {
-    let allCorrect = true;
-    for (let i = 0; i < questions.length; i++) {
-      const inputVal = document.getElementById(`input-${i}`).value;
-      // Only check if the user has checked this question
-      if (!checkedQuestions[i]) {
-        allCorrect = false;
-        break;
-      }
-      try {
-        const isCorrect = await validateAnswerRemotely({
-          challenge: "medium",
-          questionIndex: i,
-          answer: inputVal
-        });
-        if (!isCorrect) {
-          allCorrect = false;
-          break;
-        }
-      } catch (e) {
-        allCorrect = false;
-        break;
-      }
-    }
-
+  function checkAllAnswers() {
     const finalMessage = document.getElementById('finalMessage');
-    if (allCorrect && !quizCompleted) {
+
+    // Check visual color of all question blocks
+    const allQuestions = document.querySelectorAll('.question');
+    const allGreen = [...allQuestions].every(q =>
+      q.style.borderColor === 'limegreen' || q.style.borderColor === 'green'
+    );
+
+    if (allGreen && !quizCompleted) {
       quizCompleted = true;
       finalMessage.style.display = 'block';
       startVictoryConfetti();
       showVictoryOverlay();
 
-      // Freeze all inputs and buttons after completion, except certificate buttons
-      document.querySelectorAll("input, button").forEach(el => {
-        if (el.id !== "downloadBtn" && el.id !== "printBtn") {
-          //  el.disabled = true;
-        }
-      });
-      console.log("✅ Inputs and buttons frozen after completion (certificate buttons remain enabled).");
+      // Clear localStorage except anon keys
+      setTimeout(() => {
+        Object.keys(localStorage).forEach(key => {
+          if (!key.includes("cipherstick-anon")) localStorage.removeItem(key);
+        });
+        console.log("🧹 LocalStorage cleared (except anon keys)");
+      }, 500);
 
-      // Clear local/session storage except Firebase userId
-      const userId =
-        localStorage.getItem("userId") || sessionStorage.getItem("userId");
-      localStorage.clear();
-      sessionStorage.clear();
-      if (userId) {
-        localStorage.setItem("userId", userId);
+      // Firebase completion log
+      const uid = window.authUID;
+      if (uid) {
+        firebase.database().ref("completions/medium/" + uid).push({
+          timestamp: Date.now()
+        });
       }
-      console.log("🧹 Cleared local/session storage except user ID.");
-
-      // Log completion to Firebase using Firebase Auth state
-      function writeCompletion() {
-        function innerWrite() {
-          if (!window.authUID) {
-            setTimeout(innerWrite, 200);
-            return;
-          }
-          const uid = window.authUID;
-          // Use "medium" as database record path, matching naming convention
-          const attemptsRef = firebase.database().ref("attempts/medium/" + uid);
-          const completionsRef = firebase.database().ref("completions/medium/" + uid);
-          console.log("🔄 Checking completions and attempts for user...");
-          // Fetch attempts and completions
-          attemptsRef.once("value").then((attemptSnap) => {
-            const attemptsVal = attemptSnap.val();
-            let attemptsCount = 0;
-            if (attemptsVal && typeof attemptsVal === 'object') {
-              attemptsCount = Object.keys(attemptsVal).length;
-            }
-            completionsRef.once("value").then((completionSnap) => {
-              const completionsVal = completionSnap.val();
-              let completionsCount = 0;
-              if (completionsVal && typeof completionsVal === 'object') {
-                completionsCount = Object.keys(completionsVal).length;
-              } else if (completionSnap.exists()) {
-                completionsCount = 1;
-              }
-              // Save completion (allow multiple completions, use push for consistency)
-              const newCompletionKey = firebase.database().ref().push().key;
-              const updateData = {};
-              updateData[newCompletionKey] = { timestamp: Date.now() };
-              completionsRef.update(updateData)
-                .then(() => {
-                  console.log("✅ Completion logged");
-                })
-                .catch(error => {
-                  console.warn("❌ Completion logging failed:", error);
-                });
-            });
-          });
-        }
-        innerWrite();
-      }
-      writeCompletion();
-    } else if (!allCorrect) {
+    } else if (!allGreen) {
       finalMessage.style.display = 'none';
       quizCompleted = false;
     }
