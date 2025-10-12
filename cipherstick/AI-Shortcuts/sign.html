@@ -24,7 +24,7 @@
 </head>
 <body>
   <h1>AI Shortcut Maker + Converter</h1>
-  <p class="hint">Describe the Shortcut, let AI draft a DSL, convert DSL → Shortcuts XML (.plist), then sign to a .shortcut.</p>
+  <p class="hint">Describe the Shortcut, let AI draft a Program (JSON) or DSL, convert → Shortcuts XML (.plist), then sign to a .shortcut.</p>
 
   <div class="card">
     <label for="shortcutName">Shortcut name</label>
@@ -34,7 +34,7 @@
     <textarea id="prompt" rows="5" placeholder="Example: Open https://cipherstick.tech in Safari."></textarea>
 
     <div class="row" style="margin-top:12px;">
-      <button id="btnGenerate">1) AI: Plan & DSL</button>
+      <button id="btnGenerate">1) AI: Plan & Program</button>
       <span id="genStatus" class="pill">idle</span>
     </div>
   </div>
@@ -42,12 +42,12 @@
   <div class="grid">
     <div class="card">
       <div class="row" style="justify-content: space-between;">
-        <strong>DSL (editable)</strong>
+        <strong>Program JSON (editable)</strong>
         <button id="btnCopyDSL" title="Copy DSL">Copy DSL</button>
       </div>
       <textarea id="dslBox" rows="16" spellcheck="false" class="mono"></textarea>
       <div class="row" style="margin-top:12px;">
-        <button id="btnConvert">2) Convert DSL → .plist</button>
+        <button id="btnConvert">2) Convert → .plist</button>
         <span id="convStatus" class="pill">waiting</span>
       </div>
     </div>
@@ -112,9 +112,10 @@
         if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
         const data = await res.json();
 
-        // Prefer DSL if present; otherwise just show the JSON response
-        dslBox.value = data.dslRaw || data.dsl || JSON.stringify(data, null, 2);
-        setStatus(genStatus, 'DSL ready ✔', true);
+        // Prefer JSON program; fall back to DSL or raw
+        dslBox.value = data.programRaw || data.dslRaw || data.dsl || JSON.stringify(data, null, 2);
+        setStatus(genStatus, 'program ready ✔', true);
+        console.log('🧾 generate payload:', data);
       } catch (err) {
         console.error(err);
         setStatus(genStatus, 'error', false, true);
@@ -127,11 +128,33 @@
     // 2) Convert
     btnConvert.addEventListener('click', () => {
       const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-      const dsl  = dslBox.value.trim();
-      if (!dsl) { alert('Nothing to convert — DSL box is empty.'); return; }
+      const src  = dslBox.value.trim();
+      if (!src) { alert('Nothing to convert — box is empty.'); return; }
 
       try {
-        const plistXML = window.ConversionDSL.toPlist({ name, dsl });
+        let plistXML = '';
+        // If the box contains JSON, convert using JSON converter (preferred)
+        if (src.startsWith('{')) {
+          let program;
+          try { program = JSON.parse(src); }
+          catch (e) { throw new Error('Program JSON is invalid.'); }
+
+          if (window.ConversionJSON?.toPlist) {
+            plistXML = window.ConversionJSON.toPlist({ name, program });
+          } else if (window.Conversion?.toPlistFromJSON) {
+            // fallback name for older bundle
+            plistXML = window.Conversion.toPlistFromJSON(program, name);
+          } else {
+            throw new Error('JSON converter not loaded (ConversionJSON.toPlist missing).');
+          }
+        } else {
+          // Legacy DSL path
+          if (!window.ConversionDSL?.toPlist) {
+            throw new Error('DSL converter not loaded (ConversionDSL.toPlist missing).');
+          }
+          plistXML = window.ConversionDSL.toPlist({ name, dsl: src });
+        }
+
         plistBox.value = plistXML;
         btnSign.disabled = false;
         setStatus(convStatus, 'converted ✔', true);
