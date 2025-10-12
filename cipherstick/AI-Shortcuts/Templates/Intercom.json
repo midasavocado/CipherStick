@@ -1,0 +1,7 @@
+{
+  "action": "Intercom",
+  "params": {
+    "Input": "{{STRING}}",
+    "Home": "{{VARIABLE}}"
+  }
+}

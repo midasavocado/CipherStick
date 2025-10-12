@@ -1,0 +1,7 @@
+{
+  "action": "ShortcutsActions.OpenCamera",
+  "params": {
+    "Mode": "{{STRING}}",
+    "Camera": "{{STRING}}"
+  }
+}

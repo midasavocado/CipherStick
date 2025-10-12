@@ -1,0 +1,9 @@
+{
+  "action": "Filter.Reminders",
+  "params": {
+    "ContentItemFilter": "{{VARIABLE}}",
+    "ContentItemLimitEnabled": "{{BOOLEAN}}",
+    "ContentItemSortOrder": "{{STRING}}",
+    "ContentItemSortProperty": "{{STRING}}"
+  }
+}

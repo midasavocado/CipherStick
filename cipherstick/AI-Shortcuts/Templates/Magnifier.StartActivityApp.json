@@ -1,0 +1,6 @@
+{
+  "action": "Magnifier.StartActivityApp",
+  "params": {
+    "Activity": "{{VARIABLE}}"
+  }
+}

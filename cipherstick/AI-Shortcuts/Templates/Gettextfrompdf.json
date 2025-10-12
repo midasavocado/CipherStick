@@ -1,0 +1,9 @@
+{
+  "action": "Gettextfrompdf",
+  "params": {
+    "Input": "{{STRING}}",
+    "CombinePages": "{{BOOLEAN}}",
+    "GetTextFromPDFPageFooter": "{{STRING}}",
+    "GetTextFromPDFPageHeader": "{{STRING}}"
+  }
+}

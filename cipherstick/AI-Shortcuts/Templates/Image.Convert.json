@@ -1,0 +1,8 @@
+{
+  "action": "Image.Convert",
+  "params": {
+    "Input": "{{STRING}}",
+    "ImageQuality": "{{NUMBER}}",
+    "PreserveMetadata": "{{BOOLEAN}}"
+  }
+}

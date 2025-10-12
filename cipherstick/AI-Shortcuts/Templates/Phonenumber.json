@@ -1,0 +1,6 @@
+{
+  "action": "Phonenumber",
+  "params": {
+    "PhoneNumber": "{{VARIABLE}}"
+  }
+}

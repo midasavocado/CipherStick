@@ -1,0 +1,6 @@
+{
+  "action": "Stocks.OpenWatchlist",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Books.OpenTabBarItem",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

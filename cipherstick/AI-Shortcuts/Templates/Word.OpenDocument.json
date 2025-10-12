@@ -1,0 +1,6 @@
+{
+  "action": "Word.OpenDocument",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

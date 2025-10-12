@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.Tonneau",
+  "params": {
+    "TonneauAction": "{{STRING}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

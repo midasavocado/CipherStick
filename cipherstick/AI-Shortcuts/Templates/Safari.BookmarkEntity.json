@@ -1,0 +1,8 @@
+{
+  "action": "Safari.BookmarkEntity",
+  "params": {
+    "Name": "{{STRING}}",
+    "Folder": "{{STRING}}",
+    "URL": "{{STRING}}"
+  }
+}

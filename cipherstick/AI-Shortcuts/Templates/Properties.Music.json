@@ -1,0 +1,6 @@
+{
+  "action": "Properties.Music",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

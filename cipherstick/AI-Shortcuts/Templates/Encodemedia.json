@@ -1,0 +1,17 @@
+{
+  "action": "Encodemedia",
+  "params": {
+    "Metadata": "{{BOOLEAN}}",
+    "Media": "{{EXTENSION_INPUT}}",
+    "MediaAudioOnly": "{{BOOLEAN}}",
+    "MediaPreserveTransparency": "{{BOOLEAN}}",
+    "MediaSize": "{{STRING}}",
+    "MediaSpeed": "{{STRING}}",
+    "MetadataAlbum": "{{STRING}}",
+    "MetadataArtist": "{{STRING}}",
+    "MetadataArtwork": "{{EXTENSION_INPUT}}",
+    "MetadataGenre": "{{STRING}}",
+    "MetadataTitle": "{{STRING}}",
+    "MetadataYear": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Wallet.OpenPass",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

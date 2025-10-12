@@ -1,0 +1,6 @@
+{
+  "action": "TvremoteUiservice.ReduceLoudSoundsIntent",
+  "params": {
+    "Device": "{{VARIABLE}}"
+  }
+}

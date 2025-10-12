@@ -1,0 +1,7 @@
+{
+  "action": "ShortcutsActions.GetShortcuts",
+  "params": {
+    "Query": "{{STRING}}",
+    "Folder": "{{STRING}}"
+  }
+}

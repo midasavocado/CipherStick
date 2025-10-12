@@ -1,0 +1,6 @@
+{
+  "action": "Gettraveltime",
+  "params": {
+    "Destination": "{{VARIABLE}}"
+  }
+}

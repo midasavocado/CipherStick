@@ -1,0 +1,6 @@
+{
+  "action": "CheckIn.SafetyMonitor",
+  "params": {
+    "Receiver": "{{VARIABLE}}"
+  }
+}

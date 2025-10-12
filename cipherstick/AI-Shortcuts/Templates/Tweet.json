@@ -1,0 +1,6 @@
+{
+  "action": "Tweet",
+  "params": {
+    "TweetInput": "{{STRING}}"
+  }
+}

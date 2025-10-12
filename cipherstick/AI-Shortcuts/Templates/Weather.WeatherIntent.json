@@ -1,0 +1,6 @@
+{
+  "action": "Weather.WeatherIntent",
+  "params": {
+    "Location": "{{VARIABLE}}"
+  }
+}

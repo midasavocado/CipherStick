@@ -1,0 +1,6 @@
+{
+  "action": "Safari.TabGroupEntity",
+  "params": {
+    "Name": "{{STRING}}"
+  }
+}

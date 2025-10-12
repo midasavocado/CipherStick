@@ -1,0 +1,6 @@
+{
+  "action": "VoiceMemos.SelectRecording",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

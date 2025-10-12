@@ -1,0 +1,7 @@
+{
+  "action": "Selectemail",
+  "params": {
+    "Multiple": "{{BOOLEAN}}",
+    "Prompt": "{{STRING}}"
+  }
+}

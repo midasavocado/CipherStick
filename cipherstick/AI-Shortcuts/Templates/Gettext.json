@@ -1,0 +1,6 @@
+{
+  "action": "Gettext",
+  "params": {
+    "TextActionText": "{{STRING}}"
+  }
+}

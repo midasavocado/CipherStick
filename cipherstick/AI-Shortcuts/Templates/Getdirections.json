@@ -1,0 +1,7 @@
+{
+  "action": "Getdirections",
+  "params": {
+    "Destination": "{{VARIABLE}}",
+    "GetDirectionsActionApp": "{{STRING}}"
+  }
+}

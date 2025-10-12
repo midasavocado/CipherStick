@@ -1,0 +1,6 @@
+{
+  "action": "Mobilenotes.IcnotesFolderIntent",
+  "params": {
+    "Folder": "{{VARIABLE}}"
+  }
+}

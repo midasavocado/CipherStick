@@ -1,0 +1,6 @@
+{
+  "action": "Detect.Link",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

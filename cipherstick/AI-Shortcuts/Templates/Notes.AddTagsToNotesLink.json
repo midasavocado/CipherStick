@@ -1,0 +1,6 @@
+{
+  "action": "Notes.AddTagsToNotesLink",
+  "params": {
+    "Notes": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Gethomeaccessorystate",
+  "params": {
+    "HMCharacteristic": "{{VARIABLE}}",
+    "HMService": "{{VARIABLE}}"
+  }
+}

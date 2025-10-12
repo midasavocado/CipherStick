@@ -1,0 +1,6 @@
+{
+  "action": "Notes.DeleteFoldersLink",
+  "params": {
+    "Entities": "{{VARIABLE}}"
+  }
+}

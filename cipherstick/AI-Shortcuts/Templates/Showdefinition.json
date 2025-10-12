@@ -1,0 +1,7 @@
+{
+  "action": "Showdefinition",
+  "params": {
+    "Word": "{{STRING}}",
+    "Language": "{{STRING}}"
+  }
+}

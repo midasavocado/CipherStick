@@ -1,0 +1,13 @@
+{
+  "action": "Addnewcontact",
+  "params": {
+    "ContactCompany": "{{STRING}}",
+    "ContactEmails": "{{VARIABLE}}",
+    "ContactFirstName": "{{STRING}}",
+    "ContactLastName": "{{STRING}}",
+    "ContactNotes": "{{STRING}}",
+    "ContactPhoneNumbers": "{{VARIABLE}}",
+    "ContactPhoto": "{{VARIABLE}}",
+    "ShowComposeSheet": "{{VARIABLE}}"
+  }
+}

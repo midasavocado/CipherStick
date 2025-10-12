@@ -1,0 +1,6 @@
+{
+  "action": "Contacts.Select",
+  "params": {
+    "Contact": "{{VARIABLE}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Stocks.DeleteWatchlists",
+  "params": {
+    "Watchlists": "{{STRING}}",
+    "Confirm": "{{BOOLEAN}}"
+  }
+}

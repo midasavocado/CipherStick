@@ -1,0 +1,6 @@
+{
+  "action": "Fitness.OpenSummaryCard",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

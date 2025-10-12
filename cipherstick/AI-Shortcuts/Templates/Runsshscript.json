@@ -1,0 +1,12 @@
+{
+  "action": "Runsshscript",
+  "params": {
+    "Host": "{{STRING}}",
+    "Port": "{{NUMBER}}",
+    "Username": "{{STRING}}",
+    "Password": "{{STRING}}",
+    "UseSSHKey": "{{BOOLEAN}}",
+    "Script": "{{STRING}}",
+    "TimeoutSeconds": "{{NUMBER}}"
+  }
+}

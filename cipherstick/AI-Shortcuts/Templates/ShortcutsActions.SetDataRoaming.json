@@ -1,0 +1,6 @@
+{
+  "action": "ShortcutsActions.SetDataRoaming",
+  "params": {
+    "Enabled": "{{BOOLEAN}}"
+  }
+}

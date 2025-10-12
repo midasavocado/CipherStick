@@ -1,0 +1,7 @@
+{
+  "action": "Safari.WfappSettingEntityUpdaterAction",
+  "params": {
+    "SettingKey": "{{STRING}}",
+    "Value": "{{STRING}}"
+  }
+}

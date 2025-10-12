@@ -1,0 +1,7 @@
+{
+  "action": "Searchmaps",
+  "params": {
+    "Query": "{{STRING}}",
+    "TravelMode": "{{STRING}}"
+  }
+}

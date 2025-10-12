@@ -1,0 +1,6 @@
+{
+  "action": "Word.UniversalSearch",
+  "params": {
+    "Criteria": "{{STRING}}"
+  }
+}

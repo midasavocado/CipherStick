@@ -1,0 +1,7 @@
+{
+  "action": "Getvalueforkey",
+  "params": {
+    "Input": "{{STRING}}",
+    "DictionaryKey": "{{STRING}}"
+  }
+}

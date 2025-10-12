@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Conditions",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.LockUnlock",
+  "params": {
+    "Vehicle": "{{STRING}}",
+    "VehicleControlType": "{{STRING}}"
+  }
+}

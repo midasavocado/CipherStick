@@ -1,0 +1,6 @@
+{
+  "action": "PbbridgeSupport.CossetGizmoFaceIntent",
+  "params": {
+    "Face": "{{VARIABLE}}"
+  }
+}

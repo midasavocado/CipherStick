@@ -1,0 +1,6 @@
+{
+  "action": "Mail.SearchMessages",
+  "params": {
+    "SearchPhrase": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Math",
+  "params": {
+    "Input": "{{STRING}}",
+    "Operand": "{{STRING}}"
+  }
+}

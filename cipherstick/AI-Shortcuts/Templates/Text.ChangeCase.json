@@ -1,0 +1,7 @@
+{
+  "action": "Text.ChangeCase",
+  "params": {
+    "Text": "{{STRING}}",
+    "CaseType": "{{STRING}}"
+  }
+}

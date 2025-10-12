@@ -1,0 +1,6 @@
+{
+  "action": "Reminders.WfgetAppSettingAction",
+  "params": {
+    "SettingKey": "{{STRING}}"
+  }
+}

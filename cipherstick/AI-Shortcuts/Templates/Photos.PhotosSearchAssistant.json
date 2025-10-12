@@ -1,0 +1,6 @@
+{
+  "action": "Photos.PhotosSearchAssistant",
+  "params": {
+    "Criteria": "{{STRING}}"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "action": "Removeevents",
+  "params": {
+    "CalendarItems": "{{VARIABLE}}",
+    "Filter": "{{STRING}}",
+    "AskBeforeDeleting": "{{BOOLEAN}}"
+  }
+}

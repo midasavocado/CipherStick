@@ -1,0 +1,8 @@
+{
+  "action": "Tesla.HvacseatHeater",
+  "params": {
+    "Level": "{{STRING}}",
+    "Seat": "{{STRING}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

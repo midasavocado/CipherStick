@@ -1,0 +1,7 @@
+{
+  "action": "Photos.CreateAlbum",
+  "params": {
+    "Input": "{{STRING}}",
+    "AlbumName": "{{STRING}}"
+  }
+}

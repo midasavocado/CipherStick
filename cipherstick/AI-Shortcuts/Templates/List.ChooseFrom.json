@@ -1,0 +1,9 @@
+{
+  "action": "List.ChooseFrom",
+  "params": {
+    "Input": "{{LIST}}",
+    "ChooseFromListActionPrompt": "{{STRING}}",
+    "ChooseFromListActionSelectAll": "{{BOOLEAN}}",
+    "ChooseFromListActionSelectMultiple": "{{BOOLEAN}}"
+  }
+}

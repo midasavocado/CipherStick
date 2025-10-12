@@ -1,0 +1,6 @@
+{
+  "action": "Clock.RemoveWorldClock",
+  "params": {
+    "Entities": "{{LIST}}"
+  }
+}

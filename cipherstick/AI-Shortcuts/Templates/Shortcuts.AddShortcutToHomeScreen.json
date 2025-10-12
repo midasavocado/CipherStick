@@ -1,0 +1,7 @@
+{
+  "action": "Shortcuts.AddShortcutToHomeScreen",
+  "params": {
+    "ShortcutName": "{{STRING}}",
+    "IconName": "{{STRING}}"
+  }
+}

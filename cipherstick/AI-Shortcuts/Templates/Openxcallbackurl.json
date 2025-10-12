@@ -1,0 +1,6 @@
+{
+  "action": "Openxcallbackurl",
+  "params": {
+    "XCallbackURL": "{{STRING}}"
+  }
+}

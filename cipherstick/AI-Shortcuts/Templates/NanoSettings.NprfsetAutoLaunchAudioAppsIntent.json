@@ -1,0 +1,6 @@
+{
+  "action": "NanoSettings.NprfsetAutoLaunchAudioAppsIntent",
+  "params": {
+    "ShowWhenRun": "{{BOOLEAN}}"
+  }
+}

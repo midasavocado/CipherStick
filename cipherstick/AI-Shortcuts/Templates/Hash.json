@@ -1,0 +1,6 @@
+{
+  "action": "Hash",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

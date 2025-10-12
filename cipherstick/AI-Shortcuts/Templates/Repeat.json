@@ -1,0 +1,7 @@
+{
+  "action": "Repeat",
+  "params": {
+    "Count": "{{NUMBER}}",
+    "Do": "{{STRING}}"
+  }
+}

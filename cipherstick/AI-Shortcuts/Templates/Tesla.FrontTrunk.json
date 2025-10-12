@@ -1,0 +1,6 @@
+{
+  "action": "Tesla.FrontTrunk",
+  "params": {
+    "Vehicle": "{{STRING}}"
+  }
+}

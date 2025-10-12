@@ -1,0 +1,6 @@
+{
+  "action": "Text.Getgroup",
+  "params": {
+    "Matches": "{{VARIABLE}}"
+  }
+}

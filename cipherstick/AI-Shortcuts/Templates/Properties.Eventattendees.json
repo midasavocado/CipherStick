@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Eventattendees",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

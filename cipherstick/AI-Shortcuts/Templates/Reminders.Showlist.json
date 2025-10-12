@@ -1,0 +1,8 @@
+{
+  "action": "Reminders.Showlist",
+  "params": {
+    "List": "{{STRING}}",
+    "Filter": "{{STRING}}",
+    "ShowCompleted": "{{BOOLEAN}}"
+  }
+}

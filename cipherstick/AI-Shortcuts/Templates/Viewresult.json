@@ -1,0 +1,6 @@
+{
+  "action": "Viewresult",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

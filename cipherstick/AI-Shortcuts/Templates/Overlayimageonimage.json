@@ -1,0 +1,7 @@
+{
+  "action": "Overlayimageonimage",
+  "params": {
+    "Input": "{{STRING}}",
+    "Image": "{{STRING}}"
+  }
+}

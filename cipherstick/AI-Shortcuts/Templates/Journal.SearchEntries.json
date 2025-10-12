@@ -1,0 +1,6 @@
+{
+  "action": "Journal.SearchEntries",
+  "params": {
+    "Criteria": "{{STRING}}"
+  }
+}

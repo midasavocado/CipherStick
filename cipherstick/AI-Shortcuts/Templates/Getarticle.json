@@ -1,0 +1,6 @@
+{
+  "action": "Getarticle",
+  "params": {
+    "WebPage": "{{STRING}}"
+  }
+}

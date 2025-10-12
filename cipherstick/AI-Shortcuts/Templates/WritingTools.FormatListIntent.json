@@ -1,0 +1,6 @@
+{
+  "action": "WritingTools.FormatListIntent",
+  "params": {
+    "Text": "{{STRING}}"
+  }
+}

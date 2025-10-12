@@ -1,0 +1,6 @@
+{
+  "action": "Messages.ConversationListFocusFilter",
+  "params": {
+    "EnableFocusFiltering": "{{BOOLEAN}}"
+  }
+}

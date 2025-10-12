@@ -1,0 +1,8 @@
+{
+  "action": "Selectphoto",
+  "params": {
+    "Multiple": "{{BOOLEAN}}",
+    "ShowPicker": "{{BOOLEAN}}",
+    "Album": "{{STRING}}"
+  }
+}

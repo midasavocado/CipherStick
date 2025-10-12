@@ -1,0 +1,9 @@
+{
+  "action": "VoiceMemos.RcrecordingEntity",
+  "params": {
+    "ContentItemFilter": "{{VARIABLE}}",
+    "ContentItemLimitEnabled": "{{BOOLEAN}}",
+    "ContentItemSortOrder": "{{STRING}}",
+    "ContentItemSortProperty": "{{STRING}}"
+  }
+}

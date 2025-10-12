@@ -1,0 +1,6 @@
+{
+  "action": "Menu.Choose",
+  "params": {
+    "MenuPrompt": "{{STRING}}"
+  }
+}

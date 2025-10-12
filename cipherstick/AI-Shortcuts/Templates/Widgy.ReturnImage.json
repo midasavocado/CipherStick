@@ -1,0 +1,6 @@
+{
+  "action": "Widgy.ReturnImage",
+  "params": {
+    "WidgyFile": "{{VARIABLE}}"
+  }
+}

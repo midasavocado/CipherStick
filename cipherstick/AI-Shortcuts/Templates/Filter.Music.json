@@ -1,0 +1,9 @@
+{
+  "action": "Filter.Music",
+  "params": {
+    "ContentItemFilter": "{{VARIABLE}}",
+    "ContentItemLimitEnabled": "{{BOOLEAN}}",
+    "ContentItemSortOrder": "{{STRING}}",
+    "ContentItemSortProperty": "{{STRING}}"
+  }
+}

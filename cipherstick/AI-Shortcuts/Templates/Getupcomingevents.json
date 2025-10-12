@@ -1,0 +1,7 @@
+{
+  "action": "Getupcomingevents",
+  "params": {
+    "DateSpecifier": "{{STRING}}",
+    "SpecifiedDate": "{{STRING}}"
+  }
+}

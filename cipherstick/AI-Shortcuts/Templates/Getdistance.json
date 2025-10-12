@@ -1,0 +1,7 @@
+{
+  "action": "Getdistance",
+  "params": {
+    "GetDirectionsActionMode": "{{STRING}}",
+    "GetDistanceDestination": "{{VARIABLE}}"
+  }
+}

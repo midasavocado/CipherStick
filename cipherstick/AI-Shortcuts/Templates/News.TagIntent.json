@@ -1,0 +1,6 @@
+{
+  "action": "News.TagIntent",
+  "params": {
+    "Tag": "{{VARIABLE}}"
+  }
+}

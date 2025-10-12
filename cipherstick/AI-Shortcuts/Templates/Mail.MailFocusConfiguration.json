@@ -1,0 +1,6 @@
+{
+  "action": "Mail.MailFocusConfiguration",
+  "params": {
+    "Accounts": "{{VARIABLE}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Facebook.FbwidgetSwitchTab",
+  "params": {
+    "TabKeys": "{{LIST}}"
+  }
+}

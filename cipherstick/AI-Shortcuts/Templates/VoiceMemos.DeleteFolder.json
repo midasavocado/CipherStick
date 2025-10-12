@@ -1,0 +1,6 @@
+{
+  "action": "VoiceMemos.DeleteFolder",
+  "params": {
+    "Entities": "{{VARIABLE}}"
+  }
+}

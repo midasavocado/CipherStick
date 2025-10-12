@@ -1,0 +1,6 @@
+{
+  "action": "Openurl",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

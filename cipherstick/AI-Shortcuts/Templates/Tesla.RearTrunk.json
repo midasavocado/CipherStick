@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.RearTrunk",
+  "params": {
+    "RearTrunkAction": "{{STRING}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

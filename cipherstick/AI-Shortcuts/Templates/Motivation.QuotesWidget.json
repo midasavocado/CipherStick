@@ -1,0 +1,6 @@
+{
+  "action": "Motivation.QuotesWidget",
+  "params": {
+    "ShowInteractiveButtons": "{{BOOLEAN}}"
+  }
+}

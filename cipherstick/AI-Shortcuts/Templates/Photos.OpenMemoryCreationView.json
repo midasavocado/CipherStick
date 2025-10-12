@@ -1,0 +1,6 @@
+{
+  "action": "Photos.OpenMemoryCreationView",
+  "params": {
+    "Query": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Alert",
+  "params": {
+    "AlertActionMessage": "{{STRING}}",
+    "AlertActionTitle": "{{STRING}}"
+  }
+}

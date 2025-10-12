@@ -1,0 +1,7 @@
+{
+  "action": "Number.Random",
+  "params": {
+    "RandomNumberMaximum": "{{STRING}}",
+    "RandomNumberMinimum": "{{STRING}}"
+  }
+}

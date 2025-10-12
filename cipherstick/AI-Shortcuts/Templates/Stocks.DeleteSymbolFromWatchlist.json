@@ -1,0 +1,7 @@
+{
+  "action": "Stocks.DeleteSymbolFromWatchlist",
+  "params": {
+    "Symbol": "{{STRING}}",
+    "Watchlist": "{{STRING}}"
+  }
+}

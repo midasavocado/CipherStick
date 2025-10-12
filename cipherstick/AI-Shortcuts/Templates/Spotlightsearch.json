@@ -1,0 +1,6 @@
+{
+  "action": "Spotlightsearch",
+  "params": {
+    "Query": "{{STRING}}"
+  }
+}

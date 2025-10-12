@@ -1,0 +1,6 @@
+{
+  "action": "Safari.OpenReadingListItem",
+  "params": {
+    "Item": "{{STRING}}"
+  }
+}

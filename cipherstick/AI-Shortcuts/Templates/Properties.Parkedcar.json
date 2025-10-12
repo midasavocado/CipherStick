@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Parkedcar",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

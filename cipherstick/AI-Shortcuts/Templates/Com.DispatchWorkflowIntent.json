@@ -1,0 +1,11 @@
+{
+  "action": "Com.DispatchWorkflowIntent",
+  "params": {
+    "Account": "{{VARIABLE}}",
+    "Inputs": "{{STRING}}",
+    "Owner": "{{STRING}}",
+    "Ref": "{{STRING}}",
+    "Repo": "{{STRING}}",
+    "WorkflowId": "{{STRING}}"
+  }
+}

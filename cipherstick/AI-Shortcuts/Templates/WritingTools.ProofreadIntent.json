@@ -1,0 +1,6 @@
+{
+  "action": "WritingTools.ProofreadIntent",
+  "params": {
+    "Text": "{{STRING}}"
+  }
+}

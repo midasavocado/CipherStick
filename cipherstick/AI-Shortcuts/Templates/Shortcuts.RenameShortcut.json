@@ -1,0 +1,7 @@
+{
+  "action": "Shortcuts.RenameShortcut",
+  "params": {
+    "OldName": "{{STRING}}",
+    "NewName": "{{STRING}}"
+  }
+}

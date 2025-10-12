@@ -1,0 +1,6 @@
+{
+  "action": "Detectlanguage",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

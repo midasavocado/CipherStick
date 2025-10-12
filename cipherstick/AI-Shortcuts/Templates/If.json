@@ -1,0 +1,8 @@
+{
+  "action": "If",
+  "params": {
+    "Condition": "{{NUMBER}}",
+    "Then": "{{STRING}}",
+    "Else": "{{STRING}}"
+  }
+}

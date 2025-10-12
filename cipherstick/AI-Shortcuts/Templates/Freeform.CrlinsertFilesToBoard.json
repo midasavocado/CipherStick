@@ -1,0 +1,8 @@
+{
+  "action": "Freeform.CrlinsertFilesToBoard",
+  "params": {
+    "Board": "{{VARIABLE}}",
+    "Files": "{{VARIABLE}}",
+    "OpenWhenRun": "{{BOOLEAN}}"
+  }
+}

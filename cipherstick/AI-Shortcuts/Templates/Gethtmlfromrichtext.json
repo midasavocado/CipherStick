@@ -1,0 +1,6 @@
+{
+  "action": "Gethtmlfromrichtext",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

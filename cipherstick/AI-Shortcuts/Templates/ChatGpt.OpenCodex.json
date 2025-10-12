@@ -1,0 +1,6 @@
+{
+  "action": "ChatGpt.OpenCodex",
+  "params": {
+    "CreateTask": "{{BOOLEAN}}"
+  }
+}

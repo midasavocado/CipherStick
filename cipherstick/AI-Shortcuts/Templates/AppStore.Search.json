@@ -1,0 +1,10 @@
+{
+  "action": "AppStore.Search",
+  "params": {
+    "Country": "{{STRING}}",
+    "ItemLimit": "{{NUMBER}}",
+    "SearchTerm": "{{STRING}}",
+    "Attribute": "{{VARIABLE}}",
+    "Entity": "{{VARIABLE}}"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "action": "VoiceMemos.StopRecording",
+  "params": {}
+}

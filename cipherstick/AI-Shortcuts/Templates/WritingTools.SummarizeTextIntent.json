@@ -1,0 +1,6 @@
+{
+  "action": "WritingTools.SummarizeTextIntent",
+  "params": {
+    "Text": "{{STRING}}"
+  }
+}

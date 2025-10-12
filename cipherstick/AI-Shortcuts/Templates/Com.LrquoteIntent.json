@@ -1,0 +1,7 @@
+{
+  "action": "Com.LrquoteIntent",
+  "params": {
+    "ShowWhenRun": "{{BOOLEAN}}",
+    "Type": "{{STRING}}"
+  }
+}

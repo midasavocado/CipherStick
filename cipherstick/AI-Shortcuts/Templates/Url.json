@@ -1,0 +1,6 @@
+{
+  "action": "Url",
+  "params": {
+    "URLActionURL": "{{STRING}}"
+  }
+}

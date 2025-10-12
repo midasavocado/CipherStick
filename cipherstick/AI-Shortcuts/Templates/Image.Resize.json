@@ -1,0 +1,7 @@
+{
+  "action": "Image.Resize",
+  "params": {
+    "Image": "{{STRING}}",
+    "ImageResizeHeight": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Gettypeaction",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

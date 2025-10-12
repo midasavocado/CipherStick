@@ -1,0 +1,7 @@
+{
+  "action": "File.Select",
+  "params": {
+    "SelectMultiple": "{{BOOLEAN}}",
+    "PickingMode": "{{STRING}}"
+  }
+}

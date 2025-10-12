@@ -1,0 +1,6 @@
+{
+  "action": "VoiceMemos.SearchRecordings",
+  "params": {
+    "SearchPhrase": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Properties.Reminders",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

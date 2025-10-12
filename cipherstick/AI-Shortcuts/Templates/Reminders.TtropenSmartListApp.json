@@ -1,0 +1,6 @@
+{
+  "action": "Reminders.TtropenSmartListApp",
+  "params": {
+    "SmartList": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Health.OpenView",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

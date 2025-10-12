@@ -1,0 +1,6 @@
+{
+  "action": "Tips.CollectionOpen",
+  "params": {
+    "Collection": "{{VARIABLE}}"
+  }
+}

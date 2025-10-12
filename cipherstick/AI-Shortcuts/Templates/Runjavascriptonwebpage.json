@@ -1,0 +1,8 @@
+{
+  "action": "Runjavascriptonwebpage",
+  "params": {
+    "JavaScript": "{{STRING}}",
+    "WebPage": "{{VARIABLE}}",
+    "WaitForReturnValue": "{{BOOLEAN}}"
+  }
+}

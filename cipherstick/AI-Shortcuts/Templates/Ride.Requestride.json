@@ -1,0 +1,9 @@
+{
+  "action": "Ride.Requestride",
+  "params": {
+    "Service": "{{STRING}}",
+    "PickupLocation": "{{VARIABLE}}",
+    "DropoffLocation": "{{VARIABLE}}",
+    "Notes": "{{STRING}}"
+  }
+}

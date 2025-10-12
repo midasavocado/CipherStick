@@ -1,0 +1,8 @@
+{
+  "action": "Seek",
+  "params": {
+    "Direction": "{{STRING}}",
+    "Amount": "{{NUMBER}}",
+    "Unit": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Getmarkdownfromrichtext",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

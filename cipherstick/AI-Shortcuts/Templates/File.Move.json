@@ -1,0 +1,6 @@
+{
+  "action": "File.Move",
+  "params": {
+    "File": "{{VARIABLE}}"
+  }
+}

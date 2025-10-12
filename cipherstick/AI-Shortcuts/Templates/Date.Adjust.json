@@ -1,0 +1,9 @@
+{
+  "action": "Date.Adjust",
+  "params": {
+    "Date": "{{STRING}}",
+    "Duration": "{{STRING}}",
+    "Magnitude": "{{NUMBER}}",
+    "Unit": "{{STRING}}"
+  }
+}

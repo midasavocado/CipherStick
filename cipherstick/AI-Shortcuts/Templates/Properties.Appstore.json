@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Appstore",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

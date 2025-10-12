@@ -1,0 +1,12 @@
+{
+  "action": "Journal.CreateEntry",
+  "params": {
+    "Title": "{{STRING}}",
+    "Bookmark": "{{BOOLEAN}}",
+    "EntryDate": "{{STRING}}",
+    "Location": "{{VARIABLE}}",
+    "MediaItems": "{{LIST}}",
+    "Message": "{{STRING}}",
+    "OpenWhenRun": "{{BOOLEAN}}"
+  }
+}

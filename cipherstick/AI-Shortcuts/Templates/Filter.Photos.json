@@ -1,0 +1,9 @@
+{
+  "action": "Filter.Photos",
+  "params": {
+    "ContentItemFilter": "{{VARIABLE}}",
+    "ContentItemLimitEnabled": "{{BOOLEAN}}",
+    "ContentItemSortOrder": "{{STRING}}",
+    "ContentItemSortProperty": "{{STRING}}"
+  }
+}

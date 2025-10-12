@@ -1,0 +1,7 @@
+{
+  "action": "Weather.AddSavedLocation",
+  "params": {
+    "OpenWhenRun": "{{BOOLEAN}}",
+    "Place": "{{STRING}}"
+  }
+}

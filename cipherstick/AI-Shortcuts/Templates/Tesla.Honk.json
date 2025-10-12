@@ -1,0 +1,6 @@
+{
+  "action": "Tesla.Honk",
+  "params": {
+    "Vehicle": "{{STRING}}"
+  }
+}

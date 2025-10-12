@@ -1,0 +1,6 @@
+{
+  "action": "Format.Number",
+  "params": {
+    "Number": "{{STRING}}"
+  }
+}

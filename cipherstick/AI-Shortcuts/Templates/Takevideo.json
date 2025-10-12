@@ -1,0 +1,7 @@
+{
+  "action": "Takevideo",
+  "params": {
+    "CameraCaptureQuality": "{{STRING}}",
+    "RecordingStart": "{{STRING}}"
+  }
+}

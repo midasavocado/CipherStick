@@ -1,0 +1,6 @@
+{
+  "action": "Health.OpenDataType",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

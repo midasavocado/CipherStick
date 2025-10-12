@@ -1,0 +1,6 @@
+{
+  "action": "ShortcutsActions.SetVoiceDataMode",
+  "params": {
+    "Mode": "{{STRING}}"
+  }
+}

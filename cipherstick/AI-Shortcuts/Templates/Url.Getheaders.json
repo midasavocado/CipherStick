@@ -1,0 +1,6 @@
+{
+  "action": "Url.Getheaders",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

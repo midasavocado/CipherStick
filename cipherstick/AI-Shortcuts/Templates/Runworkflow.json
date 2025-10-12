@@ -1,0 +1,8 @@
+{
+  "action": "Runworkflow",
+  "params": {
+    "WorkflowName": "{{STRING}}",
+    "Input": "{{VARIABLE}}",
+    "ShowWhenRun": "{{BOOLEAN}}"
+  }
+}

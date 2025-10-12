@@ -1,0 +1,6 @@
+{
+  "action": "Calendar.WfappSettingEntityUpdaterAction",
+  "params": {
+    "SettingsAllDayDefaultAlertTimesEntity": "{{VARIABLE}}"
+  }
+}

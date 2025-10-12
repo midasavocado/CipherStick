@@ -1,0 +1,6 @@
+{
+  "action": "Skipforward",
+  "params": {
+    "Seconds": "{{NUMBER}}"
+  }
+}

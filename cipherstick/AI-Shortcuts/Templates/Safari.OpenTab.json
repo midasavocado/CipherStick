@@ -1,0 +1,6 @@
+{
+  "action": "Safari.OpenTab",
+  "params": {
+    "Tab": "{{VARIABLE}}"
+  }
+}

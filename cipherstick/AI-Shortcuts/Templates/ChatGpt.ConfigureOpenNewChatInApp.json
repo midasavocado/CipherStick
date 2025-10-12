@@ -1,0 +1,8 @@
+{
+  "action": "ChatGpt.ConfigureOpenNewChatInApp",
+  "params": {
+    "StartWhisper": "{{BOOLEAN}}",
+    "TemporaryChat": "{{BOOLEAN}}",
+    "UseSearchGpt": "{{BOOLEAN}}"
+  }
+}

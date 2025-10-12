@@ -1,0 +1,7 @@
+{
+  "action": "Selectphone",
+  "params": {
+    "Multiple": "{{BOOLEAN}}",
+    "Prompt": "{{STRING}}"
+  }
+}

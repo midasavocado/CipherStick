@@ -1,0 +1,6 @@
+{
+  "action": "Mail.OpenMailboxEntity",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

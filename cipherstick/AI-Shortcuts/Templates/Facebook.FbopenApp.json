@@ -1,0 +1,6 @@
+{
+  "action": "Facebook.FbopenApp",
+  "params": {
+    "Destination": "{{VARIABLE}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Chrome.AddBookmark",
+  "params": {
+    "URL": "{{STRING}}"
+  }
+}

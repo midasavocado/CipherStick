@@ -1,0 +1,6 @@
+{
+  "action": "TvremoteUiservice.ToggleCaptionsIntent",
+  "params": {
+    "Device": "{{VARIABLE}}"
+  }
+}

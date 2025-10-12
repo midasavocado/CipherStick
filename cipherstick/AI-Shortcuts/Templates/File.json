@@ -1,0 +1,6 @@
+{
+  "action": "File",
+  "params": {
+    "File": "{{VARIABLE}}"
+  }
+}

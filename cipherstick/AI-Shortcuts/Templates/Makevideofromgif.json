@@ -1,0 +1,7 @@
+{
+  "action": "Makevideofromgif",
+  "params": {
+    "InputGIF": "{{EXTENSION_INPUT}}",
+    "MakeVideoFromGIFActionLoopCount": "{{NUMBER}}"
+  }
+}

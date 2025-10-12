@@ -1,0 +1,6 @@
+{
+  "action": "Measurement.Create",
+  "params": {
+    "MeasurementUnit": "{{VARIABLE}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Shortcuts.CreateFolder",
+  "params": {
+    "FolderName": "{{STRING}}"
+  }
+}

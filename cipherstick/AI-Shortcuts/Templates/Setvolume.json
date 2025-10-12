@@ -1,0 +1,7 @@
+{
+  "action": "Setvolume",
+  "params": {
+    "Volume": "{{NUMBER}}",
+    "Change": "{{STRING}}"
+  }
+}

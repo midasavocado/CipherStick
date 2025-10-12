@@ -1,0 +1,8 @@
+{
+  "action": "Setters.Calendarevents",
+  "params": {
+    "Event": "{{VARIABLE}}",
+    "Field": "{{STRING}}",
+    "Value": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Selectcontacts",
+  "params": {
+    "Multiple": "{{BOOLEAN}}",
+    "Prompt": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Getlastphoto",
+  "params": {
+    "GetLatestPhotosActionIncludeScreenshots": "{{BOOLEAN}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Text.Combine",
+  "params": {
+    "Text": "{{STRING}}",
+    "Separator": "{{STRING}}"
+  }
+}

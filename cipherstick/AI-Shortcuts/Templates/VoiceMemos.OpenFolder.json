@@ -1,0 +1,6 @@
+{
+  "action": "VoiceMemos.OpenFolder",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Podcastshow",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

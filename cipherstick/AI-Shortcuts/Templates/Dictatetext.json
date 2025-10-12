@@ -1,0 +1,7 @@
+{
+  "action": "Dictatetext",
+  "params": {
+    "DictateTextStopListening": "{{STRING}}",
+    "SpeechLanguage": "{{STRING}}"
+  }
+}

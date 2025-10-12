@@ -1,0 +1,6 @@
+{
+  "action": "Getepisodesforpodcast",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

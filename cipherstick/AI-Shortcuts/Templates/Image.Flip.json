@@ -1,0 +1,6 @@
+{
+  "action": "Image.Flip",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

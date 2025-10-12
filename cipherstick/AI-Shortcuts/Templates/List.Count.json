@@ -1,0 +1,6 @@
+{
+  "action": "List.Count",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

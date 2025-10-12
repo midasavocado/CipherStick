@@ -1,0 +1,8 @@
+{
+  "action": "Mail.MailMessageEntity",
+  "params": {
+    "ContentItemFilter": "{{VARIABLE}}",
+    "ContentItemLimitEnabled": "{{BOOLEAN}}",
+    "ContentItemSortProperty": "{{STRING}}"
+  }
+}

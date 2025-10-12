@@ -1,0 +1,6 @@
+{
+  "action": "Getitemtype",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

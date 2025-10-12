@@ -1,0 +1,8 @@
+{
+  "action": "Messages.Call",
+  "params": {
+    "VenmoActionAmount": "{{VARIABLE}}",
+    "VenmoActionNote": "{{STRING}}",
+    "VenmoActionRecipients": "{{VARIABLE}}"
+  }
+}

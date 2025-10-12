@@ -1,0 +1,6 @@
+{
+  "action": "NanoSettings.NprfsetWakeOnWristRaiseIntent",
+  "params": {
+    "Operation": "{{STRING}}"
+  }
+}

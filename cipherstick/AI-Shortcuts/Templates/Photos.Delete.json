@@ -1,0 +1,6 @@
+{
+  "action": "Photos.Delete",
+  "params": {
+    "Photos": "{{VARIABLE}}"
+  }
+}

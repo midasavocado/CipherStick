@@ -1,0 +1,9 @@
+{
+  "action": "Recordaudio",
+  "params": {
+    "RecordingCompression": "{{STRING}}",
+    "RecordingEnd": "{{STRING}}",
+    "RecordingStart": "{{STRING}}",
+    "RecordingTimeInterval": "{{VARIABLE}}"
+  }
+}

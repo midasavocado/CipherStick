@@ -1,0 +1,8 @@
+{
+  "action": "Playground.GenerateImage",
+  "params": {
+    "Prompt": "{{STRING}}",
+    "SaveToPlayground": "{{STRING}}",
+    "Style": "{{STRING}}"
+  }
+}

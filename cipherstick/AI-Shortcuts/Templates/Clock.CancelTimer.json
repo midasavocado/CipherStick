@@ -1,0 +1,4 @@
+{
+  "action": "Clock.CancelTimer",
+  "params": {}
+}

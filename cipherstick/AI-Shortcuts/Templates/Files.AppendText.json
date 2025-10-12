@@ -1,0 +1,10 @@
+{
+  "action": "Files.AppendText",
+  "params": {
+    "Input": "{{STRING}}",
+    "WriteMode": "{{STRING}}",
+    "AppendOnNewLine": "{{BOOLEAN}}",
+    "File": "{{VARIABLE}}",
+    "Path": "{{STRING}}"
+  }
+}

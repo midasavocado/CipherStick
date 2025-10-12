@@ -1,0 +1,6 @@
+{
+  "action": "Intelligenceplatform.FindSportsEvents",
+  "params": {
+    "SportsTeamAppEntity": "{{VARIABLE}}"
+  }
+}

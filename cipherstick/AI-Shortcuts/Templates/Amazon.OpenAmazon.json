@@ -1,0 +1,6 @@
+{
+  "action": "Amazon.OpenAmazon",
+  "params": {
+    "Destination": "{{VARIABLE}}"
+  }
+}

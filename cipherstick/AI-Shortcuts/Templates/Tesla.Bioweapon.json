@@ -1,0 +1,8 @@
+{
+  "action": "Tesla.Bioweapon",
+  "params": {
+    "ShowWhenRun": "{{BOOLEAN}}",
+    "Vehicle": "{{STRING}}",
+    "VehicleMode": "{{STRING}}"
+  }
+}

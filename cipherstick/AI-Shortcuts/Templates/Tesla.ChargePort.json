@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.ChargePort",
+  "params": {
+    "ChargePortAction": "{{STRING}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

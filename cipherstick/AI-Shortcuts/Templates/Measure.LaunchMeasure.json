@@ -1,0 +1,6 @@
+{
+  "action": "Measure.LaunchMeasure",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

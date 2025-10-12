@@ -1,0 +1,6 @@
+{
+  "action": "Com.OpenInChromeIntent",
+  "params": {
+    "URL": "{{STRING}}"
+  }
+}

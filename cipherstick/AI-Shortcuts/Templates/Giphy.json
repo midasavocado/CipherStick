@@ -1,0 +1,8 @@
+{
+  "action": "Giphy",
+  "params": {
+    "GiphyQuery": "{{STRING}}",
+    "GiphySelectMultiple": "{{BOOLEAN}}",
+    "GiphyShowPicker": "{{BOOLEAN}}"
+  }
+}

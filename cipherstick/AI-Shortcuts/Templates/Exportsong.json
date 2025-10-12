@@ -1,0 +1,6 @@
+{
+  "action": "Exportsong",
+  "params": {
+    "ExportSongActionSelectMultiple": "{{BOOLEAN}}"
+  }
+}

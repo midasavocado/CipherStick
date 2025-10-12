@@ -1,0 +1,7 @@
+{
+  "action": "Gethalfwaypoint",
+  "params": {
+    "GetHalfwayPointFirstLocation": "{{VARIABLE}}",
+    "GetHalfwayPointSecondLocation": "{{VARIABLE}}"
+  }
+}

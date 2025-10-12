@@ -1,0 +1,6 @@
+{
+  "action": "IBooks.Openin",
+  "params": {
+    "BooksInput": "{{VARIABLE}}"
+  }
+}

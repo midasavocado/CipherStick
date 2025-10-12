@@ -1,0 +1,6 @@
+{
+  "action": "Email",
+  "params": {
+    "EmailAddress": "{{VARIABLE}}"
+  }
+}

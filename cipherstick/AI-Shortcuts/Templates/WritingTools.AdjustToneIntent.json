@@ -1,0 +1,7 @@
+{
+  "action": "WritingTools.AdjustToneIntent",
+  "params": {
+    "Text": "{{STRING}}",
+    "Tone": "{{STRING}}"
+  }
+}

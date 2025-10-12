@@ -1,0 +1,6 @@
+{
+  "action": "Unzip",
+  "params": {
+    "Archive": "{{VARIABLE}}"
+  }
+}

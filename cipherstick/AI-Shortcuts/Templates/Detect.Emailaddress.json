@@ -1,0 +1,6 @@
+{
+  "action": "Detect.Emailaddress",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

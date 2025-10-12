@@ -1,0 +1,7 @@
+{
+  "action": "VoiceMemos.CreateFolder",
+  "params": {
+    "Name": "{{STRING}}",
+    "ShowWhenRun": "{{BOOLEAN}}"
+  }
+}

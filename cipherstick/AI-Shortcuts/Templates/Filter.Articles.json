@@ -1,0 +1,10 @@
+{
+  "action": "Filter.Articles",
+  "params": {
+    "ContentItemFilter": "{{VARIABLE}}",
+    "ContentItemInputParameter": "{{EXTENSION_INPUT}}",
+    "ContentItemLimitEnabled": "{{BOOLEAN}}",
+    "ContentItemSortOrder": "{{STRING}}",
+    "ContentItemSortProperty": "{{STRING}}"
+  }
+}

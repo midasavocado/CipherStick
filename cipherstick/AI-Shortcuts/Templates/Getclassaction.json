@@ -1,0 +1,7 @@
+{
+  "action": "Getclassaction",
+  "params": {
+    "Input": "{{STRING}}",
+    "Class": "{{STRING}}"
+  }
+}

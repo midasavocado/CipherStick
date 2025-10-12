@@ -1,0 +1,6 @@
+{
+  "action": "Notes.ChangeSettingLink",
+  "params": {
+    "Setting": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Detect.Address",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

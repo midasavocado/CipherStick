@@ -1,0 +1,7 @@
+{
+  "action": "Grok.AskGrok",
+  "params": {
+    "Message": "{{STRING}}",
+    "ShowWhenRun": "{{BOOLEAN}}"
+  }
+}

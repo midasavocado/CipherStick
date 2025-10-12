@@ -1,0 +1,6 @@
+{
+  "action": "AirDrop.Send",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

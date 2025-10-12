@@ -1,0 +1,6 @@
+{
+  "action": "Avairyeditphoto",
+  "params": {
+    "Document": "{{EXTENSION_INPUT}}"
+  }
+}

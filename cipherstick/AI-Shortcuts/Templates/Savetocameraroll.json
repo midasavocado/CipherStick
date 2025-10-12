@@ -1,0 +1,9 @@
+{
+  "action": "Savetocameraroll",
+  "params": {
+    "Media": "{{EXTENSION_INPUT}}",
+    "Album": "{{STRING}}",
+    "Filename": "{{STRING}}",
+    "OverwriteIfExists": "{{BOOLEAN}}"
+  }
+}

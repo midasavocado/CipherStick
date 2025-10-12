@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Itunesstore",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

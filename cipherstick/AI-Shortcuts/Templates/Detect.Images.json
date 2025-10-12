@@ -1,0 +1,6 @@
+{
+  "action": "Detect.Images",
+  "params": {
+    "Input": "{{STRING}}"
+  }
+}

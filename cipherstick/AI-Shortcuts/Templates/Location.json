@@ -1,0 +1,6 @@
+{
+  "action": "Location",
+  "params": {
+    "Location": "{{VARIABLE}}"
+  }
+}

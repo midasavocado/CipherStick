@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.PowerOutlets",
+  "params": {
+    "PowerOutletsAction": "{{STRING}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

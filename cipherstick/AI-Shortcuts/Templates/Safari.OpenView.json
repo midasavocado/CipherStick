@@ -1,0 +1,6 @@
+{
+  "action": "Safari.OpenView",
+  "params": {
+    "View": "{{STRING}}"
+  }
+}

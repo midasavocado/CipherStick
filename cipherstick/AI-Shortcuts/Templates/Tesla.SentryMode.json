@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.SentryMode",
+  "params": {
+    "Vehicle": "{{STRING}}",
+    "VehicleMode": "{{STRING}}"
+  }
+}

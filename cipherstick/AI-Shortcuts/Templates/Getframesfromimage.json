@@ -1,0 +1,6 @@
+{
+  "action": "Getframesfromimage",
+  "params": {
+    "Image": "{{STRING}}"
+  }
+}

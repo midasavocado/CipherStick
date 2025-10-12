@@ -1,0 +1,6 @@
+{
+  "action": "Music.AddToUpNext",
+  "params": {
+    "MusicItem": "{{VARIABLE}}"
+  }
+}

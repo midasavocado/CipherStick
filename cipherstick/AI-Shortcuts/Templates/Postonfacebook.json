@@ -1,0 +1,6 @@
+{
+  "action": "Postonfacebook",
+  "params": {
+    "FacebookContent": "{{EXTENSION_INPUT}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Variable.Append",
+  "params": {
+    "Input": "{{STRING}}",
+    "VariableName": "{{STRING}}"
+  }
+}

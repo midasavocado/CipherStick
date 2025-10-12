@@ -1,0 +1,9 @@
+{
+  "action": "Text.Replace",
+  "params": {
+    "Input": "{{STRING}}",
+    "ReplaceTextFind": "{{STRING}}",
+    "ReplaceTextRegularExpression": "{{BOOLEAN}}",
+    "ReplaceTextReplace": "{{STRING}}"
+  }
+}

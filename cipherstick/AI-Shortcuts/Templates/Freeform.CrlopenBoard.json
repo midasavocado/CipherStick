@@ -1,0 +1,6 @@
+{
+  "action": "Freeform.CrlopenBoard",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "action": "Speaktext",
+  "params": {
+    "Text": "{{STRING}}",
+    "Voice": "{{STRING}}",
+    "Rate": "{{NUMBER}}",
+    "Pitch": "{{NUMBER}}",
+    "Language": "{{STRING}}",
+    "WaitUntilFinished": "{{BOOLEAN}}"
+  }
+}

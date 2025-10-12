@@ -1,0 +1,8 @@
+{
+  "action": "Setters.Reminders",
+  "params": {
+    "Reminder": "{{VARIABLE}}",
+    "Field": "{{STRING}}",
+    "Value": "{{STRING}}"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "action": "Motivation.QuoteNavigation",
+  "params": {
+    "Quote": "{{STRING}}",
+    "SelectedCategories": "{{STRING}}",
+    "SelectedThemeName": "{{STRING}}",
+    "Value": "{{STRING}}",
+    "WidgetIdentifier": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Searchpodcasts",
+  "params": {
+    "Query": "{{STRING}}",
+    "Limit": "{{NUMBER}}"
+  }
+}

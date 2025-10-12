@@ -1,0 +1,7 @@
+{
+  "action": "Removereminders",
+  "params": {
+    "Reminders": "{{VARIABLE}}",
+    "AskBeforeDeleting": "{{BOOLEAN}}"
+  }
+}

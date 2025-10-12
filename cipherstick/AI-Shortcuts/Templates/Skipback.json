@@ -1,0 +1,6 @@
+{
+  "action": "Skipback",
+  "params": {
+    "Seconds": "{{NUMBER}}"
+  }
+}

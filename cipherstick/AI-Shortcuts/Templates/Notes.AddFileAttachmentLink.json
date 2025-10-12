@@ -1,0 +1,9 @@
+{
+  "action": "Notes.AddFileAttachmentLink",
+  "params": {
+    "Name": "{{STRING}}",
+    "File": "{{VARIABLE}}",
+    "Note": "{{VARIABLE}}",
+    "OpenWhenRun": "{{BOOLEAN}}"
+  }
+}

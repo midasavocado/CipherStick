@@ -1,0 +1,6 @@
+{
+  "action": "Shortcuts.OpenNavigationDestination",
+  "params": {
+    "Destination": "{{STRING}}"
+  }
+}

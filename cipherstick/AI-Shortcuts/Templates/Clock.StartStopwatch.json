@@ -1,0 +1,4 @@
+{
+  "action": "Clock.StartStopwatch",
+  "params": {}
+}

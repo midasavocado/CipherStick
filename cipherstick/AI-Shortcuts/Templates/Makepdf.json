@@ -1,0 +1,10 @@
+{
+  "action": "Makepdf",
+  "params": {
+    "Input": "{{STRING}}",
+    "PDFIncludedPages": "{{STRING}}",
+    "PDFIncludeMargin": "{{BOOLEAN}}",
+    "PDFPageRangeEnd": "{{STRING}}",
+    "PDFPageRangeStart": "{{STRING}}"
+  }
+}

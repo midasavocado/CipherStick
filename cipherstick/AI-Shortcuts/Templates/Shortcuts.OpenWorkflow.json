@@ -1,0 +1,6 @@
+{
+  "action": "Shortcuts.OpenWorkflow",
+  "params": {
+    "ShortcutName": "{{STRING}}"
+  }
+}

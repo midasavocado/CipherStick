@@ -1,0 +1,13 @@
+{
+  "action": "Sendemail",
+  "params": {
+    "From": "{{STRING}}",
+    "To": "{{STRING}}",
+    "Cc": "{{STRING}}",
+    "Bcc": "{{STRING}}",
+    "Subject": "{{STRING}}",
+    "Body": "{{STRING}}",
+    "IsHTML": "{{BOOLEAN}}",
+    "Attachments": "{{EXTENSION_INPUT}}"
+  }
+}

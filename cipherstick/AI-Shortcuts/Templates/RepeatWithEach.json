@@ -1,0 +1,7 @@
+{
+  "action": "RepeatWithEach",
+  "params": {
+    "Items": "{{VARIABLE}}",
+    "Mode": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Vpn.Set",
+  "params": {
+    "VPN": "{{VARIABLE}}"
+  }
+}

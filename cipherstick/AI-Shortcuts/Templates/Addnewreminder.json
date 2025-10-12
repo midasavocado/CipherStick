@@ -1,0 +1,15 @@
+{
+  "action": "Addnewreminder",
+  "params": {
+    "AlertCustomTime": "{{STRING}}",
+    "AlertEnabled": "{{STRING}}",
+    "CalendarItemNotes": "{{STRING}}",
+    "CalendarItemTitle": "{{STRING}}",
+    "Flag": "{{BOOLEAN}}",
+    "Images": "{{EXTENSION_INPUT}}",
+    "ParentTask": "{{EXTENSION_INPUT}}",
+    "Priority": "{{STRING}}",
+    "Tags": "{{STRING}}",
+    "URL": "{{STRING}}"
+  }
+}

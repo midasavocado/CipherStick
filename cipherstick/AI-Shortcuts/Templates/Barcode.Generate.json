@@ -1,0 +1,10 @@
+{
+  "action": "Barcode.Generate",
+  "params": {
+    "BackgroundColor": "{{STRING}}",
+    "ErrorCorrection": "{{STRING}}",
+    "ForegroundColor": "{{STRING}}",
+    "QRRounded": "{{BOOLEAN}}",
+    "Text": "{{STRING}}"
+  }
+}

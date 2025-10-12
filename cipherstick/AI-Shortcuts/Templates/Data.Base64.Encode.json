@@ -1,0 +1,7 @@
+{
+  "action": "Data.Base64.Encode",
+  "params": {
+    "Input": "{{STRING}}",
+    "LineBreakMode": "{{STRING}}"
+  }
+}

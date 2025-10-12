@@ -1,0 +1,6 @@
+{
+  "action": "Image.Rotate",
+  "params": {
+    "Image": "{{STRING}}"
+  }
+}

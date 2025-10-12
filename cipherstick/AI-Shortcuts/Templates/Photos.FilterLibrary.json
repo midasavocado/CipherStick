@@ -1,0 +1,6 @@
+{
+  "action": "Photos.FilterLibrary",
+  "params": {
+    "ViewMode": "{{STRING}}"
+  }
+}

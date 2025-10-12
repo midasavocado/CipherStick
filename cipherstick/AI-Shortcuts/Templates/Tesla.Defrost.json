@@ -1,0 +1,8 @@
+{
+  "action": "Tesla.Defrost",
+  "params": {
+    "Defrost": "{{STRING}}",
+    "ShowWhenRun": "{{BOOLEAN}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

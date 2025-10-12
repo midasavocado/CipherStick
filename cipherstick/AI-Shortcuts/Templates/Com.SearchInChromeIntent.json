@@ -1,0 +1,6 @@
+{
+  "action": "Com.SearchInChromeIntent",
+  "params": {
+    "SearchPhrase": "{{STRING}}"
+  }
+}

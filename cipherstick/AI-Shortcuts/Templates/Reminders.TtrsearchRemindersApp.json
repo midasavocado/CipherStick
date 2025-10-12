@@ -1,0 +1,9 @@
+{
+  "action": "Reminders.TtrsearchRemindersApp",
+  "params": {
+    "Query": "{{STRING}}",
+    "InList": "{{STRING}}",
+    "IncludeCompleted": "{{BOOLEAN}}",
+    "Limit": "{{NUMBER}}"
+  }
+}

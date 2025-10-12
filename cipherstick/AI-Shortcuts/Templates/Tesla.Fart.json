@@ -1,0 +1,7 @@
+{
+  "action": "Tesla.Fart",
+  "params": {
+    "ShowWhenRun": "{{BOOLEAN}}",
+    "Vehicle": "{{STRING}}"
+  }
+}

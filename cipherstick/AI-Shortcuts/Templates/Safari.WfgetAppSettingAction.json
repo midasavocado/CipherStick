@@ -1,0 +1,6 @@
+{
+  "action": "Safari.WfgetAppSettingAction",
+  "params": {
+    "SettingKey": "{{STRING}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Safari.AddToReadingList",
+  "params": {
+    "URL": "{{STRING}}",
+    "Title": "{{STRING}}"
+  }
+}

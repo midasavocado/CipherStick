@@ -1,0 +1,6 @@
+{
+  "action": "Safari.OpenBookmark",
+  "params": {
+    "Bookmark": "{{STRING}}"
+  }
+}

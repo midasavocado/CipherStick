@@ -1,0 +1,7 @@
+{
+  "action": "Properties.Files",
+  "params": {
+    "Input": "{{STRING}}",
+    "ContentItemPropertyName": "{{STRING}}"
+  }
+}

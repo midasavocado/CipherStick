@@ -1,0 +1,9 @@
+{
+  "action": "Searchlocalbusinesses",
+  "params": {
+    "Query": "{{STRING}}",
+    "Location": "{{VARIABLE}}",
+    "Radius": "{{NUMBER}}",
+    "OpenNow": "{{BOOLEAN}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Documentpicker.Save",
+  "params": {
+    "Input": "{{STRING}}",
+    "SaveFileOverwrite": "{{BOOLEAN}}"
+  }
+}

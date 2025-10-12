@@ -1,0 +1,6 @@
+{
+  "action": "Get.Playlist",
+  "params": {
+    "PlaylistName": "{{STRING}}"
+  }
+}

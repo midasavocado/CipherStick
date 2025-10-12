@@ -1,0 +1,6 @@
+{
+  "action": "Fitness.OpenAward",
+  "params": {
+    "Target": "{{STRING}}"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "action": "Safari.ListenToPage",
+  "params": {
+    "Voice": "{{STRING}}",
+    "Rate": "{{NUMBER}}",
+    "Pitch": "{{NUMBER}}"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "action": "Shortcuts.DeleteWorkflow",
+  "params": {
+    "ShortcutName": "{{STRING}}",
+    "AskBeforeDeleting": "{{BOOLEAN}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Clock.OpenTab",
+  "params": {
+    "Tab": "{{EXTENSION_INPUT}}"
+  }
+}

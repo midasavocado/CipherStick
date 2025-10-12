@@ -1,0 +1,11 @@
+{
+  "action": "Motivation.ToggleLike",
+  "params": {
+    "Quote": "{{STRING}}",
+    "QuoteId": "{{STRING}}",
+    "SelectedCategories": "{{STRING}}",
+    "SelectedThemeName": "{{STRING}}",
+    "UpdatesTimeline": "{{BOOLEAN}}",
+    "WidgetIdentifier": "{{STRING}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Notes.DeleteNotesLink",
+  "params": {
+    "Entities": "{{VARIABLE}}"
+  }
+}
