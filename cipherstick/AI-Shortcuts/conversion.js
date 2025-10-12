@@ -1,5 +1,3 @@
-
-
 // conversion.js (updated)
 // Generalized loader + converter that uses index.json in both Templates and Conversions.
 // Adds robust nested control-flow (If / Else / End If, Repeat / End Repeat, RepeatEach / End) using
@@ -91,15 +89,17 @@
     if (action.name === 'Repeat') return renderRepeatSequence(action.params || {});
     if (action.name === 'RepeatWithEach') return renderRepeatEachSequence(action.params || {});
 
-    // Normal action via conversions catalog (best‑match filename)
+    // Normal action via conversions catalog (best-match filename)
     const fname = findBestFilename(action.name);
     if (fname) {
       const conv = CATALOG.conversions.get(fname);
       if (conv) return fillConversionTemplate(conv, action.params || {});
     }
 
-    // Parameter‑less fallback for single tokens like `Vibrate`
+    // Parameter-less fallback for single tokens (works even without a conversion file)
     if (!action.params || Object.keys(action.params).length === 0) {
+      const inline = inlineSimpleActionNode(action.name);
+      if (inline) return inline;
       const conv2 = tryFindSimpleConversion(action.name);
       if (conv2) return fillConversionTemplate(conv2, {});
     }
@@ -109,10 +109,10 @@
   }
 
   // ---------- If / Else / End If (real Shortcuts markers) -------------------
-  // Expected DSL (flexible keys, case‑insensitive):
+  // Expected DSL (flexible keys, case-insensitive):
   // If:
   //   Input: "{{Repeat Index}}"   # or any {{VariableName}}
-  //   Condition: "is" | "is not" | ">" | ">=" | "<" | "<=" | "has any value" | "between"
+  //   Condition: "is" | "is not" | ">" | ">=" | "<" | "<=" | "has any value" | "does not have any value" | "between"
   //   Number: 5                  # optional (depends on Condition)
   //   NumberMax: 9               # only for "between"
   //   Then:
@@ -128,15 +128,24 @@
     'contains': 2,
     'does not contain': 3,
     'is': 4,
+    '==': 4,
+    'equals': 4,
+    'is equal to': 4,
     'is not': 5,
+    '!=': 5,
+    'does not equal': 5,
     '>': 6,
     'is greater than': 6,
+    'greater than': 6,
     '>=': 7,
     'is greater than or equal to': 7,
+    'greater than or equal to': 7,
     '<': 8,
     'is less than': 8,
+    'less than': 8,
     '<=': 9,
     'is less than or equal to': 9,
+    'less than or equal to': 9,
     'between': 10,
     'is between': 10,
   };
@@ -147,24 +156,39 @@
     const condLabel = String(params.Condition || 'is').toLowerCase();
     const condCode = COND_CODES[condLabel] != null ? COND_CODES[condLabel] : 4; // default "is"
 
+    const num1 = params.Number != null ? Number(params.Number) : undefined;
+    const num2 = params.NumberMax != null ? Number(params.NumberMax) : undefined;
+
     const first = conditionalNode({
       GroupingIdentifier: group,
       WFControlFlowMode: 0,
       WFCondition: condCode,
       WFInput: toVariableToken(input),
-      WFNumberValue: params.Number != null ? String(params.Number) : undefined,
-      WFSecondNumberValue: params.NumberMax != null ? String(params.NumberMax) : undefined,
+      WFNumberValue: Number.isFinite(num1) ? num1 : undefined,
+      WFSecondNumberValue: Number.isFinite(num2) ? num2 : undefined,
     });
 
-    const thenXml = (Array.isArray(params.Then) ? params.Then : []).map(renderAction).join('\n');
+    const thenList = Array.isArray(params.Then) ? params.Then : [];
+    const elseList = Array.isArray(params.Else) ? params.Else : [];
+
+    const thenXml = (thenList.length ? thenList : [{ name: 'Nothing', params: {} }])
+      .map(renderAction).join('\n');
 
     const otherwise = conditionalNode({ GroupingIdentifier: group, WFControlFlowMode: 1 });
 
-    const elseXml = (Array.isArray(params.Else) ? params.Else : []).map(renderAction).join('\n');
+    const elseXml = (elseList.length ? elseList : [{ name: 'Nothing', params: {} }])
+      .map(renderAction).join('\n');
 
     const end = conditionalNode({ GroupingIdentifier: group, WFControlFlowMode: 2 });
 
     return [first, thenXml, otherwise, elseXml, end].filter(Boolean).join('\n');
+  }
+
+  function nothingNode() {
+    return dictToXml({
+      WFWorkflowActionIdentifier: 'is.workflow.actions.nothing',
+      WFWorkflowActionParameters: {}
+    });
   }
 
   function conditionalNode(p) {
@@ -177,8 +201,14 @@
     };
     if (p.WFCondition != null) dict.WFWorkflowActionParameters.WFCondition = p.WFCondition;
     if (p.WFInput != null) dict.WFWorkflowActionParameters.WFInput = p.WFInput;
-    if (p.WFNumberValue != null) dict.WFWorkflowActionParameters.WFNumberValue = String(p.WFNumberValue);
-    if (p.WFSecondNumberValue != null) dict.WFWorkflowActionParameters.WFSecondNumberValue = String(p.WFSecondNumberValue);
+    if (p.WFNumberValue != null) {
+      const n1 = typeof p.WFNumberValue === 'number' ? p.WFNumberValue : Number(p.WFNumberValue);
+      if (Number.isFinite(n1)) dict.WFWorkflowActionParameters.WFNumberValue = n1;
+    }
+    if (p.WFSecondNumberValue != null) {
+      const n2 = typeof p.WFSecondNumberValue === 'number' ? p.WFSecondNumberValue : Number(p.WFSecondNumberValue);
+      if (Number.isFinite(n2)) dict.WFWorkflowActionParameters.WFSecondNumberValue = n2;
+    }
     return dictToXml(dict);
   }
 
@@ -194,7 +224,11 @@
     const count = toNumber(params.Count, 1);
 
     const begin = repeatCountNode({ GroupingIdentifier: group, WFControlFlowMode: 0, WFRepeatCount: count });
-    const bodyXml = (Array.isArray(params.Do) ? params.Do : (Array.isArray(params.Actions) ? params.Actions : [])).map(renderAction).join('\n');
+
+    const bodyList = Array.isArray(params.Do) ? params.Do : (Array.isArray(params.Actions) ? params.Actions : []);
+    const bodyXml = (bodyList.length ? bodyList : [{ name: 'Nothing', params: {} }])
+      .map(renderAction).join('\n');
+
     const end = repeatCountNode({ GroupingIdentifier: group, WFControlFlowMode: 2, WFRepeatCount: count });
 
     return [begin, bodyXml, end].filter(Boolean).join('\n');
@@ -221,9 +255,14 @@
 
   function renderRepeatEachSequence(params) {
     const group = genUUID();
-    const begin = repeatEachNode({ GroupingIdentifier: group, WFControlFlowMode: 0, WFRepeatList: params.Items });
-    const bodyXml = (Array.isArray(params.Do) ? params.Do : (Array.isArray(params.Actions) ? params.Actions : [])).map(renderAction).join('\n');
-    const end = repeatEachNode({ GroupingIdentifier: group, WFControlFlowMode: 2, WFRepeatList: params.Items });
+    const listRaw = params.Items;
+    const begin = repeatEachNode({ GroupingIdentifier: group, WFControlFlowMode: 0, WFRepeatList: listRaw });
+
+    const bodyList = Array.isArray(params.Do) ? params.Do : (Array.isArray(params.Actions) ? params.Actions : []);
+    const bodyXml = (bodyList.length ? bodyList : [{ name: 'Nothing', params: {} }])
+      .map(renderAction).join('\n');
+
+    const end = repeatEachNode({ GroupingIdentifier: group, WFControlFlowMode: 2, WFRepeatList: listRaw });
     return [begin, bodyXml, end].filter(Boolean).join('\n');
   }
 
@@ -247,6 +286,20 @@
     return loose ? CATALOG.conversions.get(loose) : null;
   }
 
+  function inlineSimpleActionNode(name) {
+    const n = normalize(name);
+    if (n === 'vibrate') {
+      return dictToXml({
+        WFWorkflowActionIdentifier: 'is.workflow.actions.vibrate',
+        WFWorkflowActionParameters: {}
+      });
+    }
+    if (n === 'nothing') {
+      return nothingNode();
+    }
+    return null;
+  }
+
   function findBestFilename(dslHeader) {
     const base = dslHeader.trim();
     const candidates = [];
@@ -265,7 +318,7 @@
   }
 
   // ------------------------------ DSL Parser --------------------------------
-  // Supports nested blocks and list syntax using indentation. Two top‑level forms:
+  // Supports nested blocks and list syntax using indentation. Two top-level forms:
   //   ActionName:\n  //     Key: Value\n  //     Then:\n  //       - ChildAction: {...}\n  //   - ActionName: { Key: Value }
 
   function parseDsl(text) {
@@ -311,7 +364,7 @@
           out.push({ name, params });
           continue;
         }
-        // Single‑line action without parameters, not indented as a child
+        // Single-line action without parameters, not indented as a child
         const single = t.line.match(/^([A-Za-z0-9_.\-]+)\s*$/);
         if (single) {
           i++;
@@ -344,11 +397,10 @@
             params[k] = child;
           } else if (/^-\s+/.test(rhs)) {
             // Inline list begins after colon
-            // Treat as child list starting on same line
             const startIndent = t.indent + 2;
             // Rewind one step so parseActions sees this same token as a bullet
             i--; 
-            i++; // counter the i-- to keep progress
+            i++; // keep progress
             const child = parseActions(startIndent);
             const k = normalizeListKey(key);
             params[k] = child;
