@@ -68,323 +68,311 @@
   </div>
 
   <script>
-    // 👇 Your Worker that serves /generate and /sign (CORS must allow your site)
-    const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
+  // 👇 Your Worker that serves /generate and /sign (CORS must allow your site)
+  const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
 
-    const $ = (id) => document.getElementById(id);
-    const nameBox   = $('shortcutName');
-    const promptBox = $('prompt');
-    const dslBox    = $('dslBox');
-    const plistBox  = $('plistBox');
+  const $ = (id) => document.getElementById(id);
+  const nameBox   = $('shortcutName');
+  const promptBox = $('prompt');
+  const dslBox    = $('dslBox');
+  const plistBox  = $('plistBox');
 
-    const btnGenerate  = $('btnGenerate');
-    const btnConvert   = $('btnConvert');
-    const btnSign      = $('btnSign');
-    const btnCopyDSL   = $('btnCopyDSL');
-    const btnCopyPlist = $('btnCopyPlist');
+  const btnGenerate  = $('btnGenerate');
+  const btnConvert   = $('btnConvert');
+  const btnSign      = $('btnSign');
+  const btnCopyDSL   = $('btnCopyDSL');
+  const btnCopyPlist = $('btnCopyPlist');
 
-    const genStatus  = $('genStatus');
-    const convStatus = $('convStatus');
-    const signStatus = $('signStatus');
+  const genStatus  = $('genStatus');
+  const convStatus = $('convStatus');
+  const signStatus = $('signStatus');
 
-    function setStatus(node, text, good=false, bad=false){
-      node.textContent = text;
-      node.classList.remove('ok','bad');
-      if (good) node.classList.add('ok');
-      if (bad)  node.classList.add('bad');
+  function setStatus(node, text, good=false, bad=false){
+    node.textContent = text;
+    node.classList.remove('ok','bad');
+    if (good) node.classList.add('ok');
+    if (bad)  node.classList.add('bad');
+  }
+
+  // ---------------- Helpers: JSON/DSL detection & coercion ----------------
+  function stripBOM(s){ if (!s) return s; return s.replace(/^\uFEFF/, ""); }
+  function stripFences(s){
+    if (!s) return s;
+    const m = s.match(/```(?:json|JSON)?\s*([\s\S]*?)\s*```/m);
+    return m ? m[1] : s;
+  }
+  function sanitizeJSONText(raw){
+    let s = String(raw ?? "");
+    s = stripBOM(s).trim();
+    s = stripFences(s);
+    // remove trailing commas before } or ]
+    s = s.replace(/,\s*([}\]])/g, "$1");
+    // normalize smart quotes to straight
+    s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    return s.trim();
+  }
+  function parseMaybeJSON(raw){
+    try {
+      const cleaned = sanitizeJSONText(raw);
+      if (!cleaned) return null;
+      if (!(cleaned.startsWith('{') || cleaned.startsWith('['))) return null;
+      return JSON.parse(cleaned);
+    } catch { return null; }
+  }
+  function prettyStringify(v){
+    try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+  }
+  function showMessage(msg, isError=false){
+    const el = document.getElementById('msgArea');
+    if (!el) return;
+    el.textContent = String(msg || "");
+    el.style.color = isError ? '#b00020' : '#444';
+  }
+
+  // Accept anything and normalize as best as possible.
+  // If it can't be normalized to a JSON program, return null and caller will use DSL/Universal path.
+  function coerceProgram(value, fallbackName){
+    let p = value;
+
+    // If string, try JSON first
+    if (typeof p === 'string') {
+      const maybe = parseMaybeJSON(p);
+      if (maybe !== null) p = maybe;
+      else return null; // treat as DSL elsewhere
     }
 
-    // --- Helper functions for JSON/DSL/format handling ---
-    function stripBOM(s){ if (!s) return s; return s.replace(/^\uFEFF/, ""); }
-    function stripFences(s){
-      if (!s) return s;
-      const m = s.match(/```(?:json|JSON)?\s*([\s\S]*?)\s*```/m);
-      return m ? m[1] : s;
-    }
-    function sanitizeJSONText(raw){
-      let s = String(raw);
-      s = stripBOM(s).trim();
-      s = stripFences(s);
-      // remove trailing commas before } or ]
-      s = s.replace(/,\s*([}\]])/g, "$1");
-      // normalize smart quotes to straight
-      s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
-      return s.trim();
-    }
-    function isProbablyJSON(s){
-      if (!s) return false;
-      const t = s.trim();
-      return t.startsWith("{") || t.startsWith("[") || t.startsWith("```");
-    }
-    function prettyStringify(v){
-      try { return JSON.stringify(v, null, 2); } catch { return String(v); }
-    }
-    function parseJSONLoose(raw){
-      const out = { ok:false, value:null, error:null, text: String(raw || "") };
-      try {
-        const cleaned = sanitizeJSONText(raw);
-        out.value = JSON.parse(cleaned);
-        out.ok = true;
-        return out;
-      } catch (e1) {
-        out.error = e1;
-        return out;
-      }
-    }
-    function showMessage(msg, isError=false){
-      const el = document.getElementById('msgArea');
-      if (!el) return;
-      el.textContent = String(msg || "");
-      el.style.color = isError ? '#b00020' : '#444';
+    // Unwrap { program: {...} }
+    if (p && typeof p === 'object' && p.program && typeof p.program === 'object') {
+      p = { name: p.name || fallbackName, ...p.program };
     }
 
-    // --- Robust program coercion + converter fallback calls ---
-    function coerceProgram(value, name){
-      let p = value;
+    // If actions array directly
+    if (Array.isArray(p)) {
+      p = { name: fallbackName, actions: p };
+    }
 
-      // If it's a string, try to parse JSON
-      if (typeof p === 'string') {
-        const parsed = parseJSONLoose(p);
-        if (parsed.ok) {
-          p = parsed.value;
-        } else {
-          throw new Error(`Program JSON parse error: ${parsed.error?.message || parsed.error}`);
-        }
-      }
-
-      // If shape is { program: {...} }
-      if (p && typeof p === 'object' && p.program && typeof p.program === 'object') {
-        p = p.program;
-      }
-
-      // If it's an array, assume it's actions[]
-      if (Array.isArray(p)) {
-        p = { name, actions: p };
-      }
-
-      // Must be an object now
-      if (!p || typeof p !== 'object') {
-        throw new Error('Program must be an object');
-      }
-
-      // Normalize fields
-      if (!p.actions) p.actions = [];
-      if (!p.name) p.name = name;
-
+    // If already {name?, actions?}
+    if (p && typeof p === 'object') {
+      if (!p.actions) p.actions = Array.isArray(p) ? p : [];
+      if (!Array.isArray(p.actions)) p.actions = [];
+      if (!p.name) p.name = fallbackName || 'My Shortcut';
       return p;
     }
 
-    async function tryConverters({ name, programObj, rawDSL }){
-      let plistXML = '';
-      let lastErr = null;
+    return null;
+  }
 
-      // Prefer JSON path when programObj provided
-      if (programObj) {
-        const cj = window.ConversionJSON;
-        if (cj && typeof cj.toPlist === 'function') {
-          try { return cj.toPlist({ name, program: programObj }); } catch(e1) {
-            lastErr = e1;
-            try { return cj.toPlist(programObj, name); } catch(e2) {
-              lastErr = e2;
-              try { return cj.toPlist(programObj); } catch(e3) {
-                lastErr = e3;
-              }
-            }
-          }
-        }
-        const c = window.Conversion;
-        if (c) {
-          if (typeof c.toPlistFromJSON === 'function') {
-            try { return c.toPlistFromJSON(programObj, name); } catch(e4){ lastErr = e4; }
-          }
-          if (typeof c.toPlist === 'function') {
-            try { return c.toPlist(programObj, name); } catch(e5){ lastErr = e5; }
-          }
-        }
-        const cdsl = window.ConversionDSL;
-        if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
-          try { return cdsl.toPlistFromJSON(programObj, name); } catch(e6){ lastErr = e6; }
-        }
-      }
-
-      // DSL fallback
-      if (rawDSL) {
-        const cdsl = window.ConversionDSL;
-        if (cdsl && typeof cdsl.toPlist === 'function') {
-          try { return cdsl.toPlist({ name, dsl: rawDSL }); } catch(e7){ lastErr = e7; }
-        }
-      }
-
-      throw lastErr || new Error('No converter accepted the input. Check conversion.js API signatures.');
+  // Try multiple converter APIs. Prefer new universal wrapper if present.
+  async function tryConverters({ name, inputRaw, programObj, dslText }){
+    // 1) Universal tolerant path
+    if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
+      try { return window.ConversionUniversal.toPlist(programObj ?? dslText ?? inputRaw, name); } catch(e){ /* fall through */ }
     }
 
-    // 1) AI: get DSL/Program plan from Worker
-    btnGenerate.addEventListener('click', async () => {
-      const prompt = promptBox.value.trim();
-      const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-      if (!prompt) { alert('Please describe the shortcut.'); return; }
-
-      setStatus(genStatus, 'generating…');
-      btnGenerate.disabled = true;
-      btnSign.disabled = true;
-
-      try {
-        const res = await fetch(`${WORKER_ORIGIN}/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, name })
-        });
-        const text = await res.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch { throw new Error(`Generate returned non-JSON response`); }
-
-        console.debug('↩ /generate payload:', data);
-
-        // Prefer Program JSON first
-        let programCandidate = data.programRaw ?? data.program ?? null;
-        let dslCandidate = data.dslRaw ?? data.dsl ?? null;
-
-        // If programCandidate is embedded as string, parse it
-        let programObj = null;
-        if (programCandidate) {
-          if (typeof programCandidate === 'string') {
-            const parsed = parseJSONLoose(programCandidate);
-            if (parsed.ok) {
-              programObj = parsed.value;
-            } else {
-              showMessage(`Program JSON parse error: ${parsed.error?.message || parsed.error}`, true);
-            }
-          } else if (typeof programCandidate === 'object') {
-            programObj = programCandidate;
+    // 2) JSON-centric paths
+    if (programObj) {
+      const cj = window.ConversionJSON;
+      if (cj && typeof cj.toPlist === 'function') {
+        try { return cj.toPlist({ name, program: programObj }); } catch(e1) {
+          try { return cj.toPlist(programObj, name); } catch(e2) {
+            try { return cj.toPlist(programObj); } catch(e3) {}
           }
         }
-
-        if (programObj) {
-          // Ensure a name exists
-          if (!programObj.name) programObj.name = name;
-          dslBox.value = prettyStringify(programObj);
-          setStatus(genStatus, 'Program JSON ready ✔', true);
-          showMessage(`Planned files: ${(data.planArray || []).length}  |  Used files: ${(data.usedFiles || []).length}`);
-        } else if (dslCandidate) {
-          dslBox.value = String(dslCandidate);
-          setStatus(genStatus, 'DSL ready ✔', true);
-          showMessage(`Program JSON not provided; using DSL. Planned files: ${(data.planArray || []).length}`);
-        } else {
-          dslBox.value = prettyStringify(data);
-          setStatus(genStatus, 'response shown (no program/DSL)', true);
-          showMessage('No program/DSL found in response; showing raw JSON.');
-        }
-
-      } catch (err) {
-        console.error(err);
-        setStatus(genStatus, 'error', false, true);
-        showMessage(err.message || 'Generation failed', true);
-        alert(err.message || 'Generation failed');
-      } finally {
-        btnGenerate.disabled = false;
       }
-    });
-
-    // 2) Convert
-    btnConvert.addEventListener('click', async () => {
-      const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-      const raw = dslBox.value.trim();
-      if (!raw) { alert('Nothing to convert — box is empty.'); return; }
-
-      setStatus(convStatus, 'converting…');
-      btnSign.disabled = true;
-
-      try {
-        let plistXML = '';
-
-        if (isProbablyJSON(raw)) {
-          const parsed = parseJSONLoose(raw);
-          if (!parsed.ok) {
-            setStatus(convStatus, 'JSON parse error', false, true);
-            showMessage(`JSON parse error: ${parsed.error?.message || parsed.error}`, true);
-            throw parsed.error || new Error('Invalid JSON');
-          }
-          const programObj = coerceProgram(parsed.value, name);
-          plistXML = await tryConverters({ name, programObj });
-        } else {
-          // DSL path
-          plistXML = await tryConverters({ name, rawDSL: raw });
-        }
-
-        if (!plistXML || typeof plistXML !== 'string') {
-          throw new Error('Conversion returned empty output.');
-        }
-
-        plistBox.value = plistXML;
-        btnSign.disabled = false;
-        setStatus(convStatus, 'converted ✔', true);
-        showMessage('Converted to .plist successfully.');
-      } catch (err) {
-        console.error(err);
-        setStatus(convStatus, 'error', false, true);
-        showMessage(err.message || 'Conversion failed', true);
-        alert(err.message || 'Conversion failed');
+      const c = window.Conversion;
+      if (c) {
+        if (typeof c.toPlistFromJSON === 'function') { try { return c.toPlistFromJSON(programObj, name); } catch(e4){} }
+        if (typeof c.toPlist === 'function')       { try { return c.toPlist(programObj, name); }       catch(e5){} }
       }
-    });
-
-    // Copy helpers
-    btnCopyDSL.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(dslBox.value || ''); btnCopyDSL.textContent = 'Copied!'; } catch {}
-      setTimeout(() => btnCopyDSL.textContent = 'Copy Program', 800);
-    });
-    btnCopyPlist.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(plistBox.value || ''); btnCopyPlist.textContent = 'Copied!'; } catch {}
-      setTimeout(() => btnCopyPlist.textContent = 'Copy plist', 800);
-    });
-
-    // 3) Sign (forwards to Mac signer via Worker)
-    btnSign.addEventListener('click', async () => {
-      const plist = plistBox.value.trim();
-      const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-      if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
-
-      setStatus(signStatus, 'uploading to signer…');
-      btnSign.disabled = true;
-
-      try {
-        const file = new File([plist], `${name}.plist`, { type: "application/xml" });
-        const form = new FormData();
-        form.append('file', file);
-
-        const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
-        const resText = await res.text();
-        if (!res.ok) {
-          showMessage(`Signer error ${res.status}: ${resText.slice(0,500)}`, true);
-          throw new Error(`Sign failed: ${res.status}`);
-        }
-
-        // If signer returned a file, rebuild the Blob from text if necessary
-        const blob = new Blob([resText], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `${name}.signed.shortcut`; document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(url);
-
-        setStatus(signStatus, 'downloaded ✔', true);
-        showMessage('Signed and downloaded .shortcut.');
-      } catch (e) {
-        console.error(e);
-        setStatus(signStatus, 'error', false, true);
-        showMessage(e.message || 'Signing failed', true);
-        alert(e.message || 'Signing failed');
-      } finally {
-        btnSign.disabled = false;
+      const cdsl = window.ConversionDSL;
+      if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
+        try { return cdsl.toPlistFromJSON(programObj, name); } catch(e6){}
       }
-    });
-    // Surface unhandled promise rejections to the UI
-    window.addEventListener('unhandledrejection', (ev) => {
-      try {
-        const msg = ev?.reason?.message || String(ev.reason || ev);
-        showMessage(`Unhandled error: ${msg}`, true);
-        setStatus(convStatus, 'error', false, true);
-      } catch {}
-    });
-  </script>
+    }
+
+    // 3) DSL paths
+    if (dslText) {
+      const cdsl = window.ConversionDSL;
+      if (cdsl && typeof cdsl.toPlist === 'function') {
+        try { return cdsl.toPlist({ name, dsl: dslText }); } catch(e7){}
+      }
+    }
+
+    // 4) Absolute last resort: emit a minimal comment-only plist so the flow never crashes
+    if (window.ConversionUniversal && typeof window.ConversionUniversal.__makeCommentPlist === 'function') {
+      return window.ConversionUniversal.__makeCommentPlist(name, 'Conversion failed. Input preview:\n' + String(inputRaw).slice(0,2000));
+    }
+    // fallback dead-simple minimal plist
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key><string>${(name||'My Shortcut')}</string>
+  <key>WFWorkflowActions</key><array>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>
+      <key>WFWorkflowActionParameters</key><dict>
+        <key>WFCommentActionText</key><string>Conversion failed or unsupported input.</string>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>`;
+  }
+
+  // ---------------- 1) AI plan/DSL ----------------
+  btnGenerate.addEventListener('click', async () => {
+    const prompt = (promptBox.value || '').trim();
+    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
+    if (!prompt) { alert('Please describe the shortcut.'); return; }
+
+    setStatus(genStatus, 'generating…');
+    btnGenerate.disabled = true;
+    btnSign.disabled = true;
+
+    try {
+      const res = await fetch(`${WORKER_ORIGIN}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, name })
+      });
+      const text = await res.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch { throw new Error('Generate returned non-JSON'); }
+
+      console.debug('↩ /generate payload:', data);
+
+      const programCandidate = data.programRaw ?? data.program ?? null;
+      const dslCandidate     = data.program ? null : (data.dslRaw ?? data.dsl ?? null); // prefer program when present
+
+      let programObj = null;
+      if (programCandidate) {
+        programObj = typeof programCandidate === 'object' ? programCandidate : parseMaybeJSON(programCandidate);
+      }
+
+      if (programObj) {
+        if (!programObj.name) programObj.name = name;
+        dslBox.value = prettyStringify(programObj);
+        setStatus(genStatus, 'Program JSON ready ✔', true);
+      } else if (dslCandidate) {
+        dslBox.value = String(dslCandidate);
+        setStatus(genStatus, 'DSL ready ✔', true);
+      } else {
+        dslBox.value = prettyStringify(data);
+        setStatus(genStatus, 'response shown (no program/DSL)', true);
+      }
+
+      const planned = Array.isArray(data.planArray) ? data.planArray.length : 0;
+      const used    = Array.isArray(data.usedFiles) ? data.usedFiles.length : 0;
+      const catalog = Array.isArray(data.catalog)   ? data.catalog.length   : 0;
+      showMessage(`Planned: ${planned} | Used: ${used} | Catalog: ${catalog}`);
+
+    } catch (err) {
+      console.error(err);
+      setStatus(genStatus, 'error', false, true);
+      showMessage(err.message || 'Generation failed', true);
+      alert(err.message || 'Generation failed');
+    } finally {
+      btnGenerate.disabled = false;
+    }
+  });
+
+  // ---------------- 2) Convert ----------------
+  btnConvert.addEventListener('click', async () => {
+    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
+    const raw  = (dslBox.value || '').trim();
+    if (!raw) { alert('Nothing to convert — box is empty.'); return; }
+
+    setStatus(convStatus, 'converting…');
+    btnSign.disabled = true;
+
+    try {
+      // Decide lane: JSON-ish or DSL-ish or other
+      const maybeJSON = parseMaybeJSON(raw);
+      let programObj = null;
+      let plistXML = '';
+
+      if (maybeJSON !== null) {
+        programObj = coerceProgram(maybeJSON, name); // may return null → Universal handles it anyway
+        plistXML = await tryConverters({ name, inputRaw: raw, programObj, dslText: null });
+      } else {
+        // Not JSON — pass raw straight in (DSL or free text or even plist)
+        plistXML = await tryConverters({ name, inputRaw: raw, programObj: null, dslText: raw });
+      }
+
+      if (!plistXML || typeof plistXML !== 'string') {
+        throw new Error('Conversion produced empty output.');
+      }
+
+      plistBox.value = plistXML;
+      btnSign.disabled = false;
+      setStatus(convStatus, 'converted ✔', true);
+      showMessage('Converted to .plist successfully.');
+    } catch (err) {
+      console.error(err);
+      setStatus(convStatus, 'error', false, true);
+      showMessage(err.message || 'Conversion failed', true);
+      alert(err.message || 'Conversion failed');
+    }
+  });
+
+  // ---------------- Copy helpers ----------------
+  btnCopyDSL.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(dslBox.value || ''); btnCopyDSL.textContent = 'Copied!'; } catch {}
+    setTimeout(() => btnCopyDSL.textContent = 'Copy Program', 800);
+  });
+  btnCopyPlist.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(plistBox.value || ''); btnCopyPlist.textContent = 'Copied!'; } catch {}
+    setTimeout(() => btnCopyPlist.textContent = 'Copy plist', 800);
+  });
+
+  // ---------------- 3) Sign ----------------
+  btnSign.addEventListener('click', async () => {
+    const plist = (plistBox.value || '').trim();
+    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
+    if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
+
+    setStatus(signStatus, 'uploading…');
+    btnSign.disabled = true;
+
+    try {
+      const file = new File([plist], `${name}.plist`, { type: "application/xml" });
+      const form = new FormData();
+      form.append('file', file);
+
+      const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
+      const resText = await res.text();
+      if (!res.ok) {
+        showMessage(`Signer error ${res.status}: ${resText.slice(0,500)}`, true);
+        throw new Error(`Sign failed: ${res.status}`);
+      }
+      const blob = new Blob([resText], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${name}.signed.shortcut`; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus(signStatus, 'downloaded ✔', true);
+      showMessage('Signed and downloaded .shortcut.');
+    } catch (e) {
+      console.error(e);
+      setStatus(signStatus, 'error', false, true);
+      showMessage(e.message || 'Signing failed', true);
+      alert(e.message || 'Signing failed');
+    } finally {
+      btnSign.disabled = false;
+    }
+  });
+
+  // Surface unhandled promise rejections to the UI
+  window.addEventListener('unhandledrejection', (ev) => {
+    try {
+      const msg = ev?.reason?.message || String(ev.reason || ev);
+      showMessage(`Unhandled error: ${msg}`, true);
+      setStatus(convStatus, 'error', false, true);
+    } catch {}
+  });
+</script>
 
   <!-- Conversion logic lives outside the page JS on purpose -->
   <script src="conversion.js"></script>

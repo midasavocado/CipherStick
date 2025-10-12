@@ -536,3 +536,105 @@
   }
 
 })();
+
+/* --- Universal tolerant wrapper: accepts JSON/DSL/XML/plain text --- */
+(function (global){
+  function __makeCommentPlist(name, comment){
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key><string>${name || 'My Shortcut'}</string>
+  <key>WFWorkflowActions</key>
+  <array>
+    <dict>
+      <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>WFCommentActionText</key><string>${String(comment || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</string>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>`;
+  }
+
+  function tryParseJSON(text){
+    try {
+      const t = String(text || '').trim();
+      if (!(t.startsWith('{') || t.startsWith('['))) return null;
+      return JSON.parse(t);
+    } catch { return null; }
+  }
+
+  function normalizeInput(input, name){
+    if (typeof input === 'string'){
+      const s = input.trim();
+      if (s.startsWith('<?xml')) return { plist: s, name };
+      const maybe = tryParseJSON(s);
+      if (maybe !== null) return normalizeInput(maybe, name);
+      return { dsl: s, name };
+    }
+    if (Array.isArray(input)) return { program: { name, actions: input } };
+    if (input && typeof input === 'object'){
+      if (input.plist && typeof input.plist === 'string') return { plist: input.plist, name: input.name || name };
+      if (input.dsl   && typeof input.dsl   === 'string') return { dsl:   input.dsl,   name: input.name || name };
+      if (input.program && typeof input.program === 'object'){
+        const n = input.name || name;
+        return { program: { name: n, ...(input.program || {}) } };
+      }
+      if (input.actions && Array.isArray(input.actions)){
+        return { program: { name: input.name || name, actions: input.actions } };
+      }
+      // last-ditch: unknown object -> JSON stringify into comment
+      return { comment: JSON.stringify(input).slice(0,2000), name };
+    }
+    // Fallback for numbers/booleans/etc.
+    return { dsl: String(input), name };
+  }
+
+  function toPlistUniversal(input, name){
+    const norm = normalizeInput(input, name);
+    const n = norm.name || name || 'My Shortcut';
+
+    if (norm.plist) return norm.plist;
+
+    if (norm.program){
+      const prog = norm.program;
+      // Try JSON converters in forgiving order
+      if (global.ConversionJSON?.toPlist){
+        try { return global.ConversionJSON.toPlist({ name: prog.name || n, program: prog }); } catch(e){}
+        try { return global.ConversionJSON.toPlist(prog, prog.name || n); } catch(e){}
+      }
+      if (global.Conversion?.toPlistFromJSON){
+        try { return global.Conversion.toPlistFromJSON(prog, prog.name || n); } catch(e){}
+      }
+      if (global.Conversion?.toPlist){
+        try { return global.Conversion.toPlist(prog, prog.name || n); } catch(e){}
+      }
+      if (global.ConversionDSL?.toPlistFromJSON){
+        try { return global.ConversionDSL.toPlistFromJSON(prog, prog.name || n); } catch(e){}
+      }
+      // Fall through to comment plist
+      return __makeCommentPlist(n, 'JSON conversion failed.');
+    }
+
+    if (norm.dsl){
+      if (global.ConversionDSL?.toPlist){
+        try { return global.ConversionDSL.toPlist({ name: n, dsl: norm.dsl }); } catch(e){}
+      }
+      return __makeCommentPlist(n, 'DSL conversion failed.');
+    }
+
+    if (norm.comment) {
+      return __makeCommentPlist(n, norm.comment);
+    }
+
+    return __makeCommentPlist(n, 'Unrecognized input.');
+  }
+
+  global.ConversionUniversal = {
+    toPlist: toPlistUniversal,
+    __makeCommentPlist
+  };
+})(window);
