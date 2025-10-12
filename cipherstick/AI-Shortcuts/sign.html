@@ -138,6 +138,86 @@
       el.style.color = isError ? '#b00020' : '#444';
     }
 
+    // --- Robust program coercion + converter fallback calls ---
+    function coerceProgram(value, name){
+      let p = value;
+
+      // If it's a string, try to parse JSON
+      if (typeof p === 'string') {
+        const parsed = parseJSONLoose(p);
+        if (parsed.ok) {
+          p = parsed.value;
+        } else {
+          throw new Error(`Program JSON parse error: ${parsed.error?.message || parsed.error}`);
+        }
+      }
+
+      // If shape is { program: {...} }
+      if (p && typeof p === 'object' && p.program && typeof p.program === 'object') {
+        p = p.program;
+      }
+
+      // If it's an array, assume it's actions[]
+      if (Array.isArray(p)) {
+        p = { name, actions: p };
+      }
+
+      // Must be an object now
+      if (!p || typeof p !== 'object') {
+        throw new Error('Program must be an object');
+      }
+
+      // Normalize fields
+      if (!p.actions) p.actions = [];
+      if (!p.name) p.name = name;
+
+      return p;
+    }
+
+    async function tryConverters({ name, programObj, rawDSL }){
+      let plistXML = '';
+      let lastErr = null;
+
+      // Prefer JSON path when programObj provided
+      if (programObj) {
+        const cj = window.ConversionJSON;
+        if (cj && typeof cj.toPlist === 'function') {
+          try { return cj.toPlist({ name, program: programObj }); } catch(e1) {
+            lastErr = e1;
+            try { return cj.toPlist(programObj, name); } catch(e2) {
+              lastErr = e2;
+              try { return cj.toPlist(programObj); } catch(e3) {
+                lastErr = e3;
+              }
+            }
+          }
+        }
+        const c = window.Conversion;
+        if (c) {
+          if (typeof c.toPlistFromJSON === 'function') {
+            try { return c.toPlistFromJSON(programObj, name); } catch(e4){ lastErr = e4; }
+          }
+          if (typeof c.toPlist === 'function') {
+            try { return c.toPlist(programObj, name); } catch(e5){ lastErr = e5; }
+          }
+        }
+        const cdsl = window.ConversionDSL;
+        if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
+          try { return cdsl.toPlistFromJSON(programObj, name); } catch(e6){ lastErr = e6; }
+        }
+      }
+
+      // DSL fallback
+      if (rawDSL) {
+        const cdsl = window.ConversionDSL;
+        if (cdsl && typeof cdsl.toPlist === 'function') {
+          try { return cdsl.toPlist({ name, dsl: rawDSL }); } catch(e7){ lastErr = e7; }
+        }
+      }
+
+      throw lastErr || new Error('No converter accepted the input. Check conversion.js API signatures.');
+    }
+
     // 1) AI: get DSL/Program plan from Worker
     btnGenerate.addEventListener('click', async () => {
       const prompt = promptBox.value.trim();
@@ -206,13 +286,17 @@
     });
 
     // 2) Convert
-    btnConvert.addEventListener('click', () => {
+    btnConvert.addEventListener('click', async () => {
       const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
       const raw = dslBox.value.trim();
       if (!raw) { alert('Nothing to convert — box is empty.'); return; }
 
+      setStatus(convStatus, 'converting…');
+      btnSign.disabled = true;
+
       try {
         let plistXML = '';
+
         if (isProbablyJSON(raw)) {
           const parsed = parseJSONLoose(raw);
           if (!parsed.ok) {
@@ -220,21 +304,15 @@
             showMessage(`JSON parse error: ${parsed.error?.message || parsed.error}`, true);
             throw parsed.error || new Error('Invalid JSON');
           }
-          const program = parsed.value;
-          // Prefer explicit JSON converter; fallback to legacy bridge if present
-          if (window.ConversionJSON?.toPlist) {
-            plistXML = window.ConversionJSON.toPlist({ name, program });
-          } else if (window.Conversion?.toPlistFromJSON) {
-            plistXML = window.Conversion.toPlistFromJSON(program, name);
-          } else {
-            throw new Error('No JSON converter found (ConversionJSON.toPlist or Conversion.toPlistFromJSON).');
-          }
+          const programObj = coerceProgram(parsed.value, name);
+          plistXML = await tryConverters({ name, programObj });
         } else {
           // DSL path
-          if (!window.ConversionDSL?.toPlist) {
-            throw new Error('DSL converter not available (ConversionDSL.toPlist).');
-          }
-          plistXML = window.ConversionDSL.toPlist({ name, dsl: raw });
+          plistXML = await tryConverters({ name, rawDSL: raw });
+        }
+
+        if (!plistXML || typeof plistXML !== 'string') {
+          throw new Error('Conversion returned empty output.');
         }
 
         plistBox.value = plistXML;
@@ -246,7 +324,6 @@
         setStatus(convStatus, 'error', false, true);
         showMessage(err.message || 'Conversion failed', true);
         alert(err.message || 'Conversion failed');
-        btnSign.disabled = true;
       }
     });
 
@@ -298,6 +375,14 @@
       } finally {
         btnSign.disabled = false;
       }
+    });
+    // Surface unhandled promise rejections to the UI
+    window.addEventListener('unhandledrejection', (ev) => {
+      try {
+        const msg = ev?.reason?.message || String(ev.reason || ev);
+        showMessage(`Unhandled error: ${msg}`, true);
+        setStatus(convStatus, 'error', false, true);
+      } catch {}
     });
   </script>
 
