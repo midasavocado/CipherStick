@@ -593,6 +593,14 @@
     return { dsl: String(input), name };
   }
 
+  // --- Shims for legacy callers ---
+  // Some callers expect a ConversionJSON facade. Provide it if missing.
+  if (!global.ConversionJSON && global.Conversion && typeof global.Conversion.toPlistFromJSON === 'function') {
+    global.ConversionJSON = {
+      toPlist: ({ name, program }) => global.Conversion.toPlistFromJSON({ name, program })
+    };
+  }
+
   function toPlistUniversal(input, name){
     const norm = normalizeInput(input, name);
     const n = norm.name || name || 'My Shortcut';
@@ -601,26 +609,34 @@
 
     if (norm.program){
       const prog = norm.program;
-      // Try JSON converters in forgiving order
-      if (global.ConversionJSON?.toPlist){
-        try { return global.ConversionJSON.toPlist({ name: prog.name || n, program: prog }); } catch(e){}
-        try { return global.ConversionJSON.toPlist(prog, prog.name || n); } catch(e){}
+      const bundle = { name: prog.name || n, program: prog };
+
+      // Preferred: our Conversion JSON path (expects { name, program })
+      if (global.Conversion && typeof global.Conversion.toPlistFromJSON === 'function'){
+        try { return global.Conversion.toPlistFromJSON(bundle); } catch(e){}
       }
-      if (global.Conversion?.toPlistFromJSON){
-        try { return global.Conversion.toPlistFromJSON(prog, prog.name || n); } catch(e){}
+
+      // Optional facade if present
+      if (global.ConversionJSON && typeof global.ConversionJSON.toPlist === 'function'){
+        try { return global.ConversionJSON.toPlist(bundle); } catch(e){}
       }
-      if (global.Conversion?.toPlist){
-        try { return global.Conversion.toPlist(prog, prog.name || n); } catch(e){}
+
+      // As a last resort, try the generic toPlist with explicit text if caller shoved JSON as text.
+      if (global.Conversion && typeof global.Conversion.toPlist === 'function'){
+        try { return global.Conversion.toPlist({ name: bundle.name, text: JSON.stringify(prog) }); } catch(e){}
       }
-      if (global.ConversionDSL?.toPlistFromJSON){
-        try { return global.ConversionDSL.toPlistFromJSON(prog, prog.name || n); } catch(e){}
-      }
+
       // Fall through to comment plist
       return __makeCommentPlist(n, 'JSON conversion failed.');
     }
 
     if (norm.dsl){
-      if (global.ConversionDSL?.toPlist){
+      // Prefer our primary converter which accepts { name, text } (auto-detects DSL vs JSON)
+      if (global.Conversion && typeof global.Conversion.toPlist === 'function'){
+        try { return global.Conversion.toPlist({ name: n, text: norm.dsl }); } catch(e){}
+      }
+      // Fallback to a dedicated DSL converter if one exists
+      if (global.ConversionDSL && typeof global.ConversionDSL.toPlist === 'function'){
         try { return global.ConversionDSL.toPlist({ name: n, dsl: norm.dsl }); } catch(e){}
       }
       return __makeCommentPlist(n, 'DSL conversion failed.');
