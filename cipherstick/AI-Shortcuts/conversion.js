@@ -173,25 +173,75 @@
     return `${h[0]}${h[1]}${h[2]}${h[3]}-${h[4]}${h[5]}-${h[6]}${h[7]}-${h[8]}${h[9]}-${h[10]}${h[11]}${h[12]}${h[13]}${h[14]}${h[15]}`;
   }
 
+  // ---- Program coercion / normalization ----
+  function coerceProgram(program, nameHint){
+    let prog = program;
+
+    // If a JSON string was passed, parse it
+    if (typeof prog === 'string') {
+      prog = tryParseJSON(prog);
+    }
+
+    // Allow wrappers: { program: {...} } or { dsl: "..." }
+    if (prog && typeof prog === 'object' && prog.program && typeof prog.program === 'object') {
+      prog = prog.program;
+    }
+
+    // If shape is { dsl: "..." } turn into actions via DSL parser
+    if (prog && typeof prog === 'object' && typeof prog.dsl === 'string' && !prog.actions) {
+      const parsed = dslToProgramJSON(prog.dsl);
+      if (prog.name && !parsed.name) parsed.name = prog.name;
+      prog = parsed;
+    }
+
+    // If top-level is an array, treat it as actions
+    if (Array.isArray(prog)) {
+      prog = { actions: prog };
+    }
+
+    // Final validation
+    if (!prog || typeof prog !== 'object') {
+      fail('Program must be an object', { receivedType: typeof program });
+    }
+
+    if (!Array.isArray(prog.actions)) {
+      fail('Program missing "actions" array');
+    }
+
+    // Name fallback
+    if (!prog.name && nameHint) prog.name = String(nameHint);
+
+    return prog;
+  }
+  // expose helper
+  Conversion.normalizeProgram = coerceProgram;
+
   // ---- Public entry points ----
 
   // Auto-detect JSON or DSL (we keep DSL support; JSON is primary)
   Conversion.toPlist = async ({ name, text }) => {
-    const safeName = (name || 'My Shortcut').trim() || 'My Shortcut';
-    if (!text || !text.trim()) fail('Nothing to convert');
-    if (looksLikeJSON(text)) {
-      const program = tryParseJSON(text);
-      return await Conversion.toPlistFromJSON({ name: safeName, program });
-    } else {
-      const program = dslToProgramJSON(text);
-      return await Conversion.toPlistFromJSON({ name: safeName, program });
+    try {
+      const safeName = (name || 'My Shortcut').trim() || 'My Shortcut';
+      if (!text || !text.trim()) fail('Nothing to convert');
+
+      if (looksLikeJSON(text)) {
+        const program = tryParseJSON(text);
+        return await Conversion.toPlistFromJSON({ name: safeName, program });
+      } else {
+        const program = dslToProgramJSON(text);
+        return await Conversion.toPlistFromJSON({ name: safeName, program });
+      }
+    } catch (e) {
+      // Surface a readable error
+      const detail = (e && e.detail) ? `\nDetail: ${JSON.stringify(e.detail).slice(0,400)}` : '';
+      throw new Error((e && e.message) ? `Conversion failed: ${e.message}${detail}` : 'Conversion failed');
     }
   };
 
   Conversion.toPlistFromJSON = async ({ name, program }) => {
-    if (!program || typeof program !== 'object') fail('Program must be an object');
-    const wfName = String(program.name || name || 'My Shortcut');
-    const actions = Array.isArray(program.actions) ? program.actions : fail('Program missing "actions" array');
+    const prog = coerceProgram(program, name);
+    const wfName = String(prog.name || name || 'My Shortcut');
+    const actions = prog.actions;
 
     const plistActions = await buildActionsArrayFromJSON(actions);
 
