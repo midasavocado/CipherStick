@@ -1,559 +1,463 @@
-// conversion.js (updated)
-// Generalized loader + converter that uses index.json in both Templates and Conversions.
-// Adds robust nested control-flow (If / Else / End If, Repeat / End Repeat, RepeatEach / End) using
-// real Shortcuts plist markers and GroupingIdentifiers. Also supports single-line actions with no
-// parameters (e.g., `Vibrate`).
+(() => {
+  // ---------- Public API ----------
+  // window.Conversion.toPlist({ name, text })     -> auto-detect JSON or DSL from the text box
+  // window.Conversion.toPlistFromJSON({ name, program })
+  // window.Conversion.toPlistFromDSL({ name, dsl })
 
-(function () {
-  const DEFAULTS = {
-    templatesBase: '/AI-Shortcuts/Templates/',
-    conversionsBase: '/AI-Shortcuts/Conversions/',
+  const Conversion = {};
+  window.Conversion = Conversion;
+
+  // --- Utilities ---
+  const XML = {
+    esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    },
+    bool(b) { return b ? '<true/>' : '<false/>'; },
+    int(n)  { return `<integer>${n|0}</integer>`; },
+    num(n)  { return Number.isInteger(n) ? XML.int(n) : `<real>${String(n)}</real>`; },
+    str(s)  { return `<string>${XML.esc(s)}</string>`; },
+    dict(obj) {
+      return `<dict>${
+        Object.entries(obj).map(([k,v]) => `<key>${XML.esc(k)}</key>${v}`).join('')
+      }</dict>`;
+    },
+    array(items) {
+      return `<array>${items.join('')}</array>`;
+    }
   };
 
-  let CONFIG = { ...DEFAULTS };
-  let CATALOG = {
-    templatesIndex: [],
-    conversionsIndex: [],
-    templates: new Map(),   // key: filename -> text
-    conversions: new Map(), // key: filename -> text
-  };
-  let UUID_COUNTER = 0;
+  // --- Error helpers ---
+  class ConvError extends Error {
+    constructor(message, detail) { super(message); this.detail = detail; }
+  }
+  function fail(msg, detail){ throw new ConvError(msg, detail); }
 
-  // ----------------------------- Public API ---------------------------------
-  async function loadCatalog(opts = {}) {
-    CONFIG = { ...DEFAULTS, ...opts };
-    const [tIdx, cIdx] = await Promise.all([
-      loadIndex(CONFIG.templatesBase),
-      loadIndex(CONFIG.conversionsBase),
-    ]);
-    CATALOG.templatesIndex = tIdx;
-    CATALOG.conversionsIndex = cIdx;
-
-    await Promise.all([
-      fetchAllIntoMap(CONFIG.conversionsBase, cIdx, CATALOG.conversions),
-      fetchAllIntoMap(CONFIG.templatesBase,   tIdx, CATALOG.templates),
-    ]);
+  // --- Input normalization / detection ---
+  function stripCodeFences(s){
+    // remove ```json ... ``` or ``` ... ```
+    return s.replace(/^\s*```[a-z]*\s*|\s*```\s*$/gi, '');
+  }
+  function stripBOM(s){ return s.replace(/^\uFEFF/, ''); }
+  function unsmartQuotes(s){
+    return s
+      .replace(/[“”]/g,'"')
+      .replace(/[‘’]/g,"'");
+  }
+  function removeTrailingCommas(s){
+    // remove JSON trailing commas in objects/arrays
+    return s
+      .replace(/,\s*([}\]])/g, '$1');
   }
 
-  function toPlist({ name, dsl }) {
-    const meta = extractNameAndStrip(dsl || '');
-    const actions = parseDsl(meta.dsl);
-    if (!actions.length) throw new Error('No actions parsed from DSL.');
-    const xml = [];
-    for (const a of actions) {
-      xml.push(renderAction(a));
+  function looksLikeJSON(s){
+    const t = s.trim();
+    return t.startsWith('{') || t.startsWith('[');
+  }
+
+  function tryParseJSON(text){
+    const cleaned = removeTrailingCommas(unsmartQuotes(stripBOM(stripCodeFences(text))));
+    try {
+      return JSON.parse(cleaned);
+    } catch (e) {
+      fail('Invalid JSON program', { error: String(e), preview: cleaned.slice(0, 400) });
     }
-    const actionXml = xml.join('\n');
-    const finalName = name || meta.name || 'My Shortcut';
-    return buildWorkflowDictXML(finalName, actionXml);
   }
 
-  // Extract and remove `Shortcut Name: "..."` (case-insensitive) from the DSL
-  function extractNameAndStrip(dsl) {
-    const re = /(^|\n)\s*Shortcut\s+Name\s*:\s*(["']?)(.*?)\2\s*(?=\n|$)/i;
-    let foundName = null;
-    let cleaned = dsl;
-    const m = cleaned.match(re);
-    if (m) {
-      foundName = m[3].trim();
-      cleaned = cleaned.replace(re, '\n');
+  // --- Public orchestrator: auto-detect JSON or DSL from textarea text ---
+  Conversion.toPlist = ({ name, text }) => {
+    const safeName = (name || 'My Shortcut').trim() || 'My Shortcut';
+    if (!text || !text.trim()) fail('Nothing to convert');
+
+    if (looksLikeJSON(text)) {
+      const program = tryParseJSON(text);
+      return Conversion.toPlistFromJSON({ name: safeName, program });
+    } else {
+      return Conversion.toPlistFromDSL({ name: safeName, dsl: text });
     }
-    return { name: foundName, dsl: cleaned };
-  }
-
-  // ------------------------ Index + Fetch helpers ---------------------------
-  async function loadIndex(base) {
-    const url = join(base, 'index.json');
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch ${url} → ${res.status}`);
-    const data = await res.json();
-    if (!data || !Array.isArray(data.files)) throw new Error(`Malformed index at ${url}`);
-    return data.files.map(String);
-  }
-
-  async function fetchAllIntoMap(base, fileList, outMap) {
-    const tasks = fileList.map(async (fname) => {
-      const url = join(base, fname);
-      const txt = await fetchText(url);
-      outMap.set(fname, txt);
-    });
-    await Promise.all(tasks);
-  }
-
-  async function fetchText(url) {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Fetch failed: ${url} → ${res.status}`);
-    return await res.text();
-  }
-
-  function join(base, path) {
-    if (!base.endsWith('/')) base += '/';
-    return base + path.replace(/^\/+/, '');
-  }
-
-  // ---------------------------- Rendering -----------------------------------
-  function renderAction(action) {
-    // Normalized name for control-flow detection (handles spaces and case)
-    const norm = normalize(action.name).replace(/\s+/g, '');
-
-    // Control flow first (render into multiple plist actions)
-    if (norm === 'if') return renderIfSequence(action.params || {});
-    if (norm === 'repeat') return renderRepeatSequence(action.params || {});
-    if (norm === 'repeatwitheach' || norm === 'repeatforeach' || norm === 'repeatwith') {
-      return renderRepeatEachSequence(action.params || {});
-    }
-
-    // Normal action via conversions catalog (best-match filename)
-    const fname = findBestFilename(action.name);
-    if (fname) {
-      const conv = CATALOG.conversions.get(fname);
-      if (conv) return fillConversionTemplate(conv, action.params || {});
-    }
-
-    // Parameter-less fallback for single tokens (works even without a conversion file)
-    if (!action.params || Object.keys(action.params).length === 0) {
-      const inline = inlineSimpleActionNode(action.name);
-      if (inline) return inline;
-      const conv2 = tryFindSimpleConversion(action.name);
-      if (conv2) return fillConversionTemplate(conv2, {});
-    }
-
-    // Diagnostic comment so the workflow still runs
-    return buildCommentDict(`Unmapped action: ${action.name}\nParams: ${JSON.stringify(action.params || {}, null, 2)}`);
-  }
-
-  // ---------- If / Else / End If -------------------------------------------
-  const COND_CODES = {
-    'has any value': 0,
-    'does not have any value': 1,
-    'contains': 2,
-    'does not contain': 3,
-    'is': 4,
-    '==': 4,
-    'equals': 4,
-    'is equal to': 4,
-    'is not': 5,
-    '!=': 5,
-    'does not equal': 5,
-    '>': 6,
-    'is greater than': 6,
-    'greater than': 6,
-    '>=': 7,
-    'is greater than or equal to': 7,
-    'greater than or equal to': 7,
-    '<': 8,
-    'is less than': 8,
-    'less than': 8,
-    '<=': 9,
-    'is less than or equal to': 9,
-    'less than or equal to': 9,
-    'between': 10,
-    'is between': 10,
   };
 
-  function renderIfSequence(params) {
-    const group = genUUID();
-    const input = params.Input != null ? params.Input : '';
-    const condLabel = String(params.Condition || 'is').toLowerCase();
-    const condCode = COND_CODES[condLabel] != null ? COND_CODES[condLabel] : 4; // default "is"
+  // ---------- JSON → PLIST ----------
+  // Program schema (relaxed):
+  // { name?: string, actions: Array<Action> }
+  // Action can be:
+  //   - string (no params), e.g. "Vibrate"
+  //   - { action: "Openurl", params?: {...} }
+  //   - Repeat: { action: "Repeat", params: { Count: NUMBER }, do: [Action,...] }
+  //   - If: { action: "If", params: { Condition: STRING }, then: [...], else?: [...] }
+  Conversion.toPlistFromJSON = ({ name, program }) => {
+    if (!program || (typeof program !== 'object')) fail('Program must be an object');
+    const wfName = program.name ? String(program.name) : name;
+    const actions = Array.isArray(program.actions) ? program.actions : fail('Program missing "actions" array');
 
-    const num1 = params.Number != null ? Number(params.Number) : undefined;
-    const num2 = params.NumberMax != null ? Number(params.NumberMax) : undefined;
+    const plistActions = buildActionsArrayFromJSON(actions);
 
-    const first = conditionalNode({
-      GroupingIdentifier: group,
-      WFControlFlowMode: 0,
-      WFCondition: condCode,
-      WFInput: toVariableToken(input),
-      WFNumberValue: Number.isFinite(num1) ? num1 : undefined,
-      WFSecondNumberValue: Number.isFinite(num2) ? num2 : undefined,
-    });
+    const plist =
+`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key>
+  ${XML.str(wfName)}
+  <key>WFWorkflowActions</key>
+  ${XML.array(plistActions)}
+</dict>
+</plist>`;
 
-    const thenList = Array.isArray(params.Then) ? params.Then : [];
-    const elseList = Array.isArray(params.Else) ? params.Else : [];
+    return plist;
+  };
 
-    const thenXml = (thenList.length ? thenList : [{ name: 'Nothing', params: {} }])
-      .map(renderAction).join('\n');
-
-    const otherwise = conditionalNode({ GroupingIdentifier: group, WFControlFlowMode: 1 });
-
-    const elseXml = (elseList.length ? elseList : [{ name: 'Nothing', params: {} }])
-      .map(renderAction).join('\n');
-
-    const end = conditionalNode({ GroupingIdentifier: group, WFControlFlowMode: 2 });
-
-    return [first, thenXml, otherwise, elseXml, end].filter(Boolean).join('\n');
-  }
-
-  function nothingNode() {
-    return dictToXml({
-      WFWorkflowActionIdentifier: 'is.workflow.actions.nothing',
-      WFWorkflowActionParameters: {}
-    });
-  }
-
-  function conditionalNode(p) {
-    const dict = {
-      WFWorkflowActionIdentifier: 'is.workflow.actions.conditional',
-      WFWorkflowActionParameters: {
-        GroupingIdentifier: p.GroupingIdentifier,
-        WFControlFlowMode: p.WFControlFlowMode,
-      },
-    };
-    if (p.WFCondition != null) dict.WFWorkflowActionParameters.WFCondition = p.WFCondition;
-    if (p.WFInput != null) dict.WFWorkflowActionParameters.WFInput = p.WFInput;
-    if (p.WFNumberValue != null) {
-      const n1 = typeof p.WFNumberValue === 'number' ? p.WFNumberValue : Number(p.WFNumberValue);
-      if (Number.isFinite(n1)) dict.WFWorkflowActionParameters.WFNumberValue = n1;
-    }
-    if (p.WFSecondNumberValue != null) {
-      const n2 = typeof p.WFSecondNumberValue === 'number' ? p.WFSecondNumberValue : Number(p.WFSecondNumberValue);
-      if (Number.isFinite(n2)) dict.WFWorkflowActionParameters.WFSecondNumberValue = n2;
-    }
-    return dictToXml(dict);
-  }
-
-  // --------------------------- Repeat / End Repeat --------------------------
-  // Supports nested bodies and the `Do: ""` on the same line (block follows on indented lines).
-  function renderRepeatSequence(params) {
-    const group = genUUID();
-    const count = toNumber(params.Count, 1);
-
-    const begin = repeatCountNode({ GroupingIdentifier: group, WFControlFlowMode: 0, WFRepeatCount: count });
-
-    const bodyList = Array.isArray(params.Do) ? params.Do : (Array.isArray(params.Actions) ? params.Actions : []);
-    const bodyXml = (bodyList.length ? bodyList : [{ name: 'Nothing', params: {} }])
-      .map(renderAction).join('\n');
-
-    const end = repeatCountNode({ GroupingIdentifier: group, WFControlFlowMode: 2, WFRepeatCount: count });
-
-    return [begin, bodyXml, end].filter(Boolean).join('\n');
-  }
-
-  function repeatCountNode(p) {
-    const dict = {
-      WFWorkflowActionIdentifier: 'is.workflow.actions.repeat.count',
-      WFWorkflowActionParameters: {
-        GroupingIdentifier: p.GroupingIdentifier,
-        WFControlFlowMode: p.WFControlFlowMode,
-        WFRepeatCount: p.WFRepeatCount,
-      },
-    };
-    return dictToXml(dict);
-  }
-
-  // ------------------------ Repeat With Each / End --------------------------
-  function renderRepeatEachSequence(params) {
-    const group = genUUID();
-    const listRaw = params.Items;
-    const begin = repeatEachNode({ GroupingIdentifier: group, WFControlFlowMode: 0, WFRepeatList: listRaw });
-
-    const bodyList = Array.isArray(params.Do) ? params.Do : (Array.isArray(params.Actions) ? params.Actions : []);
-    const bodyXml = (bodyList.length ? bodyList : [{ name: 'Nothing', params: {} }])
-      .map(renderAction).join('\n');
-
-    const end = repeatEachNode({ GroupingIdentifier: group, WFControlFlowMode: 2, WFRepeatList: listRaw });
-    return [begin, bodyXml, end].filter(Boolean).join('\n');
-  }
-
-  function repeatEachNode(p) {
-    const dict = {
-      WFWorkflowActionIdentifier: 'is.workflow.actions.repeat.each',
-      WFWorkflowActionParameters: {
-        GroupingIdentifier: p.GroupingIdentifier,
-        WFControlFlowMode: p.WFControlFlowMode,
-        WFRepeatList: toVariableToken(p.WFRepeatList || ''),
-      },
-    };
-    return dictToXml(dict);
-  }
-
-  // -------------------------- Catalog resolution ----------------------------
-  function tryFindSimpleConversion(name) {
-    const direct = name.endsWith('.txt') ? name : name + '.txt';
-    if (CATALOG.conversions.has(direct)) return CATALOG.conversions.get(direct);
-    const loose = CATALOG.conversionsIndex.find(fn => normalize(fn).includes(normalize(name)));
-    return loose ? CATALOG.conversions.get(loose) : null;
-  }
-
-  function inlineSimpleActionNode(name) {
-    const n = normalize(name);
-    // Make Vibrate (aka “Vibrate Device”) work as a bare action
-    if (n === 'vibrate' || n === 'vibratedevice' || n === 'haptic' || n === 'haptics' || n === 'playhaptic' || n === 'playhaptics') {
-      return dictToXml({
-        WFWorkflowActionIdentifier: 'is.workflow.actions.vibrate',
-        WFWorkflowActionParameters: {}
-      });
-    }
-    if (n === 'nothing') {
-      return nothingNode();
-    }
-    return null;
-  }
-
-  function findBestFilename(dslHeader) {
-    const base = dslHeader.trim();
-    const candidates = [];
-    if (/\.txt$/i.test(base)) candidates.push(base);
-    candidates.push(base + '.txt');
-    candidates.push(normalize(base) + '.txt');
-
-    for (const c of candidates) {
-      if (CATALOG.conversionsIndex.includes(c)) return c;
-      if (CATALOG.templatesIndex.includes(c)) return c; // still return name; maybe no conversion
-    }
-    // Last resort: loose contains against both indexes
-    const pool = CATALOG.conversionsIndex.concat(CATALOG.templatesIndex);
-    const loose = pool.find(fn => normalize(fn).includes(normalize(base)));
-    return loose || null;
-  }
-
-  // ------------------------------ DSL Parser --------------------------------
-  function parseDsl(text) {
-    const lines = (text || '').replace(/\r\n/g, '\n').split('\n');
-
-    // Tokenize indentation and content
-    const toks = lines.map((raw) => {
-      const m = raw.match(/^(\s*)(.*)$/) || ['', '', raw];
-      return { indent: m[1].length, raw, line: m[2] };
-    }).filter(t => t.line.trim() !== '');
-
-    let i = 0;
-    function parseActions(minIndent) {
-      const out = [];
-      while (i < toks.length) {
-        const t = toks[i];
-        if (t.indent < minIndent) break;
-
-        // Bullet item: "- Name:" or "- Name"
-        if (/^-\s+/.test(t.line)) {
-          const m = t.line.match(/^-\s+([A-Za-z0-9_.\-]+)(?::\s*)?(.*)$/);
-          if (m) {
-            i++;
-            const name = m[1];
-            const rest = m[2].trim();
-            let params = {};
-            if (rest) {
-              try { params = JSON.parse(rest); } catch { params = {}; }
-            }
-            // Parse any nested param lines under greater indent
-            const blockIndent = t.indent + 2;
-            params = { ...params, ...parseParams(blockIndent) };
-            out.push({ name, params });
-            continue;
-          }
-        }
-
-        // Header form: "Name:" on a line
-        const h = t.line.match(/^([A-Za-z0-9_.\-]+):\s*$/);
-        if (h) {
-          i++;
-          const name = h[1];
-          const params = parseParams(t.indent + 2);
-          out.push({ name, params });
-          continue;
-        }
-
-        // Single-line action without parameters
-        const single = t.line.match(/^([A-Za-z0-9_.\-]+)\s*$/);
-        if (single) {
-          i++;
-          out.push({ name: single[1], params: {} });
-          continue;
-        }
-
-        // Unknown line → skip (acts like a comment)
-        i++;
+  function buildActionsArrayFromJSON(list){
+    const out = [];
+    for (const item of list) {
+      // No-param string shorthand
+      if (typeof item === 'string') {
+        out.push(buildOneAction({ action: item }));
+        continue;
       }
-      return out;
-    }
+      if (!item || typeof item !== 'object') {
+        out.push(comment(`Unrecognized action item: ${JSON.stringify(item).slice(0,200)}`));
+        continue;
+      }
+      const kind = (item.action || '').trim();
 
-    function parseParams(minIndent) {
-      const params = {};
-      while (i < toks.length) {
-        const t = toks[i];
-        if (t.indent < minIndent) break;
+      if (!kind) {
+        out.push(comment(`Missing "action" in ${JSON.stringify(item).slice(0,200)}`));
+        continue;
+      }
 
-        // Key: value
-        const m = t.line.match(/^([A-Za-z0-9_.\-]+):\s*(.*)$/);
-        if (m) {
-          const key = m[1];
-          const rhs = m[2];
-          i++;
-
-          const nextIndent = t.indent + 2;
-          const nextTok = toks[i];
-          // Treat empty, quoted-empty, or “block follows” as a block value
-          const looksLikeBlock = (rhs === '' || rhs === '|' || rhs === '""' || rhs === "''" || (nextTok && nextTok.indent >= nextIndent));
-          if (looksLikeBlock) {
-            const child = parseActions(nextIndent);
-            const k = normalizeListKey(key);
-            params[k] = child;
-            continue;
-          }
-
-          // Inline list after colon (rare)
-          if (/^-\s+/.test(rhs)) {
-            const child = parseActions(nextIndent);
-            const k = normalizeListKey(key);
-            params[k] = child;
-            continue;
-          }
-
-          // Scalar value
-          params[key] = coerceScalar(stripQuotes(rhs.trim()));
-          continue;
+      // Control Flow: Repeat
+      if (eq(kind,'Repeat')) {
+        const count = getNumber(item.params?.Count, 1_000_000);
+        // Start repeat
+        out.push(repeatStart(count));
+        // Body
+        if (Array.isArray(item.do)) {
+          out.push(...buildActionsArrayFromJSON(item.do));
+        } else {
+          out.push(comment('Repeat has no "do" array'));
         }
+        // End repeat
+        out.push(repeatEnd());
+        continue;
+      }
 
+      // Control Flow: If
+      if (eq(kind,'If')) {
+        const condText = normalizeCondition(item.params?.Condition || '');
+        // IF start (with condition string preserved in comment so user can see)
+        out.push(ifStart(condText));
+        // THEN
+        if (Array.isArray(item.then)) {
+          out.push(...buildActionsArrayFromJSON(item.then));
+        } else {
+          out.push(comment('If has no "then" array'));
+        }
+        // ELSE (optional)
+        out.push(ifElse());
+        if (Array.isArray(item.else)) {
+          out.push(...buildActionsArrayFromJSON(item.else));
+        } else {
+          // leave empty ELSE (Shortcuts allows it)
+        }
+        // END IF
+        out.push(ifEnd());
+        continue;
+      }
+
+      // Normal action
+      out.push(buildOneAction({ action: kind, params: item.params || {} }));
+    }
+    return out;
+  }
+
+  // ---------- DSL → PLIST ----------
+  // DSL rules (relaxed):
+  // Top-level actions: no leading dash
+  // Inside If/Repeat blocks: use "- " to denote nested actions
+  // Actions with params:
+  //   Openurl:
+  //     Input: "https://..."
+  // No-params action can be one bare word: Vibrate
+  Conversion.toPlistFromDSL = ({ name, dsl }) => {
+    const lines = dsl.split(/\r?\n/);
+    const ctx = { i:0, lines };
+    const ast = parseBlock(ctx, 0, /*inFlow*/ false);
+
+    const plistActions = buildActionsArrayFromJSON(ast);
+    const plist =
+`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>WFWorkflowName</key>
+  ${XML.str(name)}
+  <key>WFWorkflowActions</key>
+  ${XML.array(plistActions)}
+</dict>
+</plist>`;
+
+    return plist;
+  };
+
+  // --- DSL Parser (produces the same JSON Action structure we accept above) ---
+  function parseBlock(ctx, indentLevel, inFlow) {
+    const list = [];
+    while (ctx.i < ctx.lines.length) {
+      let raw = ctx.lines[ctx.i];
+      const line = raw.replace(/\t/g,'    ');
+      ctx.i++;
+
+      // Skip blanks / comments
+      if (!line.trim() || line.trim().startsWith('#')) continue;
+
+      // Determine current depth and whether it's a nested bullet
+      const m = line.match(/^(\s*)(-?\s*)(.*)$/);
+      const indent = (m && m[1]) ? m[1].length : 0;
+      const bullet = (m && m[2]) ? m[2].includes('-') : false;
+      const content = (m && m[3]) ? m[3].trim() : line.trim();
+
+      // If we’re in a flow block and indentation decreases -> end block
+      if (inFlow && indent < indentLevel) {
+        ctx.i--; // step back for outer loop
         break;
       }
-      return params;
-    }
 
-    return parseActions(0);
-  }
-
-  function normalizeListKey(k) {
-    const L = String(k).toLowerCase();
-    if (L === 'then') return 'Then';
-    if (L === 'else') return 'Else';
-    if (L === 'do') return 'Do';
-    if (L === 'actions') return 'Actions';
-    return k;
-  }
-
-  function stripQuotes(s) {
-    if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-      return s.slice(1, -1);
-    }
-    return s;
-  }
-
-  function coerceScalar(v) {
-    if (/^\{\{.*\}\}$/.test(v)) return v; // keep variable token
-    if (/^(true|false)$/i.test(v)) return (/^true$/i).test(v);
-    if (/^-?\d+$/.test(v)) return parseInt(v, 10);
-    if (/^-?\d+\.\d+$/.test(v)) return parseFloat(v);
-    return v;
-  }
-
-  // ----------------------- Conversion template filling ----------------------
-  function fillConversionTemplate(xmlTemplate, params) {
-    // Replace {{UUID}}
-    let out = xmlTemplate.replace(/\{\{\s*UUID\s*\}\}/g, genUUID());
-
-    // Replace {{Key}} with string/bool/number (string by default)
-    out = out.replace(/\{\{\s*([A-Za-z0-9_.-]+)\s*\}\}/g, (_, key) => {
-      const v = lookupParam(params, key);
-      if (typeof v === 'boolean') return v ? 'true' : 'false';
-      if (v == null) return '';
-      return String(v);
-    });
-
-    // Support {{XML:Key}} to inject typed plist nodes
-    out = out.replace(/\{\{\s*XML:([A-Za-z0-9_.-]+)\s*\}\}/g, (_, key) => plistValueNode(lookupParam(params, key)));
-
-    return out.trim();
-  }
-
-  function lookupParam(params, key) {
-    if (key in params) return params[key];
-    const k = Object.keys(params).find(p => p.toLowerCase() === String(key).toLowerCase());
-    if (k) return params[k];
-    return undefined;
-  }
-
-  // --------------------------- Plist helpers --------------------------------
-  function buildWorkflowDictXML(name, actionsXml) {
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n  <key>WFWorkflowName</key>\n  <string>${x(name)}</string>\n  <key>WFWorkflowActions</key>\n  <array>\n${indent(actionsXml, 4)}\n  </array>\n</dict>\n</plist>`;
-  }
-
-  function dictToXml(d) {
-    const parts = [];
-    parts.push('<dict>');
-    for (const [k, v] of Object.entries(d)) {
-      parts.push(`<key>${x(k)}</key>`);
-      parts.push(toNode(v));
-    }
-    parts.push('</dict>');
-    return parts.join('\n');
-  }
-
-  function toNode(v) {
-    if (v == null) return '<string></string>';
-    if (typeof v === 'string') return `<string>${x(v)}</string>`;
-    if (typeof v === 'number') return Number.isInteger(v) ? `<integer>${v}</integer>` : `<real>${v}</real>`;
-    if (typeof v === 'boolean') return v ? '<true/>' : '<false/>';
-    if (Array.isArray(v)) return `<array>\n${v.map(toNode).map(s => indent(s, 2)).join('\n')}\n</array>`;
-    if (typeof v === 'object') {
-      const parts = ['<dict>'];
-      for (const [kk, vv] of Object.entries(v)) {
-        parts.push(`<key>${x(kk)}</key>`);
-        parts.push(toNode(vv));
+      // "Repeat:" block
+      if (/^Repeat\s*:$/i.test(content)) {
+        const blockParams = parseParams(ctx, indent + 2);
+        const body = parseBlock(ctx, indent + 2, true);
+        const count = getNumber(blockParams.Count, 1_000_000);
+        list.push({ action: 'Repeat', params: { Count: count }, do: body });
+        continue;
       }
-      parts.push('</dict>');
-      return parts.join('\n');
+
+      // "If:" block
+      if (/^If\s*:$/i.test(content)) {
+        const blockParams = parseParams(ctx, indent + 2);
+        const thenBody = parseBlock(ctx, indent + 2, true);
+
+        // Optional "Else:" at same indent
+        let elseBody = [];
+        if (peekIsElse(ctx, indent)) {
+          ctx.i++; // consume Else:
+          elseBody = parseBlock(ctx, indent + 2, true);
+        }
+        list.push({ action: 'If', params: { Condition: String(blockParams.Condition || '') }, then: thenBody, else: elseBody });
+        continue;
+      }
+
+      // No-params bare action (e.g., "Vibrate")
+      if (!content.includes(':')) {
+        list.push({ action: content });
+        continue;
+      }
+
+      // Regular action header "Openurl:" + params indented below
+      const head = content.replace(/:\s*$/,'');
+      const params = parseParams(ctx, indent + 2);
+      list.push({ action: head, params });
     }
-    return `<string>${x(String(v))}</string>`;
+    return list;
   }
 
-  function plistValueNode(v) { return toNode(v); }
+  function parseParams(ctx, expectIndent){
+    const out = {};
+    while (ctx.i < ctx.lines.length) {
+      const raw = ctx.lines[ctx.i];
+      const line = raw.replace(/\t/g,'    ');
+      const m = line.match(/^(\s*)(.*)$/);
+      const indent = (m && m[1]) ? m[1].length : 0;
+      const rest   = (m && m[2]) ? m[2].trim() : '';
+      if (!rest) { ctx.i++; continue; }
+      if (indent < expectIndent) break;
+      if (/^Else\s*:$/i.test(rest)) break; // handled by caller
 
-  function x(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+      if (/^[-]/.test(rest)) break; // nested action starts; params end
 
-  function indent(s, n) {
-    const pad = ' '.repeat(n);
-    return s.split('\n').map(l => pad + l).join('\n');
-  }
+      // Parse "Key: value"
+      const kv = rest.match(/^([^:]+):\s*(.*)$/);
+      if (!kv) break;
+      const key = kv[1].trim();
+      let val = kv[2].trim();
 
-  function genUUID() {
-    UUID_COUNTER++;
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      const buf = new Uint8Array(16);
-      crypto.getRandomValues(buf);
-      buf[6] = (buf[6] & 0x0f) | 0x40;
-      buf[8] = (buf[8] & 0x3f) | 0x80;
-      const hex = [...buf].map(b => b.toString(16).padStart(2, '0')).join('');
-      return `${hex.substr(0,8)}-${hex.substr(8,4)}-${hex.substr(12,4)}-${hex.substr(16,4)}-${hex.substr(20)}`;
+      // Strip quotes around strings
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+
+      // Parse booleans/numbers if they look like them
+      if (/^(true|false)$/i.test(val)) {
+        out[key] = /^true$/i.test(val);
+      } else if (/^-?\d+(\.\d+)?$/.test(val)) {
+        out[key] = Number(val);
+      } else {
+        out[key] = val; // keep as string, may include {{VARIABLE}}
+      }
+
+      ctx.i++;
     }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-      const r = (Math.random() * 16) | 0; const v = c === 'x' ? r : (r & 0x3) | 0x8; return v.toString(16);
-    }) + '-' + UUID_COUNTER.toString(16);
+    return out;
   }
 
-  function normalize(s) {
-    return String(s).toLowerCase().replace(/\.txt$/i, '').replace(/[^a-z0-9.+_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  function peekIsElse(ctx, indentAtIf){
+    if (ctx.i >= ctx.lines.length) return false;
+    const raw = ctx.lines[ctx.i];
+    const line = raw.replace(/\t/g,'    ');
+    const m = line.match(/^(\s*)(.*)$/);
+    const indent = (m && m[1]) ? m[1].length : 0;
+    const rest = (m && m[2]) ? m[2].trim() : '';
+    return indent === indentAtIf && /^Else\s*:$/i.test(rest);
   }
 
-  function toNumber(v, fallback) {
-    if (v == null || v === '') return fallback;
-    if (typeof v === 'number') return v;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : fallback;
-  }
-
-  function toVariableToken(val) {
-    if (val == null) return '';
-    const s = String(val).trim();
-    const m = s.match(/^\{\{\s*(.*?)\s*\}\}$/);
-    if (!m) return s; // plain string
-    const name = m[1];
-    return {
-      Type: 'Variable',
-      Variable: {
-        Value: { Type: 'Variable', VariableName: name },
-        WFSerializationType: 'WFTextTokenAttachment',
-      },
-    };
-  }
-
-  // Expose
-  window.ConversionDSL = {
-    loadCatalog,
-    toPlist,
-    getIndexes: () => ({ templates: [...CATALOG.templatesIndex], conversions: [...CATALOG.conversionsIndex] }),
-    setConfig: (cfg) => { CONFIG = { ...CONFIG, ...cfg }; },
+  // ---------- Action builders ----------
+  // Minimal mapping for some common actions. Unrecognized -> comment.
+  const ACTION_IDS = {
+    // common
+    'Openurl': 'is.workflow.actions.openurls',
+    'Open URL': 'is.workflow.actions.openurls',
+    'Speaktext': 'is.workflow.actions.speaktext',
+    'Speak Text': 'is.workflow.actions.speaktext',
+    'Showresult': 'is.workflow.actions.showresult',
+    'Show Result': 'is.workflow.actions.showresult',
+    'Askforinput': 'is.workflow.actions.ask',
+    'Ask for Input': 'is.workflow.actions.ask',
+    'Vibrate': 'is.workflow.actions.vibrate',
+    'Vibrate Device': 'is.workflow.actions.vibrate',
+    // control flow identifiers
+    '__IF__': 'is.workflow.actions.conditional',
+    '__REPEAT_COUNT__': 'is.workflow.actions.repeatcount',
   };
+
+  function eq(a,b){ return String(a||'').trim().toLowerCase() === String(b||'').trim().toLowerCase(); }
+
+  function buildOneAction({ action, params = {} }) {
+    const id = ACTION_IDS[action] || ACTION_IDS[normalizeKey(action)] || null;
+    if (!id) {
+      // Fallback to a visible Comment so user can correct quickly
+      return comment(`Unmapped action: ${action}\nParams: ${safePreview(params)}`);
+    }
+
+    // Handle "no params" actions (e.g., Vibrate)
+    if (!params || Object.keys(params).length === 0) {
+      return XML.dict({
+        'WFWorkflowActionIdentifier': XML.str(id),
+        'WFWorkflowActionParameters': XML.dict({})
+      });
+    }
+
+    // Convert flat params to plist param dict
+    const wfParams = {};
+    for (const [k,v] of Object.entries(params)) {
+      wfParams[normalizeParamKey(k)] = wrapParamValue(v);
+    }
+
+    return XML.dict({
+      'WFWorkflowActionIdentifier': XML.str(id),
+      'WFWorkflowActionParameters': XML.dict(wfParams)
+    });
+  }
+
+  function normalizeKey(k){
+    return String(k||'').replace(/\s+/g,'').toLowerCase();
+  }
+  function normalizeParamKey(k){
+    return String(k||'').trim();
+  }
+  function safePreview(v){
+    try { return JSON.stringify(v, null, 2).slice(0, 400); } catch { return String(v); }
+  }
+
+  function wrapParamValue(v){
+    // Booleans
+    if (typeof v === 'boolean') return XML.bool(v);
+    // Numbers
+    if (typeof v === 'number' && Number.isFinite(v)) return XML.num(v);
+    // JSON-y objects or arrays -> store as string (simple)
+    if (v && typeof v === 'object') return XML.str(JSON.stringify(v));
+    // Everything else as string (supports {{VARIABLE}})
+    return XML.str(String(v));
+  }
+
+  // ---------- Control flow builders ----------
+  function comment(text){
+    return XML.dict({
+      'WFWorkflowActionIdentifier': XML.str('is.workflow.actions.comment'),
+      'WFWorkflowActionParameters': XML.dict({
+        'WFCommentActionText': XML.str(String(text))
+      })
+    });
+  }
+
+  // Repeat Count
+  function repeatStart(count){
+    return XML.dict({
+      'WFWorkflowActionIdentifier': XML.str(ACTION_IDS.__REPEAT_COUNT__),
+      'WFWorkflowActionParameters': XML.dict({
+        'WFRepeatCount': XML.num(count),
+        // Some Shortcuts builds don’t require explicit mode at Start; keep clean.
+      })
+    });
+  }
+  function repeatEnd(){
+    return XML.dict({
+      'WFWorkflowActionIdentifier': XML.str(ACTION_IDS.__REPEAT_COUNT__),
+      'WFWorkflowActionParameters': XML.dict({
+        'WFControlFlowMode': XML.int(1) // 1 == End
+      })
+    });
+  }
+
+  // If blocks
+  function ifStart(conditionText){
+    // We keep the human-readable condition in a Comment immediately before the IF marker
+    // so the user sees what was intended even if the internal structure differs.
+    // (Advanced: you can parse conditionText into WF condition fields later.)
+    const note = comment(`IF condition: ${conditionText || '(none)'}`);
+    const marker = XML.dict({
+      'WFWorkflowActionIdentifier': XML.str(ACTION_IDS.__IF__),
+      'WFWorkflowActionParameters': XML.dict({
+        // Some builds store the condition payload here; we leave it empty for max compatibility.
+      })
+    });
+    return XML.array([note, marker]); // Flatten by caller
+  }
+  function ifElse(){
+    return XML.dict({
+      'WFWorkflowActionIdentifier': XML.str(ACTION_IDS.__IF__),
+      'WFWorkflowActionParameters': XML.dict({
+        'WFControlFlowMode': XML.int(1) // 1 == Else
+      })
+    });
+  }
+  function ifEnd(){
+    return XML.dict({
+      'WFWorkflowActionIdentifier': XML.str(ACTION_IDS.__IF__),
+      'WFWorkflowActionParameters': XML.dict({
+        'WFControlFlowMode': XML.int(2) // 2 == End If
+      })
+    });
+  }
+
+  // normalize IF condition text into the style you want to display / keep
+  function normalizeCondition(s){
+    const t = String(s||'').trim();
+    if (!t) return '';
+    // Allow: "{{VAR}} is 3", "{{VAR}} is not 0", "has any value", etc.
+    return t
+      .replace(/\s+/g,' ')
+      .replace(/\{\{\s*/g,'{{')
+      .replace(/\s*\}\}/g,'}}');
+  }
+
+  function getNumber(v, def=0){
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+    return def;
+  }
+
 })();

@@ -24,7 +24,7 @@
 </head>
 <body>
   <h1>AI Shortcut Maker + Converter</h1>
-  <p class="hint">Describe the Shortcut, let AI draft a Program (JSON) or DSL, convert → Shortcuts XML (.plist), then sign to a .shortcut.</p>
+  <p class="hint">Describe the Shortcut, let AI draft a Program (JSON) or DSL, convert to Shortcuts XML (.plist), then sign to a .shortcut.</p>
 
   <div class="card">
     <label for="shortcutName">Shortcut name</label>
@@ -34,16 +34,17 @@
     <textarea id="prompt" rows="5" placeholder="Example: Open https://cipherstick.tech in Safari."></textarea>
 
     <div class="row" style="margin-top:12px;">
-      <button id="btnGenerate">1) AI: Plan & Program</button>
+      <button id="btnGenerate">1) AI: Plan & DSL</button>
       <span id="genStatus" class="pill">idle</span>
     </div>
+    <div id="msgArea" class="hint mono" style="margin-top:8px; white-space:pre-wrap;"></div>
   </div>
 
   <div class="grid">
     <div class="card">
       <div class="row" style="justify-content: space-between;">
-        <strong>Program JSON (editable)</strong>
-        <button id="btnCopyDSL" title="Copy DSL">Copy DSL</button>
+        <strong>Program JSON (editable) — or paste DSL</strong>
+        <button id="btnCopyDSL" title="Copy Program">Copy Program</button>
       </div>
       <textarea id="dslBox" rows="16" spellcheck="false" class="mono"></textarea>
       <div class="row" style="margin-top:12px;">
@@ -93,7 +94,51 @@
       if (bad)  node.classList.add('bad');
     }
 
-    // 1) AI: get DSL plan from Worker
+    // --- Helper functions for JSON/DSL/format handling ---
+    function stripBOM(s){ if (!s) return s; return s.replace(/^\uFEFF/, ""); }
+    function stripFences(s){
+      if (!s) return s;
+      const m = s.match(/```(?:json|JSON)?\s*([\s\S]*?)\s*```/m);
+      return m ? m[1] : s;
+    }
+    function sanitizeJSONText(raw){
+      let s = String(raw);
+      s = stripBOM(s).trim();
+      s = stripFences(s);
+      // remove trailing commas before } or ]
+      s = s.replace(/,\s*([}\]])/g, "$1");
+      // normalize smart quotes to straight
+      s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+      return s.trim();
+    }
+    function isProbablyJSON(s){
+      if (!s) return false;
+      const t = s.trim();
+      return t.startsWith("{") || t.startsWith("[") || t.startsWith("```");
+    }
+    function prettyStringify(v){
+      try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+    }
+    function parseJSONLoose(raw){
+      const out = { ok:false, value:null, error:null, text: String(raw || "") };
+      try {
+        const cleaned = sanitizeJSONText(raw);
+        out.value = JSON.parse(cleaned);
+        out.ok = true;
+        return out;
+      } catch (e1) {
+        out.error = e1;
+        return out;
+      }
+    }
+    function showMessage(msg, isError=false){
+      const el = document.getElementById('msgArea');
+      if (!el) return;
+      el.textContent = String(msg || "");
+      el.style.color = isError ? '#b00020' : '#444';
+    }
+
+    // 1) AI: get DSL/Program plan from Worker
     btnGenerate.addEventListener('click', async () => {
       const prompt = promptBox.value.trim();
       const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
@@ -109,16 +154,51 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, name })
         });
-        if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
-        const data = await res.json();
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch { throw new Error(`Generate returned non-JSON response`); }
 
-        // Prefer JSON program; fall back to DSL or raw
-        dslBox.value = data.programRaw || data.dslRaw || data.dsl || JSON.stringify(data, null, 2);
-        setStatus(genStatus, 'program ready ✔', true);
-        console.log('🧾 generate payload:', data);
+        console.debug('↩ /generate payload:', data);
+
+        // Prefer Program JSON first
+        let programCandidate = data.programRaw ?? data.program ?? null;
+        let dslCandidate = data.dslRaw ?? data.dsl ?? null;
+
+        // If programCandidate is embedded as string, parse it
+        let programObj = null;
+        if (programCandidate) {
+          if (typeof programCandidate === 'string') {
+            const parsed = parseJSONLoose(programCandidate);
+            if (parsed.ok) {
+              programObj = parsed.value;
+            } else {
+              showMessage(`Program JSON parse error: ${parsed.error?.message || parsed.error}`, true);
+            }
+          } else if (typeof programCandidate === 'object') {
+            programObj = programCandidate;
+          }
+        }
+
+        if (programObj) {
+          // Ensure a name exists
+          if (!programObj.name) programObj.name = name;
+          dslBox.value = prettyStringify(programObj);
+          setStatus(genStatus, 'Program JSON ready ✔', true);
+          showMessage(`Planned files: ${(data.planArray || []).length}  |  Used files: ${(data.usedFiles || []).length}`);
+        } else if (dslCandidate) {
+          dslBox.value = String(dslCandidate);
+          setStatus(genStatus, 'DSL ready ✔', true);
+          showMessage(`Program JSON not provided; using DSL. Planned files: ${(data.planArray || []).length}`);
+        } else {
+          dslBox.value = prettyStringify(data);
+          setStatus(genStatus, 'response shown (no program/DSL)', true);
+          showMessage('No program/DSL found in response; showing raw JSON.');
+        }
+
       } catch (err) {
         console.error(err);
         setStatus(genStatus, 'error', false, true);
+        showMessage(err.message || 'Generation failed', true);
         alert(err.message || 'Generation failed');
       } finally {
         btnGenerate.disabled = false;
@@ -128,39 +208,43 @@
     // 2) Convert
     btnConvert.addEventListener('click', () => {
       const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-      const src  = dslBox.value.trim();
-      if (!src) { alert('Nothing to convert — box is empty.'); return; }
+      const raw = dslBox.value.trim();
+      if (!raw) { alert('Nothing to convert — box is empty.'); return; }
 
       try {
         let plistXML = '';
-        // If the box contains JSON, convert using JSON converter (preferred)
-        if (src.startsWith('{')) {
-          let program;
-          try { program = JSON.parse(src); }
-          catch (e) { throw new Error('Program JSON is invalid.'); }
-
+        if (isProbablyJSON(raw)) {
+          const parsed = parseJSONLoose(raw);
+          if (!parsed.ok) {
+            setStatus(convStatus, 'JSON parse error', false, true);
+            showMessage(`JSON parse error: ${parsed.error?.message || parsed.error}`, true);
+            throw parsed.error || new Error('Invalid JSON');
+          }
+          const program = parsed.value;
+          // Prefer explicit JSON converter; fallback to legacy bridge if present
           if (window.ConversionJSON?.toPlist) {
             plistXML = window.ConversionJSON.toPlist({ name, program });
           } else if (window.Conversion?.toPlistFromJSON) {
-            // fallback name for older bundle
             plistXML = window.Conversion.toPlistFromJSON(program, name);
           } else {
-            throw new Error('JSON converter not loaded (ConversionJSON.toPlist missing).');
+            throw new Error('No JSON converter found (ConversionJSON.toPlist or Conversion.toPlistFromJSON).');
           }
         } else {
-          // Legacy DSL path
+          // DSL path
           if (!window.ConversionDSL?.toPlist) {
-            throw new Error('DSL converter not loaded (ConversionDSL.toPlist missing).');
+            throw new Error('DSL converter not available (ConversionDSL.toPlist).');
           }
-          plistXML = window.ConversionDSL.toPlist({ name, dsl: src });
+          plistXML = window.ConversionDSL.toPlist({ name, dsl: raw });
         }
 
         plistBox.value = plistXML;
         btnSign.disabled = false;
         setStatus(convStatus, 'converted ✔', true);
+        showMessage('Converted to .plist successfully.');
       } catch (err) {
         console.error(err);
         setStatus(convStatus, 'error', false, true);
+        showMessage(err.message || 'Conversion failed', true);
         alert(err.message || 'Conversion failed');
         btnSign.disabled = true;
       }
@@ -169,7 +253,7 @@
     // Copy helpers
     btnCopyDSL.addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(dslBox.value || ''); btnCopyDSL.textContent = 'Copied!'; } catch {}
-      setTimeout(() => btnCopyDSL.textContent = 'Copy DSL', 800);
+      setTimeout(() => btnCopyDSL.textContent = 'Copy Program', 800);
     });
     btnCopyPlist.addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(plistBox.value || ''); btnCopyPlist.textContent = 'Copied!'; } catch {}
@@ -191,18 +275,25 @@
         form.append('file', file);
 
         const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
-        if (!res.ok) throw new Error(`Sign failed: ${res.status}`);
+        const resText = await res.text();
+        if (!res.ok) {
+          showMessage(`Signer error ${res.status}: ${resText.slice(0,500)}`, true);
+          throw new Error(`Sign failed: ${res.status}`);
+        }
 
-        const blob = await res.blob();
+        // If signer returned a file, rebuild the Blob from text if necessary
+        const blob = new Blob([resText], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = `${name}.signed.shortcut`; document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
 
         setStatus(signStatus, 'downloaded ✔', true);
+        showMessage('Signed and downloaded .shortcut.');
       } catch (e) {
         console.error(e);
         setStatus(signStatus, 'error', false, true);
+        showMessage(e.message || 'Signing failed', true);
         alert(e.message || 'Signing failed');
       } finally {
         btnSign.disabled = false;
