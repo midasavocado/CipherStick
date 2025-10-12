@@ -3,11 +3,6 @@
 // Adds robust nested control-flow (If / Else / End If, Repeat / End Repeat, RepeatEach / End) using
 // real Shortcuts plist markers and GroupingIdentifiers. Also supports single-line actions with no
 // parameters (e.g., `Vibrate`).
-//
-// Public API:
-//   await ConversionDSL.loadCatalog({ templatesBase, conversionsBase })
-//   ConversionDSL.toPlist({ name, dsl })
-//   ConversionDSL.getIndexes()
 
 (function () {
   const DEFAULTS = {
@@ -41,15 +36,29 @@
   }
 
   function toPlist({ name, dsl }) {
-    const actions = parseDsl(dsl || '');
+    const meta = extractNameAndStrip(dsl || '');
+    const actions = parseDsl(meta.dsl);
     if (!actions.length) throw new Error('No actions parsed from DSL.');
-
     const xml = [];
     for (const a of actions) {
       xml.push(renderAction(a));
     }
     const actionXml = xml.join('\n');
-    return buildWorkflowDictXML(name || 'My Shortcut', actionXml);
+    const finalName = name || meta.name || 'My Shortcut';
+    return buildWorkflowDictXML(finalName, actionXml);
+  }
+
+  // Extract and remove `Shortcut Name: "..."` (case-insensitive) from the DSL
+  function extractNameAndStrip(dsl) {
+    const re = /(^|\n)\s*Shortcut\s+Name\s*:\s*(["']?)(.*?)\2\s*(?=\n|$)/i;
+    let foundName = null;
+    let cleaned = dsl;
+    const m = cleaned.match(re);
+    if (m) {
+      foundName = m[3].trim();
+      cleaned = cleaned.replace(re, '\n');
+    }
+    return { name: foundName, dsl: cleaned };
   }
 
   // ------------------------ Index + Fetch helpers ---------------------------
@@ -84,10 +93,15 @@
 
   // ---------------------------- Rendering -----------------------------------
   function renderAction(action) {
+    // Normalized name for control-flow detection (handles spaces and case)
+    const norm = normalize(action.name).replace(/\s+/g, '');
+
     // Control flow first (render into multiple plist actions)
-    if (action.name === 'If') return renderIfSequence(action.params || {});
-    if (action.name === 'Repeat') return renderRepeatSequence(action.params || {});
-    if (action.name === 'RepeatWithEach') return renderRepeatEachSequence(action.params || {});
+    if (norm === 'if') return renderIfSequence(action.params || {});
+    if (norm === 'repeat') return renderRepeatSequence(action.params || {});
+    if (norm === 'repeatwitheach' || norm === 'repeatforeach' || norm === 'repeatwith') {
+      return renderRepeatEachSequence(action.params || {});
+    }
 
     // Normal action via conversions catalog (best-match filename)
     const fname = findBestFilename(action.name);
@@ -108,20 +122,7 @@
     return buildCommentDict(`Unmapped action: ${action.name}\nParams: ${JSON.stringify(action.params || {}, null, 2)}`);
   }
 
-  // ---------- If / Else / End If (real Shortcuts markers) -------------------
-  // Expected DSL (flexible keys, case-insensitive):
-  // If:
-  //   Input: "{{Repeat Index}}"   # or any {{VariableName}}
-  //   Condition: "is" | "is not" | ">" | ">=" | "<" | "<=" | "has any value" | "does not have any value" | "between"
-  //   Number: 5                  # optional (depends on Condition)
-  //   NumberMax: 9               # only for "between"
-  //   Then:
-  //     - Alert:
-  //         Title: "Hello"
-  //   Else:
-  //     - Alert:
-  //         Title: "Other"
-
+  // ---------- If / Else / End If -------------------------------------------
   const COND_CODES = {
     'has any value': 0,
     'does not have any value': 1,
@@ -213,12 +214,7 @@
   }
 
   // --------------------------- Repeat / End Repeat --------------------------
-  // DSL:
-  // Repeat:
-  //   Count: 3
-  //   Do:
-  //     - Alert: { Title: "Hi" }
-
+  // Supports nested bodies and the `Do: ""` on the same line (block follows on indented lines).
   function renderRepeatSequence(params) {
     const group = genUUID();
     const count = toNumber(params.Count, 1);
@@ -247,12 +243,6 @@
   }
 
   // ------------------------ Repeat With Each / End --------------------------
-  // DSL:
-  // RepeatWithEach:
-  //   Items: "{{LIST}}"
-  //   Do:
-  //     - ...
-
   function renderRepeatEachSequence(params) {
     const group = genUUID();
     const listRaw = params.Items;
@@ -288,7 +278,8 @@
 
   function inlineSimpleActionNode(name) {
     const n = normalize(name);
-    if (n === 'vibrate') {
+    // Make Vibrate (aka “Vibrate Device”) work as a bare action
+    if (n === 'vibrate' || n === 'vibratedevice' || n === 'haptic' || n === 'haptics' || n === 'playhaptic' || n === 'playhaptics') {
       return dictToXml({
         WFWorkflowActionIdentifier: 'is.workflow.actions.vibrate',
         WFWorkflowActionParameters: {}
@@ -318,9 +309,6 @@
   }
 
   // ------------------------------ DSL Parser --------------------------------
-  // Supports nested blocks and list syntax using indentation. Two top-level forms:
-  //   ActionName:\n  //     Key: Value\n  //     Then:\n  //       - ChildAction: {...}\n  //   - ActionName: { Key: Value }
-
   function parseDsl(text) {
     const lines = (text || '').replace(/\r\n/g, '\n').split('\n');
 
@@ -336,8 +324,9 @@
       while (i < toks.length) {
         const t = toks[i];
         if (t.indent < minIndent) break;
+
+        // Bullet item: "- Name:" or "- Name"
         if (/^-\s+/.test(t.line)) {
-          // Bullet item: "- Name:" or "- Name"
           const m = t.line.match(/^-\s+([A-Za-z0-9_.\-]+)(?::\s*)?(.*)$/);
           if (m) {
             i++;
@@ -345,7 +334,6 @@
             const rest = m[2].trim();
             let params = {};
             if (rest) {
-              // Support inline JSON-ish object after colon
               try { params = JSON.parse(rest); } catch { params = {}; }
             }
             // Parse any nested param lines under greater indent
@@ -355,6 +343,7 @@
             continue;
           }
         }
+
         // Header form: "Name:" on a line
         const h = t.line.match(/^([A-Za-z0-9_.\-]+):\s*$/);
         if (h) {
@@ -364,14 +353,16 @@
           out.push({ name, params });
           continue;
         }
-        // Single-line action without parameters, not indented as a child
+
+        // Single-line action without parameters
         const single = t.line.match(/^([A-Za-z0-9_.\-]+)\s*$/);
         if (single) {
           i++;
           out.push({ name: single[1], params: {} });
           continue;
         }
-        // If we reach here, consume line as comment
+
+        // Unknown line → skip (acts like a comment)
         i++;
       }
       return out;
@@ -389,26 +380,31 @@
           const key = m[1];
           const rhs = m[2];
           i++;
-          if (rhs === '' || rhs === '|' ) {
-            // Block value (for Then/Else/Do/Actions)
-            const child = parseActions(t.indent + 2);
-            // Normalize list keys
+
+          const nextIndent = t.indent + 2;
+          const nextTok = toks[i];
+          // Treat empty, quoted-empty, or “block follows” as a block value
+          const looksLikeBlock = (rhs === '' || rhs === '|' || rhs === '""' || rhs === "''" || (nextTok && nextTok.indent >= nextIndent));
+          if (looksLikeBlock) {
+            const child = parseActions(nextIndent);
             const k = normalizeListKey(key);
             params[k] = child;
-          } else if (/^-\s+/.test(rhs)) {
-            // Inline list begins after colon
-            const startIndent = t.indent + 2;
-            // Rewind one step so parseActions sees this same token as a bullet
-            i--; 
-            i++; // keep progress
-            const child = parseActions(startIndent);
-            const k = normalizeListKey(key);
-            params[k] = child;
-          } else {
-            params[key] = coerceScalar(stripQuotes(rhs.trim()));
+            continue;
           }
+
+          // Inline list after colon (rare)
+          if (/^-\s+/.test(rhs)) {
+            const child = parseActions(nextIndent);
+            const k = normalizeListKey(key);
+            params[k] = child;
+            continue;
+          }
+
+          // Scalar value
+          params[key] = coerceScalar(stripQuotes(rhs.trim()));
           continue;
         }
+
         break;
       }
       return params;
@@ -473,7 +469,6 @@
   }
 
   function dictToXml(d) {
-    // Minimal plist dict serializer for our action nodes
     const parts = [];
     parts.push('<dict>');
     for (const [k, v] of Object.entries(d)) {
