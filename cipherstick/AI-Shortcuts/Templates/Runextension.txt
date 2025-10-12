@@ -1,3 +1,4 @@
 Runextension:
-  Input: {{EXTENSION_INPUT}}  # required
-  AppIdentifier: "TEXT"
+  ExtensionIdentifier: "TEXT"
+  Input: {{EXTENSION_INPUT}}
+  ShowWhenRun: BOOLEAN

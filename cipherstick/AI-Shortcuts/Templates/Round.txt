@@ -1,4 +1,4 @@
 Round:
-  Input: "TEXT"  # required
-  RoundMode: "TEXT"
-  RoundTo: "TEXT"
+  Number: NUMBER
+  Mode: "TEXT"
+  DecimalPlaces: NUMBER

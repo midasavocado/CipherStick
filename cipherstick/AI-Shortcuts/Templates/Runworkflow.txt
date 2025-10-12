@@ -1,3 +1,4 @@
 Runworkflow:
-  Workflow: {{OBJECT}}
   WorkflowName: "TEXT"
+  Input: {{VARIABLE}}
+  ShowWhenRun: BOOLEAN

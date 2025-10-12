@@ -1,2 +1,2 @@
 ShortcutsActions.ToggleCellularPlan:
-  Plan: {{ASK_WHEN_RUN}}
+  PlanName: "TEXT"

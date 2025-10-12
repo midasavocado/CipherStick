@@ -1,2 +1,2 @@
 Shortcuts.OpenWorkflow:
-  Target: {{ENTITY}}  # optional
+  ShortcutName: "TEXT"

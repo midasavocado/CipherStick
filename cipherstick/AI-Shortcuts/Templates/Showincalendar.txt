@@ -1,2 +1,3 @@
 Showincalendar:
-  Event: {{EXTENSION_INPUT}}
+  Date: "DATE"
+  Event: {{VARIABLE}}

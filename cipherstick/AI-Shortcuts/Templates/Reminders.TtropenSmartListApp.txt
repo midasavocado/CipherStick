@@ -1,3 +1,2 @@
 Reminders.TtropenSmartListApp:
-  Target: "TEXT"  # optional
-  TargetEntity: {{ENTITY}}
+  SmartList: "TEXT"

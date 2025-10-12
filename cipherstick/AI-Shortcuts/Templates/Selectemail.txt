@@ -1,2 +1,3 @@
 Selectemail:
-  # No parameters (runs with defaults)
+  Multiple: BOOLEAN
+  Prompt: "TEXT"

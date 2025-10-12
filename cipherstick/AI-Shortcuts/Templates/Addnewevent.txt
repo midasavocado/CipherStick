@@ -1,9 +1,8 @@
 Addnewevent:
-  AlertTime: "TEXT"
-  CalendarDescriptor: {{OBJECT}}
+  AlertTime: "TEXT" #In the form of "{{NUMBER}} {{MINUTES/HOURS}} before"
   CalendarItemAllDay: BOOLEAN
   CalendarItemCalendar: "TEXT"
-  CalendarItemEndDate: "TEXT"
+  CalendarItemEndDate: "
   CalendarItemLocation: "TEXT"
   CalendarItemNotes: "TEXT"
   CalendarItemStartDate: "TEXT"

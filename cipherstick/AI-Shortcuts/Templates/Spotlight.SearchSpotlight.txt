@@ -1,2 +1,2 @@
 Spotlight.SearchSpotlight:
-  Criteria: "TEXT"
+  Query: "TEXT"

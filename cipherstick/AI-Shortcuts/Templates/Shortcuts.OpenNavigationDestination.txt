@@ -1,2 +1,2 @@
 Shortcuts.OpenNavigationDestination:
-  Target: {{ENTITY}}  # optional
+  Destination: "TEXT"

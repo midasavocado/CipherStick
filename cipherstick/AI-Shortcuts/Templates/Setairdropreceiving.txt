@@ -1,2 +1,2 @@
 Setairdropreceiving:
-  # No parameters (runs with defaults)
+  Mode: "TEXT"

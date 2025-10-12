@@ -1,0 +1,36 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.addnewevent</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>WFAlertTime</key>
+				<string>1 hour before</string>
+				<key>WFCalendarDescriptor</key>
+				<dict>
+					<key>Identifier</key>
+					<string>B2D9A906-D6C7-4286-9503-3AF22A568499</string>
+					<key>IsAllCalendar</key>
+					<false />
+					<key>RGBAValue</key>
+					<integer>3408978175</integer>
+					<key>Title</key>
+					<string>Work</string>
+				</dict>
+				<key>WFCalendarItemAllDay</key>
+				<true />
+				<key>WFCalendarItemCalendar</key>
+				<string>Work</string>
+				<key>WFCalendarItemEndDate</key>
+				<string>Tomorrow at 1 pm</string>
+				<key>WFCalendarItemLocation</key>
+				<string>Optional</string>
+				<key>WFCalendarItemNotes</key>
+				<string>Notes</string>
+				<key>WFCalendarItemStartDate</key>
+				<string>Tomorrow at noon</string>
+				<key>WFCalendarItemTitle</key>
+				<string>Title</string>
+			</dict>
+		</dict>

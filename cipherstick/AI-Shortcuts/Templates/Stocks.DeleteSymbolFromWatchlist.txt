@@ -1,4 +1,3 @@
 Stocks.DeleteSymbolFromWatchlist:
-  OpenWhenRun: BOOLEAN  # optional
-  Symbol: {{ENTITY}}  # optional
-  Watchlist: {{ENTITY}}  # optional
+  Symbol: "TEXT"
+  Watchlist: "TEXT"

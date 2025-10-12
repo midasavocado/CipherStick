@@ -1,2 +1,3 @@
 Shortcuts.DeleteWorkflow:
-  Entities: {{ENTITY}}
+  ShortcutName: "TEXT"
+  AskBeforeDeleting: BOOLEAN

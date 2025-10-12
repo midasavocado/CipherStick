@@ -1,2 +1,4 @@
 Reminders.Showlist:
-  # No parameters (runs with defaults)
+  List: "TEXT"
+  Filter: "TEXT"
+  ShowCompleted: BOOLEAN

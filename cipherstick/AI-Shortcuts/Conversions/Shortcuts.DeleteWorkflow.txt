@@ -1,0 +1,44 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>com.apple.shortcuts.DeleteWorkflowAction</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>AppIntentDescriptor</key>
+				<dict>
+					<key>AppIntentIdentifier</key>
+					<string>DeleteWorkflowAction</string>
+					<key>BundleIdentifier</key>
+					<string>com.apple.shortcuts</string>
+					<key>Name</key>
+					<string>Shortcuts</string>
+					<key>TeamIdentifier</key>
+					<string>0000000000</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>entities</key>
+				<dict>
+					<key>identifier</key>
+					<string>C2FA89F0-E425-4504-9897-34223EA864EA</string>
+					<key>image</key>
+					<dict>
+						<key>storageServiceIdentifier</key>
+						<string>com.apple.Intents.INImageServiceConnection</string>
+						<key>type</key>
+						<string>URL</string>
+						<key>uri</key>
+						<string>intents-remote-image-proxy:?proxyIdentifier=41D0D520-7ACB-D8CF-EA09-4C466D119934.png&amp;storageServiceIdentifier=com.apple.Intents.INImageServiceConnection</string>
+					</dict>
+					<key>subtitle</key>
+					<dict>
+						<key>key</key>
+						<string>Start Activity</string>
+					</dict>
+					<key>title</key>
+					<dict>
+						<key>key</key>
+						<string>Start Activity</string>
+					</dict>
+				</dict>
+			</dict>
+		</dict>

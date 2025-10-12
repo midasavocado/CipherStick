@@ -1,3 +1,4 @@
 Runjavascriptonwebpage:
-  Input: {{EXTENSION_INPUT}}  # required
   JavaScript: "TEXT"
+  WebPage: {{VARIABLE}}
+  WaitForReturnValue: BOOLEAN

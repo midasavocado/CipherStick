@@ -1,4 +1,3 @@
 Shortcuts.RenameShortcut:
-  Name: "TEXT"  # required
-  OpenWhenRun: BOOLEAN  # optional
-  Shortcut: {{ENTITY}}
+  OldName: "TEXT"
+  NewName: "TEXT"

@@ -1,5 +1,2 @@
 ShortcutsActions.CellularPlanEntity:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"
+  PlanName: "TEXT"

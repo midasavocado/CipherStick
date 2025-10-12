@@ -1,3 +1,2 @@
 Shortcuts.CreateFolder:
-  Name: "TEXT"  # required
-  OpenWhenRun: BOOLEAN  # optional
+  FolderName: "TEXT"

@@ -1,2 +1,4 @@
 SessionTrackerApp.Call:
-  # No parameters (runs with defaults)
+  SessionId: "TEXT"
+  Action: "TEXT"
+  Notes: "TEXT"

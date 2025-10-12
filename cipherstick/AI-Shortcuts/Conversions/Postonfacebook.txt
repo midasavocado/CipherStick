@@ -1,0 +1,19 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.postonfacebook</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>FacebookContent</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>{{VARIABLE}}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+			</dict>
+		</dict>

@@ -1,2 +1,3 @@
 Share:
-  Input: {{EXTENSION_INPUT}}  # required
+  Items: {{EXTENSION_INPUT}}
+  Service: "TEXT"

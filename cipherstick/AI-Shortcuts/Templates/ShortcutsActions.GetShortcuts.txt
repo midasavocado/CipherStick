@@ -1,1 +1,3 @@
-GetShortcuts #Gets all your shortcuts.
+ShortcutsActions.GetShortcuts:
+  Query: "TEXT"
+  Folder: "TEXT"

@@ -1,2 +1,2 @@
 Safari.OpenView:
-  Target: {{ENTITY}}  # optional
+  View: "TEXT"

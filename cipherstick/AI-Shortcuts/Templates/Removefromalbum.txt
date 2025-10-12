@@ -1,2 +1,3 @@
 Removefromalbum:
-  Input: {{EXTENSION_INPUT}}  # required
+  Photos: {{EXTENSION_INPUT}}
+  Album: "TEXT"

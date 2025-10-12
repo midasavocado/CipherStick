@@ -1,4 +1,7 @@
 Speaktext:
-  SpeakTextPitch: NUMBER
-  SpeakTextRate: NUMBER
-  Text: "TEXT"  # required
+  Text: "TEXT"
+  Voice: "TEXT"
+  Rate: NUMBER
+  Pitch: NUMBER
+  Language: "TEXT"
+  WaitUntilFinished: BOOLEAN

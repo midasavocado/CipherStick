@@ -1,2 +1,2 @@
 Showresult:
-  Text: "TEXT"  # required
+  Text: "TEXT"

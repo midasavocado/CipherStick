@@ -1,2 +1,3 @@
 Rss:
-  RSSFeedURL: "TEXT"
+  FeedURL: "TEXT"
+  ItemCount: NUMBER

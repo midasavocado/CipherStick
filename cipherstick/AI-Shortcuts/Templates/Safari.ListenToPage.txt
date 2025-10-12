@@ -1,2 +1,4 @@
 Safari.ListenToPage:
-  # No parameters (runs with defaults)
+  Voice: "TEXT"
+  Rate: NUMBER
+  Pitch: NUMBER

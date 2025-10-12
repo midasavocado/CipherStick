@@ -1,3 +1,2 @@
 ShortcutsActions.SetVoiceDataMode:
-  RatMode: {{OBJECT}}
-  Sim: {{ENTITY}}
+  Mode: "TEXT"

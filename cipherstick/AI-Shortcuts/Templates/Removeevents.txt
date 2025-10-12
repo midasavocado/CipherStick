@@ -1,2 +1,4 @@
 Removeevents:
-  InputEvents: {{EXTENSION_INPUT}}
+  CalendarItems: {{VARIABLE}}
+  Filter: "TEXT"
+  AskBeforeDeleting: BOOLEAN

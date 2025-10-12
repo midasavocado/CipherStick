@@ -1,2 +1,2 @@
 Safari.CloseTab:
-  Target: {{ENTITY}}  # optional
+  Tab: {{VARIABLE}}

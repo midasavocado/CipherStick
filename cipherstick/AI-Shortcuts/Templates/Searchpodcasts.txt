@@ -1,6 +1,3 @@
 Searchpodcasts:
-  Country: "TEXT"  # optional
-  ItemLimit: NUMBER  # optional
-  SearchTerm: "TEXT"
-  Attribute: "TEXT"
-  Entity: "TEXT"
+  Query: "TEXT"
+  Limit: NUMBER

@@ -1,0 +1,4 @@
+<dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+			</dict>

@@ -1,2 +1,4 @@
 Rss.Extract:
-  URLs: "TEXT"
+  FeedURL: "TEXT"
+  ItemCount: NUMBER
+  IncludeFullText: BOOLEAN

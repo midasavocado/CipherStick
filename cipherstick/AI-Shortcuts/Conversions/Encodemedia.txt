@@ -1,0 +1,49 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.encodemedia</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>Metadata</key>
+				<true />
+				<key>UUID</key>
+				<string>1EBC27EA-1296-4ECF-B207-EAFD5D5FBA03</string>
+				<key>WFMedia</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>{{VARIABLE}}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFMediaAudioOnly</key>
+				<false />
+				<key>WFMediaPreserveTransparency</key>
+				<true />
+				<key>WFMediaSize</key>
+				<string>ProRes 422</string>
+				<key>WFMediaSpeed</key>
+				<string>0.5X</string>
+				<key>WFMetadataAlbum</key>
+				<string>Mine</string>
+				<key>WFMetadataArtist</key>
+				<string>Me</string>
+				<key>WFMetadataArtwork</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>{{VARIABLE}}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFMetadataGenre</key>
+				<string>Mine</string>
+				<key>WFMetadataTitle</key>
+				<string>Amazing</string>
+				<key>WFMetadataYear</key>
+				<string>200</string>
+			</dict>
+		</dict>

@@ -1,0 +1,21 @@
+<dict>
+	<key>WFWorkflowActionIdentifier</key>
+	<string>is.workflow.actions.makezip</string>
+	<key>WFWorkflowActionParameters</key>
+	<dict>
+		<key>UUID</key>
+		<string>{{UUID}}</string>
+		<key>WFInput</key>
+		<dict>
+			<key>Value</key>
+			<dict>
+				<key>Type</key>
+				<string>{{VARIABLE}}</string>
+			</dict>
+			<key>WFSerializationType</key>
+			<string>WFTextTokenAttachment</string>
+		</dict>
+		<key>WFZIPName</key>
+		<string>Optional</string>
+	</dict>
+</dict>

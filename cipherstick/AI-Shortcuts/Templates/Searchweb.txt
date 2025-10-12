@@ -1,2 +1,4 @@
 Searchweb:
-  InputText: "TEXT"
+  Query: "TEXT"
+  SearchEngine: "TEXT"
+  SafeSearch: "TEXT"

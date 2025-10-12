@@ -1,5 +1,3 @@
 Safari.ReadingListItemEntity:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"
+  Title: "TEXT"
+  URL: "TEXT"

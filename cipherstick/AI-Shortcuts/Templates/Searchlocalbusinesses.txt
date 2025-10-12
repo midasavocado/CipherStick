@@ -1,3 +1,5 @@
 Searchlocalbusinesses:
-  SearchQuery: "TEXT"
-  SearchRadius: {{OBJECT}}
+  Query: "TEXT"
+  Location: {{VARIABLE}}
+  Radius: NUMBER
+  OpenNow: BOOLEAN

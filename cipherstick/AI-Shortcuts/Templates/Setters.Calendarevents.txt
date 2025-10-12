@@ -1,4 +1,4 @@
 Setters.Calendarevents:
-  Input: {{EXTENSION_INPUT}}  # required
-  Mode: "TEXT"
-  ContentItemPropertyName: "TEXT"
+  Event: {{VARIABLE}}
+  Field: "TEXT"
+  Value: "TEXT"

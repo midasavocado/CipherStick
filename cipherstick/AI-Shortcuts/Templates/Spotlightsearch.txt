@@ -1,4 +1,2 @@
 Spotlightsearch:
-  InputText: "TEXT"
-  SpotlightSearchLimit: NUMBER
-  SpotlightSearchResultType: {{LIST}}
+  Query: "TEXT"

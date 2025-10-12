@@ -1,2 +1,2 @@
 ShortcutsActions.SetDataRoaming:
-  Plan: {{ENTITY}}
+  Enabled: BOOLEAN

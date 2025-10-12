@@ -1,2 +1,3 @@
 ShortcutsActions.OpenCamera:
-  CameraMode: {{ENTITY}}
+  Mode: "TEXT"
+  Camera: "TEXT"

@@ -1,0 +1,55 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.filter.articles</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>WFContentItemFilter</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>WFActionParameterFilterPrefix</key>
+						<integer>1</integer>
+						<key>WFActionParameterFilterTemplates</key>
+						<array>
+							<dict>
+								<key>Operator</key>
+								<integer>4</integer>
+								<key>Property</key>
+								<string>Title</string>
+								<key>Removable</key>
+								<true />
+								<key>Values</key>
+								<dict>
+									<key>String</key>
+									<string>Hi</string>
+									<key>Unit</key>
+									<integer>4</integer>
+								</dict>
+							</dict>
+						</array>
+						<key>WFContentPredicateBoundedDate</key>
+						<false />
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFContentPredicateTableTemplate</string>
+				</dict>
+				<key>WFContentItemInputParameter</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>{{VARIABLE}}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFContentItemLimitEnabled</key>
+				<true />
+				<key>WFContentItemSortOrder</key>
+				<string>Oldest First</string>
+				<key>WFContentItemSortProperty</key>
+				<string>Published Date</string>
+			</dict>
+		</dict>

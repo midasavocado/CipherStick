@@ -1,0 +1,10 @@
+<dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>matches</key>
+				<dict>
+					<key>Value</key>
+<string>{{VARIABLE}}</string>
+<key>WFSerializationType</key>
+<string>WFTextTokenAttachment</string>
+				</dict>

@@ -1,2 +1,3 @@
 Setparkedcar:
-  SetParkedCarNotes: "TEXT"
+  Location: {{VARIABLE}}
+  Clear: BOOLEAN

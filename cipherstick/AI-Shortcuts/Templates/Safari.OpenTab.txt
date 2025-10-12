@@ -1,2 +1,2 @@
 Safari.OpenTab:
-  Target: {{ENTITY}}  # optional
+  Tab: {{VARIABLE}}

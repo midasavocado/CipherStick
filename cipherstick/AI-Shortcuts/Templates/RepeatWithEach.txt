@@ -1,4 +1,3 @@
 RepeatWithEach:
-  Items: "{{LIST}}"
-  Do:
-    - {{ACTIONS}}
+  Items: {{VARIABLE}}
+  Mode: "TEXT"

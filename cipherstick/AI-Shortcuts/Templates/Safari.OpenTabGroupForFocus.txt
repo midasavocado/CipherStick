@@ -1,2 +1,2 @@
 Safari.OpenTabGroupForFocus:
-  Type: "TEXT"
+  Focus: "TEXT"

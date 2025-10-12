@@ -1,3 +1,4 @@
 Selectphoto:
-  PhotoPickerTypes: {{LIST}}
-  SelectMultiplePhotos: BOOLEAN
+  Multiple: BOOLEAN
+  ShowPicker: BOOLEAN
+  Album: "TEXT"

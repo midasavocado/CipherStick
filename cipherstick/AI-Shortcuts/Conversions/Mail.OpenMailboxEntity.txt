@@ -1,0 +1,35 @@
+<dict>
+	<key>WFWorkflowActionIdentifier</key>
+	<string>com.apple.mobilemail.OpenMailboxEntityAction</string>
+	<key>WFWorkflowActionParameters</key>
+	<dict>
+		<key>AppIntentDescriptor</key>
+		<dict>
+			<key>AppIntentIdentifier</key>
+			<string>OpenMailboxEntityAction</string>
+			<key>BundleIdentifier</key>
+			<string>com.apple.mobilemail</string>
+			<key>Name</key>
+			<string>Mail</string>
+			<key>TeamIdentifier</key>
+			<string>0000000000</string>
+		</dict>
+		<key>UUID</key>
+		<string>{{UUID}}</string>
+		<key>target</key>
+		<dict>
+			<key>identifier</key>
+			<string>imap://D047D0AB-D4E6-40B2-85DC-06BE8030A1F4/INBOX</string>
+			<key>subtitle</key>
+			<dict>
+				<key>key</key>
+				<string>INBOX</string>
+			</dict>
+			<key>title</key>
+			<dict>
+				<key>key</key>
+				<string>INBOX</string>
+			</dict>
+		</dict>
+	</dict>
+</dict>

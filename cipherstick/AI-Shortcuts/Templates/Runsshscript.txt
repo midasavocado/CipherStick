@@ -1,6 +1,8 @@
 Runsshscript:
-  Input: {{EXTENSION_INPUT}}  # required
-  SSHHost: "TEXT"
-  SSHPassword: "TEXT"
-  SSHScript: "TEXT"
-  SSHUser: "TEXT"
+  Host: "TEXT"
+  Port: NUMBER
+  Username: "TEXT"
+  Password: "TEXT"
+  UseSSHKey: BOOLEAN
+  Script: "TEXT"
+  TimeoutSeconds: NUMBER

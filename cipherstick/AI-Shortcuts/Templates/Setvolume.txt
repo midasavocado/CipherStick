@@ -1,2 +1,3 @@
 Setvolume:
-  # No parameters (runs with defaults)
+  Volume: NUMBER
+  Change: "TEXT"

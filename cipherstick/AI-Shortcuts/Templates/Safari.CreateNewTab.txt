@@ -1,2 +1,2 @@
 Safari.CreateNewTab:
-  # No parameters (runs with defaults)
+  # No parameters

@@ -1,2 +1,2 @@
 Safari.WfgetAppSettingAction:
-  # No parameters (runs with defaults)
+  SettingKey: "TEXT"

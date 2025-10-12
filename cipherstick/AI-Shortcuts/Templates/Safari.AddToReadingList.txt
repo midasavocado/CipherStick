@@ -1,2 +1,3 @@
 Safari.AddToReadingList:
-  URL: "TEXT"  # required
+  URL: "TEXT"
+  Title: "TEXT"

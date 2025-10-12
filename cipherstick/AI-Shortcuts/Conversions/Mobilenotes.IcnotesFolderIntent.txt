@@ -1,0 +1,30 @@
+<dict>
+	<key>WFWorkflowActionIdentifier</key>
+	<string>com.apple.mobilenotes.ICNotesFolderIntent</string>
+	<key>WFWorkflowActionParameters</key>
+	<dict>
+		<key>UUID</key>
+		<string>{{UUID}}</string>
+		<key>folder</key>
+		<dict>
+			<key>displayImage</key>
+			<dict>
+				<key>imageData</key>
+				<string>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</string>
+				<key>imageSize</key>
+				<dict>
+					<key>height</key>
+					<real>23.666666666666668</real>
+					<key>width</key>
+					<real>29.666666666666668</real>
+				</dict>
+				<key>type</key>
+				<string>Data</string>
+			</dict>
+			<key>displayString</key>
+			<string>Notes</string>
+			<key>identifier</key>
+			<string>applenotes://showDefaultFolder</string>
+		</dict>
+	</dict>
+</dict>

@@ -1,7 +1,9 @@
 Sendemail:
-  SendEmailActionBccRecipients: {{OBJECT}}
-  SendEmailActionCcRecipients: {{OBJECT}}
-  SendEmailActionFrom: "TEXT"
-  SendEmailActionInputAttachments: "TEXT"
-  SendEmailActionSubject: "TEXT"
-  SendEmailActionToRecipients: {{OBJECT}}
+  From: "TEXT"
+  To: "TEXT"
+  Cc: "TEXT"
+  Bcc: "TEXT"
+  Subject: "TEXT"
+  Body: "TEXT"
+  IsHTML: BOOLEAN
+  Attachments: {{EXTENSION_INPUT}}

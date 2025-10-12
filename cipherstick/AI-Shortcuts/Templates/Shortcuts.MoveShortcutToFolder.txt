@@ -1,2 +1,3 @@
 Shortcuts.MoveShortcutToFolder:
-  Shortcuts: {{ENTITY}}
+  ShortcutName: "TEXT"
+  FolderName: "TEXT"

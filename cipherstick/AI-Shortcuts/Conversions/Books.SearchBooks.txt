@@ -1,0 +1,17 @@
+<dict>
+				<key>AppIntentDescriptor</key>
+				<dict>
+					<key>AppIntentIdentifier</key>
+					<string>SearchBooksIntent</string>
+					<key>BundleIdentifier</key>
+					<string>com.apple.iBooks</string>
+					<key>Name</key>
+					<string>Books</string>
+					<key>TeamIdentifier</key>
+					<string>4GG2695MJK</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>searchPhrase</key>
+				<string>Text</string>
+			</dict>

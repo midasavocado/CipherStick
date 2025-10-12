@@ -1,0 +1,9 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getlastvideo</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A2DCE424-0D0F-425A-A3E8-6384E5678FC1</string>
+			</dict>
+		</dict>

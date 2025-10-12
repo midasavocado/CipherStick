@@ -1,0 +1,38 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.openin</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFInput</key>
+				<dict>
+					<key>displayName</key>
+					<string>CareerShowdown.html</string>
+					<key>fileLocation</key>
+					<dict>
+						<key>WFFileLocationType</key>
+						<string>Desktop</string>
+						<key>crossDeviceItemID</key>
+						<string>docs.icloud.com:com.apple.CloudDocs/3DEBF639-8C0D-43FD-BE0F-B2BAE563E587/8069b876baa10023bb1afb9adcf6111cf512b198</string>
+						<key>fileProviderDomainID</key>
+						<string>com.apple.CloudDocs.iCloudDriveFileProvider/75DCD2BC-8005-431A-B88E-5DE406633C10</string>
+						<key>relativeSubpath</key>
+						<string>Midas/Coding/Short:Small Projects/CareerShowdown.html</string>
+					</dict>
+					<key>filename</key>
+					<string>CareerShowdown.html</string>
+				</dict>
+				<key>WFOpenInAppIdentifier</key>
+				<string>com.adobe.Adobe-Reader</string>
+				<key>WFOpenInAskWhenRun</key>
+				<false />
+				<key>WFSelectedApp</key>
+				<dict>
+					<key>BundleIdentifier</key>
+					<string>com.adobe.Adobe-Reader</string>
+					<key>Name</key>
+					<string>Acrobat</string>
+					<key>TeamIdentifier</key>
+					<string>JQ525L2MZD</string>
+				</dict>
+			</dict>
+		</dict>

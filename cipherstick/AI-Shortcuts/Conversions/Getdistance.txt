@@ -1,0 +1,81 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getdistance</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>966693DC-4D0B-449C-8E37-C92DC4586807</string>
+				<key>WFGetDirectionsActionMode</key>
+				<string>Driving</string>
+				<key>WFGetDistanceDestination</key>
+				<dict>
+					<key>placemark</key>
+					<dict>
+						<key>addressDictionary</key>
+						<dict>
+							<key>City</key>
+							<string>Oceanside</string>
+							<key>Country</key>
+							<string>United States</string>
+							<key>CountryCode</key>
+							<string>US</string>
+							<key>FormattedAddressLines</key>
+							<array>
+								<string>431 College Blvd</string>
+								<string>Oceanside, CA 92057</string>
+								<string>United States</string>
+							</array>
+							<key>Name</key>
+							<string>Regal Mission Marketplace &amp; RPX</string>
+							<key>State</key>
+							<string>CA</string>
+							<key>Street</key>
+							<string>431 College Blvd</string>
+							<key>SubAdministrativeArea</key>
+							<string>San Diego County</string>
+							<key>SubLocality</key>
+							<string>San Luis Rey</string>
+							<key>SubThoroughfare</key>
+							<string>431</string>
+							<key>Thoroughfare</key>
+							<string>College Blvd</string>
+							<key>ZIP</key>
+							<string>92057</string>
+						</dict>
+						<key>location</key>
+						<dict>
+							<key>altitude</key>
+							<real>0.0</real>
+							<key>course</key>
+							<real>-1</real>
+							<key>horizontalAccuracy</key>
+							<real>0.0</real>
+							<key>latitude</key>
+							<real>33.244968800000002</real>
+							<key>longitude</key>
+							<real>-117.2937301</real>
+							<key>speed</key>
+							<real>-1</real>
+							<key>timestamp</key>
+							<date>2025-09-24T14:56:47Z</date>
+							<key>verticalAccuracy</key>
+							<real>-1</real>
+						</dict>
+						<key>region</key>
+						<dict>
+							<key>center</key>
+							<dict>
+								<key>latitude</key>
+								<real>33.24496880461615</real>
+								<key>longitude</key>
+								<real>-117.2937301</real>
+							</dict>
+							<key>identifier</key>
+							<string>&lt;+33.24496880,-117.29373010&gt; radius 141.17</string>
+							<key>radius</key>
+							<real>141.17478013248325</real>
+						</dict>
+					</dict>
+				</dict>
+			</dict>
+		</dict>

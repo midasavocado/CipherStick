@@ -1,0 +1,17 @@
+<dict>
+				<key>AppIntentDescriptor</key>
+				<dict>
+					<key>AppIntentIdentifier</key>
+					<string>RecognizeMusicIntent</string>
+					<key>BundleIdentifier</key>
+					<string>com.apple.musicrecognition</string>
+					<key>Name</key>
+					<string>Music Recognition</string>
+					<key>TeamIdentifier</key>
+					<string>4GWDBCF5A4</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>errorIfNotRecognized</key>
+				<true/>
+			</dict>

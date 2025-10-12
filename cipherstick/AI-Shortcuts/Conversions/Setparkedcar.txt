@@ -1,0 +1,11 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setparkedcar</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>WFSetParkedCarNotes</key>
+				<string>Parked</string>
+			</dict>
+		</dict>

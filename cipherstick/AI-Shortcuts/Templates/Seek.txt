@@ -1,2 +1,4 @@
 Seek:
-  TimeInterval: {{OBJECT}}
+  Direction: "TEXT"
+  Amount: NUMBER
+  Unit: "TEXT"

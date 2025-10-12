@@ -1,0 +1,13 @@
+<dict>
+	<key>WFWorkflowActionIdentifier</key>
+	<string>is.workflow.actions.getupcomingevents</string>
+	<key>WFWorkflowActionParameters</key>
+	<dict>
+		<key>UUID</key>
+		<string>{{UUID}}</string>
+		<key>WFDateSpecifier</key>
+		<string>Specified Day</string>
+		<key>WFSpecifiedDate</key>
+		<string>June 27, 2009</string>
+	</dict>
+</dict>

@@ -1,2 +1,5 @@
 Reminders.TtrsearchRemindersApp:
-  SearchPhrase: "TEXT"
+  Query: "TEXT"
+  InList: "TEXT"
+  IncludeCompleted: BOOLEAN
+  Limit: NUMBER

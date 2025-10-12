@@ -1,2 +1,3 @@
 ShortcutsActions.TranscribeAudio:
-  AudioFile: {{OBJECT}}
+  Audio: {{EXTENSION_INPUT}}
+  Language: "TEXT"

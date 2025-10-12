@@ -1,2 +1,0 @@
-Display.Set:
-  # No parameters (runs with defaults)

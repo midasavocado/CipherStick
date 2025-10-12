@@ -3,5 +3,5 @@ Addframetogif:
   DelaySeconds: "TEXT"
   Height: "TEXT"
   Width: "TEXT"
-  Image: {{EXTENSION_INPUT}}
-  InputGIF: {{DEVICE_DETAILS}}
+  Image: {{VARIABLE}}
+  InputGIF: {{VARIABLE}}

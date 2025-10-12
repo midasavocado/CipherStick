@@ -1,2 +1,2 @@
 Safari.OpenReadingListItem:
-  Target: {{ENTITY}}  # optional
+  Item: "TEXT"

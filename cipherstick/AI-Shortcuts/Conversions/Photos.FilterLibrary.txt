@@ -1,0 +1,17 @@
+<dict>
+				<key>AppIntentDescriptor</key>
+				<dict>
+					<key>AppIntentIdentifier</key>
+					<string>FilterLibraryIntent</string>
+					<key>BundleIdentifier</key>
+					<string>com.apple.mobileslideshow</string>
+					<key>Name</key>
+					<string>Photos</string>
+					<key>TeamIdentifier</key>
+					<string>0000000000</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>viewMode</key>
+				<string>personal</string>
+			</dict>

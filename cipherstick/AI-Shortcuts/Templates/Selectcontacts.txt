@@ -1,2 +1,3 @@
 Selectcontacts:
-  SelectMultiple: BOOLEAN
+  Multiple: BOOLEAN
+  Prompt: "TEXT"

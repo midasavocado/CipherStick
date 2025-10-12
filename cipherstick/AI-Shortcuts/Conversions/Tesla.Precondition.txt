@@ -1,0 +1,23 @@
+<dict>
+				<key>AppIntentDescriptor</key>
+				<dict>
+					<key>AppIntentIdentifier</key>
+					<string>PreconditionIntent</string>
+					<key>BundleIdentifier</key>
+					<string>com.teslamotors.TeslaApp</string>
+					<key>Name</key>
+					<string>Tesla</string>
+					<key>TeamIdentifier</key>
+					<string>PS9EBAM2PU</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>preconditionAction</key>
+				<string>stop</string>
+				<key>vehicle</key>
+				<dict>
+					<key>Value</key>
+<string>{{VARIABLE}}</string>
+<key>WFSerializationType</key>
+<string>WFTextTokenAttachment</string>
+				</dict>

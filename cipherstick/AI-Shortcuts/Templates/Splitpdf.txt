@@ -1,2 +1,4 @@
 Splitpdf:
-  Input: {{OBJECT}}  # required
+  PDF: {{EXTENSION_INPUT}}
+  Mode: "TEXT"
+  PageRanges: "TEXT"

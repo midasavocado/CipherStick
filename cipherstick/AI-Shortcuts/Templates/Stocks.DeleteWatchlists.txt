@@ -1,2 +1,3 @@
 Stocks.DeleteWatchlists:
-  Entities: {{ASK_WHEN_RUN}}
+  Watchlists: "TEXT"
+  Confirm: BOOLEAN

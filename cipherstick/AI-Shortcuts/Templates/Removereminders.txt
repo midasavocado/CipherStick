@@ -1,2 +1,3 @@
 Removereminders:
-  InputReminders: {{EXTENSION_INPUT}}
+  Reminders: {{VARIABLE}}
+  AskBeforeDeleting: BOOLEAN

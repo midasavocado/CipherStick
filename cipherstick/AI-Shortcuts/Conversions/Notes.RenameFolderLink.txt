@@ -1,0 +1,33 @@
+<dict>
+				<key>AppIntentDescriptor</key>
+				<dict>
+					<key>AppIntentIdentifier</key>
+					<string>RenameFolderLinkAction</string>
+					<key>BundleIdentifier</key>
+					<string>com.apple.mobilenotes</string>
+					<key>Name</key>
+					<string>Notes</string>
+					<key>TeamIdentifier</key>
+					<string>0000000000</string>
+				</dict>
+				<key>UUID</key>
+				<string>{{UUID}}</string>
+				<key>entity</key>
+				<dict>
+					<key>identifier</key>
+					<string>applenotes:folder/30A7B503-EE93-41F1-B814-45D62B09D894</string>
+					<key>subtitle</key>
+					<dict>
+						<key>key</key>
+						<string>Imported Notes</string>
+					</dict>
+					<key>symbol</key>
+					<dict>
+						<key>systemName</key>
+						<string>folder</string>
+					</dict>
+					<key>title</key>
+					<dict>
+						<key>key</key>
+						<string>Imported Notes</string>
+					</dict>

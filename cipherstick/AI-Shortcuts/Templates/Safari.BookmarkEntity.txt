@@ -1,5 +1,4 @@
 Safari.BookmarkEntity:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"
+  Name: "TEXT"
+  Folder: "TEXT"
+  URL: "TEXT"

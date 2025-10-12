@@ -1,2 +1,3 @@
 Showinstore:
-  Product: {{EXTENSION_INPUT}}
+  ItemIdentifier: "TEXT"
+  Storefront: "TEXT"

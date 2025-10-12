@@ -1,0 +1,11 @@
+<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.showwebpage</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFEnterSafariReader</key>
+				<true/>
+				<key>WFURL</key>
+				<string>cipherstick.tech</string>
+			</dict>
+		</dict>

@@ -1,2 +1,2 @@
 Safari.ChangeReaderModeState:
-  # No parameters (runs with defaults)
+  State: "TEXT"

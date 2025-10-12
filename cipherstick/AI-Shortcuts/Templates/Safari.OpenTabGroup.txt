@@ -1,2 +1,2 @@
 Safari.OpenTabGroup:
-  # No parameters (runs with defaults)
+  TabGroup: "TEXT"
