@@ -182,16 +182,9 @@
       prog = tryParseJSON(prog);
     }
 
-    // Allow wrappers: { program: {...} } or { dsl: "..." }
+    // Allow wrappers: { program: {...} }
     if (prog && typeof prog === 'object' && prog.program && typeof prog.program === 'object') {
       prog = prog.program;
-    }
-
-    // If shape is { dsl: "..." } turn into actions via DSL parser
-    if (prog && typeof prog === 'object' && typeof prog.dsl === 'string' && !prog.actions) {
-      const parsed = dslToProgramJSON(prog.dsl);
-      if (prog.name && !parsed.name) parsed.name = prog.name;
-      prog = parsed;
     }
 
     // If top-level is an array, treat it as actions
@@ -218,21 +211,26 @@
 
   // ---- Public entry points ----
 
-  // Auto-detect JSON or DSL (we keep DSL support; JSON is primary)
-  Conversion.toPlist = async ({ name, text }) => {
+  // ---- Public entry points ----
+  // JSON-only entry point (no DSL auto-conversion)
+  Conversion.toPlist = async ({ name, text, program }) => {
     try {
       const safeName = (name || 'My Shortcut').trim() || 'My Shortcut';
-      if (!text || !text.trim()) fail('Nothing to convert');
+      let prog = null;
 
-      if (looksLikeJSON(text)) {
-        const program = tryParseJSON(text);
-        return await Conversion.toPlistFromJSON({ name: safeName, program });
+      if (program && typeof program === 'object') {
+        prog = program;
+      } else if (typeof text === 'string' && text.trim()) {
+        if (!looksLikeJSON(text)) {
+          fail('Expected JSON input that starts with { or [}.');
+        }
+        prog = tryParseJSON(text);
       } else {
-        const program = dslToProgramJSON(text);
-        return await Conversion.toPlistFromJSON({ name: safeName, program });
+        fail('Nothing to convert. Provide JSON string "text" or a "program" object.');
       }
+
+      return await Conversion.toPlistFromJSON({ name: safeName, program: prog });
     } catch (e) {
-      // Surface a readable error
       const detail = (e && e.detail) ? `\nDetail: ${JSON.stringify(e.detail).slice(0,400)}` : '';
       throw new Error((e && e.message) ? `Conversion failed: ${e.message}${detail}` : 'Conversion failed');
     }
@@ -424,100 +422,6 @@
     return t;
   }
 
-  // ---- DSL (optional) → program JSON (same schema we accept above) ----
-  function dslToProgramJSON(dsl) {
-    // Minimal, robust parser for your prior DSL; keeps top-level vs nested with "-".
-    // Since you’re focusing on JSON now, keep this as a fallback.
-    const lines = String(dsl||'').split(/\r?\n/);
-    const ctx = { i: 0, lines };
-    const actions = parseBlock(ctx, 0, false);
-    return { actions };
-  }
-
-  function parseBlock(ctx, indentLevel, inFlow) {
-    const list = [];
-    while (ctx.i < ctx.lines.length) {
-      let raw = ctx.lines[ctx.i];
-      const line = raw.replace(/\t/g,'    ');
-      ctx.i++;
-      if (!line.trim() || line.trim().startsWith('#')) continue;
-
-      const m = line.match(/^(\s*)(-?\s*)(.*)$/);
-      const indent = (m && m[1]) ? m[1].length : 0;
-      const bullet = (m && m[2]) ? m[2].includes('-') : false;
-      const content = (m && m[3]) ? m[3].trim() : line.trim();
-
-      if (inFlow && indent < indentLevel) { ctx.i--; break; }
-
-      if (/^Repeat\s*:$/i.test(content)) {
-        const params = parseParams(ctx, indent + 2);
-        const body = parseBlock(ctx, indent + 2, true);
-        list.push({ action: 'Repeat', params: { Count: getNumber(params.Count, 1_000_000) }, do: body });
-        continue;
-      }
-      if (/^RepeatEach\s*:$/i.test(content) || /^Repeat With Each\s*:$/i.test(content)) {
-        const params = parseParams(ctx, indent + 2);
-        const body = parseBlock(ctx, indent + 2, true);
-        list.push({ action: 'RepeatEach', params: { Items: params.Items ?? '{{LIST}}' }, do: body });
-        continue;
-      }
-      if (/^If\s*:$/i.test(content)) {
-        const params = parseParams(ctx, indent + 2);
-        const thenBody = parseBlock(ctx, indent + 2, true);
-        let elseBody = [];
-        if (peekIsElse(ctx, indent)) { ctx.i++; elseBody = parseBlock(ctx, indent + 2, true); }
-        list.push({ action: 'If', params: { Condition: String(params.Condition || '') }, then: thenBody, else: elseBody });
-        continue;
-      }
-
-      // bare action (no params)
-      if (!content.includes(':')) { list.push({ action: content }); continue; }
-
-      const head = content.replace(/:\s*$/,'');
-      const params = parseParams(ctx, indent + 2);
-      list.push({ action: head, params });
-    }
-    return list;
-  }
-
-  function parseParams(ctx, expectIndent){
-    const out = {};
-    while (ctx.i < ctx.lines.length) {
-      const raw = ctx.lines[ctx.i];
-      const line = raw.replace(/\t/g,'    ');
-      const m = line.match(/^(\s*)(.*)$/);
-      const indent = (m && m[1]) ? m[1].length : 0;
-      const rest   = (m && m[2]) ? m[2].trim() : '';
-      if (!rest) { ctx.i++; continue; }
-      if (indent < expectIndent) break;
-      if (/^Else\s*:$/i.test(rest)) break;
-      if (/^[-]/.test(rest)) break;
-
-      const kv = rest.match(/^([^:]+):\s*(.*)$/);
-      if (!kv) break;
-      const key = kv[1].trim();
-      let val = kv[2].trim();
-
-      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-        val = val.slice(1, -1);
-      }
-      if (/^(true|false)$/i.test(val)) out[key] = /^true$/i.test(val);
-      else if (/^-?\d+(\.\d+)?$/.test(val)) out[key] = Number(val);
-      else out[key] = val;
-
-      ctx.i++;
-    }
-    return out;
-  }
-  function peekIsElse(ctx, indentAtIf){
-    if (ctx.i >= ctx.lines.length) return false;
-    const raw = ctx.lines[ctx.i];
-    const line = raw.replace(/\t/g,'    ');
-    const m = line.match(/^(\s*)(.*)$/);
-    const indent = (m && m[1]) ? m[1].length : 0;
-    const rest = (m && m[2]) ? m[2].trim() : '';
-    return indent === indentAtIf && /^Else\s*:$/i.test(rest);
-  }
 
   // ---- Misc helpers ----
   function eq(a,b){ return normalizeName(a) === normalizeName(b); }
@@ -572,13 +476,12 @@
       const s = input.trim();
       if (s.startsWith('<?xml')) return { plist: s, name };
       const maybe = tryParseJSON(s);
-      if (maybe !== null) return normalizeInput(maybe, name);
-      return { dsl: s, name };
+      if (maybe !== null) return { program: maybe, name };
+      return { comment: 'Expected JSON input (string did not start with { or [).', name };
     }
     if (Array.isArray(input)) return { program: { name, actions: input } };
     if (input && typeof input === 'object'){
       if (input.plist && typeof input.plist === 'string') return { plist: input.plist, name: input.name || name };
-      if (input.dsl   && typeof input.dsl   === 'string') return { dsl:   input.dsl,   name: input.name || name };
       if (input.program && typeof input.program === 'object'){
         const n = input.name || name;
         return { program: { name: n, ...(input.program || {}) } };
@@ -590,7 +493,7 @@
       return { comment: JSON.stringify(input).slice(0,2000), name };
     }
     // Fallback for numbers/booleans/etc.
-    return { dsl: String(input), name };
+    return { comment: String(input), name };
   }
 
   // --- Shims for legacy callers ---
@@ -630,17 +533,7 @@
       return __makeCommentPlist(n, 'JSON conversion failed.');
     }
 
-    if (norm.dsl){
-      // Prefer our primary converter which accepts { name, text } (auto-detects DSL vs JSON)
-      if (global.Conversion && typeof global.Conversion.toPlist === 'function'){
-        try { return global.Conversion.toPlist({ name: n, text: norm.dsl }); } catch(e){}
-      }
-      // Fallback to a dedicated DSL converter if one exists
-      if (global.ConversionDSL && typeof global.ConversionDSL.toPlist === 'function'){
-        try { return global.ConversionDSL.toPlist({ name: n, dsl: norm.dsl }); } catch(e){}
-      }
-      return __makeCommentPlist(n, 'DSL conversion failed.');
-    }
+    // (No DSL branch — JSON only. Non-JSON strings become comment plists.)
 
     if (norm.comment) {
       return __makeCommentPlist(n, norm.comment);
