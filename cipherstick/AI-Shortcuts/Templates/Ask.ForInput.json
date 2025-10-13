@@ -1,9 +1,8 @@
 {
-  "action": "Ask.Text",
+  "action": "Ask.ForInput",
   "params": {
     "Prompt": "{{STRING}}",
     "Multiline": "{{BOOLEAN}}",
-    "DefaultAnswer": "{{STRING}}",
-    "AskFor": "{{NUMBER}}"
+    "DefaultAnswer": "{{STRING}}"
   }
 }

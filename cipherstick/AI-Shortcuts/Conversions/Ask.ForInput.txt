@@ -6,10 +6,10 @@
 				<key>UUID</key>
 				<string>{{UUID}}</string>
 				<key>WFAllowsMultilineText</key>
-				<true />
+				<{{VARIABLE}}>
 				<key>WFAskActionDefaultAnswer</key>
-				<string>Yeaaaa</string>
+				<string>{{STRING}}</string>
 				<key>WFAskActionPrompt</key>
-				<string>Gimme text</string>
+				<string>{{STRING}}</string>
 			</dict>
 		</dict>

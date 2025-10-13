@@ -164,6 +164,81 @@
     return out;
   }
 
+  // ---- Ask LLM prompt post-processing (conditional text-token vs plain string) ----
+  function buildWFTextTokenString(promptText, attachments) {
+    // If no attachments, return plain string node
+    if (!attachments || !attachments.length) {
+      return XML.str(String(promptText ?? ''));
+    }
+
+    // Build &lt;dict&gt; for attachmentsByRange
+    const entries = attachments.map((a) => {
+      const rangeKey = a.range ? String(a.range) : `{${(a.start|0)}, ${(a.len|0) || 1}}`;
+      const typeStr  = String(a.type ?? a.Type ?? a.name ?? 'Variable');
+      const entryDict = XML.dict({ 'Type': XML.str(typeStr) });
+      return `<key>${XML.esc(rangeKey)}</key>${entryDict}`;
+    }).join('');
+
+    return XML.dict({
+      'Value': XML.dict({
+        'attachmentsByRange': `<dict>${entries}</dict>`,
+        'string': XML.str(String(promptText ?? ''))
+      }),
+      'WFSerializationType': XML.str('WFTextTokenString')
+    });
+  }
+
+  function normalizeAskLLMAttachments(varsLike) {
+    // Accept several shapes:
+    // 1) Array of { range:"{5, 1}", type:"VariableName" }
+    // 2) Array of { start:5, len:1, type:"VariableName" }
+    // 3) Object map: { "{5, 1}": { type:"VariableName" }, "{10, 1}": { type:"Another" } }
+    if (!varsLike) return [];
+    if (Array.isArray(varsLike)) {
+      return varsLike.map(v => {
+        if (v && typeof v === 'object') {
+          if (v.range) return { range: String(v.range), type: v.type ?? v.Type ?? v.name };
+          if (typeof v.start !== 'undefined') return { start: Number(v.start)||0, len: Number(v.len)||1, type: v.type ?? v.Type ?? v.name };
+        }
+        return null;
+      }).filter(Boolean);
+    }
+    if (typeof varsLike === 'object') {
+      return Object.entries(varsLike).map(([range, meta]) => {
+        const type = (meta && (meta.type ?? meta.Type ?? meta.name)) || 'Variable';
+        return { range: String(range), type };
+      });
+    }
+    return [];
+  }
+
+  function postProcessAskLLM(dictXML, params) {
+    // Only touch actions whose identifier is is.workflow.actions.askllm
+    const idMatch = dictXML.match(/&lt;key&gt;\s*WFWorkflowActionIdentifier\s*&lt;\/key&gt;\s*&lt;string&gt;\s*([^&lt;]+)\s*&lt;\/string&gt;/i);
+    const identifier = idMatch?.[1]?.trim();
+    if (identifier !== 'is.workflow.actions.askllm') return dictXML;
+
+    // Normalize inputs
+    const promptText = params?.PROMPT ?? params?.WFLLMPrompt ?? '';
+    const varsRaw = params?.AttachmentsByRange ?? params?.attachmentsByRange ?? params?.VARIABLES ?? params?.variables ?? params?.Attachments ?? params?.attachments;
+    const attachments = normalizeAskLLMAttachments(varsRaw);
+
+    // Build the right WFLLMPrompt node (plain string if no attachments; WFTextTokenString otherwise)
+    const promptNode = buildWFTextTokenString(promptText, attachments);
+
+    // Replace any existing WFLLMPrompt block (either &lt;dict&gt;...&lt;/dict&gt; or &lt;string&gt;...&lt;/string&gt;)
+    const replaced = dictXML.replace(
+      /(&lt;key&gt;\s*WFLLMPrompt\s*&lt;\/key&gt;\s*)(?:&lt;dict&gt;[\s\S]*?&lt;\/dict&gt;|&lt;string&gt;[\s\S]*?&lt;\/string&gt;)/i,
+      `$1${promptNode}`
+    );
+
+    // If no WFLLMPrompt key existed, try to insert it just before the closing of the parameters dict
+    if (replaced === dictXML) {
+      return dictXML.replace(/(&lt;key&gt;\s*WFWorkflowActionParameters\s*&lt;\/key&gt;\s*&lt;dict&gt;)/i, `$1\n  &lt;key&gt;WFLLMPrompt&lt;\/key&gt;\n  ${promptNode}`);
+    }
+    return replaced;
+  }
+
   function genUUID(){
     // RFC 4122 v4
     const a = crypto.getRandomValues(new Uint8Array(16));
@@ -334,7 +409,8 @@
     const dictXML = await loadConvFile(filename);
 
     // Substitutions
-    const substituted = substitutePlaceholders(dictXML, params || {});
+    let substituted = substitutePlaceholders(dictXML, params || {});
+    substituted = postProcessAskLLM(substituted, params || {});
 
     // Ensure it *looks* like a dict (we won't attempt to validate fully)
     if (!/^\s*<dict>[\s\S]*<\/dict>\s*$/i.test(substituted)) {

@@ -5,7 +5,7 @@
 				<key>UUID</key>
 				<string>{{UUID}}</string>
 				<key>WFLLMModel</key>
-				<string>ChatGPT/On-Device/Private Cloud Compute</string>
+				<string>{{MODEL}}</string>
 				<key>WFLLMPrompt</key>
 				<dict>
 					<key>Value</key>
@@ -19,7 +19,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{{STRING}}</string>
+						<string>{{PROMPT}}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
