@@ -380,42 +380,6 @@
     btnSign.disabled = false;
   }
 });
-    const plist = (plistBox.value || '').trim();
-    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-    if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
-
-    setStatus(signStatus, 'uploading…');
-    btnSign.disabled = true;
-
-    try {
-      const file = new File([plist], `${name}.plist`, { type: "application/xml" });
-      const form = new FormData();
-      form.append('file', file);
-
-      const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
-      const resText = await res.text();
-      if (!res.ok) {
-        showMessage(`Signer error ${res.status}: ${resText.slice(0,500)}`, true);
-        throw new Error(`Sign failed: ${res.status}`);
-      }
-      const blob = new Blob([resText], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `${name}.signed.shortcut`; document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-
-      setStatus(signStatus, 'downloaded ✔', true);
-      showMessage('Signed and downloaded .shortcut.');
-    } catch (e) {
-      console.error(e);
-      setStatus(signStatus, 'error', false, true);
-      showMessage(e.message || 'Signing failed', true);
-      alert(e.message || 'Signing failed');
-    } finally {
-      btnSign.disabled = false;
-    }
-  });
-
   // Surface unhandled promise rejections to the UI
   window.addEventListener('unhandledrejection', (ev) => {
     try {
