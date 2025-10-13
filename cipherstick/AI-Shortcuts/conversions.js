@@ -350,7 +350,7 @@
   //       Repeat each markers:  'is.workflow.actions.repeat.each' (some builds use this identifier)
   const IDS = {
     IF: 'is.workflow.actions.conditional',
-    REPEAT_COUNT: 'is.workflow.actions.repeatcount',
+    REPEAT_COUNT: 'is.workflow.actions.repeat.count',
     REPEAT_EACH: 'is.workflow.actions.repeat.each', // if your library uses a different id, change here
   };
 
