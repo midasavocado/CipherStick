@@ -1,13 +1,29 @@
-<dict>
-			<key>WFWorkflowActionIdentifier</key>
+<key>WFWorkflowActionIdentifier</key>
 			<string>is.workflow.actions.askllm</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
-				<key>FollowUp</key>
-				<true />
 				<key>UUID</key>
 				<string>{{UUID}}</string>
+				<key>WFLLMModel</key>
+				<string>ChatGPT/On-Device/Private Cloud Compute</string>
 				<key>WFLLMPrompt</key>
-				<string>Request. </string>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{5, 1}</key>
+							<dict>
+								<key>Type</key>
+								<string>{{VARIABLE}}</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>{{STRING}}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFFollowUp</key>
+				<{{BOOLEAN}}>
 			</dict>
-		</dict>
