@@ -327,7 +327,59 @@
   });
 
   // ---------------- 3) Sign ----------------
-  btnSign.addEventListener('click', async () => {
+ btnSign.addEventListener('click', async () => {
+  const plist = (plistBox.value || '').trim();
+  const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
+  if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
+
+  setStatus(signStatus, 'uploading…');
+  btnSign.disabled = true;
+
+  try {
+    // send plist as a file in multipart/form-data
+    const file = new File([plist], `${name}.plist`, { type: "application/xml" });
+    const form = new FormData();
+    form.append('file', file);
+
+    const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
+
+    // If signer failed, try to surface readable message
+    if (!res.ok) {
+      let msg = '';
+      try { msg = await res.text(); } catch {}
+      showMessage(`Signer error ${res.status}: ${msg.slice(0,500)}`, true);
+      throw new Error(`Sign failed: ${res.status}`);
+    }
+
+    // IMPORTANT: read as BLOB (binary), not text
+    const blob = await res.blob();
+
+    // Try to use filename from Content-Disposition if present
+    const cd = res.headers.get('Content-Disposition') || '';
+    let filename = `${name}.signed.shortcut`;
+    const m = /filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i.exec(cd);
+    if (m && m[1]) {
+      try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
+    }
+
+    // Download
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+
+    setStatus(signStatus, 'downloaded ✔', true);
+    showMessage('Signed and downloaded .shortcut.');
+  } catch (e) {
+    console.error(e);
+    setStatus(signStatus, 'error', false, true);
+    showMessage(e.message || 'Signing failed', true);
+    alert(e.message || 'Signing failed');
+  } finally {
+    btnSign.disabled = false;
+  }
+});
     const plist = (plistBox.value || '').trim();
     const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
     if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
