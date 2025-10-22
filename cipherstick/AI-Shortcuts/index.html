@@ -12,13 +12,18 @@
       --bg-surface: #ffffff;
       --text-primary: #0f172a;
       --text-secondary: #475569;
+      --text-muted: rgba(15, 23, 42, 0.48);
       --outline: rgba(15, 23, 42, 0.08);
       --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
       --accent: #2563eb;
       --accent-dark: #1d4ed8;
       --accent-soft: rgba(37, 99, 235, 0.12);
+      --accent-glow: rgba(37, 99, 235, 0.22);
+      --good: #10b981;
+      --warn: #f59e0b;
       --radius-lg: 18px;
       --radius-md: 12px;
+      --radius-sm: 8px;
     }
 
     * { box-sizing: border-box; }
@@ -28,12 +33,29 @@
       min-height: 100vh;
       background: var(--bg-page);
       color: var(--text-primary);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(600px circle at 20% 15%, rgba(59, 130, 246, 0.18), transparent 60%),
+        radial-gradient(520px circle at 80% 5%, rgba(99, 102, 241, 0.16), transparent 65%),
+        radial-gradient(680px circle at 50% 85%, rgba(45, 212, 191, 0.12), transparent 70%);
+      filter: blur(0px);
+      z-index: 0;
     }
 
     .page {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      position: relative;
+      z-index: 1;
     }
 
     .container {
@@ -43,8 +65,23 @@
     }
 
     .hero {
-      padding: 72px 0 48px;
+      padding: 88px 0 56px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.22), transparent 65%);
+      top: -220px;
+      right: -160px;
+      transform: rotate(12deg);
+      pointer-events: none;
+      z-index: -1;
     }
 
     .hero__badge {
@@ -62,9 +99,10 @@
     }
 
     .hero h1 {
-      margin: 20px 0 12px;
-      font-size: clamp(2.4rem, 4vw, 2.9rem);
+      margin: 20px 0 16px;
+      font-size: clamp(2.6rem, 4vw, 3.2rem);
       font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .hero p {
@@ -75,10 +113,78 @@
       line-height: 1.6;
     }
 
+    .hero__subgrid {
+      margin-top: 44px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero__cta-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 20px;
+      padding: 20px 26px;
+      max-width: 320px;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.1);
+      backdrop-filter: blur(18px);
+      text-align: left;
+    }
+
+    .hero__cta-card strong {
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .hero__cta-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
     .workspace {
       padding-bottom: 64px;
       display: grid;
       gap: 32px;
+    }
+
+    .workflow-steps {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 8px 0 10px;
+    }
+
+    .workflow-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.05);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .workflow-step__index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+      font-size: 0.85rem;
     }
 
     .panel {
@@ -87,7 +193,7 @@
       box-shadow: var(--shadow);
       padding: 28px;
       border: 1px solid var(--outline);
-    }
+      }
 
     .panel__heading h2 {
       margin: 0;
@@ -224,6 +330,40 @@
       font-size: 0.9rem;
     }
 
+    .prompt-samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      align-items: center;
+    }
+
+    .prompt-samples__label {
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .prompt-chip {
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    .prompt-chip:hover {
+      background: rgba(37, 99, 235, 0.18);
+      transform: translateY(-1px);
+    }
+
     .editor-grid {
       display: grid;
       gap: 24px;
@@ -268,6 +408,76 @@
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     }
+
+    .feature-strip {
+      padding: 0 0 36px;
+    }
+
+    .feature-strip__grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      text-align: left;
+      backdrop-filter: blur(12px);
+    }
+
+    .feature-card__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--accent);
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: inherit;
+      background: rgba(15, 23, 42, 0.08);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+
+    footer {
+      padding: 36px 0 48px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -277,8 +487,46 @@
         <span class="hero__badge">AI Shortcuts Toolkit</span>
         <h1>AI Shortcut Maker</h1>
         <p>Describe what you want and turn it into editable JSON or a ready-to-import Shortcuts plist in seconds.</p>
+        <div class="hero__subgrid">
+          <div class="hero__cta-card">
+            <strong>Three simple moves</strong>
+            <ul>
+              <li>Share your idea with the planner.</li>
+              <li>Fine-tune the generated JSON or DSL.</li>
+              <li>Convert, sign, and share it instantly.</li>
+            </ul>
+          </div>
+          <div class="hero__cta-card">
+            <strong>Designed for builders</strong>
+            <ul>
+              <li>Understands variable references and UUID links.</li>
+              <li>Works offline with embedded conversion templates.</li>
+              <li>Outputs clean, ready-to-import Shortcuts files.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </header>
+
+    <section class="feature-strip">
+      <div class="container feature-strip__grid">
+        <article class="feature-card">
+          <span class="feature-card__icon">🤖</span>
+          <h3>Smarter planning</h3>
+          <p>The integrated worker compares your prompt against curated templates, producing a solid first draft you can edit immediately.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-card__icon">🧩</span>
+          <h3>Dynamic variables</h3>
+          <p>Use <code>$Name</code> or <code>!Variable</code> markers in your JSON and the converter rebuilds the proper Shortcuts attachments for you.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-card__icon">⚡️</span>
+          <h3>Fast signing</h3>
+          <p>Once your plist looks perfect, sign it with a click and deliver a Shortcut that imports without warnings on macOS or iOS.</p>
+        </article>
+      </div>
+    </section>
 
     <main class="container workspace">
       <section class="panel panel--prompt">
@@ -297,6 +545,13 @@
           <textarea id="prompt" rows="5" placeholder="Example: Open https://cipherstick.tech in Safari."></textarea>
         </label>
 
+        <div class="prompt-samples">
+          <span class="prompt-samples__label">Try a sample</span>
+          <button type="button" class="prompt-chip js-sample-prompt" data-name="Share Latest Photo" data-prompt="Ask for the latest photo I took and send it to my family group text with a quick caption.">Share latest photo</button>
+          <button type="button" class="prompt-chip js-sample-prompt" data-name="Morning Digest" data-prompt="Gather today's calendar events, unread emails from VIPs, and the current weather, then speak the summary.">Morning digest</button>
+          <button type="button" class="prompt-chip js-sample-prompt" data-name="App Launch Pad" data-prompt="Show a menu with options for Maps, Safari, and Notes, then open the selected app.">App launch pad</button>
+        </div>
+
         <div class="panel__actions">
           <button id="btnGenerate" class="btn btn--primary">1. Plan with AI</button>
           <span id="genStatus" class="status-chip">idle</span>
@@ -306,6 +561,20 @@
       </section>
 
       <section class="panel panel--editors">
+        <div class="workflow-steps">
+          <div class="workflow-step">
+            <span class="workflow-step__index">1</span>
+            Plan &amp; edit JSON
+          </div>
+          <div class="workflow-step">
+            <span class="workflow-step__index">2</span>
+            Convert to plist
+          </div>
+          <div class="workflow-step">
+            <span class="workflow-step__index">3</span>
+            Sign &amp; ship
+          </div>
+        </div>
         <div class="editor-grid">
           <div class="editor">
             <div class="editor__header">
@@ -339,6 +608,12 @@
         </div>
       </section>
     </main>
+
+    <footer>
+      <div class="container">
+        Built by the CipherStick crew. Need help or have an idea for a new template? <a href="mailto:team@cipherstick.tech">Reach out</a> and let's improve the Shortcut ecosystem together.
+      </div>
+    </footer>
   </div>
 
   <script>
@@ -578,6 +853,22 @@
   btnCopyPlist.addEventListener('click', () => {
     if (!plistBox.value) return;
     navigator.clipboard.writeText(plistBox.value).then(() => setStatus(signStatus, 'copied', true, false));
+  });
+
+  document.querySelectorAll('.js-sample-prompt').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const prompt = chip.getAttribute('data-prompt') || '';
+      const shortcutName = chip.getAttribute('data-name') || '';
+      if (prompt) {
+        promptBox.value = prompt;
+        promptBox.focus();
+      }
+      if (shortcutName) {
+        nameBox.value = shortcutName;
+      }
+      setStatus(genStatus, 'sample loaded', true, false);
+      showMessage('Sample prompt loaded. Customize it, then tap “Plan with AI”.');
+    });
   });
   </script>
 </body>
