@@ -1909,6 +1909,242 @@ const userConversions = (() => {
     return XML.str(String(value));
   }
 
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  function escapeRegExp(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function indentXMLBlock(xml, indent) {
+    const trimmed = String(xml ?? '').trim();
+    if (!trimmed) return '';
+    const lines = trimmed.split(/\r?\n/);
+    const formatted = lines.map((line) => `${indent}${line}`).join('\n');
+    return `\n${formatted}\n`;
+  }
+
+  function replaceVariableBlock(template, key, xml) {
+    const placeholder = `{{${key}}}`;
+    if (!template.includes(placeholder)) {
+      return { template, replaced: false };
+    }
+
+    const pattern = new RegExp(`(^[\t ]*<key>[^<]+<\/key>\s*)<dict>[\\s\\S]*?${escapeRegExp(placeholder)}[\\s\\S]*?<\/dict>`, 'm');
+    const match = pattern.exec(template);
+    if (!match) {
+      return { template, replaced: false };
+    }
+
+    const [fullMatch, keySegment] = match;
+    const trailingWhitespaceMatch = fullMatch.match(/\s*$/);
+    const trailingWhitespace = trailingWhitespaceMatch ? trailingWhitespaceMatch[0] : '';
+    const indentMatch = keySegment.match(/^[ \t]*/);
+    const indent = indentMatch ? `${indentMatch[0]}  ` : '  ';
+    const formattedBlock = indentXMLBlock(xml, indent);
+    const replacement = `${keySegment}${formattedBlock}${trailingWhitespace}`;
+    const updated = template.slice(0, match.index) + replacement + template.slice(match.index + fullMatch.length);
+    return { template: updated, replaced: true };
+  }
+
+  class ConversionRuntime {
+    constructor() {
+      this.namedUUIDs = new Map();
+      this.namedLabels = new Map();
+    }
+
+    cleanToken(token) {
+      if (token == null) return '';
+      let t = String(token).trim();
+      if (!t) return '';
+      t = t.replace(/^\{+/, '').replace(/\}+$/, '');
+      t = t.replace(/^\((.*)\)$/, '$1');
+      t = t.replace(/^"(.+)"$/, '$1');
+      t = t.replace(/^'(.+)'$/, '$1');
+      return t.trim();
+    }
+
+    guessDisplayName(name) {
+      const base = this.cleanToken(name);
+      if (!base) return '';
+      const spaced = base.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!spaced) return base;
+      return spaced.replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    ensureUUIDForName(name, labelHint) {
+      const clean = this.cleanToken(name);
+      if (!clean) {
+        const uuid = genUUID();
+        return uuid;
+      }
+      if (!this.namedUUIDs.has(clean)) {
+        this.namedUUIDs.set(clean, genUUID());
+      }
+      if (labelHint) {
+        this.namedLabels.set(clean, labelHint);
+      }
+      return this.namedUUIDs.get(clean);
+    }
+
+    resolveUUIDToken(token) {
+      const clean = this.cleanToken(token);
+      if (!clean) {
+        const uuid = genUUID();
+        return { name: clean, uuid, label: this.guessDisplayName(clean) };
+      }
+      if (UUID_REGEX.test(clean)) {
+        const label = this.namedLabels.get(clean) ?? this.guessDisplayName(clean);
+        return { name: clean, uuid: clean, label };
+      }
+      const label = this.namedLabels.get(clean) ?? this.guessDisplayName(clean);
+      const uuid = this.ensureUUIDForName(clean, label);
+      return { name: clean, uuid, label };
+    }
+
+    extractPlaceholderName(value) {
+      if (typeof value !== 'string') return null;
+      const match = value.match(/^\{\{\s*([^{}]+?)\s*\}\}$/);
+      if (!match) return null;
+      const inner = this.cleanToken(match[1]);
+      if (!inner) return null;
+      const upper = inner.toUpperCase();
+      if (['STRING', 'NUMBER', 'BOOLEAN', 'VARIABLE', 'RAW', 'UUID'].includes(upper)) return null;
+      return inner;
+    }
+
+    isIDNameKey(key) {
+      const normalized = String(key || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+      return normalized === 'idname';
+    }
+
+    isUUIDKey(key) {
+      const normalized = String(key || '').toLowerCase();
+      return normalized.includes('uuid');
+    }
+
+    makeUUIDVariableBlock(key, token) {
+      const resolved = this.resolveUUIDToken(token);
+      const xml = renderValue(variableValue({ uuid: resolved.uuid, name: resolved.label || resolved.name }));
+      return { key, xml, uuid: resolved.uuid, name: resolved.name };
+    }
+
+    makeNamedVariableBlock(key, token) {
+      const name = this.cleanToken(token);
+      const xml = renderValue(variableValue({
+        type: 'Variable',
+        value: { Type: 'Variable', VariableName: name }
+      }));
+      return { key, xml, name };
+    }
+
+    transformNestedValue(value) {
+      if (Array.isArray(value)) {
+        return value.map((item) => this.transformNestedValue(item));
+      }
+      if (isPlainObject(value)) {
+        const obj = {};
+        for (const [k, v] of Object.entries(value)) {
+          obj[k] = this.transformNestedValue(v);
+        }
+        return obj;
+      }
+      return value;
+    }
+
+    transformParam(key, rawValue) {
+      if (typeof rawValue === 'string') {
+        const trimmed = rawValue.trim();
+
+        if (this.isIDNameKey(key)) {
+          const extracted = this.extractPlaceholderName(trimmed) ?? this.cleanToken(trimmed);
+          if (extracted) {
+            const label = this.guessDisplayName(extracted);
+            const uuid = this.ensureUUIDForName(extracted, label);
+            return { value: rawValue, namedUUID: { name: extracted, uuid } };
+          }
+        }
+
+        if (trimmed.startsWith('$')) {
+          const block = this.makeUUIDVariableBlock(key, trimmed.slice(1));
+          return { variableBlock: block };
+        }
+
+        if (trimmed.startsWith('!')) {
+          const block = this.makeNamedVariableBlock(key, trimmed.slice(1));
+          return { variableBlock: block };
+        }
+
+        if (this.isUUIDKey(key)) {
+          if (trimmed.startsWith('$')) {
+            const resolved = this.resolveUUIDToken(trimmed.slice(1));
+            return { value: resolved.uuid };
+          }
+          const extracted = this.extractPlaceholderName(trimmed);
+          if (extracted) {
+            const uuid = this.ensureUUIDForName(extracted, this.guessDisplayName(extracted));
+            return { value: uuid };
+          }
+          const clean = this.cleanToken(trimmed);
+          if (UUID_REGEX.test(clean)) {
+            return { value: clean };
+          }
+          if (this.namedUUIDs.has(clean)) {
+            return { value: this.namedUUIDs.get(clean) };
+          }
+        }
+      }
+
+      if (Array.isArray(rawValue)) {
+        return { value: rawValue.map((item) => this.transformNestedValue(item)) };
+      }
+
+      if (isPlainObject(rawValue)) {
+        const obj = {};
+        for (const [k, v] of Object.entries(rawValue)) {
+          obj[k] = this.transformNestedValue(v);
+        }
+        return { value: obj };
+      }
+
+      return { value: rawValue };
+    }
+
+    prepareParamsForTemplate(template, params = {}) {
+      let workingTemplate = template;
+      const prepared = {};
+      const idUUIDs = [];
+
+      for (const [key, rawValue] of Object.entries(params)) {
+        const result = this.transformParam(key, rawValue);
+        if (result.variableBlock) {
+          const { template: updated, replaced } = replaceVariableBlock(workingTemplate, key, result.variableBlock.xml);
+          if (replaced) {
+            workingTemplate = updated;
+            if (workingTemplate.includes(`{{${key}}}`)) {
+              prepared[key] = '';
+            }
+            continue;
+          }
+          prepared[key] = rawValue;
+          continue;
+        }
+
+        if (result.value !== undefined) {
+          prepared[key] = result.value;
+        }
+        if (result.namedUUID) {
+          idUUIDs.push(result.namedUUID);
+        }
+      }
+
+      if (prepared.UUID == null && idUUIDs.length) {
+        prepared.UUID = idUUIDs[0].uuid;
+      }
+
+      return { template: workingTemplate, params: prepared };
+    }
+  }
+
   function mergeParams(...sources) {
     const out = {};
     for (const src of sources) {
@@ -2275,8 +2511,9 @@ const userConversions = (() => {
     const prog = coerceProgram(program, name);
     const wfName = String(prog.name || name || 'My Shortcut');
     const actions = prog.actions;
+    const runtime = new ConversionRuntime();
 
-    const plistActions = await buildActionsArrayFromJSON(actions);
+    const plistActions = await buildActionsArrayFromJSON(actions, runtime);
 
     const plist =
 `<?xml version="1.0" encoding="UTF-8"?>
@@ -2483,7 +2720,7 @@ const userConversions = (() => {
     ]
   };
 
-  async function buildSpecialIf(item) {
+  async function buildSpecialIf(item, context) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
 
     const providedGroup =
@@ -2530,11 +2767,11 @@ const userConversions = (() => {
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const thenActions = Array.isArray(item?.then) && item.then.length
-      ? await buildActionsArrayFromJSON(item.then)
+      ? await buildActionsArrayFromJSON(item.then, context)
       : [comment('If (then) has no actions')];
 
     const elseActions = Array.isArray(item?.else) && item.else.length
-      ? await buildActionsArrayFromJSON(item.else)
+      ? await buildActionsArrayFromJSON(item.else, context)
       : [comment('If (else) has no actions')];
 
     const templateValues = {
@@ -2552,7 +2789,7 @@ const userConversions = (() => {
     return SPECIAL_ACTION_TEMPLATES.IF.map((part) => replaceTemplate(part, templateValues));
   }
 
-  async function buildSpecialRepeatCount(item) {
+  async function buildSpecialRepeatCount(item, context) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
 
     const providedGroup =
@@ -2574,7 +2811,7 @@ const userConversions = (() => {
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const bodyActions = Array.isArray(item?.do) && item.do.length
-      ? await buildActionsArrayFromJSON(item.do)
+      ? await buildActionsArrayFromJSON(item.do, context)
       : [comment('Repeat has no actions')];
 
     const templateValues = {
@@ -2587,7 +2824,7 @@ const userConversions = (() => {
     return SPECIAL_ACTION_TEMPLATES.REPEAT.map((part) => replaceTemplate(part, templateValues));
   }
 
-  async function buildSpecialRepeatEach(item) {
+  async function buildSpecialRepeatEach(item, context) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
 
     const providedGroup =
@@ -2611,7 +2848,7 @@ const userConversions = (() => {
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const bodyActions = Array.isArray(item?.do) && item.do.length
-      ? await buildActionsArrayFromJSON(item.do)
+      ? await buildActionsArrayFromJSON(item.do, context)
       : [comment('Repeat Each has no actions')];
 
     const templateValues = {
@@ -2643,11 +2880,12 @@ const userConversions = (() => {
   //  - Repeat: { action:"Repeat", params:{ Count }, do:[...] }
   //  - RepeatEach: { action:"RepeatEach", params:{ Items }, do:[...] }
   //  - If: { action:"If", params:{ Condition }, then:[...], else:[...] }
-  async function buildActionsArrayFromJSON(list) {
+  async function buildActionsArrayFromJSON(list, context) {
+    const runtime = context instanceof ConversionRuntime ? context : new ConversionRuntime();
     const out = [];
     for (const item of list) {
       if (typeof item === 'string') {
-        out.push(await buildActionFromConversions(item, {}));
+        out.push(await buildActionFromConversions(item, {}, runtime));
         continue;
       }
       if (!item || typeof item !== 'object') {
@@ -2662,18 +2900,18 @@ const userConversions = (() => {
 
       const specialBuilder = SPECIAL_ACTION_BUILDERS.get(normalizeName(kind));
       if (specialBuilder) {
-        out.push(...await specialBuilder(item));
+        out.push(...await specialBuilder(item, runtime));
         continue;
       }
 
       // Regular action
-      out.push(await buildActionFromConversions(kind, item.params || {}));
+      out.push(await buildActionFromConversions(kind, item.params || {}, runtime));
     }
     return out;
   }
 
   // ---- Build one action from Conversions/ dict template ----
-  async function buildActionFromConversions(actionName, params) {
+  async function buildActionFromConversions(actionName, params, context) {
     // Find file
     const filename = await lookupConversionFileForAction(actionName);
     if (!filename) {
@@ -2683,8 +2921,11 @@ const userConversions = (() => {
     // Load <dict>…</dict> snippet
     const dictXML = await loadConvFile(filename);
 
+    const runtime = context instanceof ConversionRuntime ? context : new ConversionRuntime();
+    const prepared = runtime.prepareParamsForTemplate(dictXML, params || {});
+
     // Substitutions
-    let substituted = substitutePlaceholders(dictXML, params || {});
+    let substituted = substitutePlaceholders(prepared.template, prepared.params);
     substituted = postProcessAskLLM(substituted, params || {});
 
     // Ensure it *looks* like a dict (we won't attempt to validate fully)
@@ -2728,7 +2969,7 @@ const userConversions = (() => {
     });
   }
 
-  async function buildRepeatCountBlock(item) {
+  async function buildRepeatCountBlock(item, context) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
     const groupId =
       params.GroupingIdentifier ??
@@ -2757,7 +2998,7 @@ const userConversions = (() => {
     const startAction = makeAction(IDS.REPEAT_COUNT, startParams);
 
     const bodyActions = Array.isArray(item?.do)
-      ? await buildActionsArrayFromJSON(item.do)
+      ? await buildActionsArrayFromJSON(item.do, context)
       : [comment('Repeat has no "do" array')];
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
@@ -2774,7 +3015,7 @@ const userConversions = (() => {
     return [startAction, ...bodyActions, endAction];
   }
 
-  async function buildRepeatEachBlock(item) {
+  async function buildRepeatEachBlock(item, context) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
     const groupId =
       params.GroupingIdentifier ??
@@ -2803,7 +3044,7 @@ const userConversions = (() => {
     const startAction = makeAction(IDS.REPEAT_EACH, startParams);
 
     const bodyActions = Array.isArray(item?.do)
-      ? await buildActionsArrayFromJSON(item.do)
+      ? await buildActionsArrayFromJSON(item.do, context)
       : [comment('RepeatEach has no "do" array')];
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
@@ -2820,7 +3061,7 @@ const userConversions = (() => {
     return [startAction, ...bodyActions, endAction];
   }
 
-  async function buildIfBlock(item) {
+  async function buildIfBlock(item, context) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
     const groupId =
       params.GroupingIdentifier ??
@@ -2892,11 +3133,11 @@ const userConversions = (() => {
     const endAction = makeAction(IDS.IF, endParams);
 
     const thenActions = Array.isArray(item?.then)
-      ? await buildActionsArrayFromJSON(item.then)
+      ? await buildActionsArrayFromJSON(item.then, context)
       : [comment('If has no "then" array')];
 
     const elseActions = Array.isArray(item?.else)
-      ? await buildActionsArrayFromJSON(item.else)
+      ? await buildActionsArrayFromJSON(item.else, context)
       : [];
 
     return [startAction, ...thenActions, elseAction, ...elseActions, endAction];
