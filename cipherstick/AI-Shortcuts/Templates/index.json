@@ -1,107 +1,995 @@
 [
-  "Addframetogif.json",
-  "Addnewcontact.json",
-  "Addnewevent.json",
-  "Addnewreminder.json",
-  "Address.json",
-  "AirDrop.Send.json",
-  "Alert.json",
-  "Ask.ForInput.json",
-  "Askllm.json",
-  "Barcode.Generate.json",
-  "Calendar.CreateCalendar.json",
-  "Calendar.SetCalendarFocusConfiguration.json",
-  "ChatGpt.ConfigureOpenNewChatInApp.json",
-  "Chrome.AddBookmark.json",
-  "Clipboard.Set.json",
-  "Clock.CreateAlarm.json",
-  "Clock.StartTimer.json",
-  "Com.AddReadingListItemToChromeIntent.json",
-  "Control.Comment.json",
-  "Correctspelling.json",
-  "Count.json",
-  "Data.Base64.Encode.json",
-  "Date.Now.json",
-  "Delay.json",
-  "Detect.Emailaddress.json",
-  "Dictatetext.json",
-  "Dismisssiri.json",
-  "Dnd.Getfocus.json",
-  "Downloadurl.json",
-  "Exit.json",
-  "Extracttextfromimage.json",
-  "File.Delete.json",
-  "File.Getfoldercontents.json",
-  "File.Rename.json",
-  "Format.Number.json",
-  "GenerateHash.json",
-  "GenerateQRCodeFromText.json",
-  "GetOrientation.json",
-  "Getbatterylevel.json",
-  "Getclipboard.json",
-  "Getcurrentapp.json",
-  "Getcurrentlocation.json",
-  "Getipaddress.json",
-  "Getitemfromlist.json",
-  "Getitemname.json",
-  "Getitemtype.json",
-  "Getonscreencontent.json",
-  "Getparkedcarlocation.json",
-  "Getpodcastsfromlibrary.json",
-  "Getvariable.json",
-  "Getwebpagecontents.json",
-  "Hash.json",
-  "If.json",
-  "Image.Flip.json",
-  "Image.Removebackground.json",
-  "List.ChooseFrom.json",
-  "List.Count.json",
-  "Lockscreen.json",
-  "Magnifier.DescribeThis.json",
-  "Makezip.json",
-  "Math.CalculateExpression.json",
-  "Math.json",
-  "Nothing.json",
-  "Notification.json",
-  "Number.Random.json",
-  "Number.json",
-  "Openapp.json",
-  "Openurl.json",
-  "Output.json",
-  "Pausemusic.json",
-  "PlaySoundFile.json",
-  "Playsound.json",
-  "Print.json",
-  "Repeat.json",
-  "RepeatWithEach.json",
-  "Returntohomescreen.json",
-  "Round.json",
-  "RoundNumber.json",
-  "Runjavascriptonwebpage.json",
-  "Scanbarcode.json",
-  "Selectcontacts.json",
-  "SelectemailAdresses.json",
-  "SelectphoneNumber.json",
-  "Selectphoto.json",
-  "Setbrightness.json",
-  "Setvariable.json",
-  "Setvolume.json",
-  "ShortcutsActions.GetOrientation.json",
-  "ShortcutsActions.TranscribeAudio.json",
-  "ShowControlCenter.json",
-  "Showdefinition.json",
-  "Showresult.json",
-  "Speaktext.json",
-  "StopAndOutput.json",
-  "Takephoto.json",
-  "Takescreenshot.json",
-  "Takevideo.json",
-  "Text.ChangeCase.json",
-  "TranscribeAudio.json",
-  "Url.Expand.json",
-  "Variable.Append.json",
-  "Vibrate.json",
-  "Waittoreturn.json",
-  "Weather.Currentconditions.json",
-  "Weather.Forecast.json"
+  {
+    "file": "Addframetogif.json",
+    "tags": [
+      "addframetogif",
+      "animation",
+      "frame",
+      "gif",
+      "media",
+      "still"
+    ]
+  },
+  {
+    "file": "Addnewcontact.json",
+    "tags": [
+      "addnewcontact",
+      "contact",
+      "people"
+    ]
+  },
+  {
+    "file": "Addnewevent.json",
+    "tags": [
+      "addnewevent",
+      "calendar",
+      "event"
+    ]
+  },
+  {
+    "file": "Addnewreminder.json",
+    "tags": [
+      "addnewreminder",
+      "reminder",
+      "task"
+    ]
+  },
+  {
+    "file": "Address.json",
+    "tags": [
+      "address",
+      "location"
+    ]
+  },
+  {
+    "file": "AirDrop.Send.json",
+    "tags": [
+      "airdrop",
+      "airdrop.send",
+      "send",
+      "share"
+    ]
+  },
+  {
+    "file": "Alert.json",
+    "tags": [
+      "alert",
+      "notification"
+    ]
+  },
+  {
+    "file": "Ask.ForInput.json",
+    "tags": [
+      "ask",
+      "ask.forinput",
+      "forinput",
+      "prompt",
+      "source"
+    ]
+  },
+  {
+    "file": "Askllm.json",
+    "tags": [
+      "ai",
+      "ask",
+      "askllm",
+      "language",
+      "llm",
+      "prompt"
+    ]
+  },
+  {
+    "file": "Barcode.Generate.json",
+    "tags": [
+      "automation",
+      "barcode",
+      "barcode.generate",
+      "code",
+      "generate",
+      "scan"
+    ]
+  },
+  {
+    "file": "Calendar.CreateCalendar.json",
+    "tags": [
+      "automation",
+      "calendar",
+      "calendar.createcalendar",
+      "createcalendar",
+      "event",
+      "schedule"
+    ]
+  },
+  {
+    "file": "Calendar.SetCalendarFocusConfiguration.json",
+    "tags": [
+      "automation",
+      "calendar",
+      "calendar.setcalendarfocusconfiguration",
+      "configuration",
+      "device",
+      "dnd",
+      "event",
+      "focus",
+      "schedule",
+      "setcalendarfocusconfiguration"
+    ]
+  },
+  {
+    "file": "ChatGpt.ConfigureOpenNewChatInApp.json",
+    "tags": [
+      "ai",
+      "app",
+      "application",
+      "automation",
+      "chat",
+      "chatgpt",
+      "chatgpt.configureopennewchatinapp",
+      "configure",
+      "configureopennewchatinapp",
+      "gpt",
+      "in",
+      "launch",
+      "new"
+    ]
+  },
+  {
+    "file": "Chrome.AddBookmark.json",
+    "tags": [
+      "addbookmark",
+      "bookmark",
+      "browser",
+      "chrome",
+      "chrome.addbookmark",
+      "web"
+    ]
+  },
+  {
+    "file": "Clipboard.Set.json",
+    "tags": [
+      "automation",
+      "clipboard",
+      "clipboard.set",
+      "copy",
+      "paste"
+    ]
+  },
+  {
+    "file": "Clock.CreateAlarm.json",
+    "tags": [
+      "alarm",
+      "automation",
+      "clock",
+      "clock.createalarm",
+      "createalarm",
+      "device",
+      "time"
+    ]
+  },
+  {
+    "file": "Clock.StartTimer.json",
+    "tags": [
+      "clock",
+      "clock.starttimer",
+      "device",
+      "start",
+      "starttimer",
+      "time",
+      "timer"
+    ]
+  },
+  {
+    "file": "Com.AddReadingListItemToChromeIntent.json",
+    "tags": [
+      "addreadinglistitemtochromeintent",
+      "array",
+      "browser",
+      "chrome",
+      "com",
+      "com.addreadinglistitemtochromeintent",
+      "intent",
+      "item",
+      "list",
+      "lists",
+      "reading",
+      "to",
+      "web"
+    ]
+  },
+  {
+    "file": "Control.Comment.json",
+    "tags": [
+      "comment",
+      "control",
+      "control.comment",
+      "manage",
+      "text"
+    ]
+  },
+  {
+    "file": "Correctspelling.json",
+    "tags": [
+      "correctspelling"
+    ]
+  },
+  {
+    "file": "Count.json",
+    "tags": [
+      "count",
+      "math"
+    ]
+  },
+  {
+    "file": "Data.Base64.Encode.json",
+    "tags": [
+      "base",
+      "base64",
+      "data",
+      "data.base64.encode",
+      "encode"
+    ]
+  },
+  {
+    "file": "Date.Now.json",
+    "tags": [
+      "date",
+      "date.now",
+      "now",
+      "time"
+    ]
+  },
+  {
+    "file": "Delay.json",
+    "tags": [
+      "delay",
+      "time",
+      "wait"
+    ]
+  },
+  {
+    "file": "Detect.Emailaddress.json",
+    "tags": [
+      "address",
+      "detect",
+      "detect.emailaddress",
+      "email",
+      "emailaddress",
+      "location",
+      "mail"
+    ]
+  },
+  {
+    "file": "Dictatetext.json",
+    "tags": [
+      "dictate",
+      "dictatetext",
+      "speech",
+      "string",
+      "text"
+    ]
+  },
+  {
+    "file": "Dismisssiri.json",
+    "tags": [
+      "dismisssiri"
+    ]
+  },
+  {
+    "file": "Dnd.Getfocus.json",
+    "tags": [
+      "device",
+      "dnd",
+      "dnd.getfocus",
+      "focus",
+      "getfocus"
+    ]
+  },
+  {
+    "file": "Downloadurl.json",
+    "tags": [
+      "download",
+      "downloadurl",
+      "link",
+      "url",
+      "web"
+    ]
+  },
+  {
+    "file": "Exit.json",
+    "tags": [
+      "exit"
+    ]
+  },
+  {
+    "file": "Extracttextfromimage.json",
+    "tags": [
+      "extracttextfromimage",
+      "image",
+      "media",
+      "photo",
+      "picture",
+      "string",
+      "text"
+    ]
+  },
+  {
+    "file": "File.Delete.json",
+    "tags": [
+      "delete",
+      "document",
+      "file",
+      "file.delete",
+      "files",
+      "remove"
+    ]
+  },
+  {
+    "file": "File.Getfoldercontents.json",
+    "tags": [
+      "directory",
+      "document",
+      "file",
+      "file.getfoldercontents",
+      "files",
+      "folder",
+      "getfoldercontents"
+    ]
+  },
+  {
+    "file": "File.Rename.json",
+    "tags": [
+      "document",
+      "file",
+      "file.rename",
+      "files",
+      "rename"
+    ]
+  },
+  {
+    "file": "Format.Number.json",
+    "tags": [
+      "format",
+      "format.number",
+      "math",
+      "number",
+      "style",
+      "text"
+    ]
+  },
+  {
+    "file": "GenerateHash.json",
+    "tags": [
+      "automation",
+      "crypto",
+      "generate",
+      "generatehash",
+      "hash"
+    ]
+  },
+  {
+    "file": "GenerateQRCodeFromText.json",
+    "tags": [
+      "automation",
+      "code",
+      "from",
+      "generate",
+      "generateqrcodefromtext",
+      "qr",
+      "qrcode",
+      "string",
+      "text"
+    ]
+  },
+  {
+    "file": "GetOrientation.json",
+    "tags": [
+      "automation",
+      "device",
+      "getorientation",
+      "orientation",
+      "rotation"
+    ]
+  },
+  {
+    "file": "Getbatterylevel.json",
+    "tags": [
+      "battery",
+      "device",
+      "getbatterylevel",
+      "power"
+    ]
+  },
+  {
+    "file": "Getclipboard.json",
+    "tags": [
+      "clipboard",
+      "copy",
+      "getclipboard",
+      "paste"
+    ]
+  },
+  {
+    "file": "Getcurrentapp.json",
+    "tags": [
+      "app",
+      "application",
+      "getcurrentapp"
+    ]
+  },
+  {
+    "file": "Getcurrentlocation.json",
+    "tags": [
+      "getcurrentlocation",
+      "gps",
+      "location"
+    ]
+  },
+  {
+    "file": "Getipaddress.json",
+    "tags": [
+      "address",
+      "getipaddress",
+      "location"
+    ]
+  },
+  {
+    "file": "Getitemfromlist.json",
+    "tags": [
+      "array",
+      "getitemfromlist",
+      "list",
+      "lists"
+    ]
+  },
+  {
+    "file": "Getitemname.json",
+    "tags": [
+      "getitemname"
+    ]
+  },
+  {
+    "file": "Getitemtype.json",
+    "tags": [
+      "getitemtype"
+    ]
+  },
+  {
+    "file": "Getonscreencontent.json",
+    "tags": [
+      "getonscreencontent"
+    ]
+  },
+  {
+    "file": "Getparkedcarlocation.json",
+    "tags": [
+      "car",
+      "getparkedcarlocation",
+      "gps",
+      "location",
+      "parked"
+    ]
+  },
+  {
+    "file": "Getpodcastsfromlibrary.json",
+    "tags": [
+      "audio",
+      "getpodcastsfromlibrary",
+      "media",
+      "podcast",
+      "podcasts"
+    ]
+  },
+  {
+    "file": "Getvariable.json",
+    "tags": [
+      "data",
+      "getvariable",
+      "variable",
+      "variables"
+    ]
+  },
+  {
+    "file": "Getwebpagecontents.json",
+    "tags": [
+      "getwebpagecontents",
+      "internet",
+      "web"
+    ]
+  },
+  {
+    "file": "Hash.json",
+    "tags": [
+      "crypto",
+      "hash"
+    ]
+  },
+  {
+    "file": "If.json",
+    "tags": [
+      "automation",
+      "if"
+    ]
+  },
+  {
+    "file": "Image.Flip.json",
+    "tags": [
+      "flip",
+      "image",
+      "image.flip",
+      "media",
+      "photo",
+      "picture"
+    ]
+  },
+  {
+    "file": "Image.Removebackground.json",
+    "tags": [
+      "image",
+      "image.removebackground",
+      "math",
+      "media",
+      "photo",
+      "picture",
+      "removebackground",
+      "round"
+    ]
+  },
+  {
+    "file": "List.ChooseFrom.json",
+    "tags": [
+      "array",
+      "choose",
+      "choosefrom",
+      "from",
+      "list",
+      "list.choosefrom",
+      "lists"
+    ]
+  },
+  {
+    "file": "List.Count.json",
+    "tags": [
+      "array",
+      "count",
+      "list",
+      "list.count",
+      "lists",
+      "math"
+    ]
+  },
+  {
+    "file": "Lockscreen.json",
+    "tags": [
+      "lockscreen"
+    ]
+  },
+  {
+    "file": "Magnifier.DescribeThis.json",
+    "tags": [
+      "ai",
+      "analysis",
+      "describe",
+      "describethis",
+      "magnifier",
+      "magnifier.describethis",
+      "this"
+    ]
+  },
+  {
+    "file": "Makezip.json",
+    "tags": [
+      "archive",
+      "files",
+      "makezip",
+      "zip"
+    ]
+  },
+  {
+    "file": "Math.CalculateExpression.json",
+    "tags": [
+      "calculate",
+      "calculateexpression",
+      "expression",
+      "math",
+      "math.calculateexpression"
+    ]
+  },
+  {
+    "file": "Math.json",
+    "tags": [
+      "calculate",
+      "math"
+    ]
+  },
+  {
+    "file": "Nothing.json",
+    "tags": [
+      "nothing"
+    ]
+  },
+  {
+    "file": "Notification.json",
+    "tags": [
+      "alert",
+      "notification"
+    ]
+  },
+  {
+    "file": "Number.Random.json",
+    "tags": [
+      "math",
+      "number",
+      "number.random",
+      "random"
+    ]
+  },
+  {
+    "file": "Number.json",
+    "tags": [
+      "math",
+      "number"
+    ]
+  },
+  {
+    "file": "Openapp.json",
+    "tags": [
+      "app",
+      "application",
+      "automation",
+      "launch",
+      "openapp"
+    ]
+  },
+  {
+    "file": "Openurl.json",
+    "tags": [
+      "automation",
+      "launch",
+      "link",
+      "openurl",
+      "url",
+      "web"
+    ]
+  },
+  {
+    "file": "Output.json",
+    "tags": [
+      "result"
+    ]
+  },
+  {
+    "file": "Pausemusic.json",
+    "tags": [
+      "pausemusic"
+    ]
+  },
+  {
+    "file": "PlaySoundFile.json",
+    "tags": [
+      "document",
+      "file",
+      "files",
+      "media",
+      "play",
+      "playsoundfile",
+      "sound"
+    ]
+  },
+  {
+    "file": "Playsound.json",
+    "tags": [
+      "playsound"
+    ]
+  },
+  {
+    "file": "Print.json",
+    "tags": [
+      "print"
+    ]
+  },
+  {
+    "file": "Repeat.json",
+    "tags": [
+      "automation",
+      "lists",
+      "loop",
+      "repeat"
+    ]
+  },
+  {
+    "file": "RepeatWithEach.json",
+    "tags": [
+      "automation",
+      "each",
+      "lists",
+      "loop",
+      "repeat",
+      "repeatwitheach",
+      "with"
+    ]
+  },
+  {
+    "file": "Returntohomescreen.json",
+    "tags": [
+      "device",
+      "homescreen",
+      "returntohomescreen"
+    ]
+  },
+  {
+    "file": "Round.json",
+    "tags": [
+      "math",
+      "round"
+    ]
+  },
+  {
+    "file": "RoundNumber.json",
+    "tags": [
+      "math",
+      "number",
+      "round",
+      "roundnumber"
+    ]
+  },
+  {
+    "file": "Runjavascriptonwebpage.json",
+    "tags": [
+      "automation",
+      "execute",
+      "internet",
+      "runjavascriptonwebpage",
+      "web"
+    ]
+  },
+  {
+    "file": "Scanbarcode.json",
+    "tags": [
+      "barcode",
+      "code",
+      "detect",
+      "scan",
+      "scanbarcode"
+    ]
+  },
+  {
+    "file": "Selectcontacts.json",
+    "tags": [
+      "contact",
+      "people",
+      "selectcontacts"
+    ]
+  },
+  {
+    "file": "SelectemailAdresses.json",
+    "tags": [
+      "adresses",
+      "email",
+      "mail",
+      "selectemail",
+      "selectemailadresses"
+    ]
+  },
+  {
+    "file": "SelectphoneNumber.json",
+    "tags": [
+      "math",
+      "number",
+      "selectphone",
+      "selectphonenumber"
+    ]
+  },
+  {
+    "file": "Selectphoto.json",
+    "tags": [
+      "camera",
+      "media",
+      "photo",
+      "selectphoto"
+    ]
+  },
+  {
+    "file": "Setbrightness.json",
+    "tags": [
+      "brightness",
+      "device",
+      "display",
+      "setbrightness"
+    ]
+  },
+  {
+    "file": "Setvariable.json",
+    "tags": [
+      "data",
+      "setvariable",
+      "variable",
+      "variables"
+    ]
+  },
+  {
+    "file": "Setvolume.json",
+    "tags": [
+      "device",
+      "media",
+      "setvolume",
+      "sound",
+      "volume"
+    ]
+  },
+  {
+    "file": "ShortcutsActions.GetOrientation.json",
+    "tags": [
+      "automation",
+      "device",
+      "getorientation",
+      "orientation",
+      "rotation",
+      "shortcut",
+      "shortcutsactions.getorientation"
+    ]
+  },
+  {
+    "file": "ShortcutsActions.TranscribeAudio.json",
+    "tags": [
+      "ai",
+      "audio",
+      "automation",
+      "media",
+      "shortcut",
+      "shortcutsactions.transcribeaudio",
+      "sound",
+      "speech",
+      "transcribe",
+      "transcribeaudio"
+    ]
+  },
+  {
+    "file": "ShowControlCenter.json",
+    "tags": [
+      "automation",
+      "center",
+      "control",
+      "manage",
+      "show",
+      "showcontrolcenter"
+    ]
+  },
+  {
+    "file": "Showdefinition.json",
+    "tags": [
+      "showdefinition"
+    ]
+  },
+  {
+    "file": "Showresult.json",
+    "tags": [
+      "showresult",
+      "text"
+    ]
+  },
+  {
+    "file": "Speaktext.json",
+    "tags": [
+      "speak",
+      "speaktext",
+      "string",
+      "text",
+      "tts",
+      "voice"
+    ]
+  },
+  {
+    "file": "StopAndOutput.json",
+    "tags": [
+      "and",
+      "automation",
+      "result",
+      "stopandoutput"
+    ]
+  },
+  {
+    "file": "Takephoto.json",
+    "tags": [
+      "camera",
+      "media",
+      "photo",
+      "takephoto"
+    ]
+  },
+  {
+    "file": "Takescreenshot.json",
+    "tags": [
+      "takescreenshot"
+    ]
+  },
+  {
+    "file": "Takevideo.json",
+    "tags": [
+      "camera",
+      "media",
+      "takevideo",
+      "video"
+    ]
+  },
+  {
+    "file": "Text.ChangeCase.json",
+    "tags": [
+      "case",
+      "change",
+      "changecase",
+      "string",
+      "text",
+      "text.changecase"
+    ]
+  },
+  {
+    "file": "TranscribeAudio.json",
+    "tags": [
+      "ai",
+      "audio",
+      "media",
+      "sound",
+      "speech",
+      "transcribe",
+      "transcribeaudio"
+    ]
+  },
+  {
+    "file": "Url.Expand.json",
+    "tags": [
+      "expand",
+      "link",
+      "url",
+      "url.expand",
+      "web"
+    ]
+  },
+  {
+    "file": "Variable.Append.json",
+    "tags": [
+      "app",
+      "append",
+      "application",
+      "automation",
+      "data",
+      "lists",
+      "variable",
+      "variable.append",
+      "variables"
+    ]
+  },
+  {
+    "file": "Vibrate.json",
+    "tags": [
+      "device",
+      "haptic",
+      "vibrate"
+    ]
+  },
+  {
+    "file": "Waittoreturn.json",
+    "tags": [
+      "delay",
+      "time",
+      "wait",
+      "waittoreturn"
+    ]
+  },
+  {
+    "file": "Weather.Currentconditions.json",
+    "tags": [
+      "currentconditions",
+      "forecast",
+      "weather",
+      "weather.currentconditions"
+    ]
+  },
+  {
+    "file": "Weather.Forecast.json",
+    "tags": [
+      "forecast",
+      "weather",
+      "weather.forecast"
+    ]
+  }
 ]
