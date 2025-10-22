@@ -1888,12 +1888,36 @@ const userConversions = (() => {
     }
   }
 
+  function interpretQuickReference(raw) {
+    if (typeof raw !== 'string') return null;
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('!link:')) {
+      const target = trimmed.slice(6).trim();
+      if (!target) return { type: 'string', value: '' };
+      return { type: 'link', value: target };
+    }
+    if (trimmed.startsWith('!var:')) {
+      const name = trimmed.slice(5).trim().replace(/[{}]/g, '');
+      if (!name) return { type: 'string', value: '' };
+      return { type: 'variable', value: name };
+    }
+    return null;
+  }
+
   function renderValue(value) {
     if (value && value[SPECIAL_VALUE]) {
       return renderSpecialValue(value);
     }
     if (value == null) return XML.str('');
-    if (typeof value === 'string') return XML.str(value);
+    if (typeof value === 'string') {
+      const quick = interpretQuickReference(value);
+      if (quick) {
+        if (quick.type === 'link') return XML.str(quick.value);
+        if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
+        return XML.str(quick.value || '');
+      }
+      return XML.str(value);
+    }
     if (typeof value === 'number') return XML.num(value);
     if (typeof value === 'boolean') return XML.bool(value);
     if (Array.isArray(value)) {
@@ -2040,6 +2064,14 @@ const userConversions = (() => {
         if (value && value[SPECIAL_VALUE]) return renderValue(value);
         return value == null ? '' : String(value);
       case 'UUID':
+        {
+          const quick = interpretQuickReference(value);
+          if (quick) {
+            if (quick.type === 'link') return XML.str(quick.value);
+            if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
+            return XML.str(quick.value || '');
+          }
+        }
         if (value == null || value === true) return XML.str(genUUID());
         return XML.str(String(value));
       default:
@@ -2050,6 +2082,12 @@ const userConversions = (() => {
   function renderAutoPlaceholder(key, value) {
     const upperKey = String(key || '').toUpperCase();
     if (upperKey === 'UUID') {
+      const quick = interpretQuickReference(value);
+      if (quick) {
+        if (quick.type === 'link') return XML.str(quick.value);
+        if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
+        return XML.str(quick.value || '');
+      }
       if (value === undefined || value === null || value === true) return XML.str(genUUID());
       return XML.str(String(value));
     }
