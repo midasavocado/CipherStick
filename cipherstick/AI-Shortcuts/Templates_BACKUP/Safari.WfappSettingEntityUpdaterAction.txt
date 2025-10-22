@@ -1,3 +1,0 @@
-Safari.WfappSettingEntityUpdaterAction:
-  SettingKey: "TEXT"
-  Value: "TEXT"

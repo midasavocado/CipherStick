@@ -1,6 +1,0 @@
-{
-  "action": "Urlencode",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

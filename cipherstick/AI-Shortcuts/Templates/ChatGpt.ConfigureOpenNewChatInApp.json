@@ -1,5 +1,5 @@
 {
-  "action": "ChatGpt.ConfigureOpenNewChatInApp",
+  "action": "ChatGpt.OpenNewChatInApp",
   "params": {
     "StartWhisper": "{{BOOLEAN}}",
     "TemporaryChat": "{{BOOLEAN}}",

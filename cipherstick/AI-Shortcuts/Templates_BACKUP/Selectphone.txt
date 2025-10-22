@@ -1,3 +1,0 @@
-Selectphone:
-  Multiple: BOOLEAN
-  Prompt: "TEXT"

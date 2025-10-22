@@ -1,2 +1,0 @@
-PbbridgeSupport.CosgetCurrentGizmoFaceIntent:
-  # No parameters (runs with defaults)

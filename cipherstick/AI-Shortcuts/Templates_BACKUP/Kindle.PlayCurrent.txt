@@ -1,2 +1,0 @@
-Kindle.PlayCurrent:
-  # No parameters (runs with defaults)

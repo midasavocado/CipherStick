@@ -1,4 +1,0 @@
-Searchweb:
-  Query: "TEXT"
-  SearchEngine: "TEXT"
-  SafeSearch: "TEXT"

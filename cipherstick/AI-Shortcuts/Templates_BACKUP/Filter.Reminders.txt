@@ -1,5 +1,0 @@
-Filter.Reminders:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"

@@ -1,6 +1,0 @@
-{
-  "action": "Getnameofemoji",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

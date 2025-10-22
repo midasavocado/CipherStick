@@ -1,6 +1,0 @@
-{
-  "action": "Text.Create",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "action": "Showwebpage",
-  "params": {
-    "URL": "{{STRING}}",
-    "ReaderMode": "{{BOOLEAN}}"
-  }
-}

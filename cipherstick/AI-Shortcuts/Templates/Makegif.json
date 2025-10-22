@@ -1,7 +1,0 @@
-{
-  "action": "Makegif",
-  "params": {
-    "Input": "{{STRING}}",
-    "MakeGIFActionDelayTime": "{{STRING}}"
-  }
-}

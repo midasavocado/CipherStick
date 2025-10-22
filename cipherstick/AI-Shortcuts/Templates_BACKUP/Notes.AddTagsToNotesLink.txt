@@ -1,2 +1,0 @@
-Notes.AddTagsToNotesLink:
-  Notes: {{ENTITY}}  # optional

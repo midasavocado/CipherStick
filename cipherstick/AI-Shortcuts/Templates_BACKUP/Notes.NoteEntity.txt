@@ -1,5 +1,0 @@
-Notes.NoteEntity:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"

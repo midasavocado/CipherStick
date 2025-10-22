@@ -1,2 +1,0 @@
-Viewresult:
-  Input: {{EXTENSION_INPUT}}  # required

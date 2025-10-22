@@ -1,3 +1,0 @@
-Scanbarcode:
-  AllowedTypes: "TEXT"
-  ShowText: BOOLEAN

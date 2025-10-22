@@ -1,2 +1,0 @@
-Downloadurl:
-  URL: "TEXT"  # required

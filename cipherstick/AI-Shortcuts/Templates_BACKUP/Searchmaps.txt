@@ -1,3 +1,0 @@
-Searchmaps:
-  Query: "TEXT"
-  TravelMode: "TEXT"

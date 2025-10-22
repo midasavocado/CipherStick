@@ -1,2 +1,0 @@
-Getwebpagecontents:
-  Input: "TEXT"  # required

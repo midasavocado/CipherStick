@@ -1,2 +1,0 @@
-Yelp.ProjectsWorkspaceApp:
-  # No parameters (runs with defaults)

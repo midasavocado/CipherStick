@@ -1,3 +1,0 @@
-Math:
-  Input: "TEXT"  # required
-  Operand: "TEXT"

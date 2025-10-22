@@ -1,6 +1,0 @@
-{
-  "action": "Photos.OpenCollection",
-  "params": {
-    "Target": "{{STRING}}"
-  }
-}

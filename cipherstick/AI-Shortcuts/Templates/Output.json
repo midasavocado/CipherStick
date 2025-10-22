@@ -1,8 +1,8 @@
 {
-  "action": "Output",
+  "action": "StopAndOutput",
   "params": {
-    "NoOutputSurfaceBehavior": "{{STRING}}",
+    "NowhereToOutputBehaviour": "Do Nothing/Respond/Copy to Clipboard",
     "Output": "{{STRING}}",
-    "Response": "{{STRING}}"
+    "Response": "{{STRING}}" #only used if "NowhereToOutputBehaviour" is set to "Respond"
   }
 }

@@ -1,7 +1,0 @@
-{
-  "action": "Notes.CreateFolderLink",
-  "params": {
-    "Name": "{{STRING}}",
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}

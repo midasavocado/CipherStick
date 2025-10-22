@@ -2,6 +2,6 @@
   "action": "Takephoto",
   "params": {
     "Camera": "{{Front/Back}}",
-    "ShowWhenRun": "{{BOOLEAN}}"
+    "OpenWhenRun": "{{BOOLEAN}}"
   }
 }

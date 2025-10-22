@@ -1,6 +1,0 @@
-{
-  "action": "Clock.DeleteAlarm",
-  "params": {
-    "Entities": "{{VARIABLE}}"
-  }
-}

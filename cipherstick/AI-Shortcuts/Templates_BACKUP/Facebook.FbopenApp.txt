@@ -1,2 +1,0 @@
-Facebook.FbopenApp:
-  Destination: {{ENTITY}}

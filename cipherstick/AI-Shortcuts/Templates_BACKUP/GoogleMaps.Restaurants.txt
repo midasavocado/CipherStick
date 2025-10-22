@@ -1,2 +1,0 @@
-GoogleMaps.Restaurants:
-  OpenWhenRun: BOOLEAN  # optional

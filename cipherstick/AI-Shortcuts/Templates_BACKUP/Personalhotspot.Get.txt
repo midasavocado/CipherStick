@@ -1,2 +1,0 @@
-Personalhotspot.Get:
-  # No parameters (runs with defaults)

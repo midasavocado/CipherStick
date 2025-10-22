@@ -1,8 +1,0 @@
-{
-  "action": "Searchweb",
-  "params": {
-    "Query": "{{STRING}}",
-    "SearchEngine": "{{STRING}}",
-    "SafeSearch": "{{STRING}}"
-  }
-}

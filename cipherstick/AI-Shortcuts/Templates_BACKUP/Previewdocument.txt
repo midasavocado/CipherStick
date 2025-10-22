@@ -1,2 +1,0 @@
-Previewdocument:
-  Input: {{EXTENSION_INPUT}}  # required

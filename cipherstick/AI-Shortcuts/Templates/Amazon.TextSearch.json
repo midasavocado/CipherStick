@@ -1,6 +1,0 @@
-{
-  "action": "Amazon.TextSearch",
-  "params": {
-    "Criteria": "{{STRING}}"
-  }
-}

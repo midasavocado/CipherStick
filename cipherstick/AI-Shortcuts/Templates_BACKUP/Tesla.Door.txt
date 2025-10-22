@@ -1,4 +1,0 @@
-Tesla.Door:
-  Door: "TEXT"
-  DoorAction: "TEXT"
-  Vehicle: {{ASK_WHEN_RUN}}  # required

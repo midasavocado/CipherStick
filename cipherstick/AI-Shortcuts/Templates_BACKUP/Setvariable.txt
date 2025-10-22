@@ -1,3 +1,0 @@
-Setvariable:
-  Name: "TEXT"
-  Value: {{VARIABLE}}

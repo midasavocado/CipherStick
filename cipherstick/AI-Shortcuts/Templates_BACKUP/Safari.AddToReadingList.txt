@@ -1,3 +1,0 @@
-Safari.AddToReadingList:
-  URL: "TEXT"
-  Title: "TEXT"

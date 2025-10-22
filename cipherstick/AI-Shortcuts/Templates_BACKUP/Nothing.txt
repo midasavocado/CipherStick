@@ -1,2 +1,0 @@
-Nothing:
-  # No parameters (runs with defaults)

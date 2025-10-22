@@ -1,3 +1,0 @@
-Showdefinition:
-  Word: "TEXT"
-  Language: "TEXT"

@@ -1,6 +1,0 @@
-{
-  "action": "Com.SelectPopularTrailersCategoryIntent",
-  "params": {
-    "Category": "{{STRING}}"
-  }
-}

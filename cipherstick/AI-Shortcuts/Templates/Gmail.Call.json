@@ -1,7 +1,0 @@
-{
-  "action": "Gmail.Call",
-  "params": {
-    "SendMessageActionRecipients": "{{VARIABLE}}",
-    "SendMessageContent": "{{STRING}}"
-  }
-}

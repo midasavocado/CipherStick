@@ -1,4 +1,6 @@
 {
   "action": "Delay",
-  "params": {}
+  "params": {
+    "DelayTime": "{{NUMBER}}" #In seconds
+  }
 }

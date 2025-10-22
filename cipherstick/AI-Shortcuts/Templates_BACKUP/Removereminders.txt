@@ -1,3 +1,0 @@
-Removereminders:
-  Reminders: {{VARIABLE}}
-  AskBeforeDeleting: BOOLEAN

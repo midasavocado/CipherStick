@@ -1,6 +1,0 @@
-{
-  "action": "Text.Match",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}

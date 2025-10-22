@@ -1,8 +1,0 @@
-<dict>
-				<key>UUID</key>
-				<string>{{UUID}}</string>
-				<key>text</key>
-				<string>Hey</string>
-				<key>tone</key>
-				<string>friendly</string>
-			</dict>

@@ -1,2 +1,0 @@
-Getframesfromimage:
-  Image: {{EXTENSION_INPUT}}  # optional

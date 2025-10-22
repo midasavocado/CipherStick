@@ -1,3 +1,0 @@
-Getitemname:
-  Input: {{EXTENSION_INPUT}}  # required
-  GetWebPageTitle: BOOLEAN

@@ -1,7 +1,0 @@
-{
-  "action": "Intelligenceplatform.CalculateAppUsageIntent",
-  "params": {
-    "ActivityType": "{{STRING}}",
-    "SelectedDevice": "{{VARIABLE}}"
-  }
-}

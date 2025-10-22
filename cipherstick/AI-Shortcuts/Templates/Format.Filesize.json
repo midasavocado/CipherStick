@@ -1,6 +1,0 @@
-{
-  "action": "Format.Filesize",
-  "params": {
-    "FileSize": "{{STRING}}"
-  }
-}

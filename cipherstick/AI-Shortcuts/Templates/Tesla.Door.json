@@ -1,8 +1,0 @@
-{
-  "action": "Tesla.Door",
-  "params": {
-    "Door": "{{STRING}}",
-    "DoorAction": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

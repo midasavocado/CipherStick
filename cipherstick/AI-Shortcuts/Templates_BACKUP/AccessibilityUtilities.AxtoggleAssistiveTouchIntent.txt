@@ -1,2 +1,0 @@
-AccessibilityUtilities.AxtoggleAssistiveTouchIntent:
-  # No parameters (runs with defaults)

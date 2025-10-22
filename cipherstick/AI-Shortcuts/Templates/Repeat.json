@@ -1,7 +1,11 @@
 {
   "action": "Repeat",
   "params": {
-    "Count": "{{NUMBER}}",
-    "Do": "{{STRING}}"
-  }
+    "Count": "{{NUMBER}}"
+  },
+  "do": [
+    {
+      "params": {} #Actions go here
+    }
+  ]
 }

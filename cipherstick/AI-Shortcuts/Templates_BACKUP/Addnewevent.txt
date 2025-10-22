@@ -1,9 +1,0 @@
-Addnewevent:
-  AlertTime: "TEXT" #In the form of "{{NUMBER}} {{MINUTES/HOURS}} before"
-  CalendarItemAllDay: BOOLEAN
-  CalendarItemCalendar: "TEXT"
-  CalendarItemEndDate: "
-  CalendarItemLocation: "TEXT"
-  CalendarItemNotes: "TEXT"
-  CalendarItemStartDate: "TEXT"
-  CalendarItemTitle: "TEXT"

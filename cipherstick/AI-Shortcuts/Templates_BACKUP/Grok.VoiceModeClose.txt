@@ -1,2 +1,0 @@
-Grok.VoiceModeClose:
-  # No parameters (runs with defaults)

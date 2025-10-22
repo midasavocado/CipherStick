@@ -1,6 +1,0 @@
-{
-  "action": "Makeimagefrompdfpage",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

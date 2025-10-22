@@ -1,2 +1,0 @@
-Photos.Delete:
-  Photos: {{CLIPBOARD}}

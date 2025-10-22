@@ -1,7 +1,0 @@
-{
-  "action": "TvremoteUiservice.SwitchUserAccountIntent",
-  "params": {
-    "Account": "{{VARIABLE}}",
-    "Device": "{{VARIABLE}}"
-  }
-}

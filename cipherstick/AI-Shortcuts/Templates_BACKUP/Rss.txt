@@ -1,3 +1,0 @@
-Rss:
-  FeedURL: "TEXT"
-  ItemCount: NUMBER

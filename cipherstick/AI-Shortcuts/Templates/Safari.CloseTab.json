@@ -1,6 +1,0 @@
-{
-  "action": "Safari.CloseTab",
-  "params": {
-    "Tab": "{{VARIABLE}}"
-  }
-}

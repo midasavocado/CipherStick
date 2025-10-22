@@ -1,2 +1,0 @@
-Word.OpenDocument:
-  Target: {{ENTITY}}  # optional

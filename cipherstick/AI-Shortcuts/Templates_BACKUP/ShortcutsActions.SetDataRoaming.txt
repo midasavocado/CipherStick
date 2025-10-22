@@ -1,2 +1,0 @@
-ShortcutsActions.SetDataRoaming:
-  Enabled: BOOLEAN

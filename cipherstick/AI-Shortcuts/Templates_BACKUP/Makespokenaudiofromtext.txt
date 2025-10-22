@@ -1,5 +1,0 @@
-Makespokenaudiofromtext:
-  Input: "TEXT"  # required
-  SpeakTextPitch: NUMBER
-  SpeakTextRate: NUMBER
-  SpeakTextVoice: "TEXT"

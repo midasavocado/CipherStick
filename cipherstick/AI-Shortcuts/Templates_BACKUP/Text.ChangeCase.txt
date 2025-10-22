@@ -1,3 +1,0 @@
-Text.ChangeCase:
-  Text: "TEXT"  # required
-  CaseType: "Uppercase|Lowercase|Title Case|Sentence Case|Alternating|Custom"

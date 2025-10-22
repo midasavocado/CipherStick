@@ -1,2 +1,0 @@
-WritingTools.FormatTableIntent:
-  Text: "TEXT"  # required

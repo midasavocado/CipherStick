@@ -1,7 +1,0 @@
-{
-  "action": "Shortcuts.MoveShortcutToFolder",
-  "params": {
-    "ShortcutName": "{{STRING}}",
-    "FolderName": "{{STRING}}"
-  }
-}

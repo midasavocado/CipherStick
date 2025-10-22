@@ -1,6 +1,0 @@
-{
-  "action": "Fitness.SearchFitnessPlus",
-  "params": {
-    "Criteria": "{{STRING}}"
-  }
-}

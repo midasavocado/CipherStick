@@ -1,6 +1,0 @@
-{
-  "action": "WhatsApp.Call",
-  "params": {
-    "CallContact": "{{VARIABLE}}"
-  }
-}

@@ -1,2 +1,0 @@
-NanoSettings.NprfsetAutoLaunchAudioAppsIntent:
-  ShowWhenRun: BOOLEAN  # optional

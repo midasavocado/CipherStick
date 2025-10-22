@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Safariwebpage",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

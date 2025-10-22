@@ -1,5 +1,0 @@
-Clock.CreateAlarm:
-  Name: "TEXT"  # required
-  AllowsSnooze: BOOLEAN
-  Time: "TEXT"
-  OpenWhenRun: BOOLEAN  # optional

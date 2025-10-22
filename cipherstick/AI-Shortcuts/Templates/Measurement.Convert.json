@@ -1,6 +1,0 @@
-{
-  "action": "Measurement.Convert",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

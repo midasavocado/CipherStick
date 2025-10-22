@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Itunesartist",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

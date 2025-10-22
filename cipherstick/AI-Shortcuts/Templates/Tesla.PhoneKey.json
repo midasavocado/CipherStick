@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.PhoneKey",
-  "params": {
-    "Vehicle": "{{STRING}}",
-    "VehicleMode": "{{STRING}}"
-  }
-}

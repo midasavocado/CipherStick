@@ -1,2 +1,0 @@
-Vibrate:
-  # No parameters (runs with defaults)

@@ -1,8 +1,0 @@
-{
-  "action": "Runextension",
-  "params": {
-    "ExtensionIdentifier": "{{STRING}}",
-    "Input": "{{EXTENSION_INPUT}}",
-    "ShowWhenRun": "{{BOOLEAN}}"
-  }
-}

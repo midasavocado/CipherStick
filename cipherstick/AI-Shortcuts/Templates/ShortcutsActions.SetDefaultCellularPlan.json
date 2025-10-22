@@ -1,6 +1,0 @@
-{
-  "action": "ShortcutsActions.SetDefaultCellularPlan",
-  "params": {
-    "PlanName": "{{STRING}}"
-  }
-}

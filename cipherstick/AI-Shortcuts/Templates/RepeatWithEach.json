@@ -1,7 +1,11 @@
 {
   "action": "RepeatWithEach",
   "params": {
-    "Items": "{{VARIABLE}}",
-    "Mode": "{{STRING}}"
-  }
+    "ItemsIn": "{{VARIABLE}}"
+  },
+  "do": [
+    {
+      "params": {}
+    }
+  ]
 }

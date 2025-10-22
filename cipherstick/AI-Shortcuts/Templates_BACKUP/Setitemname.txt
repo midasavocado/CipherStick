@@ -1,3 +1,0 @@
-Setitemname:
-  Item: {{VARIABLE}}
-  Name: "TEXT"

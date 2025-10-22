@@ -1,2 +1,0 @@
-Getmapslink:
-  Input: {{CURRENT_LOCATION}}  # required

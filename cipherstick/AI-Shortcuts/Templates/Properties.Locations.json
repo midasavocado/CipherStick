@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Locations",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

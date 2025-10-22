@@ -1,3 +1,0 @@
-Properties.Podcastshow:
-  Input: {{CLIPBOARD}}  # required
-  ContentItemPropertyName: "TEXT"

@@ -1,6 +1,0 @@
-Barcode.Generate:
-  BackgroundColor: "#38571A"  # alpha 1.0
-  ErrorCorrection: "Low|Medium|Quartile|High"
-  ForegroundColor: "#785800"  # alpha 1.0
-  QRRounded: BOOLEAN
-  Text: "TEXT"  # required

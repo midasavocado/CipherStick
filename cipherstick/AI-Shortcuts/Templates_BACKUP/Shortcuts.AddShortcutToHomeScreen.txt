@@ -1,3 +1,0 @@
-Shortcuts.AddShortcutToHomeScreen:
-  ShortcutName: "TEXT"
-  IconName: "TEXT"

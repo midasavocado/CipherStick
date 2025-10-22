@@ -1,2 +1,0 @@
-Shortcuts.OpenNavigationDestination:
-  Destination: "TEXT"

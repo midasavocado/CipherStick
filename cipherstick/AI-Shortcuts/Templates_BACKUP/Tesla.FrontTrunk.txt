@@ -1,2 +1,0 @@
-Tesla.FrontTrunk:
-  Vehicle: {{ASK_WHEN_RUN}}  # required

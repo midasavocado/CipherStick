@@ -1,8 +1,0 @@
-{
-  "action": "Openin",
-  "params": {
-    "Input": "{{STRING}}",
-    "OpenInAppIdentifier": "{{STRING}}",
-    "OpenInAskWhenRun": "{{BOOLEAN}}"
-  }
-}

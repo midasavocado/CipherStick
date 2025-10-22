@@ -1,8 +1,0 @@
-{
-  "action": "Tesla.CampMode",
-  "params": {
-    "ShowWhenRun": "{{BOOLEAN}}",
-    "Vehicle": "{{STRING}}",
-    "VehicleMode": "{{STRING}}"
-  }
-}

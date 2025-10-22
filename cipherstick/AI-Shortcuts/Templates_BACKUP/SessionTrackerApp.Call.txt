@@ -1,4 +1,0 @@
-SessionTrackerApp.Call:
-  SessionId: "TEXT"
-  Action: "TEXT"
-  Notes: "TEXT"

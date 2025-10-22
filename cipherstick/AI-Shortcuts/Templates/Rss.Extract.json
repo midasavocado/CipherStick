@@ -1,8 +1,0 @@
-{
-  "action": "Rss.Extract",
-  "params": {
-    "FeedURL": "{{STRING}}",
-    "ItemCount": "{{NUMBER}}",
-    "IncludeFullText": "{{BOOLEAN}}"
-  }
-}

@@ -1,3 +1,0 @@
-Math.Statistics:
-  Input: {{CURRENT_APP}}  # required
-  StatisticsOperation: {{ASK_WHEN_RUN}}

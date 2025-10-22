@@ -1,3 +1,0 @@
-Shortcuts.MoveShortcutToFolder:
-  ShortcutName: "TEXT"
-  FolderName: "TEXT"

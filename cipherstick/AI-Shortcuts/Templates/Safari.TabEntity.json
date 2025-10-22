@@ -1,8 +1,0 @@
-{
-  "action": "Safari.TabEntity",
-  "params": {
-    "Title": "{{STRING}}",
-    "URL": "{{STRING}}",
-    "Index": "{{NUMBER}}"
-  }
-}

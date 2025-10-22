@@ -1,2 +1,0 @@
-Com.RunSafetyCheckIntent:
-  # No parameters (runs with defaults)

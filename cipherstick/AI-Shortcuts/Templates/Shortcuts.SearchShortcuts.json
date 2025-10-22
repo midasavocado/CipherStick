@@ -1,7 +1,0 @@
-{
-  "action": "Shortcuts.SearchShortcuts",
-  "params": {
-    "Query": "{{STRING}}",
-    "InFolder": "{{STRING}}"
-  }
-}

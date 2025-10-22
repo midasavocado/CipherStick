@@ -1,2 +1,0 @@
-Gemini.ShareImageWithGemini:
-  # No parameters (runs with defaults)

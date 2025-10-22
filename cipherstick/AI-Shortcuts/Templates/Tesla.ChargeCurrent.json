@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.ChargeCurrent",
-  "params": {
-    "Amps": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

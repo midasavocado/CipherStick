@@ -1,3 +1,0 @@
-Makevideofromgif:
-  InputGIF: {{EXTENSION_INPUT}}
-  MakeVideoFromGIFActionLoopCount: NUMBER

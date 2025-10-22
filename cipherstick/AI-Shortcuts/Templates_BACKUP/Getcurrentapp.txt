@@ -1,2 +1,0 @@
-Getcurrentapp:
-  # No parameters (runs with defaults)

@@ -1,6 +1,0 @@
-AppStore.Search:
-  Country: "TEXT"  # optional
-  ItemLimit: NUMBER  # optional
-  SearchTerm: "TEXT"
-  Attribute: {{ASK_WHEN_RUN}}
-  Entity: {{ASK_WHEN_RUN}}

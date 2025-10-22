@@ -1,7 +1,0 @@
-{
-  "action": "Geturlcomponent",
-  "params": {
-    "URL": "{{STRING}}",
-    "URLComponent": "{{STRING}}"
-  }
-}

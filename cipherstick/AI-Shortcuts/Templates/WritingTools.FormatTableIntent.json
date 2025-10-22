@@ -1,6 +1,0 @@
-{
-  "action": "WritingTools.FormatTableIntent",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}

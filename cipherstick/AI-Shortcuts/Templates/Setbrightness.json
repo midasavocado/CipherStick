@@ -1,6 +1,6 @@
 {
   "action": "Setbrightness",
   "params": {
-    "Level": "{{NUMBER}}"
+    "Level": "{{NUMBER}}" #1-100
   }
 }

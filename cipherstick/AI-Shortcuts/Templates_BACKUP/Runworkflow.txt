@@ -1,4 +1,0 @@
-Runworkflow:
-  WorkflowName: "TEXT"
-  Input: {{VARIABLE}}
-  ShowWhenRun: BOOLEAN

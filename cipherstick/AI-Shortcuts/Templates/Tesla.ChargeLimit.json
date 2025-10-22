@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.ChargeLimit",
-  "params": {
-    "Percent": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

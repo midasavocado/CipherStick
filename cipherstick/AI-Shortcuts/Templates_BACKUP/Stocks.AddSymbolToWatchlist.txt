@@ -1,3 +1,0 @@
-Stocks.AddSymbolToWatchlist:
-  Symbol: "TEXT"
-  Watchlist: "TEXT"

@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Quantity",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

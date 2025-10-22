@@ -1,4 +1,0 @@
-Safari.ListenToPage:
-  Voice: "TEXT"
-  Rate: NUMBER
-  Pitch: NUMBER

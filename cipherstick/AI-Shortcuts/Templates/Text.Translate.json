@@ -1,6 +1,0 @@
-{
-  "action": "Text.Translate",
-  "params": {
-    "InputText": "{{STRING}}"
-  }
-}

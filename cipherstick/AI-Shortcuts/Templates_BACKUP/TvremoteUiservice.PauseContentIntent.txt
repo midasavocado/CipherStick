@@ -1,2 +1,0 @@
-TvremoteUiservice.PauseContentIntent:
-  Device: {{OBJECT}}

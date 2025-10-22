@@ -1,3 +1,0 @@
-Tesla.ChargePort:
-  ChargePortAction: "TEXT"
-  Vehicle: {{ASK_WHEN_RUN}}  # required

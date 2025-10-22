@@ -1,5 +1,0 @@
-Searchlocalbusinesses:
-  Query: "TEXT"
-  Location: {{VARIABLE}}
-  Radius: NUMBER
-  OpenNow: BOOLEAN

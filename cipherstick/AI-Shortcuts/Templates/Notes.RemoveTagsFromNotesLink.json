@@ -1,6 +1,0 @@
-{
-  "action": "Notes.RemoveTagsFromNotesLink",
-  "params": {
-    "Notes": "{{STRING}}"
-  }
-}

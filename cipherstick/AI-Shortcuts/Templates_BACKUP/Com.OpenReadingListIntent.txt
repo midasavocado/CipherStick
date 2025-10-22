@@ -1,2 +1,0 @@
-Com.OpenReadingListIntent:
-  # No parameters (runs with defaults)

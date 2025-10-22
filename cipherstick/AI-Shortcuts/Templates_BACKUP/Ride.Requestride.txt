@@ -1,5 +1,0 @@
-Ride.Requestride:
-  Service: "TEXT"
-  PickupLocation: {{VARIABLE}}
-  DropoffLocation: {{VARIABLE}}
-  Notes: "TEXT"

@@ -1,6 +1,0 @@
-{
-  "action": "Clock.ToggleAlarm",
-  "params": {
-    "Alarm": "{{VARIABLE}}"
-  }
-}

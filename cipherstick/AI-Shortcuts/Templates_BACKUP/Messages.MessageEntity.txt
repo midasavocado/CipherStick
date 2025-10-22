@@ -1,4 +1,0 @@
-Messages.MessageEntity:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortProperty: "TEXT"

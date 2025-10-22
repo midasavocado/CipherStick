@@ -1,4 +1,0 @@
-Tesla.HvacseatHeater:
-  Level: "TEXT"
-  Seat: "TEXT"
-  Vehicle: {{ASK_WHEN_RUN}}  # required

@@ -1,6 +1,0 @@
-{
-  "action": "Siri.VisualIntelligenceCameraLaunch",
-  "params": {
-    "Mode": "{{STRING}}"
-  }
-}

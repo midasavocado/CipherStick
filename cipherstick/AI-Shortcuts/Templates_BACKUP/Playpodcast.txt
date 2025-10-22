@@ -1,3 +1,0 @@
-Playpodcast:
-  PodcastPlaybackOrder: "TEXT"
-  PodcastShow: {{ASK_WHEN_RUN}}

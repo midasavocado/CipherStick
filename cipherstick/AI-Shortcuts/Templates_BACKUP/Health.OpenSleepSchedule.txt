@@ -1,2 +1,0 @@
-Health.OpenSleepSchedule:
-  # No parameters (runs with defaults)

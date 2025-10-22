@@ -1,7 +1,0 @@
-{
-  "action": "Showincalendar",
-  "params": {
-    "Date": "{{STRING}}",
-    "Event": "{{VARIABLE}}"
-  }
-}

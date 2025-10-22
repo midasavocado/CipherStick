@@ -1,7 +1,4 @@
 {
   "action": "Getipaddress",
-  "params": {
-    "IPAddressSourceOption": "{{VARIABLE}}",
-    "IPAddressTypeOption": "{{VARIABLE}}"
-  }
+  "params": {}
 }

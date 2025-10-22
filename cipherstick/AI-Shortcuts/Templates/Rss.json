@@ -1,7 +1,0 @@
-{
-  "action": "Rss",
-  "params": {
-    "FeedURL": "{{STRING}}",
-    "ItemCount": "{{NUMBER}}"
-  }
-}

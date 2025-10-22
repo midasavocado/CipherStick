@@ -1,2 +1,0 @@
-Getupcomingreminders:
-  # No parameters (runs with defaults)

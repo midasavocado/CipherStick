@@ -1,7 +1,0 @@
-Speaktext:
-  Text: "TEXT"
-  Voice: "TEXT"
-  Rate: NUMBER
-  Pitch: NUMBER
-  Language: "TEXT"
-  WaitUntilFinished: BOOLEAN

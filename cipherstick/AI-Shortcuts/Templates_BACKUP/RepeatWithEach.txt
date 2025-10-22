@@ -1,3 +1,0 @@
-RepeatWithEach:
-  Items: {{VARIABLE}}
-  Mode: "TEXT"

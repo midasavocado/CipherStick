@@ -1,2 +1,0 @@
-Detectlanguage:
-  Input: "TEXT"  # required

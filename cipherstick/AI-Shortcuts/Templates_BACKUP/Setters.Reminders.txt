@@ -1,4 +1,0 @@
-Setters.Reminders:
-  Reminder: {{VARIABLE}}
-  Field: "TEXT"
-  Value: "TEXT"

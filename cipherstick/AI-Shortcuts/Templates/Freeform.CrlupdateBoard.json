@@ -1,7 +1,0 @@
-{
-  "action": "Freeform.CrlupdateBoard",
-  "params": {
-    "Title": "{{STRING}}",
-    "Target": "{{STRING}}"
-  }
-}

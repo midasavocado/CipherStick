@@ -1,6 +1,0 @@
-If:
-  Condition: "{{VARIABLE}} is {NUMBER}/is not {NUMBER}/has any value/does not have any value/is greater than {NUMBER}/is greater than or equal to {NUMBER}/is less than {NUMBER}/is less than or equal to {NUMBER}/is between {NUMBER} and {NUMBER}"
-  Then:
-    - {{ACTIONS}}
-  Else:
-    - {{ACTIONS}}

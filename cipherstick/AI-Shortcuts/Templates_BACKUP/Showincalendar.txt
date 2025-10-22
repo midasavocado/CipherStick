@@ -1,3 +1,0 @@
-Showincalendar:
-  Date: "DATE"
-  Event: {{VARIABLE}}

@@ -1,2 +1,0 @@
-Magnifier.ReaderMode:
-  # No parameters (runs with defaults)

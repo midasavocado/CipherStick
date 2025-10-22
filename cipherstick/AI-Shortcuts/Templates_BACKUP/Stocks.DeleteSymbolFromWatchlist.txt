@@ -1,3 +1,0 @@
-Stocks.DeleteSymbolFromWatchlist:
-  Symbol: "TEXT"
-  Watchlist: "TEXT"

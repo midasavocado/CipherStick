@@ -1,7 +1,0 @@
-{
-  "action": "Notes.RenameFolderLink",
-  "params": {
-    "Name": "{{STRING}}",
-    "Entity": "{{VARIABLE}}"
-  }
-}

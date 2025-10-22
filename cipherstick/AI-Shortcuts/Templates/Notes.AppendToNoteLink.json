@@ -1,7 +1,0 @@
-{
-  "action": "Notes.AppendToNoteLink",
-  "params": {
-    "Input": "{{STRING}}",
-    "Note": "{{VARIABLE}}"
-  }
-}

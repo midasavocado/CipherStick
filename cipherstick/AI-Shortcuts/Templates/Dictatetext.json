@@ -1,7 +1,6 @@
 {
   "action": "Dictatetext",
   "params": {
-    "DictateTextStopListening": "{{STRING}}",
-    "SpeechLanguage": "{{STRING}}"
+    "DictateTextStopListening": "After Pause/After short pause/On tap"
   }
 }

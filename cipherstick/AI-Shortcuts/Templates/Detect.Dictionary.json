@@ -1,6 +1,0 @@
-{
-  "action": "Detect.Dictionary",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

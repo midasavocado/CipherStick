@@ -1,8 +1,0 @@
-{
-  "action": "Playmusic",
-  "params": {
-    "MediaItems": "{{STRING}}",
-    "PlayMusicActionRepeat": "{{STRING}}",
-    "PlayMusicActionShuffle": "{{STRING}}"
-  }
-}

@@ -1,2 +1,0 @@
-Getonscreencontent:
-  # No parameters (runs with defaults)

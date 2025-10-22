@@ -1,2 +1,0 @@
-Getcurrentsong:
-  # No parameters (runs with defaults)

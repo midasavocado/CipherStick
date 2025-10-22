@@ -1,13 +1,13 @@
 {
   "action": "Addnewevent",
   "params": {
-    "AlertTime": "{{NUMBER}}",
+    "AlertTime": "MM/DD/YY HH:MM",
     "CalendarItemAllDay": "{{BOOLEAN}}",
-    "CalendarItemCalendar": "{{STRING}}",
-    "CalendarItemEndDate": "{{STRING}}",
+    "CalendarItemEndDate": "MM/DD/YY HH:MM",
     "CalendarItemLocation": "{{STRING}}",
     "CalendarItemNotes": "{{STRING}}",
-    "CalendarItemStartDate": "{{STRING}}",
-    "CalendarItemTitle": "{{STRING}}"
+    "CalendarItemStartDate": "MM/DD/YY HH:MM",
+    "CalendarItemTitle": "{{STRING}}",
+    "ShowWhenRun": "{{BOOLEAN}}"
   }
 }

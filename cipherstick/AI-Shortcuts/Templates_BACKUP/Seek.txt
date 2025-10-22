@@ -1,4 +1,0 @@
-Seek:
-  Direction: "TEXT"
-  Amount: NUMBER
-  Unit: "TEXT"

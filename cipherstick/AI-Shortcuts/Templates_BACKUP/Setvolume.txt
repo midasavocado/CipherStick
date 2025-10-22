@@ -1,3 +1,0 @@
-Setvolume:
-  Volume: NUMBER
-  Change: "TEXT"

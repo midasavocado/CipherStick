@@ -1,3 +1,0 @@
-Overlayimageonimage:
-  Input: {{DEVICE_DETAILS}}  # required
-  Image: {{EXTENSION_INPUT}}  # optional

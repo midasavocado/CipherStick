@@ -1,6 +1,0 @@
-{
-  "action": "Dictionary",
-  "params": {
-    "Items": "{{DICTIONARY}}"
-  }
-}

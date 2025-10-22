@@ -1,4 +1,0 @@
-Safari.TabEntity:
-  Title: "TEXT"
-  URL: "TEXT"
-  Index: NUMBER

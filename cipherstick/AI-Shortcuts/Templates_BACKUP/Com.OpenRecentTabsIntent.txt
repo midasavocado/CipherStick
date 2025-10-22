@@ -1,2 +1,0 @@
-Com.OpenRecentTabsIntent:
-  # No parameters (runs with defaults)

@@ -1,8 +1,0 @@
-{
-  "action": "ChatGpt.OpenNewChatInAppShortcut",
-  "params": {
-    "StartAction": "{{STRING}}",
-    "TemporaryChat": "{{BOOLEAN}}",
-    "UseSearchGpt": "{{BOOLEAN}}"
-  }
-}

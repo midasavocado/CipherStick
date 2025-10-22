@@ -1,9 +1,0 @@
-Addnewcontact:
-  ContactCompany: "TEXT"
-  ContactEmails: {{TEXT}}
-  ContactFirstName: "TEXT"
-  ContactLastName: "TEXT"
-  ContactNotes: "TEXT"
-  ContactPhoneNumbers: {{NUMBER}}
-  ContactPhoto: {{VARIABLE}}
-  ShowComposeSheet: {{BOOLEAN}}

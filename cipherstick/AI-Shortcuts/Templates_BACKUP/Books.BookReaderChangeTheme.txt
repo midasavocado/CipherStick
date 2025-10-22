@@ -1,2 +1,0 @@
-Books.BookReaderChangeTheme:
-  # No parameters (runs with defaults)

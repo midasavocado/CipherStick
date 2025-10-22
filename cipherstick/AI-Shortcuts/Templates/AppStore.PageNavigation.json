@@ -1,6 +1,0 @@
-{
-  "action": "AppStore.PageNavigation",
-  "params": {
-    "Target": "{{STRING}}"
-  }
-}

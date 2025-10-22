@@ -1,4 +1,0 @@
-Image.Convert:
-  Input: {{CLIPBOARD}}  # required
-  ImageQuality: NUMBER  # 0..1
-  PreserveMetadata: BOOLEAN  # optional

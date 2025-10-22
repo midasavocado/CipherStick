@@ -1,7 +1,0 @@
-{
-  "action": "Setparkedcar",
-  "params": {
-    "Location": "{{VARIABLE}}",
-    "Clear": "{{BOOLEAN}}"
-  }
-}

@@ -1,2 +1,0 @@
-Grok.VoiceModeDeafen:
-  # No parameters (runs with defaults)

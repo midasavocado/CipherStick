@@ -1,2 +1,0 @@
-ChatGpt.OpenVoiceMode:
-  # No parameters (runs with defaults)

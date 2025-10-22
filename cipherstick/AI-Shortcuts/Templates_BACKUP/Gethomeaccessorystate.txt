@@ -1,3 +1,0 @@
-Gethomeaccessorystate:
-  HMCharacteristic: {{OBJECT}}
-  HMService: {{OBJECT}}

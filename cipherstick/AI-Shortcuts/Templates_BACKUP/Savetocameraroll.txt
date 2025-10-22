@@ -1,5 +1,0 @@
-Savetocameraroll:
-  Media: {{EXTENSION_INPUT}}
-  Album: "TEXT"
-  Filename: "TEXT"
-  OverwriteIfExists: BOOLEAN

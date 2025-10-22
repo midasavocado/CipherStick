@@ -1,9 +1,0 @@
-{
-  "action": "Music.CreatePlaylist",
-  "params": {
-    "PlaylistName": "{{STRING}}",
-    "PlaylistAuthor": "{{STRING}}",
-    "PlaylistDescription": "{{STRING}}",
-    "PlaylistItems": "{{VARIABLE}}"
-  }
-}

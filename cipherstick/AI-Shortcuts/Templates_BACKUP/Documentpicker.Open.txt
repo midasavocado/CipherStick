@@ -1,2 +1,0 @@
-Documentpicker.Open:
-  GetFilePath: "TEXT"

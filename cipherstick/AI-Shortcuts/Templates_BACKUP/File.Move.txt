@@ -1,2 +1,0 @@
-File.Move:
-  File: {{OBJECT}}

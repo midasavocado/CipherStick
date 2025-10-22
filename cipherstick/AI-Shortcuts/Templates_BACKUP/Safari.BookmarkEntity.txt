@@ -1,4 +1,0 @@
-Safari.BookmarkEntity:
-  Name: "TEXT"
-  Folder: "TEXT"
-  URL: "TEXT"

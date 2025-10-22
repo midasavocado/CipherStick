@@ -1,2 +1,0 @@
-Journal.SearchEntries:
-  Criteria: "TEXT"

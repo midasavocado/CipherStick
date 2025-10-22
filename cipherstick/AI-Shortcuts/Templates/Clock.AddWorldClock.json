@@ -1,7 +1,0 @@
-{
-  "action": "Clock.AddWorldClock",
-  "params": {
-    "City": "{{STRING}}",
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}

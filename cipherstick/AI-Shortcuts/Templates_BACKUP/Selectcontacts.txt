@@ -1,3 +1,0 @@
-Selectcontacts:
-  Multiple: BOOLEAN
-  Prompt: "TEXT"

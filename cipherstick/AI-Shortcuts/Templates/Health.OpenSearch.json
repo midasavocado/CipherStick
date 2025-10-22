@@ -1,6 +1,0 @@
-{
-  "action": "Health.OpenSearch",
-  "params": {
-    "Criteria": "{{STRING}}"
-  }
-}

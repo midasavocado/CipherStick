@@ -1,2 +1,0 @@
-Com.OpenLensIntent:
-  # No parameters (runs with defaults)

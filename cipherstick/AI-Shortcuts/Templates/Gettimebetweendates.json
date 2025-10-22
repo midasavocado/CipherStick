@@ -1,7 +1,0 @@
-{
-  "action": "Gettimebetweendates",
-  "params": {
-    "Input": "{{STRING}}",
-    "TimeUntilFromDate": "{{VARIABLE}}"
-  }
-}

@@ -1,6 +1,0 @@
-Filter.Locations:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemInputParameter: {{EXTENSION_INPUT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"

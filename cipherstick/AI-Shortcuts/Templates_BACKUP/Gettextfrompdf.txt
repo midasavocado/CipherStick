@@ -1,5 +1,0 @@
-Gettextfrompdf:
-  Input: {{OBJECT}}  # required
-  CombinePages: BOOLEAN
-  GetTextFromPDFPageFooter: "TEXT"
-  GetTextFromPDFPageHeader: "TEXT"

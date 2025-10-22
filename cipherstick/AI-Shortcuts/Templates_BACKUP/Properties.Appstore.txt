@@ -1,3 +1,0 @@
-Properties.Appstore:
-  Input: {{EXTENSION_INPUT}}  # required
-  ContentItemPropertyName: "TEXT"

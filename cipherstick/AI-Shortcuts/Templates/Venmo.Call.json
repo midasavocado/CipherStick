@@ -1,9 +1,0 @@
-{
-  "action": "Venmo.Call",
-  "params": {
-    "VenmoActionAmount": "{{VARIABLE}}",
-    "VenmoActionAppSwitch": "{{BOOLEAN}}",
-    "VenmoActionNote": "{{STRING}}",
-    "VenmoActionRecipients": "{{VARIABLE}}"
-  }
-}

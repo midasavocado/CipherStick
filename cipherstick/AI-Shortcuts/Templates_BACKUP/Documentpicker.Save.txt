@@ -1,3 +1,0 @@
-Documentpicker.Save:
-  Input: {{OBJECT}}  # required
-  SaveFileOverwrite: BOOLEAN

@@ -1,2 +1,0 @@
-Format.Number:
-  Number: "TEXT"

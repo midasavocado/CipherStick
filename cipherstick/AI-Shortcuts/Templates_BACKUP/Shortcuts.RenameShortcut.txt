@@ -1,3 +1,0 @@
-Shortcuts.RenameShortcut:
-  OldName: "TEXT"
-  NewName: "TEXT"

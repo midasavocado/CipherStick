@@ -1,9 +1,0 @@
-{
-  "action": "Searchitunes",
-  "params": {
-    "Query": "{{STRING}}",
-    "MediaType": "{{STRING}}",
-    "CountryCode": "{{STRING}}",
-    "Limit": "{{NUMBER}}"
-  }
-}

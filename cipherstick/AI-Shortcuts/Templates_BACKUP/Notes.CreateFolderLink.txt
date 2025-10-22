@@ -1,3 +1,0 @@
-Notes.CreateFolderLink:
-  Name: "TEXT"  # required
-  OpenWhenRun: BOOLEAN  # optional

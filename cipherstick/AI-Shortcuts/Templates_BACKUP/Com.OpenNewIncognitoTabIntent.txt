@@ -1,2 +1,0 @@
-Com.OpenNewIncognitoTabIntent:
-  # No parameters (runs with defaults)

@@ -1,6 +1,0 @@
-{
-  "action": "Safari.ChangeReaderModeState",
-  "params": {
-    "State": "{{STRING}}"
-  }
-}

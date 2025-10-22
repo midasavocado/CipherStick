@@ -1,3 +1,0 @@
-Gettimebetweendates:
-  Input: "TEXT"  # required
-  TimeUntilFromDate: {{OBJECT}}

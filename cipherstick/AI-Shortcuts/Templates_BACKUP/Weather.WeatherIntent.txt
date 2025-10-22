@@ -1,2 +1,0 @@
-Weather.WeatherIntent:
-  Location: {{OBJECT}}

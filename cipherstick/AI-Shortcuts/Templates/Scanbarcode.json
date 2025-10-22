@@ -1,7 +1,5 @@
 {
   "action": "Scanbarcode",
   "params": {
-    "AllowedTypes": "{{STRING}}",
-    "ShowText": "{{BOOLEAN}}"
   }
 }

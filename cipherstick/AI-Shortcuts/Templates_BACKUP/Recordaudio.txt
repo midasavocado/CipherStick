@@ -1,5 +1,0 @@
-Recordaudio:
-  RecordingCompression: "TEXT"
-  RecordingEnd: "TEXT"
-  RecordingStart: "TEXT"
-  RecordingTimeInterval: {{OBJECT}}

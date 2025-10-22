@@ -1,2 +1,0 @@
-Com.ClearBrowsingDataIntent:
-  # No parameters (runs with defaults)

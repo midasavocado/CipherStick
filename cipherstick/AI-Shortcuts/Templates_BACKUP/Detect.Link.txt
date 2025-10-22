@@ -1,2 +1,0 @@
-Detect.Link:
-  Input: "TEXT"  # required

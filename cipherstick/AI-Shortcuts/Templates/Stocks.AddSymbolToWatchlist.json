@@ -1,7 +1,0 @@
-{
-  "action": "Stocks.AddSymbolToWatchlist",
-  "params": {
-    "Symbol": "{{STRING}}",
-    "Watchlist": "{{STRING}}"
-  }
-}

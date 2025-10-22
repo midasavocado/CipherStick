@@ -1,8 +1,0 @@
-{
-  "action": "Stocks.NewWatchlist",
-  "params": {
-    "Name": "{{STRING}}",
-    "OpenWhenRun": "{{BOOLEAN}}",
-    "Symbols": "{{LIST}}"
-  }
-}

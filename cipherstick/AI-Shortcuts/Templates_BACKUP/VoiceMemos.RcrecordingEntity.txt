@@ -1,5 +1,0 @@
-VoiceMemos.RcrecordingEntity:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"

@@ -1,6 +1,0 @@
-{
-  "action": "Homeaccessory",
-  "params": {
-    "HomeTriggerActionSets": "{{VARIABLE}}"
-  }
-}

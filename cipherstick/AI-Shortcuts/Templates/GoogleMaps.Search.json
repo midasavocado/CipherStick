@@ -1,6 +1,0 @@
-{
-  "action": "GoogleMaps.Search",
-  "params": {
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}

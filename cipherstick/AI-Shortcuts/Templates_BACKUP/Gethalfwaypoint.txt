@@ -1,3 +1,0 @@
-Gethalfwaypoint:
-  GetHalfwayPointFirstLocation: {{OBJECT}}
-  GetHalfwayPointSecondLocation: {{CURRENT_LOCATION}}

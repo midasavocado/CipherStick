@@ -1,2 +1,0 @@
-File.Getlink:
-  File: {{EXTENSION_INPUT}}

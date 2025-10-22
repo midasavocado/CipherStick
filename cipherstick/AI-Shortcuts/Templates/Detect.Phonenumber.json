@@ -1,6 +1,0 @@
-{
-  "action": "Detect.Phonenumber",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

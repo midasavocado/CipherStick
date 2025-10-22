@@ -1,6 +1,0 @@
-{
-  "action": "Documentpicker.Open",
-  "params": {
-    "GetFilePath": "{{STRING}}"
-  }
-}

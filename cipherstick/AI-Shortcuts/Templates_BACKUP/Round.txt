@@ -1,4 +1,0 @@
-Round:
-  Number: NUMBER
-  Mode: "TEXT"
-  DecimalPlaces: NUMBER

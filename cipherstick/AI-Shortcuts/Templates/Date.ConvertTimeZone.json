@@ -1,8 +1,0 @@
-{
-  "action": "Date.ConvertTimeZone",
-  "params": {
-    "Date": "{{STRING}}",
-    "DestinationTimeZone": "{{VARIABLE}}",
-    "SourceTimeZone": "{{VARIABLE}}"
-  }
-}

@@ -1,2 +1,0 @@
-AppStore.PageNavigation:
-  Target: "TEXT"  # optional

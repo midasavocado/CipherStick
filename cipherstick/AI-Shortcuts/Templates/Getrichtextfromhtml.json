@@ -1,6 +1,0 @@
-{
-  "action": "Getrichtextfromhtml",
-  "params": {
-    "HTML": "{{EXTENSION_INPUT}}"
-  }
-}

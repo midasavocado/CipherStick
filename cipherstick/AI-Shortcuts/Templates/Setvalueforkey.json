@@ -1,8 +1,0 @@
-{
-  "action": "Setvalueforkey",
-  "params": {
-    "Dictionary": "{{VARIABLE}}",
-    "Key": "{{STRING}}",
-    "Value": "{{STRING}}"
-  }
-}

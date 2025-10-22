@@ -1,3 +1,0 @@
-Tesla.CloseWindow:
-  ShowWhenRun: BOOLEAN  # optional
-  Vehicle: {{ASK_WHEN_RUN}}  # required

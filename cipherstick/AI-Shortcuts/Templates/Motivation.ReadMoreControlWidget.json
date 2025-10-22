@@ -1,6 +1,0 @@
-{
-  "action": "Motivation.ReadMoreControlWidget",
-  "params": {
-    "Value": "{{BOOLEAN}}"
-  }
-}

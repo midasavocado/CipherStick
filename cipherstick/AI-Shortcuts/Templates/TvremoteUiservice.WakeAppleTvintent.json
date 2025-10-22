@@ -1,6 +1,0 @@
-{
-  "action": "TvremoteUiservice.WakeAppleTvintent",
-  "params": {
-    "Device": "{{VARIABLE}}"
-  }
-}

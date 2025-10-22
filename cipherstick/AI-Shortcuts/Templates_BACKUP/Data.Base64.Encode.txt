@@ -1,3 +1,0 @@
-Data.Base64.Encode:
-  Input: {{CLIPBOARD}}  # required
-  LineBreakMode: "None|Every 64 Characters|Every 76 Characters"  # optional

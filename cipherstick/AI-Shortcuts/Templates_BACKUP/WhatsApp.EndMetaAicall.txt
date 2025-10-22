@@ -1,2 +1,0 @@
-WhatsApp.EndMetaAicall:
-  # No parameters (runs with defaults)

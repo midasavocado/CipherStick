@@ -1,2 +1,0 @@
-Notes.ShowQuickNote:
-  # No parameters (runs with defaults)

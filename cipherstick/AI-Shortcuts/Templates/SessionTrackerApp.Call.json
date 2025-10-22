@@ -1,8 +1,0 @@
-{
-  "action": "SessionTrackerApp.Call",
-  "params": {
-    "SessionId": "{{STRING}}",
-    "Action": "{{STRING}}",
-    "Notes": "{{STRING}}"
-  }
-}

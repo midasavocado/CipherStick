@@ -1,3 +1,0 @@
-Com.LrquoteIntent:
-  ShowWhenRun: BOOLEAN  # optional
-  Type: "TEXT"

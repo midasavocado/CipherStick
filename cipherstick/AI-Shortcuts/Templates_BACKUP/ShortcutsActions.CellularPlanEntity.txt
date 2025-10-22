@@ -1,2 +1,0 @@
-ShortcutsActions.CellularPlanEntity:
-  PlanName: "TEXT"

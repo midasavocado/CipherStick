@@ -1,7 +1,7 @@
 {
   "action": "Setvariable",
   "params": {
-    "Name": "{{STRING}}",
+    "VariableName": "{{STRING}}",
     "Value": "{{VARIABLE}}"
   }
 }

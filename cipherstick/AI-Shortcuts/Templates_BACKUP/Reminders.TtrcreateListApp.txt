@@ -1,3 +1,0 @@
-Reminders.TtrcreateListApp:
-  ListName: "TEXT"
-  Default: BOOLEAN

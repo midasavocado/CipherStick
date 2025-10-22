@@ -1,3 +1,0 @@
-Image.Mask:
-  Input: {{EXTENSION_INPUT}}  # required
-  MaskCornerRadius: "TEXT"

@@ -1,2 +1,0 @@
-Weather.OpenNotificationsConfiguration:
-  # No parameters (runs with defaults)

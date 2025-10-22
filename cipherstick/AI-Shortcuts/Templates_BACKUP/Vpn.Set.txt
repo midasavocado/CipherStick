@@ -1,2 +1,0 @@
-Vpn.Set:
-  VPN: {{ASK_WHEN_RUN}}

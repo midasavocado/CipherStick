@@ -1,2 +1,0 @@
-Clock.CancelTimer:
-  # No parameters (runs with defaults)

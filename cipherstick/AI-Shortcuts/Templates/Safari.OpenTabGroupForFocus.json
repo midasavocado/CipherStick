@@ -1,6 +1,0 @@
-{
-  "action": "Safari.OpenTabGroupForFocus",
-  "params": {
-    "Focus": "{{STRING}}"
-  }
-}

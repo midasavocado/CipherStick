@@ -1,6 +1,0 @@
-{
-  "action": "Podcasts.Subscribe",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

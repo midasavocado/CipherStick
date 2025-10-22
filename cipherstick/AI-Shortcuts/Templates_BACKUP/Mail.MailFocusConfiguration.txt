@@ -1,2 +1,0 @@
-Mail.MailFocusConfiguration:
-  Accounts: {{ENTITY}}

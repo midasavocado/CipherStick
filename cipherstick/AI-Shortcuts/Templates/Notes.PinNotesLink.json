@@ -1,6 +1,0 @@
-{
-  "action": "Notes.PinNotesLink",
-  "params": {
-    "Entities": "{{VARIABLE}}"
-  }
-}

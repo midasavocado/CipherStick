@@ -1,2 +1,0 @@
-Homeaccessory:
-  HomeTriggerActionSets: {{OBJECT}}

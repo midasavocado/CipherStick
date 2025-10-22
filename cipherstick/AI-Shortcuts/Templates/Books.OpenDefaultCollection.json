@@ -1,6 +1,0 @@
-{
-  "action": "Books.OpenDefaultCollection",
-  "params": {
-    "Target": "{{STRING}}"
-  }
-}

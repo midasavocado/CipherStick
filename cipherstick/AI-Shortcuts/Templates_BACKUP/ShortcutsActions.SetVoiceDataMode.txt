@@ -1,2 +1,0 @@
-ShortcutsActions.SetVoiceDataMode:
-  Mode: "TEXT"

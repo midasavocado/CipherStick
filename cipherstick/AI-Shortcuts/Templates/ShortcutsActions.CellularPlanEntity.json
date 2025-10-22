@@ -1,6 +1,0 @@
-{
-  "action": "ShortcutsActions.CellularPlanEntity",
-  "params": {
-    "PlanName": "{{STRING}}"
-  }
-}

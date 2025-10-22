@@ -1,6 +1,0 @@
-{
-  "action": "Tesla.VehicleControlToggle",
-  "params": {
-    "Vehicle": "{{STRING}}"
-  }
-}

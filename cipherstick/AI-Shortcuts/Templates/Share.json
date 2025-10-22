@@ -1,7 +1,0 @@
-{
-  "action": "Share",
-  "params": {
-    "Items": "{{EXTENSION_INPUT}}",
-    "Service": "{{STRING}}"
-  }
-}

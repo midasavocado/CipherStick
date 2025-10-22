@@ -1,7 +1,6 @@
 {
   "action": "Setvolume",
   "params": {
-    "Volume": "{{NUMBER}}",
-    "Change": "{{STRING}}"
+    "Volume": "{{NUMBER}}" #1-100
   }
 }

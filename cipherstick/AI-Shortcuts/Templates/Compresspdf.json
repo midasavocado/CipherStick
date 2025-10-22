@@ -1,6 +1,0 @@
-{
-  "action": "Compresspdf",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

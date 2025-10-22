@@ -1,4 +1,0 @@
-Stocks.NewWatchlist:
-  Name: "TEXT"  # required
-  OpenWhenRun: BOOLEAN  # optional
-  Symbols: {{LIST}}  # required

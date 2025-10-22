@@ -1,6 +1,0 @@
-{
-  "action": "Repeat.Each",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

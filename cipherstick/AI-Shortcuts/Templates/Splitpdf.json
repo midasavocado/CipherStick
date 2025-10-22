@@ -1,8 +1,0 @@
-{
-  "action": "Splitpdf",
-  "params": {
-    "PDF": "{{EXTENSION_INPUT}}",
-    "Mode": "{{STRING}}",
-    "PageRanges": "{{STRING}}"
-  }
-}

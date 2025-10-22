@@ -1,3 +1,0 @@
-Tesla.ChargeCurrent:
-  Amps: "TEXT"
-  Vehicle: {{ASK_WHEN_RUN}}  # required

@@ -1,8 +1,0 @@
-Runsshscript:
-  Host: "TEXT"
-  Port: NUMBER
-  Username: "TEXT"
-  Password: "TEXT"
-  UseSSHKey: BOOLEAN
-  Script: "TEXT"
-  TimeoutSeconds: NUMBER

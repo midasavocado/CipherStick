@@ -1,6 +1,0 @@
-{
-  "action": "Photos.StreamShareService",
-  "params": {
-    "ImageInput": "{{EXTENSION_INPUT}}"
-  }
-}

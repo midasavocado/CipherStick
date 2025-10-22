@@ -1,7 +1,7 @@
 {
   "action": "Takevideo",
   "params": {
-    "CameraCaptureQuality": "{{STRING}}",
-    "RecordingStart": "{{STRING}}"
+    "CameraCaptureQuality": "Low/Medium/High",
+    "RecordingStart": "Immediately/On Tap"
   }
 }

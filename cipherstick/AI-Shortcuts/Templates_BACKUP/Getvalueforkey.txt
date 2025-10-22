@@ -1,3 +1,0 @@
-Getvalueforkey:
-  Input: {{EXTENSION_INPUT}}  # required
-  DictionaryKey: "TEXT"

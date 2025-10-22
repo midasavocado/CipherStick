@@ -1,3 +1,0 @@
-Showwebpage:
-  URL: "TEXT"
-  ReaderMode: BOOLEAN

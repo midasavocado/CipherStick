@@ -1,6 +1,0 @@
-{
-  "action": "Tesla.OpenTailgate",
-  "params": {
-    "Vehicle": "{{STRING}}"
-  }
-}

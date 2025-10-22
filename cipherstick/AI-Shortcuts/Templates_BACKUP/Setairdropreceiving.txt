@@ -1,2 +1,0 @@
-Setairdropreceiving:
-  Mode: "TEXT"

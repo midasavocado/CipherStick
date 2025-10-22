@@ -1,7 +1,0 @@
-Addframetogif:
-  AutoSize: BOOLEAN
-  DelaySeconds: "TEXT"
-  Height: "TEXT"
-  Width: "TEXT"
-  Image: {{VARIABLE}}
-  InputGIF: {{VARIABLE}}

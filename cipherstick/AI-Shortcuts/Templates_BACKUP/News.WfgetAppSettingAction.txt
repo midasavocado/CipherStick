@@ -1,2 +1,0 @@
-News.WfgetAppSettingAction:
-  # No parameters (runs with defaults)

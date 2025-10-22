@@ -1,6 +1,0 @@
-{
-  "action": "Getmapslink",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

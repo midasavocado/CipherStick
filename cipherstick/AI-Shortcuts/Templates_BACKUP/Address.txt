@@ -1,6 +1,0 @@
-Address:
-  AddressLine1: "TEXT"
-  AddressLine2: "TEXT"
-  City: "TEXT"  # optional
-  PostalCode: "TEXT"
-  State: "TEXT"

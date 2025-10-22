@@ -1,2 +1,0 @@
-VoiceMemos.DeleteFolder:
-  Entities: {{ASK_WHEN_RUN}}

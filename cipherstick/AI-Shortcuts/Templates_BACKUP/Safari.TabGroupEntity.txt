@@ -1,2 +1,0 @@
-Safari.TabGroupEntity:
-  Name: "TEXT"

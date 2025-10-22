@@ -1,6 +1,0 @@
-{
-  "action": "Notes.OpenAccountLink",
-  "params": {
-    "Target": "{{STRING}}"
-  }
-}

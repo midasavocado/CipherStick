@@ -1,8 +1,0 @@
-{
-  "action": "ChatGpt.Ask",
-  "params": {
-    "Prompt": "{{STRING}}",
-    "Attachments": "{{VARIABLE}}",
-    "FollowUp": "{{BOOLEAN}}"
-  }
-}

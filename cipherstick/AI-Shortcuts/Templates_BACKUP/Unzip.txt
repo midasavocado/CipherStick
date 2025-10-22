@@ -1,2 +1,0 @@
-Unzip:
-  Archive: {{CLIPBOARD}}

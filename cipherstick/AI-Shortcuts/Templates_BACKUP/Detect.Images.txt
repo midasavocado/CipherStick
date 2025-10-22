@@ -1,2 +1,0 @@
-Detect.Images:
-  Input: {{EXTENSION_INPUT}}  # required

@@ -1,2 +1,0 @@
-Com.SetChromeDefaultBrowserIntent:
-  # No parameters (runs with defaults)

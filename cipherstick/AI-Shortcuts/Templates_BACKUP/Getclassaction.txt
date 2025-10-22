@@ -1,3 +1,0 @@
-Getclassaction:
-  Input: {{EXTENSION_INPUT}}  # required
-  Class: "TEXT"

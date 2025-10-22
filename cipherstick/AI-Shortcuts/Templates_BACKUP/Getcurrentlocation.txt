@@ -1,2 +1,0 @@
-Getcurrentlocation:
-  # No parameters (runs with defaults)

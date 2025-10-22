@@ -1,6 +1,0 @@
-{
-  "action": "Detect.Number",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

@@ -1,4 +1,0 @@
-Selectphoto:
-  Multiple: BOOLEAN
-  ShowPicker: BOOLEAN
-  Album: "TEXT"

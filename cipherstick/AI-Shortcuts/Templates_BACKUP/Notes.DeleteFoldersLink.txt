@@ -1,2 +1,0 @@
-Notes.DeleteFoldersLink:
-  Entities: {{ENTITY}}

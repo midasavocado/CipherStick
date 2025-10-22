@@ -1,5 +1,0 @@
-Filter.Music:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN
-  ContentItemSortOrder: "TEXT"
-  ContentItemSortProperty: "TEXT"

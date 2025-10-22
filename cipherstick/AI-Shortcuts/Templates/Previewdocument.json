@@ -1,6 +1,0 @@
-{
-  "action": "Previewdocument",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

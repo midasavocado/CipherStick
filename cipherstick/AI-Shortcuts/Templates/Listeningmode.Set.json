@@ -1,7 +1,0 @@
-{
-  "action": "Listeningmode.Set",
-  "params": {
-    "ListeningMode": "{{VARIABLE}}",
-    "Route": "{{VARIABLE}}"
-  }
-}

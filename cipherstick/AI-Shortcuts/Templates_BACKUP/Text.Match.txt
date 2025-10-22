@@ -1,2 +1,0 @@
-Text.Match:
-  Text: "TEXT"  # required

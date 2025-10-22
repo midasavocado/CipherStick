@@ -1,2 +1,0 @@
-Weather.RemoveSavedLocation:
-  Entities: {{LIST}}

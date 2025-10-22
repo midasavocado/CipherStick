@@ -1,6 +1,0 @@
-{
-  "action": "Spotlight.SearchSpotlight",
-  "params": {
-    "Query": "{{STRING}}"
-  }
-}

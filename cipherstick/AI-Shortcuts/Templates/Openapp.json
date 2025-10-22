@@ -1,6 +1,6 @@
 {
   "action": "Openapp",
   "params": {
-    "AppIdentifier": "{{STRING}}"
+    "AppName": "{{STRING}}"
   }
 }

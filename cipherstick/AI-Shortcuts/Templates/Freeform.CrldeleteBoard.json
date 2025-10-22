@@ -1,6 +1,0 @@
-{
-  "action": "Freeform.CrldeleteBoard",
-  "params": {
-    "Entities": "{{VARIABLE}}"
-  }
-}

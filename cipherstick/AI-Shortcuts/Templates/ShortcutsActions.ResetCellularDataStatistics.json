@@ -1,6 +1,0 @@
-{
-  "action": "ShortcutsActions.ResetCellularDataStatistics",
-  "params": {
-    "Confirm": "{{BOOLEAN}}"
-  }
-}

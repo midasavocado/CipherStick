@@ -1,6 +1,0 @@
-{
-  "action": "Notes.OpenNoteLink",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

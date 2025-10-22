@@ -1,6 +1,0 @@
-{
-  "action": "DocumentManagerUicore.DocopenLocationIntent",
-  "params": {
-    "Location": "{{VARIABLE}}"
-  }
-}

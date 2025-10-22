@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Calendarevents",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

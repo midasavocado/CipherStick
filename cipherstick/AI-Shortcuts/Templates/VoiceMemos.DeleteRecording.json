@@ -1,6 +1,0 @@
-{
-  "action": "VoiceMemos.DeleteRecording",
-  "params": {
-    "Entities": "{{VARIABLE}}"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "action": "Photos.RenameAlbum",
-  "params": {
-    "Title": "{{STRING}}",
-    "Album": "{{VARIABLE}}"
-  }
-}

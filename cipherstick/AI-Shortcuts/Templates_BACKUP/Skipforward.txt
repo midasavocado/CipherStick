@@ -1,2 +1,0 @@
-Skipforward:
-  Seconds: NUMBER

@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.FlashLight",
-  "params": {
-    "ShowWhenRun": "{{BOOLEAN}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

@@ -1,2 +1,0 @@
-Magnifier.DescribeThis:
-  # No parameters (runs with defaults)

@@ -1,2 +1,0 @@
-Journal.CreateEntryAudio:
-  # No parameters (runs with defaults)

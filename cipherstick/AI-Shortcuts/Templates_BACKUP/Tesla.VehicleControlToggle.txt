@@ -1,2 +1,0 @@
-Tesla.VehicleControlToggle:
-  Vehicle: {{ASK_WHEN_RUN}}  # required

@@ -1,4 +1,0 @@
-Splitpdf:
-  PDF: {{EXTENSION_INPUT}}
-  Mode: "TEXT"
-  PageRanges: "TEXT"

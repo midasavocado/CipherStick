@@ -1,3 +1,0 @@
-Handoffplayback:
-  DestinationMediaRoute: {{ASK_WHEN_RUN}}
-  SourceMediaRoute: {{ASK_WHEN_RUN}}

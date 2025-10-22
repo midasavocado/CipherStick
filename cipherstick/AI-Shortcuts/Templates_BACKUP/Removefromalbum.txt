@@ -1,3 +1,0 @@
-Removefromalbum:
-  Photos: {{EXTENSION_INPUT}}
-  Album: "TEXT"

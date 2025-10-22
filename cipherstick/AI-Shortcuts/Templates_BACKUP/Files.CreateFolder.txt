@@ -1,3 +1,0 @@
-Files.CreateFolder:
-  Path: "TEXT"  # required
-  Folder: {{OBJECT}}

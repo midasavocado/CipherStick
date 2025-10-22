@@ -1,5 +1,5 @@
 {
-  "action": "QRcode.Generate",
+  "action": "GenerateQRCodeFromText",
   "params": {
     "Text": "{{STRING}}"
   }

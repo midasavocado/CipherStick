@@ -1,7 +1,0 @@
-{
-  "action": "Safari.ReadingListItemEntity",
-  "params": {
-    "Title": "{{STRING}}",
-    "URL": "{{STRING}}"
-  }
-}

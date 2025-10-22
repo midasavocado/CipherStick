@@ -1,4 +1,0 @@
-Runjavascriptonwebpage:
-  JavaScript: "TEXT"
-  WebPage: {{VARIABLE}}
-  WaitForReturnValue: BOOLEAN

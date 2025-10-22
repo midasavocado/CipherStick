@@ -1,6 +1,10 @@
 {
   "action": "Getitemfromlist",
   "params": {
-    "Input": "{{STRING}}"
+    "List": "{{VARIABLE}}",
+    "ItemIndex": "{{NUMBER}}",
+    "ItemRangeEnd": "{{NUMBER}}",
+    "ItemRangeStart": "{{NUMBER}}",
+    "TypeOfGet": "Item at Index/Items in range/Random Item/First Item/Last Item"
   }
 }

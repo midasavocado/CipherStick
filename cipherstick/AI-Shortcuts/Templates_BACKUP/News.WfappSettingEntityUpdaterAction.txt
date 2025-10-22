@@ -1,2 +1,0 @@
-News.WfappSettingEntityUpdaterAction:
-  # No parameters (runs with defaults)

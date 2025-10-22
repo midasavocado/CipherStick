@@ -1,3 +1,0 @@
-Searchpodcasts:
-  Query: "TEXT"
-  Limit: NUMBER

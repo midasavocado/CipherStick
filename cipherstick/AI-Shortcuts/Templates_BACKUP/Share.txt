@@ -1,3 +1,0 @@
-Share:
-  Items: {{EXTENSION_INPUT}}
-  Service: "TEXT"

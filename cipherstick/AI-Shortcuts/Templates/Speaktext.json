@@ -2,10 +2,9 @@
   "action": "Speaktext",
   "params": {
     "Text": "{{STRING}}",
-    "Voice": "{{STRING}}",
-    "Rate": "{{NUMBER}}",
-    "Pitch": "{{NUMBER}}",
-    "Language": "{{STRING}}",
+    "Rate": "{{NUMBER}}", #0-1, .5 avg
+    "Pitch": "{{NUMBER}}", #0-1, 1 avg
+    "Language": "{{STRING}}", #Form: en-US
     "WaitUntilFinished": "{{BOOLEAN}}"
   }
 }

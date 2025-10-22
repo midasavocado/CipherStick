@@ -1,7 +1,0 @@
-{
-  "action": "Notes.CreateTagLink",
-  "params": {
-    "Name": "{{STRING}}",
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}

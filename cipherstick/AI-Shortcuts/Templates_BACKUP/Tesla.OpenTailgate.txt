@@ -1,2 +1,0 @@
-Tesla.OpenTailgate:
-  Vehicle: {{ASK_WHEN_RUN}}  # required

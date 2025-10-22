@@ -1,6 +1,0 @@
-{
-  "action": "TvremoteUiservice.PauseContentIntent",
-  "params": {
-    "Device": "{{VARIABLE}}"
-  }
-}

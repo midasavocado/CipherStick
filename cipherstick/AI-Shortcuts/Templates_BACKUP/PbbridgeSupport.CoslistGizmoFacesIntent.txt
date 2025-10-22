@@ -1,2 +1,0 @@
-PbbridgeSupport.CoslistGizmoFacesIntent:
-  # No parameters (runs with defaults)

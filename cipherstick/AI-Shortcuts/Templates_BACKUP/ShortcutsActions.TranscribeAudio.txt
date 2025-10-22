@@ -1,3 +1,0 @@
-ShortcutsActions.TranscribeAudio:
-  Audio: {{EXTENSION_INPUT}}
-  Language: "TEXT"

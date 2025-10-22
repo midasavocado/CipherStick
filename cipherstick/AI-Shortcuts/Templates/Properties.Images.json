@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Images",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

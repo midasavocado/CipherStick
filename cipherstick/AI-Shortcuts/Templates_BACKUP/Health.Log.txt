@@ -1,2 +1,0 @@
-Health.Log:
-  # No parameters (runs with defaults)

@@ -1,6 +1,0 @@
-Files.AppendText:
-  Input: "TEXT"  # required
-  WriteMode: "TEXT"
-  AppendOnNewLine: BOOLEAN  # optional
-  File: {{OBJECT}}
-  Path: "TEXT"  # required

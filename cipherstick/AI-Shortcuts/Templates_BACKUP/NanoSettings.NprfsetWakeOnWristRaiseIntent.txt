@@ -1,2 +1,0 @@
-NanoSettings.NprfsetWakeOnWristRaiseIntent:
-  Operation: "TEXT"

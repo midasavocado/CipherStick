@@ -1,7 +1,0 @@
-{
-  "action": "Math.Statistics",
-  "params": {
-    "Input": "{{STRING}}",
-    "StatisticsOperation": "{{VARIABLE}}"
-  }
-}

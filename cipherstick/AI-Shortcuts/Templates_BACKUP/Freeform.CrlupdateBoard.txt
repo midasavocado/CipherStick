@@ -1,3 +1,0 @@
-Freeform.CrlupdateBoard:
-  Title: "TEXT"  # required
-  Target: {{ENTITY}}  # optional

@@ -1,6 +1,0 @@
-{
-  "action": "Fitness.OpenTrend",
-  "params": {
-    "Target": "{{STRING}}"
-  }
-}

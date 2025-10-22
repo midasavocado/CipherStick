@@ -1,6 +1,0 @@
-{
-  "action": "GoogleMaps.Restaurants",
-  "params": {
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}

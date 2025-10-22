@@ -1,2 +1,0 @@
-Notes.OpenAppLocationLink:
-  Target: "TEXT"  # optional

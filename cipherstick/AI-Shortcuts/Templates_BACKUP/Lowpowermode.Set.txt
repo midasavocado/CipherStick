@@ -1,2 +1,0 @@
-Lowpowermode.Set:
-  # No parameters (runs with defaults)

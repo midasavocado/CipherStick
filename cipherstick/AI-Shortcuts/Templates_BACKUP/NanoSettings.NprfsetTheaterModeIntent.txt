@@ -1,2 +1,0 @@
-NanoSettings.NprfsetTheaterModeIntent:
-  # No parameters (runs with defaults)

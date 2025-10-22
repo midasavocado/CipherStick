@@ -1,6 +1,0 @@
-{
-  "action": "TvremoteUiservice.ToggleSystemAppearanceIntent",
-  "params": {
-    "Device": "{{VARIABLE}}"
-  }
-}

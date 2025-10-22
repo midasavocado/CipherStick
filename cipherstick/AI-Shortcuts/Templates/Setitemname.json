@@ -1,7 +1,0 @@
-{
-  "action": "Setitemname",
-  "params": {
-    "Item": "{{VARIABLE}}",
-    "Name": "{{STRING}}"
-  }
-}

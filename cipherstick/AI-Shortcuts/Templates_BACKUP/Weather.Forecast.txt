@@ -1,2 +1,0 @@
-Weather.Forecast:
-  # No parameters (runs with defaults)

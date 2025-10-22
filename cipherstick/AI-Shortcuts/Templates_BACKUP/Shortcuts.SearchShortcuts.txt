@@ -1,3 +1,0 @@
-Shortcuts.SearchShortcuts:
-  Query: "TEXT"
-  InFolder: "TEXT"

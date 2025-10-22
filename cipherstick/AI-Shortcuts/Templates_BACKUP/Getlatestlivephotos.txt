@@ -1,2 +1,0 @@
-Getlatestlivephotos:
-  # No parameters (runs with defaults)

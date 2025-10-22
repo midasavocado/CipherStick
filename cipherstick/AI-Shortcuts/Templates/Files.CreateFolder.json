@@ -1,7 +1,0 @@
-{
-  "action": "Files.CreateFolder",
-  "params": {
-    "Path": "{{STRING}}",
-    "Folder": "{{VARIABLE}}"
-  }
-}

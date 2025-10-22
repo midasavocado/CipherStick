@@ -1,9 +1,0 @@
-{
-  "action": "Notes.NoteEntity",
-  "params": {
-    "ContentItemFilter": "{{VARIABLE}}",
-    "ContentItemLimitEnabled": "{{BOOLEAN}}",
-    "ContentItemSortOrder": "{{STRING}}",
-    "ContentItemSortProperty": "{{STRING}}"
-  }
-}

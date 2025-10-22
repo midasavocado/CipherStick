@@ -1,7 +1,0 @@
-{
-  "action": "Playpodcast",
-  "params": {
-    "PodcastPlaybackOrder": "{{STRING}}",
-    "PodcastShow": "{{VARIABLE}}"
-  }
-}

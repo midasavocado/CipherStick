@@ -1,2 +1,0 @@
-Getitemfromlist:
-  Input: {{EXTENSION_INPUT}}  # required

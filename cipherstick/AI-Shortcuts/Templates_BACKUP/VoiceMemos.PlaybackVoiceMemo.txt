@@ -1,2 +1,0 @@
-VoiceMemos.PlaybackVoiceMemo:
-  # No parameters (runs with defaults)

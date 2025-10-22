@@ -1,3 +1,0 @@
-Properties.Safariwebpage:
-  Input: {{EXTENSION_INPUT}}  # required
-  ContentItemPropertyName: "TEXT"

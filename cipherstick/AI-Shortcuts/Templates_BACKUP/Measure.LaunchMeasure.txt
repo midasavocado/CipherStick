@@ -1,2 +1,0 @@
-Measure.LaunchMeasure:
-  Target: "TEXT"  # optional

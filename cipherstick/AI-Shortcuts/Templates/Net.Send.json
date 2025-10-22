@@ -1,6 +1,0 @@
-{
-  "action": "Net.Send",
-  "params": {
-    "WhatsAppContact": "{{VARIABLE}}"
-  }
-}

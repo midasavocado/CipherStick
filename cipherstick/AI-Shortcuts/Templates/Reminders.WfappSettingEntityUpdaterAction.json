@@ -1,7 +1,0 @@
-{
-  "action": "Reminders.WfappSettingEntityUpdaterAction",
-  "params": {
-    "SettingKey": "{{STRING}}",
-    "Value": "{{STRING}}"
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "action": "Messages.ConversationEntity",
-  "params": {
-    "ContentItemFilter": "{{VARIABLE}}",
-    "ContentItemLimitEnabled": "{{BOOLEAN}}",
-    "ContentItemSortOrder": "{{STRING}}",
-    "ContentItemSortProperty": "{{STRING}}"
-  }
-}

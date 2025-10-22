@@ -1,2 +1,0 @@
-Print:
-  Input: {{CURRENT_DATE}}  # required

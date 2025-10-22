@@ -1,3 +1,0 @@
-Filter.Calendarevents:
-  ContentItemFilter: {{OBJECT}}
-  ContentItemLimitEnabled: BOOLEAN

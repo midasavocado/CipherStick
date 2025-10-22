@@ -1,5 +1,5 @@
 {
-  "action": "Emailaddress",
+  "action": "Hash",
   "params": {
     "Input": "{{STRING}}"
   }

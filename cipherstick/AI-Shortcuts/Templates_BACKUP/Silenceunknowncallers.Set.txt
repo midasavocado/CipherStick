@@ -1,2 +1,0 @@
-Silenceunknowncallers.Set:
-  Enabled: BOOLEAN

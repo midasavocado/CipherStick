@@ -1,6 +1,0 @@
-{
-  "action": "Notes.OpenAppLocationLink",
-  "params": {
-    "Target": "{{STRING}}"
-  }
-}

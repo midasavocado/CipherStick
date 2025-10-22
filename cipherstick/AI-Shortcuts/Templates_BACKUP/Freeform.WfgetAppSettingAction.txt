@@ -1,2 +1,0 @@
-Freeform.WfgetAppSettingAction:
-  # No parameters (runs with defaults)

@@ -1,2 +1,0 @@
-Menu.Choose:
-  MenuPrompt: "TEXT"

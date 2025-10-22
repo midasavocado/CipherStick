@@ -1,5 +1,0 @@
-Searchitunes:
-  Query: "TEXT"
-  MediaType: "TEXT"
-  CountryCode: "TEXT"
-  Limit: NUMBER

@@ -1,6 +1,0 @@
-{
-  "action": "Text.Trimwhitespace",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

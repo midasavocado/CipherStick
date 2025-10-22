@@ -1,9 +1,0 @@
-{
-  "action": "Image.Crop",
-  "params": {
-    "Input": "{{STRING}}",
-    "CropHeight": "{{STRING}}",
-    "CropPosition": "{{STRING}}",
-    "CropWidth": "{{STRING}}"
-  }
-}

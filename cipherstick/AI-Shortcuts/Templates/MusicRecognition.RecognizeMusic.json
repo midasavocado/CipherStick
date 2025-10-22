@@ -1,6 +1,0 @@
-{
-  "action": "MusicRecognition.RecognizeMusic",
-  "params": {
-    "ErrorIfNotRecognized": "{{BOOLEAN}}"
-  }
-}

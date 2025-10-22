@@ -1,3 +1,0 @@
-Tesla.ChargeLimit:
-  Percent: "TEXT"
-  Vehicle: {{ASK_WHEN_RUN}}  # required

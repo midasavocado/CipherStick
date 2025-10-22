@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.MediaVolume",
-  "params": {
-    "Percent": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

@@ -1,2 +1,0 @@
-Gettraveltime:
-  Destination: {{OBJECT}}

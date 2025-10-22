@@ -1,4 +1,0 @@
-Removeevents:
-  CalendarItems: {{VARIABLE}}
-  Filter: "TEXT"
-  AskBeforeDeleting: BOOLEAN

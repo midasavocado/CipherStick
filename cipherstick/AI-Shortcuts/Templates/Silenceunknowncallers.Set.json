@@ -1,6 +1,0 @@
-{
-  "action": "Silenceunknowncallers.Set",
-  "params": {
-    "Enabled": "{{BOOLEAN}}"
-  }
-}

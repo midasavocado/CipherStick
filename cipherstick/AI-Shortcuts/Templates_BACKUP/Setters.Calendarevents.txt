@@ -1,4 +1,0 @@
-Setters.Calendarevents:
-  Event: {{VARIABLE}}
-  Field: "TEXT"
-  Value: "TEXT"

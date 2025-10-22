@@ -1,6 +1,0 @@
-{
-  "action": "ShortcutsActions.SetSilentMode",
-  "params": {
-    "Enabled": "{{BOOLEAN}}"
-  }
-}

@@ -1,6 +1,0 @@
-{
-  "action": "Magnifier.StartDetectionType",
-  "params": {
-    "DetectionType": "{{STRING}}"
-  }
-}

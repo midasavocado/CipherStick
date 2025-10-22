@@ -1,2 +1,0 @@
-Correctspelling:
-  Text: "TEXT"  # required

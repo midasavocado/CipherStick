@@ -1,6 +1,0 @@
-{
-  "action": "Net.Openin",
-  "params": {
-    "WhatsAppInput": "{{EXTENSION_INPUT}}"
-  }
-}

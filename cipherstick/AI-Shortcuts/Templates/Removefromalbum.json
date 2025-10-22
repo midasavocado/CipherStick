@@ -1,7 +1,0 @@
-{
-  "action": "Removefromalbum",
-  "params": {
-    "Photos": "{{EXTENSION_INPUT}}",
-    "Album": "{{STRING}}"
-  }
-}

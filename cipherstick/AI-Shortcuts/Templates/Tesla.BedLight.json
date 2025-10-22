@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.BedLight",
-  "params": {
-    "BedLightAction": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

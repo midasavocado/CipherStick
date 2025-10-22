@@ -1,7 +1,0 @@
-{
-  "action": "Showinstore",
-  "params": {
-    "ItemIdentifier": "{{STRING}}",
-    "Storefront": "{{STRING}}"
-  }
-}

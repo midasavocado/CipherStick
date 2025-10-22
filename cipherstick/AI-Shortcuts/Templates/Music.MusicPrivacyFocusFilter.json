@@ -1,6 +1,0 @@
-{
-  "action": "Music.MusicPrivacyFocusFilter",
-  "params": {
-    "UseListeningHistory": "{{BOOLEAN}}"
-  }
-}

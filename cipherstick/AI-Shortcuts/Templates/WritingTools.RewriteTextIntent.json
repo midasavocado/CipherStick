@@ -1,6 +1,0 @@
-{
-  "action": "WritingTools.RewriteTextIntent",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}

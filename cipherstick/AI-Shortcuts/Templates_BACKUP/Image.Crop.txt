@@ -1,5 +1,0 @@
-Image.Crop:
-  Input: {{CLIPBOARD}}  # required
-  CropHeight: "TEXT"
-  CropPosition: "Top Left|Top|Top Right|Left|Center|Right|Bottom Left|Bottom|Bottom Right"
-  CropWidth: "TEXT"

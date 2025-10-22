@@ -1,6 +1,0 @@
-{
-  "action": "Books.SearchBooks",
-  "params": {
-    "SearchPhrase": "{{STRING}}"
-  }
-}

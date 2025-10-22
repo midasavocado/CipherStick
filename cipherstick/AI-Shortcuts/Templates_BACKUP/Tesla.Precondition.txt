@@ -1,3 +1,0 @@
-Tesla.Precondition:
-  PreconditionAction: "TEXT"
-  Vehicle: {{EXTENSION_INPUT}}  # required

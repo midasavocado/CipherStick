@@ -1,6 +1,0 @@
-{
-  "action": "Safari.OpenTabGroup",
-  "params": {
-    "TabGroup": "{{STRING}}"
-  }
-}

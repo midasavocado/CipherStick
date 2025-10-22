@@ -1,2 +1,0 @@
-TvremoteUiservice.SleepAppleTvintent:
-  Device: {{OBJECT}}

@@ -1,6 +1,0 @@
-{
-  "action": "Notes.CreateChecklistItemLink",
-  "params": {
-    "Name": "{{STRING}}"
-  }
-}

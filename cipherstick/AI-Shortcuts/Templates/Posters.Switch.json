@@ -1,6 +1,0 @@
-{
-  "action": "Posters.Switch",
-  "params": {
-    "Poster": "{{VARIABLE}}"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "action": "Filter.Calendarevents",
-  "params": {
-    "ContentItemFilter": "{{VARIABLE}}",
-    "ContentItemLimitEnabled": "{{BOOLEAN}}"
-  }
-}

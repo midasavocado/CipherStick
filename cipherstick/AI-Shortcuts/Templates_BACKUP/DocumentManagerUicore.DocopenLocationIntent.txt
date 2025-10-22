@@ -1,2 +1,0 @@
-DocumentManagerUicore.DocopenLocationIntent:
-  Location: {{OBJECT}}

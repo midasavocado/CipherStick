@@ -1,2 +1,0 @@
-Widgy.WidgyTransparencyIntent2:
-  # No parameters (runs with defaults)

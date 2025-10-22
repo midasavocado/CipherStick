@@ -1,2 +1,0 @@
-Getlastvideo:
-  # No parameters (runs with defaults)

@@ -1,4 +1,0 @@
-Rss.Extract:
-  FeedURL: "TEXT"
-  ItemCount: NUMBER
-  IncludeFullText: BOOLEAN

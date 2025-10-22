@@ -1,6 +1,0 @@
-{
-  "action": "Conditional",
-  "params": {
-    "Conditions": "{{VARIABLE}}"
-  }
-}

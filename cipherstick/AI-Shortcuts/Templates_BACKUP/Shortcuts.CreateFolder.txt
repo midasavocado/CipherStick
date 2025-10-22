@@ -1,2 +1,0 @@
-Shortcuts.CreateFolder:
-  FolderName: "TEXT"

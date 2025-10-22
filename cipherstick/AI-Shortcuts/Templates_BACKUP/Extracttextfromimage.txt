@@ -1,2 +1,0 @@
-Extracttextfromimage:
-  Image: {{EXTENSION_INPUT}}  # optional

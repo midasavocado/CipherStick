@@ -1,6 +1,0 @@
-{
-  "action": "Weather.RemoveSavedLocation",
-  "params": {
-    "Entities": "{{LIST}}"
-  }
-}

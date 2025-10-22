@@ -1,5 +1,0 @@
-List.ChooseFrom:
-  Input: {{LIST}}  # required
-  ChooseFromListActionPrompt: "TEXT"
-  ChooseFromListActionSelectAll: BOOLEAN
-  ChooseFromListActionSelectMultiple: BOOLEAN

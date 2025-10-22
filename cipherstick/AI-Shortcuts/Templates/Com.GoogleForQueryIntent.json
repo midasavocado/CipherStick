@@ -1,6 +1,0 @@
-{
-  "action": "Com.GoogleForQueryIntent",
-  "params": {
-    "QueryString": "{{STRING}}"
-  }
-}

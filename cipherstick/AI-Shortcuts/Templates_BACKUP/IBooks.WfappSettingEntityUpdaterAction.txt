@@ -1,2 +1,0 @@
-IBooks.WfappSettingEntityUpdaterAction:
-  # No parameters (runs with defaults)

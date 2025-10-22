@@ -1,5 +1,5 @@
 {
-  "action": "Print",
+  "action": "PlaySoundFile",
   "params": {
     "Input": "{{VARIABLE}}"
   }

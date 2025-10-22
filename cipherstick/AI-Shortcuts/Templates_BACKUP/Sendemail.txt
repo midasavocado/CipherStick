@@ -1,9 +1,0 @@
-Sendemail:
-  From: "TEXT"
-  To: "TEXT"
-  Cc: "TEXT"
-  Bcc: "TEXT"
-  Subject: "TEXT"
-  Body: "TEXT"
-  IsHTML: BOOLEAN
-  Attachments: {{EXTENSION_INPUT}}

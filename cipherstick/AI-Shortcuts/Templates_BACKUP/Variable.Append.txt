@@ -1,3 +1,0 @@
-Variable.Append:
-  Input: {{DEVICE_DETAILS}}  # required
-  VariableName: "TEXT"

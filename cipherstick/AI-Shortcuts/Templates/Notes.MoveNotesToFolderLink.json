@@ -1,7 +1,0 @@
-{
-  "action": "Notes.MoveNotesToFolderLink",
-  "params": {
-    "Container": "{{VARIABLE}}",
-    "Entities": "{{VARIABLE}}"
-  }
-}

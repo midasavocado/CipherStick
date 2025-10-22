@@ -1,2 +1,0 @@
-Gettypeaction:
-  Input: {{EXTENSION_INPUT}}  # required

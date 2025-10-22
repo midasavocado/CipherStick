@@ -1,2 +1,0 @@
-Image.Rotate:
-  Image: {{EXTENSION_INPUT}}  # optional

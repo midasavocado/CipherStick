@@ -1,6 +1,0 @@
-{
-  "action": "FaceTime.Call",
-  "params": {
-    "CallContact": "{{VARIABLE}}"
-  }
-}

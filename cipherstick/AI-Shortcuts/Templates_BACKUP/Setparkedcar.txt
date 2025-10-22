@@ -1,3 +1,0 @@
-Setparkedcar:
-  Location: {{VARIABLE}}
-  Clear: BOOLEAN

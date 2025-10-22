@@ -1,9 +1,0 @@
-{
-  "action": "Makespokenaudiofromtext",
-  "params": {
-    "Input": "{{STRING}}",
-    "SpeakTextPitch": "{{NUMBER}}",
-    "SpeakTextRate": "{{NUMBER}}",
-    "SpeakTextVoice": "{{STRING}}"
-  }
-}

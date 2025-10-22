@@ -1,6 +1,0 @@
-{
-  "action": "Text.Split",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}

@@ -1,6 +1,0 @@
-{
-  "action": "Trimvideo",
-  "params": {
-    "InputMedia": "{{EXTENSION_INPUT}}"
-  }
-}

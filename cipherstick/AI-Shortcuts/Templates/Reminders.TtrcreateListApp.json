@@ -1,7 +1,0 @@
-{
-  "action": "Reminders.TtrcreateListApp",
-  "params": {
-    "ListName": "{{STRING}}",
-    "Default": "{{BOOLEAN}}"
-  }
-}

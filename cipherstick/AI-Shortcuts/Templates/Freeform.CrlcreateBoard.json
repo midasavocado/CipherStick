@@ -1,7 +1,0 @@
-{
-  "action": "Freeform.CrlcreateBoard",
-  "params": {
-    "Title": "{{STRING}}",
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}

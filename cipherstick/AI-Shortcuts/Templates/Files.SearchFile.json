@@ -1,6 +1,0 @@
-{
-  "action": "Files.SearchFile",
-  "params": {
-    "SearchPhrase": "{{STRING}}"
-  }
-}

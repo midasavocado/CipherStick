@@ -1,4 +1,0 @@
-Setvalueforkey:
-  Dictionary: {{VARIABLE}}
-  Key: "TEXT"
-  Value: "TEXT"

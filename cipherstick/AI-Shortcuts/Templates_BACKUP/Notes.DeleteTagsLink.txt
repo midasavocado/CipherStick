@@ -1,2 +1,0 @@
-Notes.DeleteTagsLink:
-  # No parameters (runs with defaults)

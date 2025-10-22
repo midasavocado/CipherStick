@@ -1,2 +1,0 @@
-Clock.OpenTab:
-  Tab: {{EXTENSION_INPUT}}

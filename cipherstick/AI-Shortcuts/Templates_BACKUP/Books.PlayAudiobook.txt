@@ -1,2 +1,0 @@
-Books.PlayAudiobook:
-  # No parameters (runs with defaults)

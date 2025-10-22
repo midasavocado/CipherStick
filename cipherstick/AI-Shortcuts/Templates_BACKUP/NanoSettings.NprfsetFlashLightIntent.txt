@@ -1,2 +1,0 @@
-NanoSettings.NprfsetFlashLightIntent:
-  # No parameters (runs with defaults)

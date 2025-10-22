@@ -1,3 +1,0 @@
-Showinstore:
-  ItemIdentifier: "TEXT"
-  Storefront: "TEXT"

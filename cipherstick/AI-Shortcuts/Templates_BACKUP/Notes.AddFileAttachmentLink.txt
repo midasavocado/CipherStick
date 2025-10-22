@@ -1,5 +1,0 @@
-Notes.AddFileAttachmentLink:
-  Name: "TEXT"  # required
-  File: {{OBJECT}}
-  Note: {{ENTITY}}
-  OpenWhenRun: BOOLEAN  # optional

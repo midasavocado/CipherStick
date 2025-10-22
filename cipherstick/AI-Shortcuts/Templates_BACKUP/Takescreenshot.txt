@@ -1,2 +1,0 @@
-Takescreenshot:
-  # No parameters (runs with defaults)

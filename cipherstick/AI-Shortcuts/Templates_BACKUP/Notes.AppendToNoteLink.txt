@@ -1,3 +1,0 @@
-Notes.AppendToNoteLink:
-  Input: "TEXT"  # required
-  Note: {{ENTITY}}

@@ -1,2 +1,0 @@
-Getlatestbursts:
-  # No parameters (runs with defaults)

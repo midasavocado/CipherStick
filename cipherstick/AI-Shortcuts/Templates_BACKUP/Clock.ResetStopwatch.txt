@@ -1,2 +1,0 @@
-Clock.ResetStopwatch:
-  # No parameters (runs with defaults)

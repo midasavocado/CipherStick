@@ -1,2 +1,0 @@
-Location:
-  Location: {{CURRENT_LOCATION}}

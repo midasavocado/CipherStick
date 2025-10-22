@@ -1,2 +1,0 @@
-ShortcutsActions.GetOrientation:
-  # No parameters

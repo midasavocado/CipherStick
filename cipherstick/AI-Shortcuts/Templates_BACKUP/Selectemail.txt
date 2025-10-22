@@ -1,3 +1,0 @@
-Selectemail:
-  Multiple: BOOLEAN
-  Prompt: "TEXT"

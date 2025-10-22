@@ -1,4 +1,0 @@
-Takephoto:
-
-  Camera: Front/Back
-  ShowWhenRun: BOOLEAN

@@ -1,3 +1,0 @@
-ShortcutsActions.OpenCamera:
-  Mode: "TEXT"
-  Camera: "TEXT"

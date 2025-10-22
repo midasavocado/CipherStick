@@ -1,6 +1,0 @@
-{
-  "action": "TvremoteUiservice.SkipContentIntent",
-  "params": {
-    "Device": "{{VARIABLE}}"
-  }
-}

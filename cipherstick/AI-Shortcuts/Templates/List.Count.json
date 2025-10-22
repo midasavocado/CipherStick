@@ -1,6 +1,7 @@
 {
-  "action": "List.Count",
+  "action": "Count",
   "params": {
-    "Input": "{{STRING}}"
+    "Input": "{{VARIABLE}}",
+    "CountType": "Items/Characters/Words/Sentences/Lines"
   }
 }

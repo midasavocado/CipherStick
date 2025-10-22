@@ -1,3 +1,0 @@
-Geturlcomponent:
-  URL: "TEXT"  # required
-  URLComponent: "TEXT"

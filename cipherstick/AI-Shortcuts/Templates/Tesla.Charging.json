@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.Charging",
-  "params": {
-    "ChargeAction": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

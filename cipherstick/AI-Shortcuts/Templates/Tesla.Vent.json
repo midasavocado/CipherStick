@@ -1,6 +1,0 @@
-{
-  "action": "Tesla.Vent",
-  "params": {
-    "Vehicle": "{{STRING}}"
-  }
-}

@@ -1,4 +1,0 @@
-ChatGpt.ConfigureOpenNewChatInApp:
-  StartWhisper: BOOLEAN
-  TemporaryChat: BOOLEAN
-  UseSearchGpt: BOOLEAN

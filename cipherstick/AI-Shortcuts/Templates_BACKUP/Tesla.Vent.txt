@@ -1,2 +1,0 @@
-Tesla.Vent:
-  Vehicle: {{ASK_WHEN_RUN}}  # required

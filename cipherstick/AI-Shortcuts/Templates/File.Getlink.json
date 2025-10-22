@@ -1,6 +1,0 @@
-{
-  "action": "File.Getlink",
-  "params": {
-    "File": "{{EXTENSION_INPUT}}"
-  }
-}

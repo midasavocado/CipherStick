@@ -1,3 +1,0 @@
-Properties.Itunesartist:
-  Input: {{CURRENT_APP}}  # required
-  ContentItemPropertyName: "TEXT"

@@ -1,2 +1,0 @@
-Properties.Reminders:
-  Input: {{EXTENSION_INPUT}}  # required

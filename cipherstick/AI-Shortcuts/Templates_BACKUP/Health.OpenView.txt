@@ -1,2 +1,0 @@
-Health.OpenView:
-  Target: {{ENTITY}}  # optional

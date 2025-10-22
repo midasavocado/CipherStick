@@ -2,6 +2,6 @@
   "action": "Text.ChangeCase",
   "params": {
     "Text": "{{STRING}}",
-    "CaseType": "{{STRING}}"
+    "CaseType": "cApItAlIzE wItH aLtErNaTiNg cAsE/UPPERCASE/lowercase/Capitalize Every Word/Capitalize with Title Case/Capitalize with sentence case"
   }
 }

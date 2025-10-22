@@ -1,6 +1,0 @@
-Makepdf:
-  Input: {{EXTENSION_INPUT}}  # required
-  PDFIncludedPages: "TEXT"
-  PDFIncludeMargin: BOOLEAN
-  PDFPageRangeEnd: "TEXT"
-  PDFPageRangeStart: "TEXT"

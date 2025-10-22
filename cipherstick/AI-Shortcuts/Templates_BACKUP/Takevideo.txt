@@ -1,3 +1,0 @@
-Takevideo:
-  CameraCaptureQuality: "TEXT"
-  RecordingStart: "TEXT"

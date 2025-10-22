@@ -1,7 +1,0 @@
-{
-  "action": "Properties.Articles",
-  "params": {
-    "Input": "{{STRING}}",
-    "ContentItemPropertyName": "{{STRING}}"
-  }
-}

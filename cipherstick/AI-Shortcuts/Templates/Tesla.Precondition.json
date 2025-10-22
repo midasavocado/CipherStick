@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.Precondition",
-  "params": {
-    "PreconditionAction": "{{STRING}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

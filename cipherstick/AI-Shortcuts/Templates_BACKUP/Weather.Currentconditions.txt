@@ -1,2 +1,0 @@
-Weather.Currentconditions:
-  # No parameters (runs with defaults)

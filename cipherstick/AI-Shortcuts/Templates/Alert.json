@@ -2,6 +2,7 @@
   "action": "Alert",
   "params": {
     "AlertActionMessage": "{{STRING}}",
-    "AlertActionTitle": "{{STRING}}"
+    "AlertActionTitle": "{{STRING}}",
+    "ShowCancelButton": "{{BOOLEAN}}"
   }
 }

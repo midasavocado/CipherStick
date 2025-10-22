@@ -1,7 +1,0 @@
-{
-  "action": "Tesla.HvacsetTemp",
-  "params": {
-    "Temperature": "{{VARIABLE}}",
-    "Vehicle": "{{STRING}}"
-  }
-}

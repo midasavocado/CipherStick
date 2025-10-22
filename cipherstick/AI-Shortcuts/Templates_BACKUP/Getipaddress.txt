@@ -1,3 +1,0 @@
-Getipaddress:
-  IPAddressSourceOption: {{ASK_WHEN_RUN}}
-  IPAddressTypeOption: {{ASK_WHEN_RUN}}

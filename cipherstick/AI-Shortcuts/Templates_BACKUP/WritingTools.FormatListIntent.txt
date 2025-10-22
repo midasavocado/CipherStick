@@ -1,2 +1,0 @@
-WritingTools.FormatListIntent:
-  Text: "TEXT"  # required

@@ -1,4 +1,0 @@
-Runextension:
-  ExtensionIdentifier: "TEXT"
-  Input: {{EXTENSION_INPUT}}
-  ShowWhenRun: BOOLEAN

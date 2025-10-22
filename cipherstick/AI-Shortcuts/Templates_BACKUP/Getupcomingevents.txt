@@ -1,3 +1,0 @@
-Getupcomingevents:
-  DateSpecifier: "TEXT"
-  SpecifiedDate: "TEXT"

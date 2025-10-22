@@ -1,7 +1,0 @@
-{
-  "action": "TvremoteUiservice.LaunchApplicationIntent",
-  "params": {
-    "Application": "{{VARIABLE}}",
-    "Device": "{{VARIABLE}}"
-  }
-}

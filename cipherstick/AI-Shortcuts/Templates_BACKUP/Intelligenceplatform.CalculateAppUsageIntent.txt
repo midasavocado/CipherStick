@@ -1,3 +1,0 @@
-Intelligenceplatform.CalculateAppUsageIntent:
-  ActivityType: "TEXT"
-  SelectedDevice: {{ENTITY}}

@@ -1,2 +1,0 @@
-Getwifi:
-  # No parameters (runs with defaults)

@@ -1,7 +1,0 @@
-{
-  "action": "Handoffplayback",
-  "params": {
-    "DestinationMediaRoute": "{{VARIABLE}}",
-    "SourceMediaRoute": "{{VARIABLE}}"
-  }
-}

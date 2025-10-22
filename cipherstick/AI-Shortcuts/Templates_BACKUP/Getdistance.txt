@@ -1,3 +1,0 @@
-Getdistance:
-  GetDirectionsActionMode: "TEXT"
-  GetDistanceDestination: {{OBJECT}}

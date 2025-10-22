@@ -1,4 +1,0 @@
-Reminders.Showlist:
-  List: "TEXT"
-  Filter: "TEXT"
-  ShowCompleted: BOOLEAN

@@ -1,2 +1,0 @@
-Detect.Address:
-  Input: {{EXTENSION_INPUT}}  # required

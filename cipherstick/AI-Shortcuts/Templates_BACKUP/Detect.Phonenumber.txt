@@ -1,2 +1,0 @@
-Detect.Phonenumber:
-  Input: "TEXT"  # required

@@ -1,3 +1,0 @@
-ShortcutsActions.GetShortcuts:
-  Query: "TEXT"
-  Folder: "TEXT"

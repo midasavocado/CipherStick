@@ -1,2 +1,0 @@
-Makeimagefrompdfpage:
-  Input: {{EXTENSION_INPUT}}  # required

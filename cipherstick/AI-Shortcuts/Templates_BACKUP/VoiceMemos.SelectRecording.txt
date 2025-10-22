@@ -1,2 +1,0 @@
-VoiceMemos.SelectRecording:
-  Target: {{ASK_WHEN_RUN}}  # optional
