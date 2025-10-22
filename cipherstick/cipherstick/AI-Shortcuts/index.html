@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Shortcut Maker + Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', sans-serif;
+      color-scheme: light;
+      --bg-page: linear-gradient(160deg, #f5f7ff 0%, #f9fbff 40%, #eef2ff 100%);
+      --bg-surface: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --outline: rgba(15, 23, 42, 0.08);
+      --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-page);
+      color: var(--text-primary);
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .masthead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .masthead__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      gap: 24px;
+    }
+
+    .masthead__logo {
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .masthead__nav {
+      display: flex;
+      gap: 20px;
+      font-size: 0.9rem;
+    }
+
+    .masthead__nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .masthead__nav a:hover {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--accent);
+    }
+
+    .hero {
+      padding: 72px 0 56px;
+      text-align: left;
+    }
+
+    .hero--gradient {
+      background: linear-gradient(140deg, rgba(37, 99, 235, 0.12) 0%, rgba(14, 116, 144, 0.08) 100%);
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .hero__content {
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 12px 0 8px;
+      font-size: clamp(2.6rem, 4.2vw, 3.1rem);
+      font-weight: 700;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .hero__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.08);
+      font-weight: 600;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .info-grid {
+      display: grid;
+      gap: 24px;
+      margin: 48px auto;
+    }
+
+    @media (min-width: 960px) {
+      .info-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .info-card {
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-card h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .info-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .callout {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--accent-dark);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      background: rgba(15, 23, 42, 0.1);
+      color: var(--text-primary);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .workspace {
+      padding-bottom: 64px;
+      display: grid;
+      gap: 32px;
+    }
+
+    @media (min-width: 1100px) {
+      .workspace {
+        grid-template-columns: minmax(0, 410px) minmax(0, 1fr);
+        align-items: start;
+      }
+    }
+
+    .panel {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      border: 1px solid var(--outline);
+    }
+
+    .panel__heading h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .panel__heading p {
+      margin: 6px 0 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .panel__heading + .field { margin-top: 24px; }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .field__label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      background: #f8fafc;
+      font-size: 0.98rem;
+      color: var(--text-primary);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+      background: #ffffff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 140px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    .panel__actions,
+    .editor__footer {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .panel__actions { margin-top: 8px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: translateY(1px); }
+
+    .btn--primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #ffffff;
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn--secondary {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
+    .btn:disabled,
+    .btn[disabled] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .status-chip.ok {
+      background: rgba(22, 163, 74, 0.14);
+      color: #15803d;
+    }
+
+    .status-chip.bad {
+      background: rgba(220, 38, 38, 0.14);
+      color: #b91c1c;
+    }
+
+    .panel__message {
+      margin-top: 14px;
+      min-height: 22px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .editor-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    @media (min-width: 960px) {
+      .editor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .editor {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 22px;
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      border-radius: var(--radius-md);
+      background: linear-gradient(145deg, #ffffff, #f8fbff);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+    }
+
+    .editor__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .editor__header h3 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .editor__header p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .editor textarea { min-height: 260px; }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="container masthead__inner">
+        <span class="masthead__logo">AI Shortcuts</span>
+        <nav class="masthead__nav">
+          <a href="#builder">Builder</a>
+          <a href="#syntax">Variable syntax</a>
+          <a href="https://cipherstick.tech" target="_blank" rel="noopener">CipherStick</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero hero--gradient">
+      <div class="container hero__content">
+        <span class="hero__badge">AI Shortcuts Toolkit</span>
+        <h1>Build signed Shortcuts from a single prompt.</h1>
+        <p>Plan actions with AI, inspect the generated JSON, and export a signed <code>.shortcut</code> ready to import on iOS.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#builder">Start building</a>
+          <span class="chip">No Mac required</span>
+        </div>
+        <div class="hero__meta">
+          <span>Special blocks (<code>If</code>, <code>Repeat</code>) now use the same placeholder system.</span>
+          <span>Supports <code>$OutputUUID</code> and <code>!VariableName</code> tokens automatically.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="container info-grid" id="syntax">
+      <article class="info-card">
+        <h3>1. Describe your shortcut</h3>
+        <p>Give the AI planner a name and prompt. Adjust the JSON before you convert.</p>
+      </article>
+      <article class="info-card">
+        <h3>Variables made simple</h3>
+        <p>Use <code>$OutputName</code> to grab an action's UUID or <code>!MyVariable</code> for the variable operator.</p>
+        <div class="callout">Tip: add an <code>IDNAME</code> parameter to auto-generate a UUID that can be referenced later.</div>
+      </article>
+      <article class="info-card">
+        <h3>Control flow aware</h3>
+        <p><code>If</code> and both <code>Repeat</code> styles render from placeholders, so your DSL stays tidy.</p>
+      </article>
+    </section>
+
+    <main class="container workspace" id="builder">
+      <section class="panel panel--prompt">
+        <div class="panel__heading">
+          <h2>Describe your shortcut</h2>
+          <p>The AI planner drafts a JSON program that you can tweak before converting.</p>
+        </div>
+
+        <label class="field" for="shortcutName">
+          <span class="field__label">Shortcut name</span>
+          <input id="shortcutName" type="text" placeholder="E.g., 'Open my website'" />
+        </label>
+
+        <label class="field" for="prompt">
+          <span class="field__label">What should it do?</span>
+          <textarea id="prompt" rows="5" placeholder="Example: Open https://cipherstick.tech in Safari."></textarea>
+        </label>
+
+        <div class="panel__actions">
+          <button id="btnGenerate" class="btn btn--primary">1. Plan with AI</button>
+          <span id="genStatus" class="status-chip">idle</span>
+        </div>
+
+        <div id="msgArea" class="panel__message mono" style="white-space: pre-wrap;"></div>
+      </section>
+
+      <section class="panel panel--editors">
+        <div class="editor-grid">
+          <div class="editor">
+            <div class="editor__header">
+              <div>
+                <h3>Program JSON / DSL</h3>
+                <p>Edit or paste a program before converting.</p>
+              </div>
+              <button id="btnCopyDSL" class="btn btn--ghost" title="Copy Program">Copy</button>
+            </div>
+            <textarea id="dslBox" rows="18" spellcheck="false" class="mono"></textarea>
+            <div class="editor__footer">
+              <button id="btnConvert" class="btn btn--secondary">2. Convert to .plist</button>
+              <span id="convStatus" class="status-chip">waiting</span>
+            </div>
+          </div>
+
+          <div class="editor">
+            <div class="editor__header">
+              <div>
+                <h3>.plist XML</h3>
+                <p>Review the generated Shortcuts plist before signing.</p>
+              </div>
+              <button id="btnCopyPlist" class="btn btn--ghost" title="Copy plist">Copy</button>
+            </div>
+            <textarea id="plistBox" rows="18" spellcheck="false" class="mono"></textarea>
+            <div class="editor__footer">
+              <button id="btnSign" class="btn btn--primary" disabled>3. Sign &amp; download</button>
+              <span id="signStatus" class="status-chip">waiting</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // 👇 Your Worker that serves /generate and /sign (CORS must allow your site)
+  const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
+
+  const $ = (id) => document.getElementById(id);
+  const nameBox   = $('shortcutName');
+  const promptBox = $('prompt');
+  const dslBox    = $('dslBox');
+  const plistBox  = $('plistBox');
+
+  const btnGenerate  = $('btnGenerate');
+  const btnConvert   = $('btnConvert');
+  const btnSign      = $('btnSign');
+  const btnCopyDSL   = $('btnCopyDSL');
+  const btnCopyPlist = $('btnCopyPlist');
+
+  const genStatus  = $('genStatus');
+  const convStatus = $('convStatus');
+  const signStatus = $('signStatus');
+
+  function setStatus(node, text, good=false, bad=false){
+    node.textContent = text;
+    node.classList.remove('ok','bad');
+    if (good) node.classList.add('ok');
+    if (bad)  node.classList.add('bad');
+  }
+
+  // ---------------- Helpers: JSON/DSL detection & coercion ----------------
+  function stripBOM(s){ if (!s) return s; return s.replace(/^\uFEFF/, ""); }
+  function stripFences(s){
+    if (!s) return s;
+    const m = s.match(/```(?:json|JSON)?\s*([\s\S]*?)\s*```/m);
+    return m ? m[1] : s;
+  }
+  function sanitizeJSONText(raw){
+    let s = String(raw ?? "");
+    s = stripBOM(s).trim();
+    s = stripFences(s);
+    // remove trailing commas before } or ]
+    s = s.replace(/,\s*([}\]])/g, "$1");
+    // normalize smart quotes to straight
+    s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    return s.trim();
+  }
+  function parseMaybeJSON(raw){
+    try {
+      const cleaned = sanitizeJSONText(raw);
+      if (!cleaned) return null;
+      if (!(cleaned.startsWith('{') || cleaned.startsWith('['))) return null;
+      return JSON.parse(cleaned);
+    } catch { return null; }
+  }
+  function prettyStringify(v){
+    try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+  }
+  function showMessage(msg, isError=false){
+    const el = document.getElementById('msgArea');
+    if (!el) return;
+    el.textContent = String(msg || "");
+    el.style.color = isError ? '#b00020' : '#444';
+  }
+
+  // Accept anything and normalize as best as possible.
+  // If it can't be normalized to a JSON program, return null and caller will use DSL/Universal path.
+  function coerceProgram(value, fallbackName){
+    let p = value;
+
+    // If string, try JSON first
+    if (typeof p === 'string') {
+      const maybe = parseMaybeJSON(p);
+      if (maybe !== null) p = maybe;
+      else return null; // treat as DSL elsewhere
+    }
+
+    // Unwrap { program: {...} }
+    if (p && typeof p === 'object' && p.program && typeof p.program === 'object') {
+      p = { name: p.name || fallbackName, ...p.program };
+    }
+
+    // If actions array directly
+    if (Array.isArray(p)) {
+      p = { name: fallbackName, actions: p };
+    }
+
+    // If already {name?, actions?}
+    if (p && typeof p === 'object') {
+      if (!p.actions) p.actions = Array.isArray(p) ? p : [];
+      if (!Array.isArray(p.actions)) p.actions = [];
+      if (!p.name) p.name = fallbackName || 'My Shortcut';
+      return p;
+    }
+
+    return null;
+  }
+
+  // Try multiple converter APIs. Prefer new universal wrapper if present.
+  async function tryConverters({ name, inputRaw, programObj, dslText }){
+    // 1) Universal tolerant path
+    if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
+      try { return window.ConversionUniversal.toPlist(programObj ?? dslText ?? inputRaw, name); } catch(e){ /* fall through */ }
+    }
+
+    // 2) JSON-centric paths
+    if (programObj) {
+      const cj = window.ConversionJSON;
+      if (cj && typeof cj.toPlist === 'function') {
+        try { return cj.toPlist({ name, program: programObj }); } catch(e1) {
+          try { return cj.toPlist(programObj, name); } catch(e2) {
+            try { return cj.toPlist(programObj); } catch(e3) {}
+          }
+        }
+      }
+      const c = window.Conversion;
+      if (c) {
+        if (typeof c.toPlistFromJSON === 'function') { try { return c.toPlistFromJSON(programObj, name); } catch(e4){} }
+        if (typeof c.toPlist === 'function')       { try { return c.toPlist(programObj, name); }       catch(e5){} }
+      }
+      const cdsl = window.ConversionDSL;
+      if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
+        try { return cdsl.toPlistFromJSON(programObj, name); } catch(e6){}
+      }
+    }
+
+    // 3) DSL paths
+    if (dslText) {
+      const cdsl = window.ConversionDSL;
+      if (cdsl && typeof cdsl.toPlist === 'function') {
+        try { return cdsl.toPlist({ name, dsl: dslText }); } catch(e7){}
+      }
+    }
+
+    // 4) Legacy Conversion.toPlist with raw text fallback
+    if (window.Conversion && typeof window.Conversion.toPlist === 'function') {
+      try { return window.Conversion.toPlist({ name, text: inputRaw || dslText || '' }); } catch(e8){}
+    }
+
+    throw new Error('No converter available.');
+  }
+
+  async function generatePlan(){
+    try {
+      const name = (nameBox.value || '').trim() || 'My Shortcut';
+      const prompt = promptBox.value.trim();
+      if (!prompt) {
+        showMessage('Please describe what the shortcut should do.');
+        setStatus(genStatus, 'needs input', false, true);
+        return;
+      }
+
+      setStatus(genStatus, 'thinking…');
+      showMessage('');
+      btnGenerate.disabled = true;
+
+      const res = await fetch(`${WORKER_ORIGIN}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, prompt })
+      });
+
+      if (!res.ok) throw new Error(`Generate failed (${res.status})`);
+
+      const data = await res.json();
+      dslBox.value = prettyStringify(data?.program ?? data) || '';
+      setStatus(genStatus, 'done', true, false);
+    } catch (err) {
+      console.error(err);
+      setStatus(genStatus, 'error', false, true);
+      showMessage(err.message ?? String(err), true);
+    } finally {
+      btnGenerate.disabled = false;
+    }
+  }
+
+  async function convertProgram(){
+    try {
+      const name = (nameBox.value || '').trim() || 'My Shortcut';
+      const raw = dslBox.value;
+      const programObj = coerceProgram(raw, name);
+      const plist = await tryConverters({ name, inputRaw: raw, programObj, dslText: programObj ? null : raw });
+      plistBox.value = plist;
+      setStatus(convStatus, 'done', true, false);
+      btnSign.disabled = false;
+    } catch (err) {
+      console.error(err);
+      setStatus(convStatus, 'error', false, true);
+      showMessage(err.message ?? String(err), true);
+    }
+  }
+
+  async function signShortcut(){
+    try {
+      const plist = plistBox.value.trim();
+      if (!plist) {
+        showMessage('Nothing to sign yet.', true);
+        setStatus(signStatus, 'missing plist', false, true);
+        return;
+      }
+      setStatus(signStatus, 'signing…');
+      btnSign.disabled = true;
+
+      const res = await fetch(`${WORKER_ORIGIN}/sign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plist })
+      });
+      if (!res.ok) throw new Error(`Sign failed (${res.status})`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(nameBox.value || 'Shortcut').trim() || 'Shortcut'}.shortcut`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus(signStatus, 'downloaded', true, false);
+    } catch (err) {
+      console.error(err);
+      setStatus(signStatus, 'error', false, true);
+      showMessage(err.message ?? String(err), true);
+    } finally {
+      btnSign.disabled = false;
+    }
+  }
+
+  btnGenerate.addEventListener('click', generatePlan);
+  btnConvert.addEventListener('click', convertProgram);
+  btnSign.addEventListener('click', signShortcut);
+
+  btnCopyDSL.addEventListener('click', () => {
+    if (!dslBox.value) return;
+    navigator.clipboard.writeText(dslBox.value).then(() => setStatus(convStatus, 'copied', true, false));
+  });
+
+  btnCopyPlist.addEventListener('click', () => {
+    if (!plistBox.value) return;
+    navigator.clipboard.writeText(plistBox.value).then(() => setStatus(signStatus, 'copied', true, false));
+  });
+  </script>
+</body>
+</html>
