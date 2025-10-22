@@ -42,64 +42,9 @@
       padding: 0 24px;
     }
 
-    .masthead {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(255, 255, 255, 0.72);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    }
-
-    .masthead__inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 0;
-      gap: 24px;
-    }
-
-    .masthead__logo {
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-
-    .masthead__nav {
-      display: flex;
-      gap: 20px;
-      font-size: 0.9rem;
-    }
-
-    .masthead__nav a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      padding: 6px 10px;
-      border-radius: 999px;
-      transition: background 0.2s ease, color 0.2s ease;
-    }
-
-    .masthead__nav a:hover {
-      background: rgba(37, 99, 235, 0.1);
-      color: var(--accent);
-    }
-
     .hero {
-      padding: 72px 0 56px;
-      text-align: left;
-    }
-
-    .hero--gradient {
-      background: linear-gradient(140deg, rgba(37, 99, 235, 0.12) 0%, rgba(14, 116, 144, 0.08) 100%);
-      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    }
-
-    .hero__content {
-      max-width: 760px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+      padding: 72px 0 48px;
+      text-align: center;
     }
 
     .hero__badge {
@@ -117,112 +62,23 @@
     }
 
     .hero h1 {
-      margin: 12px 0 8px;
-      font-size: clamp(2.6rem, 4.2vw, 3.1rem);
+      margin: 20px 0 12px;
+      font-size: clamp(2.4rem, 4vw, 2.9rem);
       font-weight: 700;
     }
 
     .hero p {
-      margin: 0;
+      margin: 0 auto;
+      max-width: 620px;
       color: var(--text-secondary);
       font-size: 1.05rem;
       line-height: 1.6;
-    }
-
-    .hero__actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      align-items: center;
-      margin-top: 8px;
-    }
-
-    .hero__meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.08);
-      font-weight: 600;
-      font-size: 0.8rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-    }
-
-    .info-grid {
-      display: grid;
-      gap: 24px;
-      margin: 48px auto;
-    }
-
-    @media (min-width: 960px) {
-      .info-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    .info-card {
-      padding: 24px;
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.78);
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .info-card h3 {
-      margin: 0;
-      font-size: 1.1rem;
-    }
-
-    .info-card p {
-      margin: 0;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      font-size: 0.95rem;
-    }
-
-    .callout {
-      margin-top: auto;
-      padding: 14px 16px;
-      border-radius: var(--radius-md);
-      background: rgba(37, 99, 235, 0.08);
-      color: var(--accent-dark);
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-
-    code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-      background: rgba(15, 23, 42, 0.1);
-      color: var(--text-primary);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 0.9rem;
     }
 
     .workspace {
       padding-bottom: 64px;
       display: grid;
       gap: 32px;
-    }
-
-    @media (min-width: 1100px) {
-      .workspace {
-        grid-template-columns: minmax(0, 410px) minmax(0, 1fr);
-        align-items: start;
-      }
     }
 
     .panel {
@@ -307,7 +163,6 @@
       transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
       padding: 12px 20px;
       font-size: 0.95rem;
-      text-decoration: none;
     }
 
     .btn:active { transform: translateY(1px); }
@@ -375,6 +230,7 @@
     }
 
     @media (min-width: 960px) {
+      .workspace { grid-template-columns: 1fr; }
       .editor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
@@ -416,50 +272,15 @@
 </head>
 <body>
   <div class="page">
-    <header class="masthead">
-      <div class="container masthead__inner">
-        <span class="masthead__logo">AI Shortcuts</span>
-        <nav class="masthead__nav">
-          <a href="#builder">Builder</a>
-          <a href="#syntax">Variable syntax</a>
-          <a href="https://cipherstick.tech" target="_blank" rel="noopener">CipherStick</a>
-        </nav>
+    <header class="hero">
+      <div class="container">
+        <span class="hero__badge">AI Shortcuts Toolkit</span>
+        <h1>AI Shortcut Maker</h1>
+        <p>Describe what you want and turn it into editable JSON or a ready-to-import Shortcuts plist in seconds.</p>
       </div>
     </header>
 
-    <section class="hero hero--gradient">
-      <div class="container hero__content">
-        <span class="hero__badge">AI Shortcuts Toolkit</span>
-        <h1>Build signed Shortcuts from a single prompt.</h1>
-        <p>Plan actions with AI, inspect the generated JSON, and export a signed <code>.shortcut</code> ready to import on iOS.</p>
-        <div class="hero__actions">
-          <a class="btn btn--primary" href="#builder">Start building</a>
-          <span class="chip">No Mac required</span>
-        </div>
-        <div class="hero__meta">
-          <span>Special blocks (<code>If</code>, <code>Repeat</code>) now use the same placeholder system.</span>
-          <span>Supports <code>$OutputUUID</code> and <code>!VariableName</code> tokens automatically.</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="container info-grid" id="syntax">
-      <article class="info-card">
-        <h3>1. Describe your shortcut</h3>
-        <p>Give the AI planner a name and prompt. Adjust the JSON before you convert.</p>
-      </article>
-      <article class="info-card">
-        <h3>Variables made simple</h3>
-        <p>Use <code>$OutputName</code> to grab an action's UUID or <code>!MyVariable</code> for the variable operator.</p>
-        <div class="callout">Tip: add an <code>IDNAME</code> parameter to auto-generate a UUID that can be referenced later.</div>
-      </article>
-      <article class="info-card">
-        <h3>Control flow aware</h3>
-        <p><code>If</code> and both <code>Repeat</code> styles render from placeholders, so your DSL stays tidy.</p>
-      </article>
-    </section>
-
-    <main class="container workspace" id="builder">
+    <main class="container workspace">
       <section class="panel panel--prompt">
         <div class="panel__heading">
           <h2>Describe your shortcut</h2>

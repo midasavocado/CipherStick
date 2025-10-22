@@ -7,51 +7,6 @@
   const Conversion = {};
   window.Conversion = Conversion;
 
-  // ---- Runtime context --------------------------------------------------
-  function createContext() {
-    return {
-      nameToUUID: new Map(),
-      uuidToName: new Map()
-    };
-  }
-
-  const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-  function normalizeTokenName(raw) {
-    if (typeof raw !== 'string') return '';
-    const trimmed = raw.trim();
-    if (/^\{\{.+\}\}$/.test(trimmed)) {
-      return trimmed.slice(2, -2).trim();
-    }
-    return trimmed;
-  }
-
-  function registerNamedUUID(ctx, rawName, suggestedUUID) {
-    const name = normalizeTokenName(rawName);
-    if (!name) return null;
-    const key = name.toLowerCase();
-    let uuid = suggestedUUID;
-    if (!uuid) uuid = ctx.nameToUUID.get(key);
-    if (!uuid) uuid = genUUID();
-    ctx.nameToUUID.set(key, uuid);
-    ctx.uuidToName.set(uuid, name);
-    return { name, uuid };
-  }
-
-  function resolveNamedUUID(ctx, rawRef) {
-    const ref = normalizeTokenName(rawRef);
-    if (!ref) return null;
-    const key = ref.toLowerCase();
-    if (ctx.nameToUUID.has(key)) {
-      const uuid = ctx.nameToUUID.get(key);
-      return { uuid, name: ctx.uuidToName.get(uuid) || ref };
-    }
-    if (uuidLike.test(ref)) {
-      return { uuid: ref, name: ctx.uuidToName.get(ref) || ref };
-    }
-    return null;
-  }
-
   // ---- Embedded conversion templates ----
   // Generated from Conversions/*.txt so everything works offline.
   // To override or extend at runtime, set window.CONVERSIONS_LIBRARY before this script loads.
@@ -73,10 +28,27 @@
         {{Height}}
         <key>WFGIFManualSizeWidth</key>
         {{Width}}
+
         <key>WFImage</key>
-          {{Image}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            {{Image}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFInputGIF</key>
-          {{InputGIF}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            {{InputGIF}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -139,7 +111,15 @@
           <string>WFContactFieldValue</string>
         </dict>
         <key>WFContactPhoto</key>
-        {{ContactPhoto}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            {{ContactPhoto}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -202,7 +182,15 @@
         <key>WFFlag</key>
         {{Flag}}
         <key>WFImages</key>
-          {{Images}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            {{Images}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFParentTask</key>
         <dict>
           <key>Value</key>
@@ -254,7 +242,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFInput</key>
+        <dict>
+          <key>Value</key>
+            <dict>
+            <key>OutputName</key>
+            <string>Name</string>
+            <key>OutputUUID</key>
             {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -300,7 +300,81 @@
         <key>WFLLMModel</key>
         {{Model}}
         <key>WFLLMPrompt</key>
-          {{Attachments}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>attachmentsByRange</key>
+            <dict>
+              <key>{0, 1}</key>
+              <dict>
+                <key>OutputName</key>
+                <string>Name</string>
+                <key>OutputUUID</key>
+                {{Attachments}}
+                <key>Type</key>
+                <string>ActionOutput</string>
+              </dict>
+            </dict>
+            <key>string</key>
+            {{LLMPrompt}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenString</string>
+        </dict>
+        <key>WFFollowUp</key>
+        {{FollowUp}}
+      </dict>
+  `,
+  'Calendar.CreateCalendar': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.addnewcalendar</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>CalendarName</key>
+        {{CalendarName}}
+        <key>UUID</key>
+        {{UUID}}
+      </dict>
+    </dict>
+  `,
+  'Chrome.AddBookmark': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>com.google.chrome.ios.AddBookmarkToChromeIntent</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        {{UUID}}
+        <key>url</key>
+        {{URL}}
+      </dict>
+    </dict>
+  `,
+  'Clipboard.Set': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.setclipboard</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        <string>CF7513CC-44BE-493F-A5CD-A1871B335735</string>
+        <key>WFExpirationDate</key>
+        {{ExpirationDate}}
+        <key>WFInput</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>Text</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFLocalOnly</key>
         {{LocalOnly}}
       </dict>
@@ -337,7 +411,161 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFDuration</key>
-          {{Duration}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Magnitude</key>
+            {{Duration}}
+            <key>Unit</key>
+            {{Unit}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFQuantityFieldValue</string>
+        </dict>
+      </dict>
+    </dict>
+  `,
+  'Clock.CreateAlarm': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>com.apple.clock.AddWorldClockIntent</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>AppIntentDescriptor</key>
+        <dict>
+          <key>AppIntentIdentifier</key>
+          <string>AddWorldClockIntent</string>
+          <key>BundleIdentifier</key>
+          <string>com.apple.mobiletimer</string>
+          <key>Name</key>
+          <string>Clock</string>
+          <key>TeamIdentifier</key>
+          <string>0000000000</string>
+        </dict>
+        <key>OpenWhenRun</key>
+        <false />
+        <key>UUID</key>
+        {{UUID}}
+        <key>city</key>
+        <dict>
+          <key>identifier</key>
+          <string>0</string>
+          <key>subtitle</key>
+          <dict>
+            <key>key</key>
+            <string>Abidjan</string>
+          </dict>
+          <key>title</key>
+          <dict>
+            <key>key</key>
+            <string>Abidjan</string>
+          </dict>
+        </dict>
+      </dict>
+    </dict>
+  `,
+  'Clock.StartTimer': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.timer.start</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>AppIntentDescriptor</key>
+        <dict>
+          <key>AppIntentIdentifier</key>
+          <string>INCreateTimerIntent</string>
+          <key>BundleIdentifier</key>
+          <string>com.apple.mobiletimer</string>
+          <key>Name</key>
+          <string>Clock</string>
+          <key>TeamIdentifier</key>
+          <string>0000000000</string>
+        </dict>
+        <key>IntentAppDefinition</key>
+        <dict>
+          <key>BundleIdentifier</key>
+          <string>com.apple.clock</string>
+          <key>ExtensionBundleIdentifier</key>
+          <string>com.apple.mobiletimer-framework.MobileTimerIntents</string>
+          <key>Name</key>
+          <string>Clock</string>
+          <key>TeamIdentifier</key>
+          <string>0000000000</string>
+        </dict>
+        <key>UUID</key>
+        {{UUID}}
+        <key>WFDuration</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Magnitude</key>
+            {{Duration}}
+            <key>Unit</key>
+            {{Unit}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFQuantityFieldValue</string>
+        </dict>
+      </dict>
+    </dict>
+  `,
+  'Com.AddReadingListItemToChromeIntent': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>com.google.chrome.ios.AddBookmarkToChromeIntent</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        {{UUID}}
+        <key>url</key>
+        {{URL}}
+      </dict>
+    </dict>
+  `,
+  'Control.Comment': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.comment</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>WFCommentActionText</key>
+        {{CommentActionText}}
+      </dict>
+    </dict>
+  `,
+  'Correctspelling': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.correctspelling</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        {{UUID}}
+        <key>text</key>
+        {{Text}}
+      </dict>
+    </dict>
+  `,
+  'Count': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>is.workflow.actions.count</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>Input</key>
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>List</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>UUID</key>
         {{UUID}}
         <key>WFCountType</key>
@@ -391,7 +619,15 @@
         <key>UUID</key>
         <string>06F5E714-6A4B-4EFE-B53D-C0DAC09D2E23</string>
         <key>WFInput</key>
-          {{VARIABLE}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            {{VARIABLE}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -457,7 +693,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFImage</key>
-          {{Image}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>Image</string>
+            <key>OutputUUID</key>
+            {{Image}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -469,7 +717,19 @@
         <key>WFDeleteImmediatelyDelete</key>
         {{ImmediatelyDelete}}
         <key>WFInput</key>
-          {{Input}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>File</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
   `,
   'File.Getfoldercontents': `
@@ -481,7 +741,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFFolder</key>
-          {{Folder}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>File</string>
+            <key>OutputUUID</key>
+            {{Folder}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -494,7 +766,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFFile</key>
-          {{File}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>File</string>
+            <key>OutputUUID</key>
+            {{File}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFNewFilename</key>
         {{NewFilename}}
       </dict>
@@ -614,7 +898,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFInput</key>
-          {{List}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>List</string>
+            <key>OutputUUID</key>
+            {{List}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFItemIndex</key>
         <string>2</string>
         <key>WFItemRangeEnd</key>
@@ -637,7 +933,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFInput</key>
-          {{Input}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>List</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -650,7 +958,19 @@
         <key>UUID</key>
         <string>DAA2A3EC-75B6-449A-9DDA-49A7873136DF</string>
         <key>WFInput</key>
-          {{Input}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>List</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -696,7 +1016,17 @@
       <key>WFWorkflowActionParameters</key>
       <dict>
         <key>WFVariable</key>
-          {{Variable}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>Type</key>
+            <string>Variable</string>
+            <key>VariableName</key>
+            {{Variable}}
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -737,7 +1067,19 @@
     <key>UUID</key>
     {{UUID}}
     <key>WFInput</key>
-      {{Image}}
+    <dict>
+      <key>Value</key>
+      <dict>
+            <key>OutputName</key>
+            <string>Image</string>
+            <key>OutputUUID</key>
+            {{Image}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+      </dict>
+      <key>WFSerializationType</key>
+      <string>WFTextTokenAttachment</string>
+    </dict>
   </dict>
   </dict>
   `,
@@ -752,7 +1094,19 @@
     <key>WFCropToBounds</key>
     {{CropToBounds}}
     <key>WFInput</key>
-      {{Image}}
+    <dict>
+      <key>Value</key>
+      <dict>
+  <key>OutputName</key>
+            <string>Image</string>
+            <key>OutputUUID</key>
+            {{Image}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+      </dict>
+      <key>WFSerializationType</key>
+      <string>WFTextTokenAttachment</string>
+    </dict>
   </dict>
   </dict>
   `,
@@ -771,7 +1125,19 @@
     <key>WFChooseFromListActionSelectMultiple</key>
     {{SelectMultiple}}
     <key>WFInput</key>
-      {{List}}
+    <dict>
+      <key>Value</key>
+      <dict>
+  <key>OutputName</key>
+            <string>Image</string>
+            <key>OutputUUID</key>
+            {{List}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+      </dict>
+      <key>WFSerializationType</key>
+      <string>WFTextTokenAttachment</string>
+    </dict>
   </dict>
   </dict>
   `,
@@ -792,7 +1158,19 @@
     <key>UUID</key>
     {{UUID}}
     <key>WFInput</key>
-      {{Input}}
+    <dict>
+      <key>Value</key>
+      <dict>
+        <key>OutputName</key>
+            <string>List</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+      </dict>
+      <key>WFSerializationType</key>
+      <string>WFTextTokenAttachment</string>
+    </dict>
     <key>WFZIPName</key>
     {{ZIPName}}
   </dict>
@@ -928,7 +1306,19 @@
       <key>WFWorkflowActionParameters</key>
       <dict>
         <key>WFInput</key>
-          {{File}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>Sound</string>
+            <key>OutputUUID</key>
+            {{File}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -941,7 +1331,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFInput</key>
-          {{Input}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>File</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -1055,7 +1457,19 @@
       <key>WFWorkflowActionParameters</key>
       <dict>
         <key>WFInput</key>
-          {{UUID}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>Variable</string>
+            <key>OutputUUID</key>
+            {{UUID}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFVariableName</key>
         {{VariableName}}
       </dict>
@@ -1229,7 +1643,19 @@
         <key>UUID</key>
         {{UUID}}
         <key>audioFile</key>
-          {{Audio}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>Variable</string>
+            <key>OutputUUID</key>
+            {{Audio}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
       </dict>
     </dict>
   `,
@@ -1253,7 +1679,19 @@
       <key>WFWorkflowActionParameters</key>
       <dict>
         <key>WFInput</key>
-          {{Input}}
+        <dict>
+          <key>Value</key>
+          <dict>
+            <key>OutputName</key>
+            <string>File</string>
+            <key>OutputUUID</key>
+            {{Input}}
+            <key>Type</key>
+            <string>ActionOutput</string>
+          </dict>
+          <key>WFSerializationType</key>
+          <string>WFTextTokenAttachment</string>
+        </dict>
         <key>WFVariableName</key>
         {{VariableName}}
       </dict>
@@ -1471,91 +1909,16 @@ const userConversions = (() => {
     return XML.str(String(value));
   }
 
-  function createUUIDVariable(ctx, ref) {
-    const resolved = resolveNamedUUID(ctx, ref);
-    if (resolved) {
-      return variableValue({ uuid: resolved.uuid, name: resolved.name, type: 'ActionOutput' });
-    }
-    const fallback = normalizeTokenName(ref);
-    if (!fallback) return variableValue({ uuid: genUUID(), type: 'ActionOutput' });
-    return variableValue({ uuid: fallback, name: fallback, type: 'ActionOutput' });
-  }
-
-  function createNamedVariable(name) {
-    const clean = normalizeTokenName(name);
-    if (!clean) return variableValue({ uuid: genUUID(), type: 'Variable' });
-    return variableValue({
-      name: clean,
-      type: 'Variable',
-      value: { Type: 'Variable', VariableName: clean },
-      serializationType: 'WFTextTokenAttachment'
-    });
-  }
-
-  function transformValueForContext(value, ctx) {
-    if (!ctx) return value;
-    if (value && value[SPECIAL_VALUE]) return value;
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (!trimmed) return value;
-      if (trimmed.startsWith('$')) {
-        return createUUIDVariable(ctx, trimmed.slice(1));
-      }
-      if (trimmed.startsWith('!')) {
-        return createNamedVariable(trimmed.slice(1));
-      }
-      return value;
-    }
-    if (Array.isArray(value)) {
-      return value.map((item) => transformValueForContext(item, ctx));
-    }
-    if (isPlainObject(value)) {
-      const out = {};
-      for (const [k, v] of Object.entries(value)) {
-        out[k] = transformValueForContext(v, ctx);
-      }
-      return out;
-    }
-    return value;
-  }
-
-  function preprocessParams(rawParams, ctx) {
-    if (!rawParams || typeof rawParams !== 'object') return {};
+  function mergeParams(...sources) {
     const out = {};
-    let pendingName = null;
-    let providedUUID = null;
-
-    for (const [key, value] of Object.entries(rawParams)) {
-      const lower = key.toLowerCase();
-      if (lower === 'idname' || lower === 'uuidname') {
-        pendingName = value;
-        continue;
-      }
-      if (lower === 'uuid') {
-        providedUUID = value;
-        const isPlaceholder = typeof value === 'string' && /\{\{\s*uuid\s*\}\}/i.test(value.trim());
-        if (!isPlaceholder) {
-          out[key] = transformValueForContext(value, ctx);
-        }
-        continue;
-      }
-      out[key] = transformValueForContext(value, ctx);
-    }
-
-    if (pendingName != null) {
-      const normalizedUUID = normalizeTokenName(providedUUID);
-      const suggestion = uuidLike.test(normalizedUUID || '') ? normalizedUUID : undefined;
-      const record = registerNamedUUID(ctx, pendingName, suggestion);
-      if (record) {
-        out.UUID = record.uuid;
-      }
-    } else if (typeof providedUUID === 'string') {
-      const normalized = normalizeTokenName(providedUUID);
-      if (uuidLike.test(normalized)) {
-        ctx.uuidToName.set(normalized, ctx.uuidToName.get(normalized) || normalized);
+    for (const src of sources) {
+      if (!src || typeof src !== 'object') continue;
+      const obj = src[SPECIAL_VALUE] ? src : src;
+      for (const [key, val] of Object.entries(obj)) {
+        if (val === undefined) continue;
+        out[key] = val;
       }
     }
-
     return out;
   }
 
@@ -1885,78 +2248,22 @@ const userConversions = (() => {
 
   // ---- Public entry points ----
   // JSON-only entry point (no DSL auto-conversion)
-  function normalizeProgramArgs(arg1, arg2) {
-    if (Array.isArray(arg1)) {
-      const name = arg2;
-      return {
-        name,
-        program: { name, actions: arg1 }
-      };
-    }
-    if (arg1 && typeof arg1 === 'object') {
-      if ('program' in arg1) {
-        return {
-          name: arg1.name ?? arg2,
-          program: arg1.program
-        };
-      }
-      if (Array.isArray(arg1.actions)) {
-        return {
-          name: arg1.name ?? arg2,
-          program: arg1
-        };
-      }
-    }
-    return {
-      name: (arg1 && typeof arg1 === 'object' && 'name' in arg1) ? arg1.name : arg2,
-      program: arg1
-    };
-  }
+  Conversion.toPlist = async ({ name, text, program }) => {
+    try {
+      const safeName = (name || 'My Shortcut').trim() || 'My Shortcut';
+      let prog = null;
 
-  async function convertConfigToPlist(config = {}) {
-    const safeName = (config.name || 'My Shortcut').trim() || 'My Shortcut';
-    const text = config.text;
-    let prog = config.program;
-
-    if (!prog && Array.isArray(config.actions)) {
-      prog = { name: safeName, actions: config.actions };
-    }
-
-    if (prog && typeof prog === 'object' && !Array.isArray(prog)) {
-      // already normalized
-    } else if (Array.isArray(prog)) {
-      prog = { name: safeName, actions: prog };
-    } else {
-      const candidate = typeof prog === 'string' && prog.trim() ? prog : text;
-      const trimmed = typeof candidate === 'string' ? candidate.trim() : '';
-
-      if (trimmed) {
-        if (!looksLikeJSON(trimmed)) {
+      if (program && typeof program === 'object') {
+        prog = program;
+      } else if (typeof text === 'string' && text.trim()) {
+        if (!looksLikeJSON(text)) {
           fail('Expected JSON input that starts with { or [}.');
         }
-        prog = tryParseJSON(trimmed);
+        prog = tryParseJSON(text);
       } else {
         fail('Nothing to convert. Provide JSON string "text" or a "program" object.');
       }
-    }
 
-    return { safeName, prog };
-  }
-
-  Conversion.toPlist = async function (...args) {
-    try {
-      let config = {};
-      if (args.length === 1 && args[0] && typeof args[0] === 'object' && !Array.isArray(args[0])) {
-        config = { ...args[0] };
-      } else if (args.length >= 1) {
-        if (typeof args[0] === 'string' && !Array.isArray(args[0])) {
-          config = { text: args[0], name: args[1] };
-        } else {
-          config = { program: args[0], name: args[1] };
-        }
-      }
-
-      const { safeName, prog } = await convertConfigToPlist(config);
       return await Conversion.toPlistFromJSON({ name: safeName, program: prog });
     } catch (e) {
       const detail = (e && e.detail) ? `\nDetail: ${JSON.stringify(e.detail).slice(0,400)}` : '';
@@ -1964,14 +2271,12 @@ const userConversions = (() => {
     }
   };
 
-  Conversion.toPlistFromJSON = async function (arg1, arg2) {
-    const { name, program } = normalizeProgramArgs(arg1, arg2);
+  Conversion.toPlistFromJSON = async ({ name, program }) => {
     const prog = coerceProgram(program, name);
     const wfName = String(prog.name || name || 'My Shortcut');
     const actions = prog.actions;
 
-    const ctx = createContext();
-    const plistActions = await buildActionsArrayFromJSON(actions, ctx);
+    const plistActions = await buildActionsArrayFromJSON(actions);
 
     const plist =
 `<?xml version="1.0" encoding="UTF-8"?>
@@ -2003,6 +2308,61 @@ const userConversions = (() => {
     ['endswith', 9]
   ]);
 
+  function valueIsPlaceholder(str) {
+    if (typeof str !== 'string') return false;
+    return /\{\{.+?\}\}/.test(str.trim());
+  }
+
+  function placeholderToken(name) {
+    return `{{${name}}}`;
+  }
+
+  function ensureStringNode(value, placeholderName, fallback) {
+    let v = value;
+    if (v == null || (typeof v === 'string' && !v.trim())) {
+      v = fallback !== undefined ? fallback : placeholderToken(placeholderName);
+    }
+    if (typeof v === 'string') {
+      const trimmed = v.trim();
+      if (!trimmed) return placeholderToken(placeholderName);
+      if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
+      return XML.str(v);
+    }
+    return XML.str(v);
+  }
+
+  function ensureAnyNode(value, placeholderName, fallback) {
+    let v = value;
+    if (v == null) v = fallback !== undefined ? fallback : placeholderToken(placeholderName);
+    if (typeof v === 'string') {
+      const trimmed = v.trim();
+      if (!trimmed) return placeholderToken(placeholderName);
+      if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
+      return XML.str(v);
+    }
+    return renderValue(v);
+  }
+
+  function replaceTemplate(template, map) {
+    let out = template;
+    for (const [key, val] of Object.entries(map)) {
+      out = out.split(`{{${key}}}`).join(val);
+    }
+    return out;
+  }
+
+  function comment(text) {
+    return `<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.comment</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>WFCommentActionText</key>
+    ${XML.str(String(text ?? ''))}
+  </dict>
+</dict>`;
+  }
+
   function resolveConditionMode(value) {
     if (value == null) return 4;
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -2014,199 +2374,254 @@ const userConversions = (() => {
     return CONDITION_MODE_MAP.get(normalized) ?? 4;
   }
 
-  function comment(text) {
-    return makeAction('is.workflow.actions.comment', {
-      WFCommentActionText: String(text ?? '')
-    });
-  }
+  const SPECIAL_ACTION_TEMPLATES = {
+    IF: [
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.conditional</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    {{StartUUIDBlock}}
+    <key>WFCondition</key>
+    {{Condition}}
+    <key>WFConditionalActionString</key>
+    {{CompareTo}}
+    <key>WFControlFlowMode</key>
+    <integer>0</integer>
+    <key>WFInput</key>
+    {{Input}}
+    <key>WFNumberValue</key>
+    {{WFNumberValue}}
+  </dict>
+</dict>`,
+      '{{THEN}}',
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.conditional</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    <key>WFControlFlowMode</key>
+    <integer>1</integer>
+  </dict>
+</dict>`,
+      '{{ELSE}}',
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.conditional</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    <key>UUID</key>
+    {{UUID}}
+    <key>WFControlFlowMode</key>
+    <integer>2</integer>
+  </dict>
+</dict>`
+    ],
+    REPEAT: [
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.repeat.count</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    <key>WFControlFlowMode</key>
+    <integer>0</integer>
+    <key>WFRepeatCount</key>
+    {{Count}}
+  </dict>
+</dict>`,
+      '{{BODY}}',
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.repeat.count</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    <key>UUID</key>
+    {{UUID}}
+    <key>WFControlFlowMode</key>
+    <integer>2</integer>
+  </dict>
+</dict>`
+    ],
+    REPEAT_EACH: [
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.repeat.each</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    <key>WFControlFlowMode</key>
+    <integer>0</integer>
+    <key>WFInput</key>
+    {{ItemsIn}}
+  </dict>
+</dict>`,
+      '{{BODY}}',
+`<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  <string>is.workflow.actions.repeat.each</string>
+  <key>WFWorkflowActionParameters</key>
+  <dict>
+    <key>GroupingIdentifier</key>
+    {{GroupingIdentifier}}
+    <key>UUID</key>
+    {{UUID}}
+    <key>WFControlFlowMode</key>
+    <integer>2</integer>
+  </dict>
+</dict>`
+    ]
+  };
 
-  function placeholder(name) {
-    return `{{${name}}}`;
-  }
-
-  function valueOrPlaceholder(raw, name, ctx) {
-    if (raw == null) return rawXML(placeholder(name));
-    const transformed = transformValueForContext(raw, ctx);
-    if (typeof transformed === 'string' && /\{\{.+\}\}/.test(transformed.trim())) {
-      return rawXML(transformed);
-    }
-    return transformed;
-  }
-
-  function toRenderedValue(value, ctx) {
-    if (value && value[SPECIAL_VALUE]) return value;
-    if (typeof value === 'string' && /\{\{.+\}\}/.test(value.trim())) {
-      return rawXML(value);
-    }
-    return transformValueForContext(value, ctx);
-  }
-
-  async function buildSpecialIf(item, ctx) {
+  async function buildSpecialIf(item) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
 
-    const groupingRaw =
+    const providedGroup =
       params.GroupingIdentifier ??
       params.groupingIdentifier ??
       params.group ??
       params.Group ??
       null;
-    const grouping = groupingRaw != null ? toRenderedValue(groupingRaw, ctx) : genUUID();
+    const groupingIdentifier = ensureStringNode(providedGroup ?? genUUID(), 'GroupingIdentifier');
 
     const startUUID = params.StartUUID ?? params.UUIDStart ?? params.startUUID ?? null;
+    const startUUIDBlock = startUUID == null
+      ? ''
+      : `<key>UUID</key>\n    ${ensureStringNode(startUUID, 'StartUUID')}`;
 
     const conditionParam = params.WFCondition ?? params.Condition ?? params.condition;
-    let conditionValue;
+    let conditionNode;
     if (conditionParam == null) {
-      conditionValue = placeholder('Condition');
-    } else if (typeof conditionParam === 'string' && /^\s*\{\{.+\}\}\s*$/.test(conditionParam)) {
-      conditionValue = conditionParam;
+      conditionNode = placeholderToken('Condition');
+    } else if (typeof conditionParam === 'string' && valueIsPlaceholder(conditionParam.trim())) {
+      conditionNode = conditionParam;
     } else {
-      conditionValue = resolveConditionMode(conditionParam);
+      conditionNode = XML.int(resolveConditionMode(conditionParam));
     }
 
-    const compareValue = valueOrPlaceholder(
-      params.WFConditionalActionString ?? params.CompareTo ?? params.compareTo ?? null,
-      'CompareTo',
-      ctx
-    );
+    const compareValue =
+      params.WFConditionalActionString ??
+      params.CompareTo ??
+      params.compareTo ??
+      null;
+    const compareNode = ensureAnyNode(compareValue, 'CompareTo', placeholderToken('CompareTo'));
 
-    const inputValue = valueOrPlaceholder(
-      params.WFInput ?? params.Input ?? params.input ?? null,
-      'Input',
-      ctx
-    );
+    const inputValue =
+      params.WFInput ??
+      params.Input ??
+      params.input ??
+      null;
+    const inputNode = ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
 
-    const numberValue = valueOrPlaceholder(
-      params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? 124,
-      'WFNumberValue',
-      ctx
-    );
+    const numberValue = params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? '124';
+    const numberNode = ensureAnyNode(numberValue, 'WFNumberValue', '124');
+
+    const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
+    const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const thenActions = Array.isArray(item?.then) && item.then.length
-      ? await buildActionsArrayFromJSON(item.then, ctx)
+      ? await buildActionsArrayFromJSON(item.then)
       : [comment('If (then) has no actions')];
 
     const elseActions = Array.isArray(item?.else) && item.else.length
-      ? await buildActionsArrayFromJSON(item.else, ctx)
+      ? await buildActionsArrayFromJSON(item.else)
       : [comment('If (else) has no actions')];
 
-    const endUUIDRaw = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
-    const endUUID = endUUIDRaw != null ? toRenderedValue(endUUIDRaw, ctx) : genUUID();
-
-    const startParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 0,
-      WFCondition: conditionValue,
-      WFConditionalActionString: compareValue,
-      WFInput: inputValue,
-      WFNumberValue: numberValue
-    };
-    if (startUUID != null) startParams.UUID = toRenderedValue(startUUID, ctx);
-
-    const midParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 1
+    const templateValues = {
+      GroupingIdentifier: groupingIdentifier,
+      StartUUIDBlock: startUUIDBlock,
+      Condition: conditionNode,
+      CompareTo: compareNode,
+      Input: inputNode,
+      WFNumberValue: numberNode,
+      UUID: endUUIDNode,
+      THEN: thenActions.join('\n'),
+      ELSE: elseActions.join('\n')
     };
 
-    const endParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 2,
-      UUID: endUUID
-    };
-
-    return [
-      makeAction(IDS.IF, startParams),
-      ...thenActions,
-      makeAction(IDS.IF, midParams),
-      ...elseActions,
-      makeAction(IDS.IF, endParams)
-    ];
+    return SPECIAL_ACTION_TEMPLATES.IF.map((part) => replaceTemplate(part, templateValues));
   }
 
-  async function buildSpecialRepeatCount(item, ctx) {
+  async function buildSpecialRepeatCount(item) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
 
-    const groupingRaw =
+    const providedGroup =
       params.GroupingIdentifier ??
       params.groupingIdentifier ??
       params.group ??
       params.Group ??
       null;
-    const grouping = groupingRaw != null ? toRenderedValue(groupingRaw, ctx) : genUUID();
+    const groupingIdentifier = ensureStringNode(providedGroup ?? genUUID(), 'GroupingIdentifier');
 
-    const countValue = valueOrPlaceholder(
-      params.WFRepeatCount ?? params.Count ?? params.count ?? null,
-      'Count',
-      ctx
-    );
+    const countValue =
+      params.WFRepeatCount ??
+      params.Count ??
+      params.count ??
+      null;
+    const countNode = ensureAnyNode(countValue, 'Count', placeholderToken('Count'));
+
+    const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
+    const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const bodyActions = Array.isArray(item?.do) && item.do.length
-      ? await buildActionsArrayFromJSON(item.do, ctx)
+      ? await buildActionsArrayFromJSON(item.do)
       : [comment('Repeat has no actions')];
 
-    const endUUIDRaw = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
-    const endUUID = endUUIDRaw != null ? toRenderedValue(endUUIDRaw, ctx) : genUUID();
-
-    const startParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 0,
-      WFRepeatCount: countValue
+    const templateValues = {
+      GroupingIdentifier: groupingIdentifier,
+      Count: countNode,
+      UUID: endUUIDNode,
+      BODY: bodyActions.join('\n')
     };
 
-    const endParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 2,
-      UUID: endUUID
-    };
-
-    return [
-      makeAction(IDS.REPEAT_COUNT, startParams),
-      ...bodyActions,
-      makeAction(IDS.REPEAT_COUNT, endParams)
-    ];
+    return SPECIAL_ACTION_TEMPLATES.REPEAT.map((part) => replaceTemplate(part, templateValues));
   }
 
-  async function buildSpecialRepeatEach(item, ctx) {
+  async function buildSpecialRepeatEach(item) {
     const params = (item && typeof item === 'object') ? (item.params || {}) : {};
 
-    const groupingRaw =
+    const providedGroup =
       params.GroupingIdentifier ??
       params.groupingIdentifier ??
       params.group ??
       params.Group ??
       null;
-    const grouping = groupingRaw != null ? toRenderedValue(groupingRaw, ctx) : genUUID();
+    const groupingIdentifier = ensureStringNode(providedGroup ?? genUUID(), 'GroupingIdentifier');
 
-    const itemsValue = valueOrPlaceholder(
-      params.WFInput ?? params.Items ?? params.List ?? params.items ?? params.ItemsIn ?? null,
-      'ItemsIn',
-      ctx
-    );
+    const itemsValue =
+      params.WFInput ??
+      params.Items ??
+      params.List ??
+      params.items ??
+      params.ItemsIn ??
+      null;
+    const itemsNode = ensureAnyNode(itemsValue, 'ItemsIn', placeholderToken('ItemsIn'));
+
+    const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
+    const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const bodyActions = Array.isArray(item?.do) && item.do.length
-      ? await buildActionsArrayFromJSON(item.do, ctx)
+      ? await buildActionsArrayFromJSON(item.do)
       : [comment('Repeat Each has no actions')];
 
-    const endUUIDRaw = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
-    const endUUID = endUUIDRaw != null ? toRenderedValue(endUUIDRaw, ctx) : genUUID();
-
-    const startParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 0,
-      WFInput: itemsValue
+    const templateValues = {
+      GroupingIdentifier: groupingIdentifier,
+      ItemsIn: itemsNode,
+      UUID: endUUIDNode,
+      BODY: bodyActions.join('\n')
     };
 
-    const endParams = {
-      GroupingIdentifier: grouping,
-      WFControlFlowMode: 2,
-      UUID: endUUID
-    };
-
-    return [
-      makeAction(IDS.REPEAT_EACH, startParams),
-      ...bodyActions,
-      makeAction(IDS.REPEAT_EACH, endParams)
-    ];
+    return SPECIAL_ACTION_TEMPLATES.REPEAT_EACH.map((part) => replaceTemplate(part, templateValues));
   }
 
   const SPECIAL_ACTION_BUILDERS = new Map([
@@ -2228,11 +2643,11 @@ const userConversions = (() => {
   //  - Repeat: { action:"Repeat", params:{ Count }, do:[...] }
   //  - RepeatEach: { action:"RepeatEach", params:{ Items }, do:[...] }
   //  - If: { action:"If", params:{ Condition }, then:[...], else:[...] }
-  async function buildActionsArrayFromJSON(list, ctx) {
+  async function buildActionsArrayFromJSON(list) {
     const out = [];
     for (const item of list) {
       if (typeof item === 'string') {
-        out.push(await buildActionFromConversions(item, {}, ctx));
+        out.push(await buildActionFromConversions(item, {}));
         continue;
       }
       if (!item || typeof item !== 'object') {
@@ -2247,18 +2662,18 @@ const userConversions = (() => {
 
       const specialBuilder = SPECIAL_ACTION_BUILDERS.get(normalizeName(kind));
       if (specialBuilder) {
-        out.push(...await specialBuilder(item, ctx));
+        out.push(...await specialBuilder(item));
         continue;
       }
 
       // Regular action
-      out.push(await buildActionFromConversions(kind, item.params || {}, ctx));
+      out.push(await buildActionFromConversions(kind, item.params || {}));
     }
     return out;
   }
 
   // ---- Build one action from Conversions/ dict template ----
-  async function buildActionFromConversions(actionName, params, ctx) {
+  async function buildActionFromConversions(actionName, params) {
     // Find file
     const filename = await lookupConversionFileForAction(actionName);
     if (!filename) {
@@ -2268,10 +2683,9 @@ const userConversions = (() => {
     // Load <dict>…</dict> snippet
     const dictXML = await loadConvFile(filename);
 
-    const processed = preprocessParams(params || {}, ctx);
     // Substitutions
-    let substituted = substitutePlaceholders(dictXML, processed);
-    substituted = postProcessAskLLM(substituted, processed);
+    let substituted = substitutePlaceholders(dictXML, params || {});
+    substituted = postProcessAskLLM(substituted, params || {});
 
     // Ensure it *looks* like a dict (we won't attempt to validate fully)
     if (!/^\s*<dict>[\s\S]*<\/dict>\s*$/i.test(substituted)) {
@@ -2306,6 +2720,197 @@ const userConversions = (() => {
       WFWorkflowActionIdentifier: XML.str(identifier),
       WFWorkflowActionParameters: paramsNode
     });
+  }
+
+  function comment(text) {
+    return makeAction('is.workflow.actions.comment', {
+      WFCommentActionText: String(text ?? '')
+    });
+  }
+
+  async function buildRepeatCountBlock(item) {
+    const params = (item && typeof item === 'object') ? (item.params || {}) : {};
+    const groupId =
+      params.GroupingIdentifier ??
+      params.groupingIdentifier ??
+      params.grouping ??
+      params.group ??
+      genUUID();
+
+    let repeatCountValue;
+    if (Object.prototype.hasOwnProperty.call(params, 'WFRepeatCount')) repeatCountValue = params.WFRepeatCount;
+    else if (Object.prototype.hasOwnProperty.call(params, 'Count')) repeatCountValue = params.Count;
+    else if (Object.prototype.hasOwnProperty.call(params, 'repeatCount')) repeatCountValue = params.repeatCount;
+    else repeatCountValue = 1;
+
+    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? null;
+
+    const startParams = mergeParams(
+      { GroupingIdentifier: groupId, WFControlFlowMode: 0, WFRepeatCount: repeatCountValue },
+      startUUID != null ? { UUID: startUUID } : null,
+      params.StartParams,
+      params.Start,
+      params.start,
+      params.StartParameters
+    );
+
+    const startAction = makeAction(IDS.REPEAT_COUNT, startParams);
+
+    const bodyActions = Array.isArray(item?.do)
+      ? await buildActionsArrayFromJSON(item.do)
+      : [comment('Repeat has no "do" array')];
+
+    const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
+    const endParams = mergeParams(
+      { GroupingIdentifier: groupId, WFControlFlowMode: 2 },
+      endUUID != null ? { UUID: endUUID } : null,
+      params.EndParams,
+      params.End,
+      params.end,
+      params.EndParameters
+    );
+    const endAction = makeAction(IDS.REPEAT_COUNT, endParams);
+
+    return [startAction, ...bodyActions, endAction];
+  }
+
+  async function buildRepeatEachBlock(item) {
+    const params = (item && typeof item === 'object') ? (item.params || {}) : {};
+    const groupId =
+      params.GroupingIdentifier ??
+      params.groupingIdentifier ??
+      params.grouping ??
+      params.group ??
+      genUUID();
+
+    let itemsValue;
+    if (Object.prototype.hasOwnProperty.call(params, 'WFInput')) itemsValue = params.WFInput;
+    else if (Object.prototype.hasOwnProperty.call(params, 'Items')) itemsValue = params.Items;
+    else if (Object.prototype.hasOwnProperty.call(params, 'List')) itemsValue = params.List;
+    else if (Object.prototype.hasOwnProperty.call(params, 'items')) itemsValue = params.items;
+
+    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? null;
+    const baseStart = { GroupingIdentifier: groupId, WFControlFlowMode: 0 };
+    if (itemsValue !== undefined) baseStart.WFInput = itemsValue;
+    if (startUUID != null) baseStart.UUID = startUUID;
+    const startParams = mergeParams(
+      baseStart,
+      params.StartParams,
+      params.Start,
+      params.start,
+      params.StartParameters
+    );
+    const startAction = makeAction(IDS.REPEAT_EACH, startParams);
+
+    const bodyActions = Array.isArray(item?.do)
+      ? await buildActionsArrayFromJSON(item.do)
+      : [comment('RepeatEach has no "do" array')];
+
+    const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
+    const endParams = mergeParams(
+      { GroupingIdentifier: groupId, WFControlFlowMode: 2 },
+      endUUID != null ? { UUID: endUUID } : null,
+      params.EndParams,
+      params.End,
+      params.end,
+      params.EndParameters
+    );
+    const endAction = makeAction(IDS.REPEAT_EACH, endParams);
+
+    return [startAction, ...bodyActions, endAction];
+  }
+
+  async function buildIfBlock(item) {
+    const params = (item && typeof item === 'object') ? (item.params || {}) : {};
+    const groupId =
+      params.GroupingIdentifier ??
+      params.groupingIdentifier ??
+      params.group ??
+      genUUID();
+
+    let conditionMode;
+    if (Object.prototype.hasOwnProperty.call(params, 'WFCondition')) conditionMode = params.WFCondition;
+    else if (Object.prototype.hasOwnProperty.call(params, 'ConditionMode')) conditionMode = params.ConditionMode;
+    else if (Object.prototype.hasOwnProperty.call(params, 'conditionMode')) conditionMode = params.conditionMode;
+
+    let conditionString;
+    if (Object.prototype.hasOwnProperty.call(params, 'WFConditionalActionString')) {
+      conditionString = params.WFConditionalActionString;
+    } else if (Object.prototype.hasOwnProperty.call(params, 'Condition')) {
+      conditionString = normalizeCondition(params.Condition);
+    } else if (Object.prototype.hasOwnProperty.call(params, 'condition')) {
+      conditionString = normalizeCondition(params.condition);
+    }
+
+    const inputValue =
+      Object.prototype.hasOwnProperty.call(params, 'WFInput') ? params.WFInput :
+      Object.prototype.hasOwnProperty.call(params, 'Input') ? params.Input :
+      Object.prototype.hasOwnProperty.call(params, 'input') ? params.input :
+      undefined;
+
+    if (conditionMode === undefined) conditionMode = 4;
+    if (conditionString === undefined) conditionString = 'Anything';
+
+    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? null;
+    const baseStart = {
+      GroupingIdentifier: groupId,
+      WFControlFlowMode: 0,
+      WFCondition: conditionMode,
+      WFConditionalActionString: conditionString
+    };
+    if (inputValue !== undefined) baseStart.WFInput = inputValue;
+    if (startUUID != null) baseStart.UUID = startUUID;
+    const startParams = mergeParams(
+      baseStart,
+      params.StartParams,
+      params.Start,
+      params.start,
+      params.StartParameters
+    );
+    const startAction = makeAction(IDS.IF, startParams);
+
+    const elseUUID = params.ElseUUID ?? params.UUIDElse ?? null;
+    const elseParams = mergeParams(
+      { GroupingIdentifier: groupId, WFControlFlowMode: 1 },
+      elseUUID != null ? { UUID: elseUUID } : null,
+      params.ElseParams,
+      params.Else,
+      params.else,
+      params.ElseParameters
+    );
+    const elseAction = makeAction(IDS.IF, elseParams);
+
+    const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
+    const endParams = mergeParams(
+      { GroupingIdentifier: groupId, WFControlFlowMode: 2 },
+      endUUID != null ? { UUID: endUUID } : null,
+      params.EndParams,
+      params.End,
+      params.end,
+      params.EndParameters
+    );
+    const endAction = makeAction(IDS.IF, endParams);
+
+    const thenActions = Array.isArray(item?.then)
+      ? await buildActionsArrayFromJSON(item.then)
+      : [comment('If has no "then" array')];
+
+    const elseActions = Array.isArray(item?.else)
+      ? await buildActionsArrayFromJSON(item.else)
+      : [];
+
+    return [startAction, ...thenActions, elseAction, ...elseActions, endAction];
+  }
+
+  // ---- Condition normalization (human-display only; internal fields omitted) ----
+  function normalizeCondition(s) {
+    const t = String(s||'').trim()
+      .replace(/\s+/g,' ')
+      .replace(/\{\{\s*/g,'{{')
+      .replace(/\s*\}\}/g,'}}');
+    // Expected shapes, e.g.:
+    // "{{VAR}} is 3", "{{VAR}} is not 0", "{{VAR}} has any value", etc.
+    return t;
   }
 
 
