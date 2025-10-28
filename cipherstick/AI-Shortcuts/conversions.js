@@ -1912,7 +1912,9 @@ const userConversions = (() => {
     if (typeof value === 'string') {
       const quick = interpretQuickReference(value);
       if (quick) {
-        if (quick.type === 'link') return XML.str(quick.value);
+        if (quick.type === 'link') {
+          return renderValue(variableValue({ uuid: quick.value }));
+        }
         if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
         return XML.str(quick.value || '');
       }
@@ -2099,17 +2101,81 @@ const userConversions = (() => {
 
   function substitutePlaceholders(dictXML, params = {}) {
     if (!dictXML) return '';
+    const normalizedParams = applyParamAliases(dictXML, params);
     let out = String(dictXML);
     out = out.replace(/\{\{\s*([A-Za-z]+)\s*:\s*([A-Za-z0-9_.-]+)\s*\}\}/g, (_m, type, keyRaw) => {
       const key = String(keyRaw);
-      const value = params[key];
+      const value = normalizedParams[key];
       return renderTypedPlaceholder(type, key, value);
     });
     out = out.replace(/\{\{\s*([A-Za-z0-9_.-]+)\s*\}\}/g, (_m, keyRaw) => {
       const key = String(keyRaw);
-      const value = params[key];
+      const value = normalizedParams[key];
       return renderAutoPlaceholder(key, value);
     });
+    return out;
+  }
+
+  function applyParamAliases(dictXML, params = {}) {
+    if (!params || typeof params !== 'object') return {};
+    const out = { ...params };
+    const keys = Object.keys(out);
+    const lowerKeyByCanonical = new Map();
+    for (const key of keys) {
+      const lower = key.toLowerCase();
+      if (!lowerKeyByCanonical.has(lower)) {
+        lowerKeyByCanonical.set(lower, key);
+      }
+    }
+
+    const hasPlaceholder = (name) => new RegExp(`\\{\\{\\s*${name}\\s*\\}\}`, 'i').test(dictXML);
+    const pickFrom = (candidates) => {
+      for (const candidate of candidates) {
+        if (out[candidate] !== undefined) return out[candidate];
+        const lower = candidate.toLowerCase();
+        if (lowerKeyByCanonical.has(lower)) {
+          const original = lowerKeyByCanonical.get(lower);
+          if (out[original] !== undefined) return out[original];
+        }
+      }
+      return undefined;
+    };
+    const ensure = (target, candidates) => {
+      if (out[target] !== undefined) return;
+      const val = pickFrom(candidates);
+      if (val !== undefined) out[target] = val;
+    };
+
+    // Case-insensitive duplicates
+    for (const key of keys) {
+      const proper = key.replace(/^(.)/, (m, c) => c.toUpperCase());
+      if (out[proper] === undefined && key !== proper) {
+        out[proper] = out[key];
+      }
+    }
+
+    if (hasPlaceholder('UUID')) {
+      ensure('UUID', ['OutputUUID', 'Uuid', 'Variable', 'Value']);
+    }
+    if (hasPlaceholder('OutputUUID')) {
+      ensure('OutputUUID', ['UUID']);
+    }
+    if (hasPlaceholder('VariableName')) {
+      ensure('VariableName', ['Name', 'VarName', 'Variable']);
+    }
+    if (hasPlaceholder('WFVariableName')) {
+      ensure('WFVariableName', ['VariableName', 'Name']);
+    }
+    if (hasPlaceholder('Text')) {
+      ensure('Text', ['text', 'Value']);
+    }
+    if (hasPlaceholder('URL')) {
+      ensure('URL', ['url', 'Link', 'Input', 'WFInput']);
+    }
+    if (hasPlaceholder('WFInput')) {
+      ensure('WFInput', ['Input', 'URL', 'Value', 'Text']);
+    }
+
     return out;
   }
 
