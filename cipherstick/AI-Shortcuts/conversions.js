@@ -1419,9 +1419,9 @@
         <key>WFSpeakTextLanguage</key>
         {{Language}}
         <key>WFSpeakTextPitch</key>
-        {{Pitch}}
-        <key>WFSpeakTextRate</key>
-        {{Rate}}
+				<real>1.1231572690217393</real>
+				<key>WFSpeakTextRate</key>
+				<real>0.41338315217391303</real>
         <key>WFSpeakTextVoice</key>
         <string>com.apple.siri.natural.Aaron</string>
         <key>WFSpeakTextWait</key>
