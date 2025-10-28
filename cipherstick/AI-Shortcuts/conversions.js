@@ -1461,7 +1461,7 @@
           <key>Value</key>
           <dict>
             <key>OutputName</key>
-            <string>Variable</string>
+            {{OutputName}}
             <key>OutputUUID</key>
             {{UUID}}
             <key>Type</key>
@@ -1683,7 +1683,7 @@
           <key>Value</key>
           <dict>
             <key>OutputName</key>
-            <string>File</string>
+            {{OutputName}}
             <key>OutputUUID</key>
             {{Input}}
             <key>Type</key>
@@ -1759,6 +1759,7 @@ const userConversions = (() => {
 
   const CONVERSION_FILENAMES = Object.freeze(Object.keys(CONVERSIONS));
   const actionLookupCache = new Map(); // normalized action -> filename
+  const linkRegistry = new Map(); // link label -> metadata about producing action
 
   // ---- XML helpers ----
   const XML = {
@@ -1782,6 +1783,72 @@ const userConversions = (() => {
       return `<array>${items.join('')}</array>`;
     }
   };
+
+  const OUTPUT_FIELD_REGEX = /(uuid|outputuuid|startuuid|enduuid|elseuuid|groupingidentifier)$/i;
+  const ATTACHMENT_SENTINEL = '\uFFFC';
+
+  function humanizeActionName(raw) {
+    if (!raw) return '';
+    const parts = String(raw)
+      .split(/[./]/)
+      .map((segment) => segment
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/_/g, ' ')
+        .replace(/\s+/g, ' ') )
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    const joined = parts.join(' ');
+    return joined
+      .split(' ')
+      .map((word) => word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : '')
+      .join(' ')
+      .trim();
+  }
+
+  function registerLinkLabel(label, actionName) {
+    if (!label) return;
+    if (linkRegistry.has(label)) return;
+    linkRegistry.set(label, {
+      action: actionName,
+      friendly: humanizeActionName(actionName) || label
+    });
+  }
+
+  function lookupLinkMetadata(label) {
+    return linkRegistry.get(label);
+  }
+
+  function parseTokenizedText(raw) {
+    const input = String(raw ?? '');
+    let cursor = 0;
+    let text = '';
+    const attachments = [];
+    const tokenRegex = /!var:([A-Za-z0-9_.-]+)|!link:([A-Za-z0-9_.-]+)/gi;
+    let match;
+    while ((match = tokenRegex.exec(input))) {
+      const [all, varName, linkLabel] = match;
+      const start = match.index;
+      if (start > cursor) {
+        text += input.slice(cursor, start);
+      }
+      const rangeStart = text.length;
+      text += ATTACHMENT_SENTINEL;
+      const range = `{${rangeStart}, 1}`;
+      if (varName) {
+        attachments.push({ range, type: 'Variable', VariableName: varName });
+      } else if (linkLabel) {
+        const meta = lookupLinkMetadata(linkLabel) || {};
+        const attachment = { range, type: 'ActionOutput', OutputUUID: linkLabel };
+        if (meta.friendly) attachment.OutputName = meta.friendly;
+        attachments.push(attachment);
+      }
+      cursor = match.index + all.length;
+    }
+    if (cursor < input.length) {
+      text += input.slice(cursor);
+    }
+    return { text, attachments };
+  }
 
   // ---- Rich value helpers (auto XML generation) ----
   const SPECIAL_VALUE = Symbol('ConversionSpecialValue');
@@ -1913,7 +1980,8 @@ const userConversions = (() => {
       const quick = interpretQuickReference(value);
       if (quick) {
         if (quick.type === 'link') {
-          return renderValue(variableValue({ uuid: quick.value }));
+          const meta = lookupLinkMetadata(quick.value) || {};
+          return renderValue(variableValue({ uuid: quick.value, name: meta.friendly || quick.value }));
         }
         if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
         return XML.str(quick.value || '');
@@ -2083,6 +2151,13 @@ const userConversions = (() => {
 
   function renderAutoPlaceholder(key, value) {
     const upperKey = String(key || '').toUpperCase();
+    if (upperKey === 'ALERTACTIONMESSAGE') {
+      return renderAlertMessage(value);
+    }
+    if (upperKey === 'SHOWCANCELBUTTON') {
+      if (value === undefined) return XML.bool(false);
+      return renderValue(value);
+    }
     if (upperKey === 'UUID') {
       const quick = interpretQuickReference(value);
       if (quick) {
@@ -2099,9 +2174,26 @@ const userConversions = (() => {
     return renderValue(value);
   }
 
+  function renderAlertMessage(value) {
+    if (value && value[SPECIAL_VALUE]) return renderValue(value);
+    if (value == null) return XML.str('');
+    if (typeof value !== 'string') return renderValue(value);
+    const { text, attachments } = parseTokenizedText(value);
+    if (!attachments.length) return XML.str(text);
+    const attachmentSpecs = attachments.map((entry) => {
+      if (entry.type === 'Variable') {
+        return { range: entry.range, type: 'Variable', VariableName: entry.VariableName };
+      }
+      const spec = { range: entry.range, type: 'ActionOutput', OutputUUID: entry.OutputUUID };
+      if (entry.OutputName) spec.OutputName = entry.OutputName;
+      return spec;
+    });
+    return renderValue(textTokenValue(text, attachmentSpecs));
+  }
+
   function substitutePlaceholders(dictXML, params = {}) {
     if (!dictXML) return '';
-    const normalizedParams = applyParamAliases(dictXML, params);
+    const normalizedParams = params && params.__normalized ? params : applyParamAliases(dictXML, params);
     let out = String(dictXML);
     out = out.replace(/\{\{\s*([A-Za-z]+)\s*:\s*([A-Za-z0-9_.-]+)\s*\}\}/g, (_m, type, keyRaw) => {
       const key = String(keyRaw);
@@ -2119,46 +2211,55 @@ const userConversions = (() => {
   function applyParamAliases(dictXML, params = {}) {
     if (!params || typeof params !== 'object') return {};
     const out = { ...params };
-    const keys = Object.keys(out);
     const lowerKeyByCanonical = new Map();
-    for (const key of keys) {
-      const lower = key.toLowerCase();
-      if (!lowerKeyByCanonical.has(lower)) {
-        lowerKeyByCanonical.set(lower, key);
-      }
+    for (const key of Object.keys(out)) {
+      lowerKeyByCanonical.set(key.toLowerCase(), key);
     }
 
-    const hasPlaceholder = (name) => new RegExp(`\\{\\{\\s*${name}\\s*\\}\}`, 'i').test(dictXML);
-    const pickFrom = (candidates) => {
-      for (const candidate of candidates) {
-        if (out[candidate] !== undefined) return out[candidate];
-        const lower = candidate.toLowerCase();
-        if (lowerKeyByCanonical.has(lower)) {
-          const original = lowerKeyByCanonical.get(lower);
-          if (out[original] !== undefined) return out[original];
-        }
-      }
+    const getValue = (candidate) => {
+      if (out[candidate] !== undefined) return out[candidate];
+      const mapped = lowerKeyByCanonical.get(candidate.toLowerCase());
+      if (mapped && out[mapped] !== undefined) return out[mapped];
       return undefined;
     };
-    const ensure = (target, candidates) => {
-      if (out[target] !== undefined) return;
-      const val = pickFrom(candidates);
-      if (val !== undefined) out[target] = val;
+
+    const setValue = (target, value) => {
+      out[target] = value;
+      lowerKeyByCanonical.set(target.toLowerCase(), target);
     };
 
-    // Case-insensitive duplicates
-    for (const key of keys) {
-      const proper = key.replace(/^(.)/, (m, c) => c.toUpperCase());
+    const hasPlaceholder = (name) => new RegExp(`\\{\\{\\s*${name}\\s*\\}\}`, 'i').test(dictXML);
+    const isLinkToken = (val) => typeof val === 'string' && /^\s*!link:/i.test(val);
+    const isVariableToken = (val) => typeof val === 'string' && /^\s*!var:/i.test(val);
+
+    const ensure = (target, candidates, predicate) => {
+      if (getValue(target) !== undefined) return;
+      for (const candidate of candidates) {
+        const val = getValue(candidate);
+        if (val === undefined) continue;
+        if (predicate && !predicate(val, candidate)) continue;
+        setValue(target, val);
+        break;
+      }
+    };
+
+    // Case-insensitive duplicates (TitleCase convenience)
+    for (const key of Object.keys(out)) {
+      const proper = key.length ? key[0].toUpperCase() + key.slice(1) : key;
       if (out[proper] === undefined && key !== proper) {
-        out[proper] = out[key];
+        setValue(proper, out[key]);
       }
     }
 
     if (hasPlaceholder('UUID')) {
-      ensure('UUID', ['OutputUUID', 'Uuid', 'Variable', 'Value']);
+      ensure('UUID', ['OutputUUID', 'Uuid', 'Value', 'Variable'], (val, source) => {
+        if (isLinkToken(val)) return true;
+        if (source.toLowerCase() === 'variable' && isVariableToken(val)) return true;
+        return false;
+      });
     }
     if (hasPlaceholder('OutputUUID')) {
-      ensure('OutputUUID', ['UUID']);
+      ensure('OutputUUID', ['UUID', 'Value'], (val) => isLinkToken(val));
     }
     if (hasPlaceholder('VariableName')) {
       ensure('VariableName', ['Name', 'VarName', 'Variable']);
@@ -2170,12 +2271,51 @@ const userConversions = (() => {
       ensure('Text', ['text', 'Value']);
     }
     if (hasPlaceholder('URL')) {
-      ensure('URL', ['url', 'Link', 'Input', 'WFInput']);
+      ensure('URL', ['url', 'Link', 'Input', 'WFInput'], (val) => !isLinkToken(val) || true);
     }
     if (hasPlaceholder('WFInput')) {
       ensure('WFInput', ['Input', 'URL', 'Value', 'Text']);
     }
+    if (hasPlaceholder('AlertActionMessage')) {
+      ensure('AlertActionMessage', ['Message', 'Text']);
+    }
+    if (hasPlaceholder('AlertActionTitle')) {
+      ensure('AlertActionTitle', ['Title']);
+    }
+    if (hasPlaceholder('ShowCancelButton')) {
+      ensure('ShowCancelButton', ['Cancel', 'ShowCancelButton', 'ShowCancel']);
+    }
 
+    if (hasPlaceholder('OutputName')) {
+      const currentUUID = getValue('UUID') || getValue('OutputUUID');
+      let friendly = null;
+      if (typeof currentUUID === 'string') {
+        const trimmed = currentUUID.trim();
+        if (/^!link:/i.test(trimmed)) {
+          const label = trimmed.slice(6).trim();
+          const meta = lookupLinkMetadata(label);
+          friendly = meta?.friendly || humanizeActionName(meta?.action || label);
+        } else if (/^!var:/i.test(trimmed)) {
+          friendly = trimmed.slice(5).trim().replace(/[{}]/g, '').toUpperCase();
+        }
+      }
+      if (friendly == null && typeof getValue('VariableName') === 'string') {
+        friendly = getValue('VariableName');
+      }
+      if (friendly == null && typeof getValue('Name') === 'string') {
+        friendly = getValue('Name');
+      }
+      if (friendly == null && typeof getValue('Label') === 'string') {
+        friendly = getValue('Label');
+      }
+      if (friendly == null && typeof currentUUID === 'string' && currentUUID) {
+        friendly = currentUUID.replace(/^!link:/i, '').replace(/^!var:/i, '');
+      }
+      if (friendly == null) friendly = 'Value';
+      setValue('OutputName', friendly);
+    }
+
+    Object.defineProperty(out, '__normalized', { value: true, enumerable: false });
     return out;
   }
 
@@ -2206,6 +2346,9 @@ const userConversions = (() => {
 
         const variableValue = raw.Variable ?? raw.variable;
         if (variableValue != null) payload.Variable = renderValue(variableValue);
+
+        const variableName = raw.VariableName ?? raw.variableName;
+        if (variableName != null) payload.VariableName = XML.str(String(variableName));
 
         if (raw.value != null) payload.Value = renderValue(raw.value);
 
@@ -2376,6 +2519,7 @@ const userConversions = (() => {
   };
 
   Conversion.toPlistFromJSON = async ({ name, program }) => {
+    linkRegistry.clear();
     const prog = coerceProgram(program, name);
     const wfName = String(prog.name || name || 'My Shortcut');
     const actions = prog.actions;
@@ -2787,9 +2931,18 @@ const userConversions = (() => {
     // Load <dict>…</dict> snippet
     const dictXML = await loadConvFile(filename);
 
+    const normalizedParams = applyParamAliases(dictXML, params || {});
+    for (const [key, value] of Object.entries(normalizedParams)) {
+      if (typeof value !== 'string') continue;
+      const trimmed = value.trim();
+      if (!/^!link:/i.test(trimmed)) continue;
+      if (!OUTPUT_FIELD_REGEX.test(key)) continue;
+      const label = trimmed.slice(6).trim();
+      registerLinkLabel(label, actionName);
+    }
     // Substitutions
-    let substituted = substitutePlaceholders(dictXML, params || {});
-    substituted = postProcessAskLLM(substituted, params || {});
+    let substituted = substitutePlaceholders(dictXML, normalizedParams);
+    substituted = postProcessAskLLM(substituted, normalizedParams);
 
     // Ensure it *looks* like a dict (we won't attempt to validate fully)
     if (!/^\s*<dict>[\s\S]*<\/dict>\s*$/i.test(substituted)) {
