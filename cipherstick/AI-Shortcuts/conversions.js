@@ -1449,19 +1449,19 @@
     </dict>
   `,
   'Takephoto': `
-    <dict>
-      <key>WFWorkflowActionIdentifier</key>
-      <string>is.workflow.actions.text.changecase</string>
-      <key>WFWorkflowActionParameters</key>
-      <dict>
-        <key>UUID</key>
-        {{UUID}}
-        <key>WFCaseType</key>
-        {{CaseType}}
-        <key>text</key>
-        {{Text}}
-      </dict>
-    </dict>
+  <dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.takephoto</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				{{UUID}}
+				<key>WFCameraCaptureDevice</key>
+				{{Camera}}
+				<key>WFCameraCaptureShowPreview</key>
+				{{OpenWhenRun}} #when set to true will require the user to press button to take the photo
+			</dict>
+		</dict>
   `,
   'Takescreenshot': `
   <dict>
