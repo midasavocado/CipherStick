@@ -2,212 +2,623 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>AI Shortcut Maker + Converter</title>
+  <title>Shortcut Studio — AI & Converter</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
-    body { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
-    h1 { margin-bottom: 8px; }
-    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-    @media (min-width: 900px){ .grid{ grid-template-columns: 1fr 1fr; } }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
-    textarea, input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bbb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    button { padding: 10px 14px; border-radius: 10px; border: 0; background: black; color: white; cursor: pointer; }
-    button[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .hint { color: #666; font-size: 13px; }
-    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #f0f0f0; font-size: 12px; margin-left: 8px; }
-    .ok { color: #0a7f2e; }
-    .bad { color: #b00020; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    :root {
+      --bg-1: #0f172a;
+      --bg-2: #111827;
+      --surface: rgba(17, 24, 39, 0.75);
+      --surface-strong: rgba(30, 41, 59, 0.85);
+      --border: rgba(148, 163, 184, 0.25);
+      --border-strong: rgba(148, 163, 184, 0.35);
+      --accent: #38bdf8;
+      --accent-strong: #0ea5e9;
+      --accent-soft: rgba(56, 189, 248, 0.18);
+      --danger: #fb7185;
+      --danger-soft: rgba(251, 113, 133, 0.18);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --card-radius: 18px;
+      --shadow: 0 28px 48px rgba(15, 23, 42, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08), transparent 55%),
+                  radial-gradient(circle at 80% 0%, rgba(129, 140, 248, 0.12), transparent 45%),
+                  linear-gradient(145deg, var(--bg-1), var(--bg-2));
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-background {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 120%, rgba(14, 165, 233, 0.22), transparent 60%);
+      z-index: -1;
+    }
+
+    a { color: var(--accent); }
+    h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+
+    .topbar {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 32px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .brand__emoji { font-size: 1.5rem; }
+    .brand__title { letter-spacing: -0.02em; }
+
+    .layout {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px 72px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .panel { display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      backdrop-filter: blur(18px);
+    }
+
+    .hero-card { padding: 28px; gap: 24px; background: var(--surface-strong); }
+
+    .card__header { display: flex; flex-direction: column; gap: 8px; }
+    .card__header--split {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card__footer { display: flex; flex-direction: column; gap: 12px; }
+
+    .field-group { display: flex; flex-direction: column; gap: 8px; }
+    label { font-size: 0.95rem; color: var(--text-muted); }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    input[type="text"]::placeholder,
+    textarea::placeholder { color: rgba(148, 163, 184, 0.7); }
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    }
+    textarea { resize: vertical; min-height: 120px; }
+    textarea.monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.9rem; background: rgba(15, 23, 42, 0.82); }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #0b1120;
+      box-shadow: 0 12px 24px rgba(14, 165, 233, 0.25);
+    }
+    button.primary.secondary {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(129, 140, 248, 0.95));
+      color: #0b1120;
+    }
+    button.primary.accent {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(56, 189, 248, 1));
+      color: #0b1120;
+    }
+    button.primary:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(14, 165, 233, 0.28); }
+    button.primary:active { transform: translateY(0); }
+
+    button.ghost {
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+    button.ghost--compact { padding: 6px 14px; font-size: 0.85rem; }
+    button.ghost:hover { background: rgba(148, 163, 184, 0.22); }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .help-text { color: var(--text-muted); font-size: 0.85rem; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.18);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-transform: lowercase;
+      letter-spacing: 0.04em;
+    }
+    .chip--idle { background: rgba(148, 163, 184, 0.14); }
+    .chip--success { background: rgba(52, 211, 153, 0.2); color: #bbf7d0; }
+    .chip--error { background: var(--danger-soft); color: #fecdd3; }
+    .chip--working { background: rgba(56, 189, 248, 0.2); color: #bae6fd; }
+
+    .mode-switch {
+      display: flex;
+      gap: 10px;
+      background: rgba(148, 163, 184, 0.12);
+      padding: 6px;
+      border-radius: 999px;
+    }
+    .mode-switch__option {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: transparent;
+      border: none;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .mode-switch__option.is-active {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+    .mode-switch__option:hover { color: var(--text); }
+
+    .conversation-card { min-height: 260px; }
+    .conversation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    .conversation-empty { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+
+    .bubble {
+      display: flex;
+      max-width: 88%;
+    }
+    .bubble__inner {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.65);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bubble--user { justify-content: flex-end; align-self: flex-end; }
+    .bubble--user .bubble__inner {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.32);
+    }
+    .bubble--assistant .bubble__inner { background: rgba(99, 102, 241, 0.16); }
+    .bubble--system .bubble__inner { background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.35); }
+    .bubble__label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(148, 163, 184, 0.72);
+    }
+    .bubble__content { margin: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text); }
+    .bubble__time { font-size: 0.7rem; color: rgba(148, 163, 184, 0.6); }
+
+    .code-card textarea { min-height: 280px; }
+
+    .footer {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 32px 32px;
+      color: rgba(148, 163, 184, 0.7);
+      font-size: 0.85rem;
+    }
+
+    .toast {
+      position: fixed;
+      right: 32px;
+      bottom: 32px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      box-shadow: 0 18px 32px rgba(15, 23, 42, 0.4);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      max-width: min(320px, calc(100% - 32px));
+      z-index: 999;
+    }
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast.toast--error {
+      border-color: rgba(251, 113, 133, 0.4);
+      background: rgba(76, 5, 25, 0.9);
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 0 20px 64px;
+      }
+      .topbar { padding: 28px 20px 16px; }
+      .card { padding: 22px; }
+      .code-card textarea { min-height: 220px; }
+    }
+
+    @media (max-width: 720px) {
+      .card { padding: 20px; }
+      .card__header--split { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .mode-switch { flex-direction: column; padding: 8px; }
+      .mode-switch__option { width: 100%; }
+      .btn-row { flex-direction: column; align-items: stretch; }
+      button { width: 100%; justify-content: center; }
+      .chip { align-self: center; }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
   </style>
 </head>
 <body>
-  <h1>AI Shortcut Maker + Converter</h1>
-  <p class="hint">Describe the Shortcut, let AI draft a Program (JSON) or DSL, convert to Shortcuts XML (.plist), then sign to a .shortcut.</p>
+  <div class="app-background" aria-hidden="true"></div>
 
-  <div class="card">
-    <label for="shortcutName">Shortcut name</label>
-    <input id="shortcutName" type="text" placeholder="E.g., 'Open my website'"/>
-
-    <label for="prompt" style="margin-top:12px; display:block;">What should it do?</label>
-    <textarea id="prompt" rows="5" placeholder="Example: Open https://cipherstick.tech in Safari."></textarea>
-
-    <div class="row" style="margin-top:12px;">
-      <button id="btnGenerate">1) AI: Plan & DSL</button>
-      <span id="genStatus" class="pill">idle</span>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__emoji">⚡️</span>
+      <span class="brand__title">Shortcut Studio</span>
     </div>
-    <div id="msgArea" class="hint mono" style="margin-top:8px; white-space:pre-wrap;"></div>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <div class="row" style="justify-content: space-between;">
-        <strong>Program JSON (editable) — or paste DSL</strong>
-        <button id="btnCopyDSL" title="Copy Program">Copy Program</button>
-      </div>
-      <textarea id="dslBox" rows="16" spellcheck="false" class="mono"></textarea>
-      <div class="row" style="margin-top:12px;">
-        <button id="btnConvert">2) Convert → .plist</button>
-        <span id="convStatus" class="pill">waiting</span>
-      </div>
+    <div class="topbar__actions">
+      <button id="btnReset" class="ghost">Reset workspace</button>
     </div>
+  </header>
 
-    <div class="card">
-      <div class="row" style="justify-content: space-between;">
-        <strong>.plist XML (editable)</strong>
-        <button id="btnCopyPlist" title="Copy plist">Copy plist</button>
-      </div>
-      <textarea id="plistBox" rows="16" spellcheck="false" class="mono"></textarea>
-      <div class="hint">Once it looks good, sign it:</div>
-      <div class="row" style="margin-top:12px;">
-        <button id="btnSign" disabled>3) Sign &amp; Download .shortcut</button>
-        <span id="signStatus" class="pill">waiting</span>
-      </div>
-    </div>
-  </div>
+  <main class="layout">
+    <section class="panel panel--primary">
+      <article class="card hero-card">
+        <div class="card__header">
+          <h1>Design, iterate, and export brilliant Shortcuts</h1>
+          <p class="help-text">Describe your idea, refine it with follow-ups, convert to plist, then sign — all in one workspace.</p>
+        </div>
+        <div class="field-group">
+          <label for="shortcutName">Shortcut name</label>
+          <input id="shortcutName" type="text" placeholder="e.g. Photo describer" />
+        </div>
+        <div class="field-group">
+          <label for="prompt">What should it do?</label>
+          <textarea id="prompt" rows="5" placeholder="Example: Take the latest photo, send it to GPT to describe it, then read the response aloud."></textarea>
+        </div>
+        <div class="card__footer">
+          <div class="btn-row">
+            <button id="btnGenerate" class="primary">Plan shortcut</button>
+            <span id="genStatus" class="chip chip--idle">idle</span>
+          </div>
+          <small class="help-text">The AI drafts program JSON (or DSL). Edit anything before converting.</small>
+        </div>
+      </article>
+
+      <article class="card conversation-card">
+        <div class="card__header card__header--split">
+          <h2>Design conversation</h2>
+          <button id="btnClearConversation" class="ghost ghost--compact">Clear log</button>
+        </div>
+        <div id="conversationList" class="conversation-list">
+          <p class="conversation-empty">No conversation yet — plan something to get started.</p>
+        </div>
+      </article>
+
+      <article class="card followup-card">
+        <div class="card__header">
+          <h2>Follow up</h2>
+          <p class="help-text">Ask a clarifying question, request updates, or search for new actions. The AI responds with a refreshed program.</p>
+        </div>
+        <div class="mode-switch" role="tablist" aria-label="Follow-up intent">
+          <button class="mode-switch__option is-active" data-follow-mode="clarify" type="button">Clarification</button>
+          <button class="mode-switch__option" data-follow-mode="update" type="button">Update shortcut</button>
+          <button class="mode-switch__option" data-follow-mode="explore" type="button">Find actions</button>
+        </div>
+        <textarea id="followUp" rows="4" placeholder="Ask a clarifying question so the AI can refine the plan."></textarea>
+        <div class="card__footer">
+          <div class="btn-row">
+            <button id="btnFollowUp" class="primary">Send follow-up</button>
+            <span id="followStatus" class="chip chip--idle">waiting</span>
+          </div>
+          <small class="help-text">We include your latest program &amp; plist so the AI always has the newest snapshot.</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel panel--secondary">
+      <article class="card code-card">
+        <div class="card__header card__header--split">
+          <h2>Program JSON / DSL</h2>
+          <button id="btnCopyDSL" class="ghost ghost--compact" title="Copy Program">Copy program</button>
+        </div>
+        <textarea id="dslBox" rows="18" spellcheck="false" class="monospace"></textarea>
+        <div class="card__footer">
+          <div class="btn-row">
+            <button id="btnConvert" class="primary secondary">Convert → plist</button>
+            <span id="convStatus" class="chip chip--idle">waiting</span>
+          </div>
+          <small class="help-text">Edit freely. Conversion accepts JSON programs or the Shortcut DSL.</small>
+        </div>
+      </article>
+
+      <article class="card code-card">
+        <div class="card__header card__header--split">
+          <h2>.plist XML</h2>
+          <button id="btnCopyPlist" class="ghost ghost--compact" title="Copy plist">Copy plist</button>
+        </div>
+        <textarea id="plistBox" rows="18" spellcheck="false" class="monospace"></textarea>
+        <div class="card__footer">
+          <div class="btn-row">
+            <button id="btnSign" class="primary accent" disabled>Sign &amp; download .shortcut</button>
+            <span id="signStatus" class="chip chip--idle">waiting</span>
+          </div>
+          <small class="help-text">Signing uploads to your Worker and delivers a .shortcut file.</small>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built for CipherStick — everything runs locally except the Worker signer. <a href="https://github.com/CipherStick" target="_blank" rel="noopener">View docs</a></p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-  // 👇 Your Worker that serves /generate and /sign (CORS must allow your site)
   const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
 
   const $ = (id) => document.getElementById(id);
-  const nameBox   = $('shortcutName');
+  const nameBox = $('shortcutName');
   const promptBox = $('prompt');
-  const dslBox    = $('dslBox');
-  const plistBox  = $('plistBox');
+  const dslBox = $('dslBox');
+  const plistBox = $('plistBox');
+  const followUpBox = $('followUp');
 
-  const btnGenerate  = $('btnGenerate');
-  const btnConvert   = $('btnConvert');
-  const btnSign      = $('btnSign');
-  const btnCopyDSL   = $('btnCopyDSL');
+  const btnGenerate = $('btnGenerate');
+  const btnConvert = $('btnConvert');
+  const btnSign = $('btnSign');
+  const btnCopyDSL = $('btnCopyDSL');
   const btnCopyPlist = $('btnCopyPlist');
+  const btnFollowUp = $('btnFollowUp');
+  const btnReset = $('btnReset');
+  const btnClearConversation = $('btnClearConversation');
 
-  const genStatus  = $('genStatus');
+  const genStatus = $('genStatus');
   const convStatus = $('convStatus');
   const signStatus = $('signStatus');
+  const followStatus = $('followStatus');
 
-  function setStatus(node, text, good=false, bad=false){
+  const conversationList = $('conversationList');
+  const toast = $('toast');
+
+  const followModeButtons = Array.from(document.querySelectorAll('[data-follow-mode]'));
+
+  const modePlaceholders = {
+    clarify: 'Ask a clarifying question or request more detail about the plan.',
+    update: 'Describe how the shortcut should change. Mention new steps or edits.',
+    explore: 'Ask for alternative approaches, new actions to include, or ideas to expand the shortcut.'
+  };
+
+  const state = {
+    followMode: 'clarify',
+    basePrompt: '',
+    lastPrompt: '',
+    lastName: '',
+    conversation: [],
+    toastTimer: null
+  };
+
+  function setStatus(node, text, good = false, bad = false) {
+    if (!node) return;
     node.textContent = text;
-    node.classList.remove('ok','bad');
-    if (good) node.classList.add('ok');
-    if (bad)  node.classList.add('bad');
+    node.classList.remove('chip--success', 'chip--error', 'chip--working', 'chip--idle');
+    const trimmed = String(text || '').trim().toLowerCase();
+    if (good) node.classList.add('chip--success');
+    else if (bad) node.classList.add('chip--error');
+    else if (text.endsWith('…') || text.endsWith('...')) node.classList.add('chip--working');
+    else if (trimmed === 'idle' || trimmed === 'waiting') node.classList.add('chip--idle');
+    else node.classList.add('chip--idle');
   }
 
-  // ---------------- Helpers: JSON/DSL detection & coercion ----------------
-  function stripBOM(s){ if (!s) return s; return s.replace(/^\uFEFF/, ""); }
-  function stripFences(s){
+  function showMessage(message, isError = false) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.toggle('toast--error', Boolean(isError));
+    toast.classList.add('is-visible');
+    clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
+  }
+
+  function pushMessage(role, content, meta = {}) {
+    state.conversation.push({
+      role,
+      content: String(content || '').trim(),
+      meta,
+      at: new Date()
+    });
+    renderConversation();
+  }
+
+  function renderConversation() {
+    if (!conversationList) return;
+    if (!state.conversation.length) {
+      conversationList.innerHTML = '<p class="conversation-empty">No conversation yet — plan something to get started.</p>';
+      return;
+    }
+    conversationList.innerHTML = state.conversation.map((entry) => {
+      const role = entry.role;
+      const metaLabel = entry.meta?.label ? '<span class="bubble__label">' + entry.meta.label + '</span>' : '';
+      const time = entry.at ? '<time class="bubble__time">' + entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</time>' : '';
+      const escaped = entry.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+      return '<article class="bubble bubble--' + role + '"><div class="bubble__inner">' + metaLabel +
+             '<p class="bubble__content">' + (escaped || '<em>(empty)</em>') + '</p>' + time + '</div></article>';
+    }).join('');
+    conversationList.scrollTop = conversationList.scrollHeight;
+  }
+
+  followModeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      followModeButtons.forEach((b) => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      state.followMode = btn.dataset.followMode;
+      followUpBox.placeholder = modePlaceholders[state.followMode] || modePlaceholders.clarify;
+    });
+  });
+  followUpBox.placeholder = modePlaceholders.clarify;
+
+  function stripBOM(s) { if (!s) return s; return s.replace(/^\uFEFF/, ''); }
+  function stripFences(s) {
     if (!s) return s;
     const m = s.match(/```(?:json|JSON)?\s*([\s\S]*?)\s*```/m);
     return m ? m[1] : s;
   }
-  function sanitizeJSONText(raw){
-    let s = String(raw ?? "");
+  function sanitizeJSONText(raw) {
+    let s = String(raw ?? '');
     s = stripBOM(s).trim();
     s = stripFences(s);
-    // remove trailing commas before } or ]
-    s = s.replace(/,\s*([}\]])/g, "$1");
-    // normalize smart quotes to straight
+    s = s.replace(/,\s*([}\]])/g, '$1');
     s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
     return s.trim();
   }
-  function parseMaybeJSON(raw){
+  function parseMaybeJSON(raw) {
     try {
       const cleaned = sanitizeJSONText(raw);
       if (!cleaned) return null;
       if (!(cleaned.startsWith('{') || cleaned.startsWith('['))) return null;
       return JSON.parse(cleaned);
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }
-  function prettyStringify(v){
+  function prettyStringify(v) {
     try { return JSON.stringify(v, null, 2); } catch { return String(v); }
   }
-  function showMessage(msg, isError=false){
-    const el = document.getElementById('msgArea');
-    if (!el) return;
-    el.textContent = String(msg || "");
-    el.style.color = isError ? '#b00020' : '#444';
-  }
 
-  // Accept anything and normalize as best as possible.
-  // If it can't be normalized to a JSON program, return null and caller will use DSL/Universal path.
-  function coerceProgram(value, fallbackName){
+  function coerceProgram(value, fallbackName) {
     let p = value;
-
-    // If string, try JSON first
     if (typeof p === 'string') {
       const maybe = parseMaybeJSON(p);
       if (maybe !== null) p = maybe;
-      else return null; // treat as DSL elsewhere
+      else return null;
     }
-
-    // Unwrap { program: {...} }
     if (p && typeof p === 'object' && p.program && typeof p.program === 'object') {
       p = { name: p.name || fallbackName, ...p.program };
     }
-
-    // If actions array directly
     if (Array.isArray(p)) {
       p = { name: fallbackName, actions: p };
     }
-
-    // If already {name?, actions?}
     if (p && typeof p === 'object') {
       if (!p.actions) p.actions = Array.isArray(p) ? p : [];
       if (!Array.isArray(p.actions)) p.actions = [];
       if (!p.name) p.name = fallbackName || 'My Shortcut';
       return p;
     }
-
     return null;
   }
 
-  // Try multiple converter APIs. Prefer new universal wrapper if present.
-  async function tryConverters({ name, inputRaw, programObj, dslText }){
-    // 1) Universal tolerant path
+  async function ensurePlist({ name, inputRaw, programObj, dslText }) {
     if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
-      try { return window.ConversionUniversal.toPlist(programObj ?? dslText ?? inputRaw, name); } catch(e){ /* fall through */ }
+      try { return window.ConversionUniversal.toPlist(programObj ?? dslText ?? inputRaw, name); } catch (e) {}
     }
-
-    // 2) JSON-centric paths
     if (programObj) {
       const cj = window.ConversionJSON;
       if (cj && typeof cj.toPlist === 'function') {
-        try { return cj.toPlist({ name, program: programObj }); } catch(e1) {
-          try { return cj.toPlist(programObj, name); } catch(e2) {
-            try { return cj.toPlist(programObj); } catch(e3) {}
+        try { return cj.toPlist({ name, program: programObj }); } catch (e1) {
+          try { return cj.toPlist(programObj, name); } catch (e2) {
+            try { return cj.toPlist(programObj); } catch (e3) {}
           }
         }
       }
       const c = window.Conversion;
       if (c) {
-        if (typeof c.toPlistFromJSON === 'function') { try { return c.toPlistFromJSON(programObj, name); } catch(e4){} }
-        if (typeof c.toPlist === 'function')       { try { return c.toPlist(programObj, name); }       catch(e5){} }
+        if (typeof c.toPlistFromJSON === 'function') { try { return c.toPlistFromJSON(programObj, name); } catch (e4) {} }
+        if (typeof c.toPlist === 'function')       { try { return c.toPlist(programObj, name); }       catch (e5) {} }
       }
       const cdsl = window.ConversionDSL;
       if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
-        try { return cdsl.toPlistFromJSON(programObj, name); } catch(e6){}
+        try { return cdsl.toPlistFromJSON(programObj, name); } catch (e6) {}
       }
     }
-
-    // 3) DSL paths
     if (dslText) {
       const cdsl = window.ConversionDSL;
       if (cdsl && typeof cdsl.toPlist === 'function') {
-        try { return cdsl.toPlist({ name, dsl: dslText }); } catch(e7){}
+        try { return cdsl.toPlist({ name, dsl: dslText }); } catch (e7) {}
       }
     }
-
-    // 4) Absolute last resort: emit a minimal comment-only plist so the flow never crashes
     if (window.ConversionUniversal && typeof window.ConversionUniversal.__makeCommentPlist === 'function') {
-      return window.ConversionUniversal.__makeCommentPlist(name, 'Conversion failed. Input preview:\n' + String(inputRaw).slice(0,2000));
+      return window.ConversionUniversal.__makeCommentPlist(name, 'Conversion failed. Input preview:\\n' + String(inputRaw).slice(0, 2000));
     }
-    // fallback dead-simple minimal plist
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>WFWorkflowName</key><string>${(name||'My Shortcut')}</string>
+  <key>WFWorkflowName</key><string>${(name || 'My Shortcut')}</string>
   <key>WFWorkflowActions</key><array>
     <dict>
       <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>
@@ -220,12 +631,57 @@
 </plist>`;
   }
 
-  // ---------------- 1) AI plan/DSL ----------------
+  function summaryFromResponse(data, programObj, dslCandidate) {
+    if (data?.answer) {
+      return String(data.answer).trim();
+    }
+    const parts = [];
+    if (programObj && Array.isArray(programObj.actions)) {
+      parts.push('Program updated (' + programObj.actions.length + ' actions)');
+    } else if (dslCandidate) {
+      parts.push('DSL snippet ready');
+    }
+    if (Array.isArray(data?.planArray) && data.planArray.length) {
+      parts.push('Plan has ' + data.planArray.length + ' steps');
+    }
+    if (Array.isArray(data?.usedFiles) && data.usedFiles.length) {
+      parts.push('Referenced ' + data.usedFiles.length + ' templates');
+    }
+    if (!parts.length) parts.push('AI response ready.');
+    return parts.join('. ');
+  }
+
+  function applyGeneratedProgram(data, name, statusNode) {
+    const programCandidate = data?.programRaw ?? data?.program ?? null;
+    const dslCandidate = programCandidate ? null : (data?.program ? null : data?.dslRaw ?? data?.dsl ?? null);
+    let programObj = null;
+
+    if (programCandidate) {
+      programObj = typeof programCandidate === 'object' ? programCandidate : parseMaybeJSON(programCandidate);
+      if (programObj && typeof programObj === 'object') {
+        if (!programObj.name) programObj.name = name;
+        dslBox.value = prettyStringify(programObj);
+        setStatus(statusNode, 'Program ready ✔', true);
+      }
+    }
+
+    if (!programObj && dslCandidate != null) {
+      dslBox.value = typeof dslCandidate === 'string' ? dslCandidate : prettyStringify(dslCandidate);
+      setStatus(statusNode, 'DSL ready ✔', true);
+    } else if (!programObj && !dslCandidate) {
+      dslBox.value = prettyStringify(data);
+      setStatus(statusNode, 'Response captured', true);
+    }
+
+    return { programObj, dslCandidate };
+  }
+
   btnGenerate.addEventListener('click', async () => {
     const prompt = (promptBox.value || '').trim();
-    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
+    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
     if (!prompt) { alert('Please describe the shortcut.'); return; }
 
+    pushMessage('user', prompt, { label: 'Initial idea' });
     setStatus(genStatus, 'generating…');
     btnGenerate.disabled = true;
     btnSign.disabled = true;
@@ -240,64 +696,99 @@
       let data = {};
       try { data = JSON.parse(text); } catch { throw new Error('Generate returned non-JSON'); }
 
-      console.debug('↩ /generate payload:', data);
+      const { programObj, dslCandidate } = applyGeneratedProgram(data, name, genStatus);
+      if (!state.basePrompt) state.basePrompt = prompt;
+      state.lastPrompt = prompt;
+      state.lastName = name;
 
-      const programCandidate = data.programRaw ?? data.program ?? null;
-      const dslCandidate     = data.program ? null : (data.dslRaw ?? data.dsl ?? null); // prefer program when present
+      const summary = summaryFromResponse(data, programObj, dslCandidate);
+      pushMessage('assistant', summary, { label: 'AI plan' });
 
-      let programObj = null;
-      if (programCandidate) {
-        programObj = typeof programCandidate === 'object' ? programCandidate : parseMaybeJSON(programCandidate);
-      }
-
-      if (programObj) {
-        if (!programObj.name) programObj.name = name;
-        dslBox.value = prettyStringify(programObj);
-        setStatus(genStatus, 'Program JSON ready ✔', true);
-      } else if (dslCandidate) {
-        dslBox.value = String(dslCandidate);
-        setStatus(genStatus, 'DSL ready ✔', true);
-      } else {
-        dslBox.value = prettyStringify(data);
-        setStatus(genStatus, 'response shown (no program/DSL)', true);
-      }
-
-      const planned = Array.isArray(data.planArray) ? data.planArray.length : 0;
-      const used    = Array.isArray(data.usedFiles) ? data.usedFiles.length : 0;
-      const catalog = Array.isArray(data.catalog)   ? data.catalog.length   : 0;
-      showMessage(`Planned: ${planned} | Used: ${used} | Catalog: ${catalog}`);
-
+      showMessage('Idea planned. Review the program, tweak as needed, then convert.');
     } catch (err) {
       console.error(err);
       setStatus(genStatus, 'error', false, true);
       showMessage(err.message || 'Generation failed', true);
-      alert(err.message || 'Generation failed');
+      pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
     } finally {
       btnGenerate.disabled = false;
     }
   });
 
-  // ---------------- 2) Convert ----------------
+  btnFollowUp.addEventListener('click', async () => {
+    const followText = (followUpBox.value || '').trim();
+    if (!followText) { alert('Enter a follow-up first.'); return; }
+    const mode = state.followMode || 'clarify';
+    const name = (nameBox.value.trim() || state.lastName || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
+
+    pushMessage('user', followText, { label: mode === 'clarify' ? 'Clarification' : mode === 'update' ? 'Update request' : 'Action search' });
+
+    setStatus(followStatus, 'sending…');
+    btnFollowUp.disabled = true;
+
+    try {
+      const payload = {
+        prompt: followText,
+        name,
+        mode,
+        followUp: true,
+        context: {
+          basePrompt: state.basePrompt || state.lastPrompt,
+          programText: dslBox.value,
+          plistText: plistBox.value
+        }
+      };
+      const res = await fetch(`${WORKER_ORIGIN}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch { throw new Error('Follow-up returned non-JSON'); }
+
+      const { programObj, dslCandidate } = applyGeneratedProgram(data, name, followStatus);
+      setStatus(genStatus, 'updated ✨', true);
+      state.lastPrompt = followText;
+      if (!state.basePrompt) state.basePrompt = followText;
+      state.lastName = name;
+
+      const summary = summaryFromResponse(data, programObj, dslCandidate);
+      const label =
+        mode === 'clarify' ? 'AI clarification' :
+        mode === 'update' ? 'AI update' :
+        'Action suggestions';
+
+      pushMessage('assistant', summary, { label });
+      showMessage('Follow-up applied. Convert again if you changed the program.');
+    } catch (err) {
+      console.error(err);
+      setStatus(followStatus, 'error', false, true);
+      showMessage(err.message || 'Follow-up failed', true);
+      pushMessage('system', err.message || 'Follow-up failed.', { label: 'Error' });
+    } finally {
+      btnFollowUp.disabled = false;
+    }
+  });
+
   btnConvert.addEventListener('click', async () => {
-    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-    const raw  = (dslBox.value || '').trim();
-    if (!raw) { alert('Nothing to convert — box is empty.'); return; }
+    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
+    const raw = (dslBox.value || '').trim();
+    if (!raw) { alert('Nothing to convert — the program box is empty.'); return; }
 
     setStatus(convStatus, 'converting…');
     btnSign.disabled = true;
 
     try {
-      // Decide lane: JSON-ish or DSL-ish or other
       const maybeJSON = parseMaybeJSON(raw);
       let programObj = null;
       let plistXML = '';
 
       if (maybeJSON !== null) {
-        programObj = coerceProgram(maybeJSON, name); // may return null → Universal handles it anyway
-        plistXML = await tryConverters({ name, inputRaw: raw, programObj, dslText: null });
+        programObj = coerceProgram(maybeJSON, name);
+        plistXML = await ensurePlist({ name, inputRaw: raw, programObj, dslText: null });
       } else {
-        // Not JSON — pass raw straight in (DSL or free text or even plist)
-        plistXML = await tryConverters({ name, inputRaw: raw, programObj: null, dslText: raw });
+        plistXML = await ensurePlist({ name, inputRaw: raw, programObj: null, dslText: raw });
       }
 
       if (!plistXML || typeof plistXML !== 'string') {
@@ -307,90 +798,118 @@
       plistBox.value = plistXML;
       btnSign.disabled = false;
       setStatus(convStatus, 'converted ✔', true);
-      showMessage('Converted to .plist successfully.');
+      showMessage('.plist ready. Sign it when you are happy.');
     } catch (err) {
       console.error(err);
       setStatus(convStatus, 'error', false, true);
       showMessage(err.message || 'Conversion failed', true);
-      alert(err.message || 'Conversion failed');
+      pushMessage('system', err.message || 'Conversion failed.', { label: 'Error' });
     }
   });
 
-  // ---------------- Copy helpers ----------------
   btnCopyDSL.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(dslBox.value || ''); btnCopyDSL.textContent = 'Copied!'; } catch {}
-    setTimeout(() => btnCopyDSL.textContent = 'Copy Program', 800);
-  });
-  btnCopyPlist.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(plistBox.value || ''); btnCopyPlist.textContent = 'Copied!'; } catch {}
-    setTimeout(() => btnCopyPlist.textContent = 'Copy plist', 800);
-  });
-
-  // ---------------- 3) Sign ----------------
- btnSign.addEventListener('click', async () => {
-  const plist = (plistBox.value || '').trim();
-  const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g,'').slice(0,60);
-  if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
-
-  setStatus(signStatus, 'uploading…');
-  btnSign.disabled = true;
-
-  try {
-    // send plist as a file in multipart/form-data
-    const file = new File([plist], `${name}.plist`, { type: "application/xml" });
-    const form = new FormData();
-    form.append('file', file);
-
-    const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
-
-    // If signer failed, try to surface readable message
-    if (!res.ok) {
-      let msg = '';
-      try { msg = await res.text(); } catch {}
-      showMessage(`Signer error ${res.status}: ${msg.slice(0,500)}`, true);
-      throw new Error(`Sign failed: ${res.status}`);
-    }
-
-    // IMPORTANT: read as BLOB (binary), not text
-    const blob = await res.blob();
-
-    // Try to use filename from Content-Disposition if present
-    const cd = res.headers.get('Content-Disposition') || '';
-    let filename = `${name}.signed.shortcut`;
-    const m = /filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i.exec(cd);
-    if (m && m[1]) {
-      try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
-    }
-
-    // Download
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-
-    setStatus(signStatus, 'downloaded ✔', true);
-    showMessage('Signed and downloaded .shortcut.');
-  } catch (e) {
-    console.error(e);
-    setStatus(signStatus, 'error', false, true);
-    showMessage(e.message || 'Signing failed', true);
-    alert(e.message || 'Signing failed');
-  } finally {
-    btnSign.disabled = false;
-  }
-});
-  // Surface unhandled promise rejections to the UI
-  window.addEventListener('unhandledrejection', (ev) => {
     try {
-      const msg = ev?.reason?.message || String(ev.reason || ev);
-      showMessage(`Unhandled error: ${msg}`, true);
-      setStatus(convStatus, 'error', false, true);
-    } catch {}
+      await navigator.clipboard.writeText(dslBox.value || '');
+      btnCopyDSL.textContent = 'Copied!';
+      showMessage('Program copied to clipboard.');
+    } catch {
+      showMessage('Clipboard copy failed.', true);
+    } finally {
+      setTimeout(() => btnCopyDSL.textContent = 'Copy program', 900);
+    }
   });
-</script>
 
-  <!-- Conversion logic lives outside the page JS on purpose -->
-  <script src="conversions.js"></script>
+  btnCopyPlist.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(plistBox.value || '');
+      btnCopyPlist.textContent = 'Copied!';
+      showMessage('plist copied to clipboard.');
+    } catch {
+      showMessage('Clipboard copy failed.', true);
+    } finally {
+      setTimeout(() => btnCopyPlist.textContent = 'Copy plist', 900);
+    }
+  });
+
+  btnSign.addEventListener('click', async () => {
+    const plist = (plistBox.value || '').trim();
+    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
+    if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
+
+    setStatus(signStatus, 'uploading…');
+    btnSign.disabled = true;
+
+    try {
+      const file = new File([plist], `${name}.plist`, { type: 'application/xml' });
+      const form = new FormData();
+      form.append('file', file);
+
+      const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
+      if (!res.ok) {
+        let msg = '';
+        try { msg = await res.text(); } catch {}
+        showMessage(`Signer error ${res.status}: ${msg.slice(0, 120)}`, true);
+        throw new Error(`Sign failed: ${res.status}`);
+      }
+
+      const blob = await res.blob();
+      const cd = res.headers.get('Content-Disposition') || '';
+      let filename = `${name}.signed.shortcut`;
+      const m = /filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i.exec(cd);
+      if (m && m[1]) {
+        try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus(signStatus, 'downloaded ✔', true);
+      showMessage('Signed shortcut downloaded.');
+    } catch (err) {
+      console.error(err);
+      setStatus(signStatus, 'error', false, true);
+      showMessage(err.message || 'Signing failed', true);
+      pushMessage('system', err.message || 'Signing failed.', { label: 'Error' });
+    } finally {
+      btnSign.disabled = false;
+    }
+  });
+
+  btnReset.addEventListener('click', () => {
+    promptBox.value = '';
+    followUpBox.value = '';
+    dslBox.value = '';
+    plistBox.value = '';
+    nameBox.value = '';
+
+    state.conversation = [];
+    state.basePrompt = '';
+    state.lastPrompt = '';
+    state.lastName = '';
+    renderConversation();
+
+    setStatus(genStatus, 'idle');
+    setStatus(convStatus, 'waiting');
+    setStatus(signStatus, 'waiting');
+    setStatus(followStatus, 'waiting');
+
+    btnSign.disabled = true;
+    showMessage('Workspace cleared. Ready for a new shortcut!');
+  });
+
+  btnClearConversation.addEventListener('click', () => {
+    state.conversation = [];
+    renderConversation();
+  });
+
+  setStatus(genStatus, 'idle');
+  setStatus(convStatus, 'waiting');
+  setStatus(signStatus, 'waiting');
+  setStatus(followStatus, 'waiting');
+  renderConversation();
+  </script>
 </body>
 </html>
