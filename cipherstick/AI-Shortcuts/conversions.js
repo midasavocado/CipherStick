@@ -1459,7 +1459,7 @@
 				<key>WFCameraCaptureDevice</key>
 				{{Camera}}
 				<key>WFCameraCaptureShowPreview</key>
-				{{OpenWhenRun}} #when set to true will require the user to press button to take the photo
+				{{OpenWhenRun}}
 			</dict>
 		</dict>
   `,
