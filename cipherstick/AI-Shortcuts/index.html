@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Shortcut Studio — AI & Converter</title>
+  <title>Shortcut Studio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg-1: #0f172a;
-      --bg-2: #111827;
-      --surface: rgba(17, 24, 39, 0.75);
-      --surface-strong: rgba(30, 41, 59, 0.85);
-      --border: rgba(148, 163, 184, 0.25);
-      --border-strong: rgba(148, 163, 184, 0.35);
-      --accent: #38bdf8;
-      --accent-strong: #0ea5e9;
-      --accent-soft: rgba(56, 189, 248, 0.18);
-      --danger: #fb7185;
-      --danger-soft: rgba(251, 113, 133, 0.18);
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --card-radius: 18px;
-      --shadow: 0 28px 48px rgba(15, 23, 42, 0.45);
+      --bg: #05070f;
+      --bg-panel: #0d111d;
+      --bg-panel-strong: #131a2b;
+      --border: rgba(110, 120, 160, 0.25);
+      --border-strong: rgba(110, 120, 160, 0.45);
+      --accent: #6c5ce7;
+      --accent-soft: rgba(108, 92, 231, 0.18);
+      --accent-strong: #a78bfa;
+      --text: #e6ecff;
+      --text-muted: #8a96b9;
+      --success: #34d399;
+      --error: #fb7185;
+      --shadow: 0 30px 60px rgba(5, 7, 15, 0.55);
+      --radius-lg: 22px;
+      --radius-md: 16px;
     }
 
     * { box-sizing: border-box; }
@@ -29,30 +29,21 @@
       margin: 0;
       min-height: 100vh;
       font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08), transparent 55%),
-                  radial-gradient(circle at 80% 0%, rgba(129, 140, 248, 0.12), transparent 45%),
-                  linear-gradient(145deg, var(--bg-1), var(--bg-2));
+      background: radial-gradient(circle at 15% 20%, rgba(69, 59, 219, 0.25), transparent 55%),
+                  radial-gradient(circle at 85% 0, rgba(14, 165, 233, 0.22), transparent 52%),
+                  linear-gradient(160deg, #04060d, #0a0e18 55%, #05070f);
       color: var(--text);
       display: flex;
       flex-direction: column;
     }
 
-    .app-background {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 120%, rgba(14, 165, 233, 0.22), transparent 60%);
-      z-index: -1;
-    }
+    a { color: var(--accent-strong); }
 
-    a { color: var(--accent); }
-    h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
-
-    .topbar {
+    header {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 0 auto;
-      padding: 32px 32px 18px;
+      padding: 28px 40px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -62,230 +53,326 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 1.25rem;
+      gap: 14px;
       font-weight: 600;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
     }
-    .brand__emoji { font-size: 1.5rem; }
-    .brand__title { letter-spacing: -0.02em; }
-
-    .layout {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 32px 72px;
+    .brand__logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6c5ce7, #a855f7);
       display: grid;
-      grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
-      gap: 24px;
+      place-items: center;
+      font-weight: 700;
+      color: #0b0620;
+      box-shadow: 0 16px 30px rgba(108, 92, 231, 0.35);
     }
 
-    .panel { display: flex; flex-direction: column; gap: 24px; }
+    .main {
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto 60px;
+      padding: 0 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+      gap: 28px;
+    }
 
-    .card {
-      background: var(--surface);
+    .panel {
+      background: var(--bg-panel);
+      border-radius: var(--radius-lg);
       border: 1px solid var(--border);
-      border-radius: var(--card-radius);
       box-shadow: var(--shadow);
-      padding: 24px;
+      backdrop-filter: blur(18px);
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      backdrop-filter: blur(18px);
+      min-height: calc(100vh - 180px);
     }
 
-    .hero-card { padding: 28px; gap: 24px; background: var(--surface-strong); }
-
-    .card__header { display: flex; flex-direction: column; gap: 8px; }
-    .card__header--split {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    .chat-panel {
+      padding: 26px 24px 20px;
+      gap: 18px;
     }
-    .card__footer { display: flex; flex-direction: column; gap: 12px; }
 
-    .field-group { display: flex; flex-direction: column; gap: 8px; }
-    label { font-size: 0.95rem; color: var(--text-muted); }
+    .status-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .status-step {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 16px;
+      position: relative;
+    }
+    .status-step::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 24px;
+      bottom: -18px;
+      width: 2px;
+      background: rgba(148, 163, 184, 0.18);
+    }
+    .status-step:last-child::before { display: none; }
+    .status-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 2px solid rgba(148, 163, 184, 0.35);
+      background: rgba(148, 163, 184, 0.12);
+      display: grid;
+      place-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.25s ease;
+    }
+    .status-dot::after {
+      content: "";
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.55);
+    }
+    .status-step.active .status-dot {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .status-step.active .status-dot::after {
+      background: var(--accent);
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    .status-step.done .status-dot {
+      border-color: var(--success);
+      background: rgba(52, 211, 153, 0.2);
+      color: var(--success);
+    }
+    .status-step.done .status-dot::after {
+      width: 12px;
+      height: 12px;
+      background: var(--success);
+      border-radius: 4px;
+      transform: rotate(45deg);
+    }
+    .status-step.error .status-dot {
+      border-color: var(--error);
+      background: rgba(251, 113, 133, 0.22);
+    }
+    .status-step.error .status-dot::after {
+      width: 12px;
+      height: 2px;
+      background: var(--error);
+      transform: rotate(45deg);
+      border-radius: 999px;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.5; }
+    }
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .status-text strong { font-size: 0.95rem; }
+    .status-text span { font-size: 0.8rem; color: var(--text-muted); }
 
-    input[type="text"], textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      background: rgba(15, 23, 42, 0.6);
-      color: var(--text);
+    .chat-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 6px 18px 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .chat-scroll::-webkit-scrollbar { width: 8px; }
+    .chat-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.22);
+      border-radius: 999px;
+    }
+
+    .bubble {
+      max-width: 92%;
+      display: flex;
+    }
+    .bubble--user { justify-content: flex-end; align-self: flex-end; }
+    .bubble__inner {
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: rgba(24, 31, 52, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      box-shadow: 0 18px 36px rgba(5, 7, 15, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .bubble--user .bubble__inner {
+      background: rgba(108, 92, 231, 0.18);
+      border-color: rgba(108, 92, 231, 0.35);
+    }
+    .bubble--assistant .bubble__inner {
+      background: rgba(14, 165, 233, 0.12);
+      border-color: rgba(14, 165, 233, 0.25);
+    }
+    .bubble__label {
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(148, 163, 184, 0.7);
+    }
+    .bubble__time {
+      font-size: 0.68rem;
+      color: rgba(148, 163, 184, 0.5);
+    }
+
+    .composer {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .composer textarea {
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      background: var(--bg-panel-strong);
+      color: var(--text);
+      min-height: 110px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      resize: vertical;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    input[type="text"]::placeholder,
-    textarea::placeholder { color: rgba(148, 163, 184, 0.7); }
-    input[type="text"]:focus,
-    textarea:focus {
+    .composer textarea:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
     }
-    textarea { resize: vertical; min-height: 120px; }
-    textarea.monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.9rem; background: rgba(15, 23, 42, 0.82); }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
-
-    button {
+    .composer button {
+      align-self: flex-end;
       border: none;
       border-radius: 999px;
-      padding: 10px 18px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
-
-    button.primary {
+      padding: 10px 20px;
       background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #0b1120;
-      box-shadow: 0 12px 24px rgba(14, 165, 233, 0.25);
+      color: #08031b;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 16px 32px rgba(108, 92, 231, 0.35);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
-    button.primary.secondary {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(129, 140, 248, 0.95));
-      color: #0b1120;
-    }
-    button.primary.accent {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(56, 189, 248, 1));
-      color: #0b1120;
-    }
-    button.primary:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(14, 165, 233, 0.28); }
-    button.primary:active { transform: translateY(0); }
-
-    button.ghost {
-      background: rgba(148, 163, 184, 0.12);
-      color: var(--text);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-    }
-    button.ghost--compact { padding: 6px 14px; font-size: 0.85rem; }
-    button.ghost:hover { background: rgba(148, 163, 184, 0.22); }
-
-    button:disabled {
+    .composer button:hover { transform: translateY(-1px); }
+    .composer button:active { transform: translateY(0); }
+    .composer button:disabled {
       opacity: 0.55;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
     }
 
-    .help-text { color: var(--text-muted); font-size: 0.85rem; }
-
-    .chip {
-      display: inline-flex;
+    .side-panel {
+      background: rgba(12, 16, 28, 0.88);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 26px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .side-header {
+      display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+    }
+    .side-header h2 { margin: 0; font-size: 1.05rem; }
+    .chip {
       padding: 4px 12px;
       border-radius: 999px;
       background: rgba(148, 163, 184, 0.18);
       color: var(--text-muted);
       font-size: 0.78rem;
+      letter-spacing: 0.05em;
       text-transform: lowercase;
-      letter-spacing: 0.04em;
     }
-    .chip--idle { background: rgba(148, 163, 184, 0.14); }
-    .chip--success { background: rgba(52, 211, 153, 0.2); color: #bbf7d0; }
-    .chip--error { background: var(--danger-soft); color: #fecdd3; }
-    .chip--working { background: rgba(56, 189, 248, 0.2); color: #bae6fd; }
 
-    .mode-switch {
-      display: flex;
-      gap: 10px;
-      background: rgba(148, 163, 184, 0.12);
-      padding: 6px;
-      border-radius: 999px;
-    }
-    .mode-switch__option {
-      flex: 1;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: transparent;
-      border: none;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-    .mode-switch__option.is-active {
-      background: var(--accent-soft);
-      color: var(--text);
-    }
-    .mode-switch__option:hover { color: var(--text); }
-
-    .conversation-card { min-height: 260px; }
-    .conversation-list {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      max-height: 320px;
-      overflow-y: auto;
-      padding-right: 6px;
-    }
-    .conversation-empty { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
-
-    .bubble {
-      display: flex;
-      max-width: 88%;
-    }
-    .bubble__inner {
-      padding: 14px 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.65);
-      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .bubble--user { justify-content: flex-end; align-self: flex-end; }
-    .bubble--user .bubble__inner {
-      background: rgba(56, 189, 248, 0.18);
-      border-color: rgba(56, 189, 248, 0.32);
-    }
-    .bubble--assistant .bubble__inner { background: rgba(99, 102, 241, 0.16); }
-    .bubble--system .bubble__inner { background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.35); }
-    .bubble__label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: rgba(148, 163, 184, 0.72);
-    }
-    .bubble__content { margin: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text); }
-    .bubble__time { font-size: 0.7rem; color: rgba(148, 163, 184, 0.6); }
-
-    .code-card textarea { min-height: 280px; }
-
-    .footer {
+    textarea.monospace {
       width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 16px 32px 32px;
-      color: rgba(148, 163, 184, 0.7);
-      font-size: 0.85rem;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: #05070f;
+      color: #f5f7ff;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Menlo, Consolas, monospace;
+      font-size: 0.86rem;
+      min-height: 220px;
+      resize: vertical;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+    }
+    textarea.monospace:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
+    }
+
+    .side-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn-ghost {
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 999px;
+      padding: 8px 18px;
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .btn-ghost:hover { background: rgba(148, 163, 184, 0.22); transform: translateY(-1px); }
+    .btn-accent {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      background: linear-gradient(135deg, rgba(94, 234, 212, 0.9), rgba(56, 189, 248, 1));
+      color: #04111b;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 18px 32px rgba(59, 130, 246, 0.28);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .btn-accent:hover { transform: translateY(-1px); }
+    .btn-accent:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .toast {
       position: fixed;
-      right: 32px;
-      bottom: 32px;
+      right: 36px;
+      bottom: 36px;
       padding: 14px 18px;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.92);
+      border-radius: 16px;
+      background: rgba(5, 7, 15, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.25);
       color: var(--text);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      box-shadow: 0 18px 32px rgba(15, 23, 42, 0.4);
+      box-shadow: 0 26px 48px rgba(5, 7, 15, 0.5);
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(16px);
       pointer-events: none;
       transition: opacity 0.25s ease, transform 0.25s ease;
-      max-width: min(320px, calc(100% - 32px));
+      max-width: min(340px, calc(100% - 32px));
       z-index: 999;
     }
     .toast.is-visible {
@@ -294,135 +381,100 @@
     }
     .toast.toast--error {
       border-color: rgba(251, 113, 133, 0.4);
-      background: rgba(76, 5, 25, 0.9);
+      background: rgba(76, 5, 25, 0.92);
     }
 
-    @media (max-width: 1100px) {
-      .layout {
+    @media (max-width: 1080px) {
+      .main {
         grid-template-columns: minmax(0, 1fr);
-        padding: 0 20px 64px;
+        padding: 0 24px;
       }
-      .topbar { padding: 28px 20px 16px; }
-      .card { padding: 22px; }
-      .code-card textarea { min-height: 220px; }
+      .panel { min-height: auto; }
     }
-
-    @media (max-width: 720px) {
-      .card { padding: 20px; }
-      .card__header--split { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .mode-switch { flex-direction: column; padding: 8px; }
-      .mode-switch__option { width: 100%; }
-      .btn-row { flex-direction: column; align-items: stretch; }
-      button { width: 100%; justify-content: center; }
-      .chip { align-self: center; }
-      .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    @media (max-width: 640px) {
+      header { padding: 24px 20px 10px; }
+      .main { padding: 0 18px; }
+      .panel { padding: 22px 18px; border-radius: 18px; }
+      .composer textarea { min-height: 100px; }
+      .btn-ghost, .btn-accent { width: 100%; text-align: center; }
+      header { flex-direction: column; align-items: flex-start; gap: 10px; }
     }
   </style>
 </head>
 <body>
-  <div class="app-background" aria-hidden="true"></div>
-
-  <header class="topbar">
+  <header>
     <div class="brand">
-      <span class="brand__emoji">⚡️</span>
-      <span class="brand__title">Shortcut Studio</span>
+      <span class="brand__logo">SS</span>
+      <span>Shortcut Studio</span>
     </div>
-    <div class="topbar__actions">
-      <button id="btnReset" class="ghost">Reset workspace</button>
-    </div>
+    <button id="btnReset" class="btn-ghost">Reset workspace</button>
   </header>
 
-  <main class="layout">
-    <section class="panel panel--primary">
-      <article class="card hero-card">
-        <div class="card__header">
-          <h1>Design, iterate, and export brilliant Shortcuts</h1>
-          <p class="help-text">Describe your idea, refine it with follow-ups, convert to plist, then sign — all in one workspace.</p>
-        </div>
-        <div class="field-group">
-          <label for="shortcutName">Shortcut name</label>
-          <input id="shortcutName" type="text" placeholder="e.g. Photo describer" />
-        </div>
-        <div class="field-group">
-          <label for="prompt">What should it do?</label>
-          <textarea id="prompt" rows="5" placeholder="Example: Take the latest photo, send it to GPT to describe it, then read the response aloud."></textarea>
-        </div>
-        <div class="card__footer">
-          <div class="btn-row">
-            <button id="btnGenerate" class="primary">Plan shortcut</button>
-            <span id="genStatus" class="chip chip--idle">idle</span>
+  <main class="main">
+    <section class="panel chat-panel">
+      <div class="status-timeline" id="statusTimeline">
+        <div class="status-step" data-step="assess">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Assessing request</strong>
+            <span>Understanding your goal and previous context</span>
           </div>
-          <small class="help-text">The AI drafts program JSON (or DSL). Edit anything before converting.</small>
         </div>
-      </article>
-
-      <article class="card conversation-card">
-        <div class="card__header card__header--split">
-          <h2>Design conversation</h2>
-          <button id="btnClearConversation" class="ghost ghost--compact">Clear log</button>
-        </div>
-        <div id="conversationList" class="conversation-list">
-          <p class="conversation-empty">No conversation yet — plan something to get started.</p>
-        </div>
-      </article>
-
-      <article class="card followup-card">
-        <div class="card__header">
-          <h2>Follow up</h2>
-          <p class="help-text">Ask a clarifying question, request updates, or search for new actions. The AI responds with a refreshed program.</p>
-        </div>
-        <div class="mode-switch" role="tablist" aria-label="Follow-up intent">
-          <button class="mode-switch__option is-active" data-follow-mode="clarify" type="button">Clarification</button>
-          <button class="mode-switch__option" data-follow-mode="update" type="button">Update shortcut</button>
-          <button class="mode-switch__option" data-follow-mode="explore" type="button">Find actions</button>
-        </div>
-        <textarea id="followUp" rows="4" placeholder="Ask a clarifying question so the AI can refine the plan."></textarea>
-        <div class="card__footer">
-          <div class="btn-row">
-            <button id="btnFollowUp" class="primary">Send follow-up</button>
-            <span id="followStatus" class="chip chip--idle">waiting</span>
+        <div class="status-step" data-step="search">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Selecting actions</strong>
+            <span>Scanning the action catalog for best-fit templates</span>
           </div>
-          <small class="help-text">We include your latest program &amp; plist so the AI always has the newest snapshot.</small>
         </div>
-      </article>
+        <div class="status-step" data-step="build">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Building program</strong>
+            <span>Linking actions &amp; filling parameters</span>
+          </div>
+        </div>
+        <div class="status-step" data-step="summarize">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Summarizing</strong>
+            <span>Explaining changes &amp; next steps</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-scroll" id="conversationList">
+        <p class="bubble__label" style="color: var(--text-muted);">Ready to craft your shortcut.</p>
+      </div>
+
+      <div class="composer">
+        <textarea id="chatInput" placeholder="Describe the shortcut you want. Ask follow-up questions anytime."></textarea>
+        <button id="btnSend">Send prompt</button>
+      </div>
     </section>
 
-    <section class="panel panel--secondary">
-      <article class="card code-card">
-        <div class="card__header card__header--split">
-          <h2>Program JSON / DSL</h2>
-          <button id="btnCopyDSL" class="ghost ghost--compact" title="Copy Program">Copy program</button>
-        </div>
-        <textarea id="dslBox" rows="18" spellcheck="false" class="monospace"></textarea>
-        <div class="card__footer">
-          <div class="btn-row">
-            <button id="btnConvert" class="primary secondary">Convert → plist</button>
-            <span id="convStatus" class="chip chip--idle">waiting</span>
-          </div>
-          <small class="help-text">Edit freely. Conversion accepts JSON programs or the Shortcut DSL.</small>
-        </div>
-      </article>
+    <aside class="side-panel">
+      <div class="side-header">
+        <h2>Program JSON / DSL</h2>
+        <span id="genStatus" class="chip">idle</span>
+      </div>
+      <textarea id="dslBox" class="monospace" spellcheck="false" placeholder="Program output will appear here after the first response."></textarea>
 
-      <article class="card code-card">
-        <div class="card__header card__header--split">
-          <h2>.plist XML</h2>
-          <button id="btnCopyPlist" class="ghost ghost--compact" title="Copy plist">Copy plist</button>
-        </div>
-        <textarea id="plistBox" rows="18" spellcheck="false" class="monospace"></textarea>
-        <div class="card__footer">
-          <div class="btn-row">
-            <button id="btnSign" class="primary accent" disabled>Sign &amp; download .shortcut</button>
-            <span id="signStatus" class="chip chip--idle">waiting</span>
-          </div>
-          <small class="help-text">Signing uploads to your Worker and delivers a .shortcut file.</small>
-        </div>
-      </article>
-    </section>
+      <div class="side-header">
+        <h2>.plist XML</h2>
+        <span id="convStatus" class="chip">waiting</span>
+      </div>
+      <textarea id="plistBox" class="monospace" spellcheck="false" placeholder="Convert the program to view the plist."></textarea>
+
+      <div class="side-actions">
+        <button id="btnCopyDSL" class="btn-ghost">Copy program</button>
+        <button id="btnConvert" class="btn-ghost">Convert → plist</button>
+        <button id="btnCopyPlist" class="btn-ghost">Copy plist</button>
+        <button id="btnSign" class="btn-accent" disabled>Sign &amp; download</button>
+        <span id="signStatus" class="chip">waiting</span>
+      </div>
+    </aside>
   </main>
-
-  <footer class="footer">
-    <p>Built for CipherStick — everything runs locally except the Worker signer. <a href="https://github.com/CipherStick" target="_blank" rel="noopener">View docs</a></p>
-  </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -430,56 +482,56 @@
   const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
 
   const $ = (id) => document.getElementById(id);
-  const nameBox = $('shortcutName');
-  const promptBox = $('prompt');
-  const dslBox = $('dslBox');
-  const plistBox = $('plistBox');
-  const followUpBox = $('followUp');
-
-  const btnGenerate = $('btnGenerate');
-  const btnConvert = $('btnConvert');
-  const btnSign = $('btnSign');
+  const chatInput = $('chatInput');
+  const conversationList = $('conversationList');
+  const btnSend = $('btnSend');
+  const btnReset = $('btnReset');
   const btnCopyDSL = $('btnCopyDSL');
   const btnCopyPlist = $('btnCopyPlist');
-  const btnFollowUp = $('btnFollowUp');
-  const btnReset = $('btnReset');
-  const btnClearConversation = $('btnClearConversation');
+  const btnConvert = $('btnConvert');
+  const btnSign = $('btnSign');
+  const toast = $('toast');
 
+  const dslBox = $('dslBox');
+  const plistBox = $('plistBox');
   const genStatus = $('genStatus');
   const convStatus = $('convStatus');
   const signStatus = $('signStatus');
-  const followStatus = $('followStatus');
 
-  const conversationList = $('conversationList');
-  const toast = $('toast');
-
-  const followModeButtons = Array.from(document.querySelectorAll('[data-follow-mode]'));
-
-  const modePlaceholders = {
-    clarify: 'Ask a clarifying question or request more detail about the plan.',
-    update: 'Describe how the shortcut should change. Mention new steps or edits.',
-    explore: 'Ask for alternative approaches, new actions to include, or ideas to expand the shortcut.'
-  };
+  const statusTimeline = document.querySelectorAll('.status-step');
 
   const state = {
-    followMode: 'clarify',
     basePrompt: '',
     lastPrompt: '',
     lastName: '',
     conversation: [],
-    toastTimer: null
+    toastTimer: null,
+    isBusy: false
   };
 
-  function setStatus(node, text, good = false, bad = false) {
-    if (!node) return;
-    node.textContent = text;
-    node.classList.remove('chip--success', 'chip--error', 'chip--working', 'chip--idle');
-    const trimmed = String(text || '').trim().toLowerCase();
-    if (good) node.classList.add('chip--success');
-    else if (bad) node.classList.add('chip--error');
-    else if (text.endsWith('…') || text.endsWith('...')) node.classList.add('chip--working');
-    else if (trimmed === 'idle' || trimmed === 'waiting') node.classList.add('chip--idle');
-    else node.classList.add('chip--idle');
+  const DEFAULT_SHORTCUT_NAME = 'My Shortcut';
+
+  function resetPipeline() {
+    statusTimeline.forEach((step) => {
+      step.classList.remove('active', 'done', 'error');
+    });
+  }
+
+  function setPipeline(stepKey, status) {
+    const stepEl = document.querySelector(`.status-step[data-step="${stepKey}"]`);
+    if (!stepEl) return;
+    if (status === 'active') {
+      stepEl.classList.remove('done', 'error');
+      stepEl.classList.add('active');
+    } else if (status === 'done') {
+      stepEl.classList.remove('active', 'error');
+      stepEl.classList.add('done');
+    } else if (status === 'error') {
+      stepEl.classList.remove('active', 'done');
+      stepEl.classList.add('error');
+    } else {
+      stepEl.classList.remove('active', 'done', 'error');
+    }
   }
 
   function showMessage(message, isError = false) {
@@ -489,6 +541,15 @@
     toast.classList.add('is-visible');
     clearTimeout(state.toastTimer);
     state.toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
+  }
+
+  function setChipStatus(node, text, variant = 'idle') {
+    if (!node) return;
+    node.textContent = text;
+    node.classList.remove('chip--success', 'chip--error', 'chip--working');
+    if (variant === 'success') node.classList.add('chip--success');
+    if (variant === 'error') node.classList.add('chip--error');
+    if (variant === 'working') node.classList.add('chip--working');
   }
 
   function pushMessage(role, content, meta = {}) {
@@ -504,58 +565,71 @@
   function renderConversation() {
     if (!conversationList) return;
     if (!state.conversation.length) {
-      conversationList.innerHTML = '<p class="conversation-empty">No conversation yet — plan something to get started.</p>';
+      conversationList.innerHTML = '<p class="bubble__label" style="color: var(--text-muted);">Ready to craft your shortcut.</p>';
       return;
     }
     conversationList.innerHTML = state.conversation.map((entry) => {
-      const role = entry.role;
-      const metaLabel = entry.meta?.label ? '<span class="bubble__label">' + entry.meta.label + '</span>' : '';
-      const time = entry.at ? '<time class="bubble__time">' + entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</time>' : '';
+      const roleClass = entry.role === 'user' ? 'bubble--user' :
+                        entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
+      const label = entry.meta?.label ? `<span class="bubble__label">${entry.meta.label}</span>` : '';
+      const time = entry.at ? `<time class="bubble__time">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>` : '';
       const escaped = entry.content
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/\n/g, '<br>');
-      return '<article class="bubble bubble--' + role + '"><div class="bubble__inner">' + metaLabel +
-             '<p class="bubble__content">' + (escaped || '<em>(empty)</em>') + '</p>' + time + '</div></article>';
+      return `
+        <article class="bubble ${roleClass}">
+          <div class="bubble__inner">
+            ${label}
+            <p>${escaped || '<em>(empty)</em>'}</p>
+            ${time}
+          </div>
+        </article>
+      `;
     }).join('');
     conversationList.scrollTop = conversationList.scrollHeight;
   }
 
-  followModeButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      followModeButtons.forEach((b) => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-      state.followMode = btn.dataset.followMode;
-      followUpBox.placeholder = modePlaceholders[state.followMode] || modePlaceholders.clarify;
-    });
-  });
-  followUpBox.placeholder = modePlaceholders.clarify;
-
-  function stripBOM(s) { if (!s) return s; return s.replace(/^\uFEFF/, ''); }
-  function stripFences(s) {
-    if (!s) return s;
-    const m = s.match(/```(?:json|JSON)?\s*([\s\S]*?)\s*```/m);
-    return m ? m[1] : s;
+  function guessMode(text) {
+    const input = text.toLowerCase();
+    if (input.includes('find') || input.includes('search') || input.includes('action') && input.includes('what')) {
+      return 'explore';
+    }
+    if (/\?/.test(input) || input.startsWith('how ') || input.startsWith('why ') || input.includes('clarify')) {
+      return 'clarify';
+    }
+    if (input.includes('add ') || input.includes('update') || input.includes('change') || input.includes('modify') || input.includes('replace') || input.includes('can you')) {
+      return 'update';
+    }
+    return 'update';
   }
-  function sanitizeJSONText(raw) {
+
+  function sanitizeName(name) {
+    return (name || DEFAULT_SHORTCUT_NAME).replace(/[^\w\s\-]/g, '').slice(0, 60) || DEFAULT_SHORTCUT_NAME;
+  }
+
+  function sanitizeJSON(raw) {
     let s = String(raw ?? '');
-    s = stripBOM(s).trim();
-    s = stripFences(s);
+    s = s.replace(/^\uFEFF/, '').trim();
+    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fence) s = fence[1];
     s = s.replace(/,\s*([}\]])/g, '$1');
     s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
     return s.trim();
   }
+
   function parseMaybeJSON(raw) {
     try {
-      const cleaned = sanitizeJSONText(raw);
-      if (!cleaned) return null;
-      if (!(cleaned.startsWith('{') || cleaned.startsWith('['))) return null;
-      return JSON.parse(cleaned);
+      const s = sanitizeJSON(raw);
+      if (!s) return null;
+      if (!(s.startsWith('{') || s.startsWith('['))) return null;
+      return JSON.parse(s);
     } catch {
       return null;
     }
   }
+
   function prettyStringify(v) {
     try { return JSON.stringify(v, null, 2); } catch { return String(v); }
   }
@@ -576,7 +650,7 @@
     if (p && typeof p === 'object') {
       if (!p.actions) p.actions = Array.isArray(p) ? p : [];
       if (!Array.isArray(p.actions)) p.actions = [];
-      if (!p.name) p.name = fallbackName || 'My Shortcut';
+      if (!p.name) p.name = fallbackName || DEFAULT_SHORTCUT_NAME;
       return p;
     }
     return null;
@@ -618,7 +692,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>WFWorkflowName</key><string>${(name || 'My Shortcut')}</string>
+  <key>WFWorkflowName</key><string>${(name || DEFAULT_SHORTCUT_NAME)}</string>
   <key>WFWorkflowActions</key><array>
     <dict>
       <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>
@@ -637,18 +711,15 @@
     }
     const parts = [];
     if (programObj && Array.isArray(programObj.actions)) {
-      parts.push('Program updated (' + programObj.actions.length + ' actions)');
+      parts.push('Program updated (' + programObj.actions.length + ' actions).');
     } else if (dslCandidate) {
-      parts.push('DSL snippet ready');
+      parts.push('DSL snippet ready.');
     }
     if (Array.isArray(data?.planArray) && data.planArray.length) {
-      parts.push('Plan has ' + data.planArray.length + ' steps');
-    }
-    if (Array.isArray(data?.usedFiles) && data.usedFiles.length) {
-      parts.push('Referenced ' + data.usedFiles.length + ' templates');
+      parts.push('Selected ' + data.planArray.length + ' template(s).');
     }
     if (!parts.length) parts.push('AI response ready.');
-    return parts.join('. ');
+    return parts.join(' ');
   }
 
   function applyGeneratedProgram(data, name, statusNode) {
@@ -661,186 +732,164 @@
       if (programObj && typeof programObj === 'object') {
         if (!programObj.name) programObj.name = name;
         dslBox.value = prettyStringify(programObj);
-        setStatus(statusNode, 'Program ready ✔', true);
+        setChipStatus(statusNode, 'Program ready ✔', 'success');
       }
     }
 
     if (!programObj && dslCandidate != null) {
       dslBox.value = typeof dslCandidate === 'string' ? dslCandidate : prettyStringify(dslCandidate);
-      setStatus(statusNode, 'DSL ready ✔', true);
+      setChipStatus(statusNode, 'Snippet ready ✔', 'success');
     } else if (!programObj && !dslCandidate) {
       dslBox.value = prettyStringify(data);
-      setStatus(statusNode, 'Response captured', true);
+      setChipStatus(statusNode, 'Response captured', 'success');
     }
 
     return { programObj, dslCandidate };
   }
 
-  btnGenerate.addEventListener('click', async () => {
-    const prompt = (promptBox.value || '').trim();
-    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
-    if (!prompt) { alert('Please describe the shortcut.'); return; }
+  async function handleSend() {
+    if (state.isBusy) return;
+    const text = (chatInput.value || '').trim();
+    if (!text) return;
 
-    pushMessage('user', prompt, { label: 'Initial idea' });
-    setStatus(genStatus, 'generating…');
-    btnGenerate.disabled = true;
-    btnSign.disabled = true;
+    const isInitial = state.conversation.length === 0;
+    const name = sanitizeName(state.lastName || DEFAULT_SHORTCUT_NAME);
+    const mode = isInitial ? 'plan' : guessMode(text);
 
-    try {
-      const res = await fetch(`${WORKER_ORIGIN}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, name })
-      });
-      const text = await res.text();
-      let data = {};
-      try { data = JSON.parse(text); } catch { throw new Error('Generate returned non-JSON'); }
+    pushMessage('user', text, { label: isInitial ? 'Idea' : 'Follow-up' });
 
-      const { programObj, dslCandidate } = applyGeneratedProgram(data, name, genStatus);
-      if (!state.basePrompt) state.basePrompt = prompt;
-      state.lastPrompt = prompt;
-      state.lastName = name;
+    chatInput.value = '';
+    btnSend.disabled = true;
+    state.isBusy = true;
 
-      const summary = summaryFromResponse(data, programObj, dslCandidate);
-      pushMessage('assistant', summary, { label: 'AI plan' });
-
-      showMessage('Idea planned. Review the program, tweak as needed, then convert.');
-    } catch (err) {
-      console.error(err);
-      setStatus(genStatus, 'error', false, true);
-      showMessage(err.message || 'Generation failed', true);
-      pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
-    } finally {
-      btnGenerate.disabled = false;
-    }
-  });
-
-  btnFollowUp.addEventListener('click', async () => {
-    const followText = (followUpBox.value || '').trim();
-    if (!followText) { alert('Enter a follow-up first.'); return; }
-    const mode = state.followMode || 'clarify';
-    const name = (nameBox.value.trim() || state.lastName || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
-
-    pushMessage('user', followText, { label: mode === 'clarify' ? 'Clarification' : mode === 'update' ? 'Update request' : 'Action search' });
-
-    setStatus(followStatus, 'sending…');
-    btnFollowUp.disabled = true;
+    resetPipeline();
+    setPipeline('assess', 'active');
+    setChipStatus(genStatus, 'working…', 'working');
 
     try {
       const payload = {
-        prompt: followText,
+        prompt: text,
         name,
-        mode,
-        followUp: true,
+        followUp: !isInitial,
+        mode: isInitial ? 'plan' : mode,
         context: {
           basePrompt: state.basePrompt || state.lastPrompt,
           programText: dslBox.value,
           plistText: plistBox.value
         }
       };
+
       const res = await fetch(`${WORKER_ORIGIN}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const text = await res.text();
+      const raw = await res.text();
       let data = {};
-      try { data = JSON.parse(text); } catch { throw new Error('Follow-up returned non-JSON'); }
+      try { data = JSON.parse(raw); } catch { throw new Error('Worker returned non-JSON.'); }
 
-      const { programObj, dslCandidate } = applyGeneratedProgram(data, name, followStatus);
-      setStatus(genStatus, 'updated ✨', true);
-      state.lastPrompt = followText;
-      if (!state.basePrompt) state.basePrompt = followText;
+      if (!res.ok || !data.ok) {
+        const message = data?.error || `Worker error ${res.status}`;
+        throw new Error(message);
+      }
+
+      setPipeline('assess', 'done');
+      setPipeline('search', 'active');
+
       state.lastName = name;
+      if (isInitial && !state.basePrompt) state.basePrompt = text;
+      state.lastPrompt = text;
+
+      const { programObj, dslCandidate } = applyGeneratedProgram(data, name, genStatus);
+
+      setPipeline('search', 'done');
+      setPipeline('build', 'active');
+
+      setChipStatus(convStatus, 'ready to convert', 'idle');
+      setPipeline('build', 'done');
+      setPipeline('summarize', 'active');
 
       const summary = summaryFromResponse(data, programObj, dslCandidate);
       const label =
+        isInitial ? 'AI plan' :
         mode === 'clarify' ? 'AI clarification' :
-        mode === 'update' ? 'AI update' :
-        'Action suggestions';
-
+        mode === 'explore' ? 'Action ideas' :
+        'AI update';
       pushMessage('assistant', summary, { label });
-      showMessage('Follow-up applied. Convert again if you changed the program.');
+
+      setPipeline('summarize', 'done');
+      showMessage('Shortcut updated. Convert for plist whenever you\'re ready.');
     } catch (err) {
       console.error(err);
-      setStatus(followStatus, 'error', false, true);
-      showMessage(err.message || 'Follow-up failed', true);
-      pushMessage('system', err.message || 'Follow-up failed.', { label: 'Error' });
+      setChipStatus(genStatus, err.message || 'error', 'error');
+      setPipeline('assess', 'error');
+      showMessage(err.message || 'Something went wrong.', true);
+      pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
     } finally {
-      btnFollowUp.disabled = false;
+      state.isBusy = false;
+      btnSend.disabled = false;
+    }
+  }
+
+  btnSend.addEventListener('click', handleSend);
+  chatInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
     }
   });
 
   btnConvert.addEventListener('click', async () => {
-    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
     const raw = (dslBox.value || '').trim();
     if (!raw) { alert('Nothing to convert — the program box is empty.'); return; }
-
-    setStatus(convStatus, 'converting…');
+    setChipStatus(convStatus, 'converting…', 'working');
     btnSign.disabled = true;
-
     try {
       const maybeJSON = parseMaybeJSON(raw);
-      let programObj = null;
-      let plistXML = '';
-
-      if (maybeJSON !== null) {
-        programObj = coerceProgram(maybeJSON, name);
-        plistXML = await ensurePlist({ name, inputRaw: raw, programObj, dslText: null });
-      } else {
-        plistXML = await ensurePlist({ name, inputRaw: raw, programObj: null, dslText: raw });
-      }
-
-      if (!plistXML || typeof plistXML !== 'string') {
-        throw new Error('Conversion produced empty output.');
-      }
-
+      const programObj = maybeJSON !== null ? coerceProgram(maybeJSON, state.lastName || DEFAULT_SHORTCUT_NAME) : null;
+      const plistXML = await ensurePlist({
+        name: state.lastName || DEFAULT_SHORTCUT_NAME,
+        inputRaw: raw,
+        programObj,
+        dslText: programObj ? null : raw
+      });
       plistBox.value = plistXML;
       btnSign.disabled = false;
-      setStatus(convStatus, 'converted ✔', true);
-      showMessage('.plist ready. Sign it when you are happy.');
+      setChipStatus(convStatus, 'converted ✔', 'success');
+      showMessage('.plist ready.');
     } catch (err) {
       console.error(err);
-      setStatus(convStatus, 'error', false, true);
+      setChipStatus(convStatus, err.message || 'error', 'error');
       showMessage(err.message || 'Conversion failed', true);
-      pushMessage('system', err.message || 'Conversion failed.', { label: 'Error' });
     }
   });
 
   btnCopyDSL.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(dslBox.value || '');
-      btnCopyDSL.textContent = 'Copied!';
       showMessage('Program copied to clipboard.');
     } catch {
       showMessage('Clipboard copy failed.', true);
-    } finally {
-      setTimeout(() => btnCopyDSL.textContent = 'Copy program', 900);
     }
   });
 
   btnCopyPlist.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(plistBox.value || '');
-      btnCopyPlist.textContent = 'Copied!';
       showMessage('plist copied to clipboard.');
     } catch {
       showMessage('Clipboard copy failed.', true);
-    } finally {
-      setTimeout(() => btnCopyPlist.textContent = 'Copy plist', 900);
     }
   });
 
   btnSign.addEventListener('click', async () => {
     const plist = (plistBox.value || '').trim();
-    const name = (nameBox.value.trim() || 'My Shortcut').replace(/[^\w\s\-]/g, '').slice(0, 60);
     if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
 
-    setStatus(signStatus, 'uploading…');
+    setChipStatus(signStatus, 'uploading…', 'working');
     btnSign.disabled = true;
-
     try {
-      const file = new File([plist], `${name}.plist`, { type: 'application/xml' });
+      const file = new File([plist], `${state.lastName || DEFAULT_SHORTCUT_NAME}.plist`, { type: 'application/xml' });
       const form = new FormData();
       form.append('file', file);
 
@@ -848,13 +897,12 @@
       if (!res.ok) {
         let msg = '';
         try { msg = await res.text(); } catch {}
-        showMessage(`Signer error ${res.status}: ${msg.slice(0, 120)}`, true);
-        throw new Error(`Sign failed: ${res.status}`);
+        throw new Error(`Signer error ${res.status}: ${msg.slice(0, 120)}`);
       }
 
       const blob = await res.blob();
       const cd = res.headers.get('Content-Disposition') || '';
-      let filename = `${name}.signed.shortcut`;
+      let filename = `${state.lastName || DEFAULT_SHORTCUT_NAME}.signed.shortcut`;
       const m = /filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i.exec(cd);
       if (m && m[1]) {
         try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
@@ -862,54 +910,46 @@
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove();
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       URL.revokeObjectURL(url);
 
-      setStatus(signStatus, 'downloaded ✔', true);
+      setChipStatus(signStatus, 'downloaded ✔', 'success');
       showMessage('Signed shortcut downloaded.');
     } catch (err) {
       console.error(err);
-      setStatus(signStatus, 'error', false, true);
+      setChipStatus(signStatus, err.message || 'error', 'error');
       showMessage(err.message || 'Signing failed', true);
-      pushMessage('system', err.message || 'Signing failed.', { label: 'Error' });
+      pushMessage('system', err.message || 'Signing failed.', { label: 'Signer error' });
     } finally {
       btnSign.disabled = false;
     }
   });
 
   btnReset.addEventListener('click', () => {
-    promptBox.value = '';
-    followUpBox.value = '';
+    chatInput.value = '';
     dslBox.value = '';
     plistBox.value = '';
-    nameBox.value = '';
-
+    resetPipeline();
+    setChipStatus(genStatus, 'idle', 'idle');
+    setChipStatus(convStatus, 'waiting', 'idle');
+    setChipStatus(signStatus, 'waiting', 'idle');
+    btnSign.disabled = true;
     state.conversation = [];
     state.basePrompt = '';
     state.lastPrompt = '';
     state.lastName = '';
     renderConversation();
-
-    setStatus(genStatus, 'idle');
-    setStatus(convStatus, 'waiting');
-    setStatus(signStatus, 'waiting');
-    setStatus(followStatus, 'waiting');
-
-    btnSign.disabled = true;
-    showMessage('Workspace cleared. Ready for a new shortcut!');
+    showMessage('Workspace cleared.');
   });
 
-  btnClearConversation.addEventListener('click', () => {
-    state.conversation = [];
-    renderConversation();
-  });
-
-  setStatus(genStatus, 'idle');
-  setStatus(convStatus, 'waiting');
-  setStatus(signStatus, 'waiting');
-  setStatus(followStatus, 'waiting');
   renderConversation();
+  setChipStatus(genStatus, 'idle', 'idle');
+  setChipStatus(convStatus, 'waiting', 'idle');
+  setChipStatus(signStatus, 'waiting', 'idle');
   </script>
 </body>
 </html>
