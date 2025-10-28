@@ -244,14 +244,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-            <dict>
-            <key>OutputName</key>
-            <string>Name</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+            {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -306,14 +299,7 @@
             <key>attachmentsByRange</key>
             <dict>
               <key>{0, 1}</key>
-              <dict>
-                <key>OutputName</key>
-                <string>Name</string>
-                <key>OutputUUID</key>
-                {{Attachments}}
-                <key>Type</key>
-                <string>ActionOutput</string>
-              </dict>
+              {{attachments}}
             </dict>
             <key>string</key>
             {{LLMPrompt}}
@@ -364,14 +350,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>Text</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -555,14 +534,7 @@
         <key>Input</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>List</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -695,14 +667,7 @@
         <key>WFImage</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>Image</string>
-            <key>OutputUUID</key>
-            {{Image}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{image}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -719,14 +684,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>File</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -743,14 +701,7 @@
         <key>WFFolder</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>File</string>
-            <key>OutputUUID</key>
-            {{Folder}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{folder}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -768,14 +719,7 @@
         <key>WFFile</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>File</string>
-            <key>OutputUUID</key>
-            {{File}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{file}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -900,14 +844,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>List</string>
-            <key>OutputUUID</key>
-            {{List}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{list}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -935,14 +872,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>List</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -960,14 +890,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>List</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -1069,14 +992,7 @@
     <key>WFInput</key>
     <dict>
       <key>Value</key>
-      <dict>
-            <key>OutputName</key>
-            <string>Image</string>
-            <key>OutputUUID</key>
-            {{Image}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-      </dict>
+      {{image}}
       <key>WFSerializationType</key>
       <string>WFTextTokenAttachment</string>
     </dict>
@@ -1096,14 +1012,7 @@
     <key>WFInput</key>
     <dict>
       <key>Value</key>
-      <dict>
-  <key>OutputName</key>
-            <string>Image</string>
-            <key>OutputUUID</key>
-            {{Image}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-      </dict>
+      {{image}}
       <key>WFSerializationType</key>
       <string>WFTextTokenAttachment</string>
     </dict>
@@ -1127,14 +1036,7 @@
     <key>WFInput</key>
     <dict>
       <key>Value</key>
-      <dict>
-  <key>OutputName</key>
-            <string>Image</string>
-            <key>OutputUUID</key>
-            {{List}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-      </dict>
+      {{list}}
       <key>WFSerializationType</key>
       <string>WFTextTokenAttachment</string>
     </dict>
@@ -1160,14 +1062,7 @@
     <key>WFInput</key>
     <dict>
       <key>Value</key>
-      <dict>
-        <key>OutputName</key>
-            <string>List</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-      </dict>
+      {{input}}
       <key>WFSerializationType</key>
       <string>WFTextTokenAttachment</string>
     </dict>
@@ -1308,14 +1203,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>Sound</string>
-            <key>OutputUUID</key>
-            {{File}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{file}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -1333,14 +1221,7 @@
         <key>WFInput</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>File</string>
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{input}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
@@ -1645,14 +1526,7 @@
         <key>audioFile</key>
         <dict>
           <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            <string>Variable</string>
-            <key>OutputUUID</key>
-            {{Audio}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
+          {{audio}}
           <key>WFSerializationType</key>
           <string>WFTextTokenAttachment</string>
         </dict>
