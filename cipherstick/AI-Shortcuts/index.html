@@ -96,6 +96,89 @@
       min-height: calc(100vh - 190px);
     }
 
+    .status-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 6px 0 18px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .status-step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 16px;
+      position: relative;
+      opacity: 0.3;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .status-step::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 26px;
+      bottom: -18px;
+      width: 2px;
+      background: rgba(148, 163, 184, 0.18);
+    }
+    .status-step:last-child::before { display: none; }
+    .status-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid rgba(148, 163, 184, 0.3);
+      background: rgba(148, 163, 184, 0.12);
+      display: grid;
+      place-items: center;
+      font-size: 0.8rem;
+      color: rgba(148, 163, 184, 0.6);
+      transition: all 0.25s ease;
+    }
+    .status-step.active { opacity: 0.9; }
+    .status-step.active .status-dot {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+    .status-step.active .status-dot::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .status-step.done { opacity: 1; }
+    .status-step.done .status-dot {
+      border-color: var(--success);
+      background: rgba(52, 211, 153, 0.2);
+      color: var(--success);
+    }
+    .status-step.done .status-dot::after {
+      content: "";
+      width: 12px;
+      height: 6px;
+      border-bottom: 2px solid var(--success);
+      border-left: 2px solid var(--success);
+      transform: rotate(-45deg) translateY(-1px);
+    }
+    .status-step.error { opacity: 1; }
+    .status-step.error .status-dot {
+      border-color: var(--error);
+      background: rgba(251, 113, 133, 0.18);
+      color: var(--error);
+    }
+    .status-step.error .status-dot::after {
+      content: "";
+      width: 12px;
+      height: 2px;
+      background: var(--error);
+      border-radius: 999px;
+      transform: rotate(45deg);
+    }
+    .status-text { display: flex; flex-direction: column; gap: 4px; }
+    .status-text strong { font-size: 0.92rem; }
+    .status-text span { font-size: 0.78rem; color: var(--text-muted); }
+
     .chat-scroll {
       flex: 1;
       overflow-y: auto;
@@ -170,8 +253,8 @@
     .composer button {
       border: none;
       border-radius: 50%;
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       display: grid;
       place-items: center;
       cursor: pointer;
@@ -179,39 +262,34 @@
       color: #07031a;
       box-shadow: 0 16px 32px var(--accent-glow);
       transition: transform 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
     }
-    .composer button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
+    .composer button .btn-label { font-weight: 600; font-size: 0.95rem; }
+    .composer button .btn-spinner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 3px solid rgba(7, 3, 26, 0.35);
+      border-top-color: rgba(7, 3, 26, 0.95);
+      animation: spin 0.8s linear infinite;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .composer button.is-loading {
+      cursor: wait;
       box-shadow: none;
-      transform: none;
     }
+    .composer button.is-loading .btn-label { opacity: 0; }
+    .composer button.is-loading .btn-spinner { opacity: 1; }
+    .composer button:disabled { opacity: 0.55; box-shadow: none; }
     .composer button:hover:not(:disabled) { transform: translateY(-1px); }
     .composer button:active:not(:disabled) { transform: translateY(0); }
 
-    .floating-spinner {
-      position: absolute;
-      right: 16px;
-      bottom: 90px;
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      background: rgba(98, 102, 241, 0.92);
-      box-shadow: 0 18px 36px rgba(98, 102, 241, 0.42);
-      display: none;
-      align-items: center;
-      justify-content: center;
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.55; }
     }
-    .floating-spinner::before {
-      content: "";
-      width: 22px;
-      height: 22px;
-      border: 3px solid rgba(15, 23, 42, 0.3);
-      border-top-color: rgba(15, 23, 42, 1);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    .floating-spinner.is-visible { display: flex; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .visual-panel {
@@ -372,11 +450,42 @@
     <section class="panel chat-panel">
       <div class="chat-scroll" id="conversationList">
         <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
+      <div class="status-timeline" id="statusTimeline">
+        <div class="status-step" data-step="assess">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Assessing request</strong>
+            <span>Reading your prompt and context</span>
+          </div>
+        </div>
+        <div class="status-step" data-step="search">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Searching actions</strong>
+            <span>Picking templates that match best</span>
+          </div>
+        </div>
+        <div class="status-step" data-step="build">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Building flow</strong>
+            <span>Linking outputs &amp; filling parameters</span>
+          </div>
+        </div>
+        <div class="status-step" data-step="summarize">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Wrapping up</strong>
+            <span>Explaining what changed</span>
+          </div>
+        </div>
       </div>
-      <div class="floating-spinner" id="floatingSpinner"></div>
+      <div class="chat-scroll" id="conversationList">
+        <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
+      </div>
       <div class="composer">
         <textarea id="chatInput" placeholder="Tell Shortcut Studio what to build…"></textarea>
-        <button id="btnSend" title="Send prompt">➤</button>
+        <button id="btnSend" title="Send prompt"><span class="btn-label">Go</span><span class="btn-spinner"></span></button>
       </div>
     </section>
 
@@ -408,8 +517,8 @@
   const btnReset = $('btnReset');
   const btnSign = $('btnSign');
   const flowContainer = $('flowContainer');
-  const floatingSpinner = $('floatingSpinner');
   const toast = $('toast');
+  const statusTimelineEls = document.querySelectorAll('.status-step');
 
   const state = {
     basePrompt: '',
@@ -429,10 +538,6 @@
     toast.classList.add('is-visible');
     clearTimeout(state.toastTimer);
     state.toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
-  }
-
-  function setSpinner(visible) {
-    floatingSpinner.classList.toggle('is-visible', visible);
   }
 
   function pushMessage(role, content, meta = {}) {
@@ -545,6 +650,57 @@
     flowContainer.innerHTML = buildFlowHtml(program);
   }
 
+  const timelineTimers = [];
+
+  function clearTimelineTimers() {
+    while (timelineTimers.length) clearTimeout(timelineTimers.pop());
+  }
+
+  function resetTimeline() {
+    clearTimelineTimers();
+    statusTimelineEls.forEach((step) => step.classList.remove('active', 'done', 'error'));
+  }
+
+  function setTimeline(stepKey, state) {
+    const el = document.querySelector(`.status-step[data-step="${stepKey}"]`);
+    if (!el) return;
+    el.classList.remove('active', 'done', 'error');
+    if (state) el.classList.add(state);
+  }
+
+  function startTimeline() {
+    resetTimeline();
+    setTimeline('assess', 'active');
+    timelineTimers.push(setTimeout(() => setTimeline('search', 'active'), 350));
+    timelineTimers.push(setTimeout(() => setTimeline('build', 'active'), 700));
+    timelineTimers.push(setTimeout(() => setTimeline('summarize', 'active'), 1050));
+  }
+
+  function finishTimeline(status) {
+    clearTimelineTimers();
+    if (status === 'success') {
+      ['assess', 'search', 'build', 'summarize'].forEach((key) => setTimeline(key, 'done'));
+    } else if (status === 'error') {
+      let marked = false;
+      ['summarize', 'build', 'search', 'assess'].some((key) => {
+        const el = document.querySelector(`.status-step[data-step="${key}"]`);
+        if (el && el.classList.contains('active')) {
+          setTimeline(key, 'error');
+          marked = true;
+          return true;
+        }
+        return false;
+      });
+      if (!marked) setTimeline('assess', 'error');
+    }
+  }
+
+  function setSendLoading(isLoading) {
+    if (isLoading) btnSend.classList.add('is-loading');
+    else btnSend.classList.remove('is-loading');
+    btnSend.disabled = isLoading;
+  }
+
   async function ensurePlist({ name, inputRaw, programObj, dslText }) {
     if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
       try { return window.ConversionUniversal.toPlist(programObj ?? dslText ?? inputRaw, name); } catch (e) {}
@@ -595,23 +751,27 @@
   }
 
   function explainResult(info) {
-    const parts = [];
-    if (info?.mode === 'clarify') parts.push("Here's what I found to clarify things:");
-    else if (info?.mode === 'explore') parts.push("I looked for new actions that might help.");
-    else parts.push("I updated the shortcut based on your request.");
+    const actions = Array.isArray(state.program?.actions) ? state.program.actions : [];
+    const flow = actions.map((a) => a?.action || '…').slice(0, 5).join(' → ');
+    const count = actions.length;
+    const templates = (info?.usedFiles || []).slice(0, 3).map((file) => file.replace(/\.json$/i, '')).join(', ');
 
-    if (state.program?.actions?.length) {
-      parts.push(`The shortcut now has ${state.program.actions.length} action${state.program.actions.length === 1 ? '' : 's'}.`);
-    }
-    if (info?.usedFiles?.length) {
-      const sample = info.usedFiles.slice(0, 3).map((file) => file.replace(/\.json$/i, '')).join(', ');
-      parts.push(`Key templates referenced: ${sample}${info.usedFiles.length > 3 ? '…' : ''}.`);
-    }
+    const summary = [];
+    if (flow) summary.push(`Flow: ${flow}${count ? ` (${count})` : ''}.`);
+    if (templates) summary.push(`Templates: ${templates}${(info?.usedFiles?.length || 0) > 3 ? '…' : ''}.`);
+
     if (info?.answer) {
-      parts.push(info.answer);
+      const firstSentence = String(info.answer).split(/(?<=[.!?])\s+/)[0]?.trim();
+      if (firstSentence) summary.push(firstSentence);
     }
 
-    return parts.join(' ');
+    let cta = 'Say the word if you want tweaks.';
+    if (info?.mode === 'clarify') cta = 'Need more detail? Just ask.';
+    else if (info?.mode === 'explore') cta = 'Tell me which idea we should expand.';
+
+    if (!summary.length && info?.answer) summary.push(info.answer);
+    summary.push(cta);
+    return summary.join(' ');
   }
 
   async function handleSend() {
@@ -626,11 +786,11 @@
     pushMessage('user', text, { label: isInitial ? 'Prompt' : 'Follow-up' });
     chatInput.value = '';
 
-    btnSend.disabled = true;
+    setSendLoading(true);
     btnReset.disabled = true;
     btnSign.disabled = true;
     state.isBusy = true;
-    setSpinner(true);
+    startTimeline();
 
     try {
       const payload = {
@@ -677,17 +837,20 @@
       });
       pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
 
+      finishTimeline('success');
+
       showToast('Shortcut updated. Download whenever you\'re ready.');
       btnSign.disabled = false;
     } catch (err) {
       console.error(err);
       pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
       showToast(err.message || 'Something went wrong.', true);
+      finishTimeline('error');
     } finally {
       state.isBusy = false;
-      setSpinner(false);
-      btnSend.disabled = false;
+      setSendLoading(false);
       btnReset.disabled = false;
+      btnSign.disabled = !state.program;
     }
   }
 
@@ -697,8 +860,11 @@
       showToast('Nothing to download yet. Describe a shortcut first.', true);
       return;
     }
-    setSpinner(true);
+    const originalLabel = btnSign.textContent;
+    btnSign.textContent = 'Signing…';
     btnSign.disabled = true;
+    btnSend.disabled = true;
+    state.isBusy = true;
     try {
       const plist = await ensurePlist({
         name: state.lastName || DEFAULT_SHORTCUT_NAME,
@@ -741,8 +907,10 @@
       console.error(err);
       showToast(err.message || 'Download failed', true);
     } finally {
-      setSpinner(false);
+      btnSign.textContent = originalLabel;
       btnSign.disabled = false;
+      btnSend.disabled = false;
+      state.isBusy = false;
     }
   }
 
@@ -767,12 +935,14 @@
     chatInput.value = '';
     renderConversation();
     updateFlow(null, '');
+    resetTimeline();
     showToast('Workspace cleared.');
     btnSign.disabled = true;
   });
 
   renderConversation();
   updateFlow(null, '');
+  resetTimeline();
   btnSign.disabled = true;
   </script>
 </body>
