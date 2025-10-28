@@ -104,89 +104,6 @@
 
     .chat-panel { display: flex; flex-direction: column; min-height: calc(100vh - 200px); }
 
-    .pipeline-card {
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      background: rgba(10, 14, 30, 0.8);
-      box-shadow: 0 18px 36px rgba(6, 8, 24, 0.48);
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .pipeline-step {
-      display: grid;
-      grid-template-columns: 26px 1fr;
-      gap: 14px;
-      align-items: flex-start;
-      position: relative;
-      opacity: 0.35;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-    .pipeline-step::before {
-      content: "";
-      position: absolute;
-      left: 12px;
-      top: 26px;
-      bottom: -14px;
-      width: 2px;
-      background: rgba(148, 163, 184, 0.16);
-    }
-    .pipeline-step:last-child::before { display: none; }
-    .pipeline-step strong { font-size: 0.9rem; }
-    .pipeline-step span { font-size: 0.78rem; color: var(--text-muted); }
-    .pipeline-dot {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 2px solid rgba(148, 163, 184, 0.28);
-      background: rgba(148, 163, 184, 0.14);
-      position: relative;
-    }
-    .pipeline-step.is-active { opacity: 0.85; }
-    .pipeline-step.is-active .pipeline-dot {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-    .pipeline-step.is-active .pipeline-dot::after {
-      content: "";
-      position: absolute;
-      inset: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    .pipeline-step.is-done { opacity: 1; }
-    .pipeline-step.is-done .pipeline-dot {
-      border-color: var(--success);
-      background: rgba(52, 211, 153, 0.22);
-    }
-    .pipeline-step.is-done .pipeline-dot::after {
-      content: "";
-      position: absolute;
-      left: 5px;
-      top: 7px;
-      width: 8px;
-      height: 12px;
-      border-right: 2px solid var(--success);
-      border-bottom: 2px solid var(--success);
-      transform: rotate(45deg);
-    }
-    .pipeline-step.is-error { opacity: 1; }
-    .pipeline-step.is-error .pipeline-dot {
-      border-color: var(--error);
-      background: rgba(251, 113, 133, 0.2);
-    }
-    .pipeline-step.is-error .pipeline-dot::after {
-      content: "";
-      position: absolute;
-      left: 5px;
-      top: 11px;
-      width: 10px;
-      height: 2px;
-      background: var(--error);
-      transform: rotate(45deg);
-    }
 
     .chat-scroll {
       flex: 1;
@@ -223,6 +140,65 @@
     .bubble--assistant .bubble__inner {
       background: rgba(45, 85, 241, 0.18);
       border-color: rgba(45, 85, 241, 0.32);
+    }
+    .pipeline-entry .bubble__inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: rgba(11, 15, 34, 0.82);
+      border-color: rgba(148, 163, 184, 0.2);
+    }
+    .pipeline-entry .bubble__inner strong { font-size: 0.9rem; }
+    .pipeline-entry .bubble__inner span { font-size: 0.78rem; color: var(--text-muted); }
+    .pipeline-entry .pipeline-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(148, 163, 184, 0.28);
+      background: rgba(148, 163, 184, 0.14);
+      margin-top: 4px;
+      position: relative;
+    }
+    .pipeline-entry.is-active .pipeline-dot {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .pipeline-entry.is-active .pipeline-dot::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .pipeline-entry.is-done .pipeline-dot {
+      border-color: var(--success);
+      background: rgba(52, 211, 153, 0.24);
+    }
+    .pipeline-entry.is-done .pipeline-dot::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 6px;
+      width: 6px;
+      height: 10px;
+      border-right: 2px solid var(--success);
+      border-bottom: 2px solid var(--success);
+      transform: rotate(45deg);
+    }
+    .pipeline-entry.is-error .pipeline-dot {
+      border-color: var(--error);
+      background: rgba(251, 113, 133, 0.22);
+    }
+    .pipeline-entry.is-error .pipeline-dot::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 8px;
+      width: 9px;
+      height: 2px;
+      background: var(--error);
+      transform: rotate(45deg);
     }
     .bubble__label {
       text-transform: uppercase;
@@ -559,12 +535,11 @@
     isBusy: false,
     toastTimer: null,
     pipelineEntries: new Map(),
-    currentPipelineId: null,
+    pipelineContext: null,
     isCodeModalOpen: false,
     codeModalTab: 'json'
   };
 
-  const timelineTimers = [];
   const PIPELINE_STEPS = [
     { key: 'assess', title: 'Assessing request', hint: 'Parsing your prompt' },
     { key: 'search', title: 'Selecting actions', hint: 'Browsing the catalog' },
@@ -599,7 +574,10 @@
     }
     conversationList.innerHTML = state.conversation.map((entry) => {
       if (entry.role === 'pipeline') {
-        return `<div class="pipeline-card" data-pipeline-id="${entry.id}"></div>`;
+        const meta = state.pipelineEntries.get(entry.id);
+        if (!meta) return '';
+        const statusClass = meta.status === 'active' ? 'is-active' : meta.status === 'done' ? 'is-done' : meta.status === 'error' ? 'is-error' : '';
+        return `<article class="bubble bubble--system pipeline-entry ${statusClass}" data-pipeline-id="${entry.id}"><div class="bubble__inner pipeline-inner"><div class="pipeline-dot"></div><div><strong>${meta.title}</strong><span>${meta.hint}</span></div></div></article>`;
       }
       const roleClass = entry.role === 'user' ? 'bubble--user' : entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
       const label = entry.meta?.label ? `<span class="bubble__label">${entry.meta.label}</span>` : '';
@@ -611,27 +589,7 @@
         .replace(/\n/g, '<br>');
       return `<article class="bubble ${roleClass}"><div class="bubble__inner">${label}<p>${escaped || '<em>(empty)</em>'}</p>${time}</div></article>`;
     }).join('');
-    hydratePipelineCards();
     conversationList.scrollTop = conversationList.scrollHeight;
-  }
-
-  function hydratePipelineCards() {
-    state.pipelineEntries.forEach((entry, id) => {
-      const card = conversationList.querySelector(`[data-pipeline-id="${id}"]`);
-      if (!card) {
-        entry.el = null;
-        return;
-      }
-      card.innerHTML = PIPELINE_STEPS.map(({ key, title, hint }) => {
-        const status = entry.statuses[key] || 'pending';
-        const classes = ['pipeline-step'];
-        if (status === 'active') classes.push('is-active');
-        if (status === 'done') classes.push('is-done');
-        if (status === 'error') classes.push('is-error');
-        return `<div class="${classes.join(' ')}" data-pipe-step="${key}"><div class="pipeline-dot"></div><div><strong>${title}</strong><span>${hint}</span></div></div>`;
-      }).join('');
-      entry.el = card;
-    });
   }
 
   function sanitizeName(name) {
@@ -700,64 +658,62 @@
     if (state.isCodeModalOpen) updateCodeModal(state.codeModalTab);
   }
 
-  function clearTimelineTimers() { while (timelineTimers.length) clearTimeout(timelineTimers.pop()); }
-
   function resetTimeline() {
-    clearTimelineTimers();
-    state.pipelineEntries.clear();
-    state.currentPipelineId = null;
+    state.pipelineContext = null;
   }
 
-  function setPipelineStep(id, stepKey, status) {
-    const entry = state.pipelineEntries.get(id);
-    if (!entry) return;
-    entry.statuses[stepKey] = status;
-    if (entry.el) {
-      const node = entry.el.querySelector(`[data-pipe-step="${stepKey}"]`);
-      if (node) {
-        node.classList.remove('is-active', 'is-done', 'is-error');
-        if (status === 'active') node.classList.add('is-active');
-        else if (status === 'done') node.classList.add('is-done');
-        else if (status === 'error') node.classList.add('is-error');
-      }
-    }
-  }
-
-  function startTimeline() {
-    clearTimelineTimers();
-    const pipelineId = `pipeline-${Date.now()}`;
-    const statuses = {};
-    PIPELINE_STEPS.forEach(({ key }) => { statuses[key] = 'pending'; });
-    state.pipelineEntries.set(pipelineId, { statuses, el: null });
-    state.currentPipelineId = pipelineId;
-    state.conversation.push({ role: 'pipeline', id: pipelineId });
+  function addPipelineEntry(stepKey, status = 'active') {
+    const meta = PIPELINE_STEPS.find((step) => step.key === stepKey);
+    if (!meta) return null;
+    const id = `pipe-${stepKey}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    state.pipelineEntries.set(id, { stepKey, status, title: meta.title, hint: meta.hint });
+    state.conversation.push({ role: 'pipeline', id });
     renderConversation();
-    if (!PIPELINE_STEPS.length) return;
-    setPipelineStep(pipelineId, PIPELINE_STEPS[0].key, 'active');
-    for (let i = 1; i < PIPELINE_STEPS.length; i++) {
-      timelineTimers.push(setTimeout(() => {
-        setPipelineStep(pipelineId, PIPELINE_STEPS[i - 1].key, 'done');
-        setPipelineStep(pipelineId, PIPELINE_STEPS[i].key, 'active');
-      }, i * 420));
-    }
+    return id;
   }
 
-  function finishTimeline(status) {
-    clearTimelineTimers();
-    const id = state.currentPipelineId;
-    if (!id) return;
-    if (status === 'success') {
-      PIPELINE_STEPS.forEach(({ key }) => setPipelineStep(id, key, 'done'));
-    } else if (status === 'error') {
-      const entry = state.pipelineEntries.get(id);
-      if (entry) {
-        let target = PIPELINE_STEPS.find(({ key }) => entry.statuses[key] === 'active');
-        if (!target) target = [...PIPELINE_STEPS].reverse().find(({ key }) => entry.statuses[key] === 'done');
-        if (!target) target = PIPELINE_STEPS[0];
-        setPipelineStep(id, target.key, 'error');
-      }
+  function setPipelineStatus(id, status) {
+    const entry = state.pipelineEntries.get(id);
+    if (!entry || entry.status === status) return;
+    entry.status = status;
+    renderConversation();
+  }
+
+  function pipelineStart() {
+    resetTimeline();
+    const first = PIPELINE_STEPS[0];
+    if (!first) return;
+    const id = addPipelineEntry(first.key, 'active');
+    state.pipelineContext = {
+      currentStepKey: first.key,
+      currentStepId: id
+    };
+  }
+
+  function pipelineGoTo(stepKey) {
+    const ctx = state.pipelineContext;
+    if (!ctx) return;
+    if (ctx.currentStepKey === stepKey) return;
+    if (ctx.currentStepId) {
+      setPipelineStatus(ctx.currentStepId, 'done');
     }
-    state.currentPipelineId = null;
+    const id = addPipelineEntry(stepKey, 'active');
+    ctx.currentStepKey = stepKey;
+    ctx.currentStepId = id;
+  }
+
+  function pipelineComplete(status) {
+    const ctx = state.pipelineContext;
+    if (!ctx) return;
+    if (status === 'success') {
+      if (ctx.currentStepKey !== 'summarize') {
+        pipelineGoTo('summarize');
+      }
+      if (ctx.currentStepId) setPipelineStatus(ctx.currentStepId, 'done');
+    } else if (status === 'error') {
+      if (ctx.currentStepId) setPipelineStatus(ctx.currentStepId, 'error');
+    }
+    state.pipelineContext = null;
   }
 
   function updateCodeModal(tab = state.codeModalTab) {
@@ -836,6 +792,7 @@
     const templates = (info?.usedFiles || []).slice(0, 2).map((file) => file.replace(/\.json$/i, '')).join(', ');
 
     const summary = [];
+    if (info?.name) summary.push(`Shortcut: ${info.name}.`);
     if (info?.answer) {
       const concise = String(info.answer).split(/(?<=[.!?])\s+/).slice(0, 2).join(' ').trim();
       if (concise) summary.push(concise);
@@ -873,7 +830,7 @@
     btnReset.disabled = true;
     btnSign.disabled = true;
     state.isBusy = true;
-    startTimeline();
+    pipelineStart();
 
     try {
       const payload = {
@@ -898,25 +855,33 @@
       try { data = JSON.parse(raw); } catch { throw new Error('Worker returned non-JSON response.'); }
       if (!res.ok || !data.ok) throw new Error(data?.error || `Worker error ${res.status}`);
 
-      state.lastName = name;
+      const finalName = sanitizeName(data.finalName || name);
+      state.lastName = finalName;
       if (isInitial && !state.basePrompt) state.basePrompt = text;
       state.lastPrompt = text;
 
       let programObj = data?.program;
       if (!programObj && data?.programRaw) programObj = parseMaybeJSON(data.programRaw);
+      if (Array.isArray(data.planArray) && data.planArray.length) {
+        pipelineGoTo('search');
+      }
+      if (programObj && Array.isArray(programObj.actions) && programObj.actions.length) {
+        pipelineGoTo('build');
+      }
       updateFlow(programObj, '');
+      pipelineGoTo('summarize');
 
-      const summary = explainResult({ mode: data.mode || mode, usedFiles: data.usedFiles, answer: data.answer });
+      const summary = explainResult({ mode: data.mode || mode, usedFiles: data.usedFiles, answer: data.answer, name: finalName });
       pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
 
-      finishTimeline('success');
+      pipelineComplete('success');
       showToast('Shortcut updated. Download whenever you\'re ready.');
       btnSign.disabled = false;
     } catch (err) {
       console.error(err);
       pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
       showToast(err.message || 'Something went wrong.', true);
-      finishTimeline('error');
+      pipelineComplete('error');
     } finally {
       state.isBusy = false;
       setSendLoading(false);
@@ -1012,6 +977,7 @@
     state.program = null;
     state.plistText = '';
     chatInput.value = '';
+    state.pipelineEntries = new Map();
     renderConversation();
     updateFlow(null, '');
     resetTimeline();

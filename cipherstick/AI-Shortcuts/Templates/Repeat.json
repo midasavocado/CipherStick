@@ -1,7 +1,7 @@
 {
   "action": "Repeat",
   "params": {
-    "Count": "{{NUMBER}}"
+    "Count": "{{NUMBER}}" #MUST be a number
   },
   "do": [
     {
