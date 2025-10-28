@@ -2247,34 +2247,99 @@ const userConversions = (() => {
   }
 
   // ---- Ask LLM prompt post-processing (conditional text-token vs plain string) ----
-  function buildWFTextTokenString(promptText, attachments) {
-    // If no attachments, return plain string node
-    if (!attachments || !attachments.length) {
-      return XML.str(String(promptText ?? ''));
+  function normalizeAttachmentSpec(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const spec = { ...raw };
+
+    if (spec.range != null) {
+      spec.range = String(spec.range);
     }
 
-    // Build &lt;dict&gt; for attachmentsByRange
+    const startFallback = Number(spec.start ?? spec.Start ?? 0) || 0;
+    const lenFallback = Number(spec.len ?? spec.length ?? spec.Len ?? spec.count ?? 1) || 1;
+    if (!spec.range) {
+      spec.start = startFallback;
+      spec.len = lenFallback;
+    }
+
+    const typeValue = spec.type ?? spec.Type ?? spec.name ?? null;
+    if (typeValue != null) spec.type = String(typeValue);
+
+    let outputUUID =
+      spec.outputUUID ??
+      spec.OutputUUID ??
+      spec.uuid ??
+      spec.UUID ??
+      spec.id ??
+      null;
+    let outputName =
+      spec.outputName ??
+      spec.OutputName ??
+      spec.label ??
+      spec.name ??
+      null;
+
+    if (typeof outputUUID === 'string') {
+      const trimmed = outputUUID.trim();
+      if (/^!link:/i.test(trimmed)) {
+        const label = trimmed.slice(6).trim();
+        const resolved = resolveLinkUUID(label);
+        outputUUID = resolved || label;
+        if (!outputName) {
+          const meta = lookupLinkMetadata(label) || {};
+          outputName =
+            (meta && meta.friendly) ||
+            humanizeActionName((meta && meta.action) || label) ||
+            label;
+        }
+      }
+    }
+
+    if (outputUUID != null) spec.outputUUID = outputUUID;
+    if (outputName != null) spec.outputName = outputName;
+
+    const variableName = spec.variableName ?? spec.VariableName ?? null;
+    if (variableName != null) spec.variableName = String(variableName);
+
+    if (!spec.type) spec.type = spec.Type ?? (outputUUID != null ? 'ActionOutput' : 'Variable');
+
+    return spec;
+  }
+
+  function buildWFTextTokenString(promptText, attachments) {
     const entries = attachments
       .map((raw) => {
-        if (!raw || typeof raw !== 'object') return null;
-        const rangeKey = raw.range
-          ? String(raw.range)
-          : `{${Number(raw.start) || 0}, ${Number(raw.len) || 1}}`;
+        const normalized = normalizeAttachmentSpec(raw);
+        if (!normalized) return null;
+        const rangeKey = normalized.range
+          ? String(normalized.range)
+          : `{${Number(normalized.start) || 0}, ${Number(normalized.len) || 1}}`;
 
         const payload = {};
-        const typeValue = raw.type ?? raw.Type ?? raw.name;
-        if (typeValue != null) payload.Type = XML.str(String(typeValue));
-
-        const outputName = raw.outputName ?? raw.OutputName ?? raw.label ?? raw.name;
+        const outputName =
+          normalized.outputName ??
+          normalized.OutputName;
         if (outputName != null) payload.OutputName = XML.str(String(outputName));
 
-        const outputUUID = raw.outputUUID ?? raw.OutputUUID ?? raw.uuid ?? raw.UUID;
+        const outputUUID =
+          normalized.outputUUID ??
+          normalized.OutputUUID;
         if (outputUUID != null) payload.OutputUUID = XML.str(String(outputUUID));
 
-        const variableValue = raw.Variable ?? raw.variable;
+        let typeValue = normalized.type ?? normalized.Type ?? null;
+        if (outputUUID != null && (!typeValue || /^variable$/i.test(String(typeValue)))) {
+          typeValue = 'ActionOutput';
+        }
+        if (typeValue != null) payload.Type = XML.str(String(typeValue));
+
+        const variableValue =
+          normalized.Variable ??
+          normalized.variable;
         if (variableValue != null) payload.Variable = renderValue(variableValue);
 
-        const variableName = raw.VariableName ?? raw.variableName;
+        const variableName =
+          normalized.variableName ??
+          normalized.VariableName;
         if (variableName != null) payload.VariableName = XML.str(String(variableName));
 
         if (raw.value != null) payload.Value = renderValue(raw.value);
@@ -2330,6 +2395,7 @@ const userConversions = (() => {
           }
           return payload;
         })
+        .map(normalizeAttachmentSpec)
         .filter(Boolean);
     }
     if (typeof varsLike === 'object') {
@@ -2339,7 +2405,7 @@ const userConversions = (() => {
         if (payload.type == null) {
           payload.type = payload.Type ?? payload.name ?? 'Variable';
         }
-        return payload;
+        return normalizeAttachmentSpec(payload);
       });
     }
     return [];
@@ -2352,18 +2418,38 @@ const userConversions = (() => {
     if (identifier !== 'is.workflow.actions.askllm') return dictXML;
 
     // Normalize inputs
-    const promptText = params?.PROMPT ?? params?.WFLLMPrompt ?? '';
+    const promptText =
+      params?.PROMPT ??
+      params?.WFLLMPrompt ??
+      params?.LLMPrompt ??
+      params?.Prompt ??
+      '';
     const varsRaw = params?.AttachmentsByRange ?? params?.attachmentsByRange ?? params?.VARIABLES ?? params?.variables ?? params?.Attachments ?? params?.attachments;
     const attachments = normalizeAskLLMAttachments(varsRaw);
+
+    const promptBlockPattern = /(<key>\s*WFLLMPrompt\s*<\/key>\s*)(?:<dict>[\s\S]*?<key>\s*WFSerializationType\s*<\/key>\s*<string>\s*WFTextTokenString\s*<\/string>\s*<\/dict>|<string>[\s\S]*?<\/string>|{{\s*LLMPrompt\s*}})/i;
+
+    if (!attachments || !attachments.length) {
+      const fallbackValue =
+        params?.LLMPrompt ??
+        params?.WFLLMPrompt ??
+        params?.PROMPT ??
+        params?.Prompt ??
+        '';
+      const fallbackNode = renderAutoPlaceholder('LLMPrompt', fallbackValue);
+      const fallbackReplaced = dictXML.replace(
+        promptBlockPattern,
+        `$1${fallbackNode}`
+      );
+      if (fallbackReplaced !== dictXML) return fallbackReplaced;
+      return dictXML;
+    }
 
     // Build the right WFLLMPrompt node (plain string if no attachments; WFTextTokenString otherwise)
     const promptNode = buildWFTextTokenString(promptText, attachments);
 
     // Replace any existing WFLLMPrompt block (either &lt;dict&gt;...&lt;/dict&gt; or &lt;string&gt;...&lt;/string&gt;)
-    const replaced = dictXML.replace(
-      /(<key>\s*WFLLMPrompt\s*<\/key>\s*)(?:<dict>[\s\S]*?<\/dict>|<string>[\s\S]*?<\/string>)/i,
-      `$1${promptNode}`
-    );
+    const replaced = dictXML.replace(promptBlockPattern, `$1${promptNode}`);
 
     if (replaced !== dictXML) return replaced;
 
