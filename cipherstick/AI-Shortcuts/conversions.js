@@ -1902,10 +1902,27 @@ const userConversions = (() => {
             (meta && meta.friendly) ||
             humanizeActionName((meta && meta.action) || label) ||
             label;
-          return renderValue(variableValue({ uuid: uuid || label, name: friendly }));
+          const attachment = {
+            type: 'ActionOutput',
+            outputUUID: uuid || label,
+            outputName: friendly
+          };
+          return buildWFTextTokenString('', [attachment]);
         }
         if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
         return XML.str(quick.value || '');
+      }
+      const parsed = parseTokenizedText(value);
+      if (parsed.attachments.length) {
+        const attachmentSpecs = parsed.attachments.map((entry) => {
+          if (entry.type === 'Variable') {
+            return { range: entry.range, type: 'Variable', VariableName: entry.VariableName };
+          }
+          const spec = { range: entry.range, type: 'ActionOutput', OutputUUID: entry.OutputUUID };
+          if (entry.OutputName) spec.OutputName = entry.OutputName;
+          return spec;
+        });
+        return renderValue(textTokenValue(parsed.text, attachmentSpecs));
       }
       return XML.str(value);
     }
@@ -2248,22 +2265,43 @@ const userConversions = (() => {
 
   // ---- Ask LLM prompt post-processing (conditional text-token vs plain string) ----
   function normalizeAttachmentSpec(raw) {
-    if (!raw || typeof raw !== 'object') return null;
-    const spec = { ...raw };
+    if (raw == null) return null;
 
-    if (spec.range != null) {
-      spec.range = String(spec.range);
+    let spec;
+    if (typeof raw === 'string') {
+      spec = { __raw: raw };
+      const quick = interpretQuickReference(raw);
+      if (quick?.type === 'link') {
+        const label = quick.value;
+        const resolved = resolveLinkUUID(label);
+        const meta = lookupLinkMetadata(label) || {};
+        spec.outputUUID = resolved || label;
+        spec.outputName =
+          meta?.friendly ??
+          humanizeActionName(meta?.action || label) ??
+          label;
+        spec.type = 'ActionOutput';
+      } else if (quick?.type === 'variable') {
+        spec.variableName = quick.value;
+        spec.type = 'Variable';
+      } else {
+        spec.value = raw;
+      }
+    } else if (typeof raw === 'object') {
+      spec = { ...raw, __raw: raw };
+    } else {
+      spec = { value: raw, __raw: raw };
     }
 
-    const startFallback = Number(spec.start ?? spec.Start ?? 0) || 0;
-    const lenFallback = Number(spec.len ?? spec.length ?? spec.Len ?? spec.count ?? 1) || 1;
-    if (!spec.range) {
-      spec.start = startFallback;
-      spec.len = lenFallback;
-    }
+    if (spec.range == null && spec.Range != null) spec.range = spec.Range;
+    if (spec.range != null) spec.range = String(spec.range);
 
-    const typeValue = spec.type ?? spec.Type ?? spec.name ?? null;
-    if (typeValue != null) spec.type = String(typeValue);
+    const startCandidate = spec.start ?? spec.Start ?? spec.begin ?? spec.Begin;
+    if (startCandidate != null) spec.start = Number(startCandidate) || 0;
+
+    const lenCandidate = spec.len ?? spec.length ?? spec.Len ?? spec.count ?? spec.Count;
+    if (lenCandidate != null) spec.len = Number(lenCandidate) || 1;
+    if (spec.start != null && spec.len == null) spec.len = 1;
 
     let outputUUID =
       spec.outputUUID ??
@@ -2288,8 +2326,8 @@ const userConversions = (() => {
         if (!outputName) {
           const meta = lookupLinkMetadata(label) || {};
           outputName =
-            (meta && meta.friendly) ||
-            humanizeActionName((meta && meta.action) || label) ||
+            meta?.friendly ??
+            humanizeActionName(meta?.action || label) ??
             label;
         }
       }
@@ -2301,69 +2339,79 @@ const userConversions = (() => {
     const variableName = spec.variableName ?? spec.VariableName ?? null;
     if (variableName != null) spec.variableName = String(variableName);
 
-    if (!spec.type) spec.type = spec.Type ?? (outputUUID != null ? 'ActionOutput' : 'Variable');
+    if (!spec.type) {
+      if (spec.Type) spec.type = spec.Type;
+      else if (outputUUID != null) spec.type = 'ActionOutput';
+      else if (variableName != null) spec.type = 'Variable';
+    }
 
+    if (spec.type != null) spec.type = String(spec.type);
+    if (spec.Type == null && spec.type != null) spec.Type = spec.type;
+
+    spec.__autoRange = !(spec.range || spec.start != null);
     return spec;
   }
 
   function buildWFTextTokenString(promptText, attachments) {
-    const entries = attachments
-      .map((raw) => {
-        const normalized = normalizeAttachmentSpec(raw);
-        if (!normalized) return null;
-        const rangeKey = normalized.range
-          ? String(normalized.range)
-          : `{${Number(normalized.start) || 0}, ${Number(normalized.len) || 1}}`;
+    const normalizedList = (attachments || [])
+      .map((entry) => normalizeAttachmentSpec(entry))
+      .filter(Boolean);
 
-        const payload = {};
-        const outputName =
-          normalized.outputName ??
-          normalized.OutputName;
-        if (outputName != null) payload.OutputName = XML.str(String(outputName));
+    let text = String(promptText ?? '');
+    const entries = [];
 
-        const outputUUID =
-          normalized.outputUUID ??
-          normalized.OutputUUID;
-        if (outputUUID != null) payload.OutputUUID = XML.str(String(outputUUID));
+    for (const spec of normalizedList) {
+      let rangeKey;
+      if (spec.range) {
+        rangeKey = String(spec.range);
+      } else if (spec.start != null) {
+        const start = Number(spec.start) || 0;
+        const len = Number(spec.len ?? 1) || 1;
+        rangeKey = `{${start}, ${len}}`;
+      } else {
+        const start = text.length;
+        text += ATTACHMENT_SENTINEL;
+        rangeKey = `{${start}, 1}`;
+      }
 
-        let typeValue = normalized.type ?? normalized.Type ?? null;
-        if (outputUUID != null && (!typeValue || /^variable$/i.test(String(typeValue)))) {
-          typeValue = 'ActionOutput';
-        }
-        if (typeValue != null) payload.Type = XML.str(String(typeValue));
+      const payload = {};
 
-        const variableValue =
-          normalized.Variable ??
-          normalized.variable;
-        if (variableValue != null) payload.Variable = renderValue(variableValue);
+      const typeValue = spec.type ?? spec.Type ?? null;
+      if (typeValue != null) payload.Type = XML.str(String(typeValue));
 
-        const variableName =
-          normalized.variableName ??
-          normalized.VariableName;
-        if (variableName != null) payload.VariableName = XML.str(String(variableName));
+      const outputName = spec.outputName ?? spec.OutputName ?? null;
+      if (outputName != null) payload.OutputName = XML.str(String(outputName));
 
-        if (raw.value != null) payload.Value = renderValue(raw.value);
+      const outputUUID = spec.outputUUID ?? spec.OutputUUID ?? null;
+      if (outputUUID != null) payload.OutputUUID = XML.str(String(outputUUID));
 
-        const serializationType = raw.serializationType ?? raw.WFSerializationType;
-        if (serializationType != null) {
-          payload.WFSerializationType = XML.str(String(serializationType));
-        }
+      const variableValue = spec.Variable ?? spec.variable ?? null;
+      if (variableValue != null) payload.Variable = renderValue(variableValue);
 
-        if (!Object.keys(payload).length) {
-          payload.Type = XML.str('Variable');
-        }
+      const variableName = spec.variableName ?? spec.VariableName ?? null;
+      if (variableName != null) payload.VariableName = XML.str(String(variableName));
 
-        return `<key>${XML.esc(rangeKey)}</key>${XML.dict(payload)}`;
-      })
-      .filter(Boolean)
-      .join('');
+      const val = spec.value ?? spec.Value ?? null;
+      if (val != null) payload.Value = renderValue(val);
 
-    if (!entries) return XML.str(String(promptText ?? ''));
+      const serializationType = spec.serializationType ?? spec.WFSerializationType ?? null;
+      if (serializationType != null) {
+        payload.WFSerializationType = XML.str(String(serializationType));
+      }
+
+      if (!Object.keys(payload).length) {
+        payload.Type = XML.str('Variable');
+      }
+
+      entries.push(`<key>${XML.esc(rangeKey)}</key>${XML.dict(payload)}`);
+    }
+
+    if (!entries.length) return XML.str(text);
 
     return XML.dict({
       Value: XML.dict({
-        attachmentsByRange: `<dict>${entries}</dict>`,
-        string: XML.str(String(promptText ?? ''))
+        attachmentsByRange: `<dict>${entries.join('')}</dict>`,
+        string: XML.str(text)
       }),
       WFSerializationType: XML.str('WFTextTokenString')
     });
@@ -2376,36 +2424,20 @@ const userConversions = (() => {
     // 3) Object map: { "{5, 1}": { type:"VariableName" }, "{10, 1}": { type:"Another" } }
     if (!varsLike) return [];
     if (Array.isArray(varsLike)) {
-      return varsLike
-        .map((entry) => {
-          if (entry == null) return null;
-          if (typeof entry === 'string') {
-            return { range: String(entry) };
-          }
-          if (typeof entry !== 'object') return null;
-          const payload = { ...entry };
-          if (payload.range != null) {
-            payload.range = String(payload.range);
-          } else {
-            payload.start = Number(payload.start) || 0;
-            payload.len = Number(payload.len) || 1;
-          }
-          if (payload.type == null) {
-            payload.type = payload.Type ?? payload.name ?? 'Variable';
-          }
-          return payload;
-        })
-        .map(normalizeAttachmentSpec)
-        .filter(Boolean);
+      return varsLike.filter((entry) => entry != null);
+    }
+    if (typeof varsLike === 'string') {
+      return [varsLike];
     }
     if (typeof varsLike === 'object') {
       return Object.entries(varsLike).map(([range, meta]) => {
-        const payload = meta && typeof meta === 'object' ? { ...meta } : { type: meta };
-        payload.range = String(range);
-        if (payload.type == null) {
-          payload.type = payload.Type ?? payload.name ?? 'Variable';
+        if (meta == null || typeof meta !== 'object') {
+          return { range, type: meta };
         }
-        return normalizeAttachmentSpec(payload);
+        if (meta.range == null && meta.Range == null) {
+          return { range, ...meta };
+        }
+        return { ...meta };
       });
     }
     return [];
