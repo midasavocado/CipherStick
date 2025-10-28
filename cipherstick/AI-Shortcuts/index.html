@@ -104,67 +104,86 @@
 
     .chat-panel { display: flex; flex-direction: column; min-height: calc(100vh - 200px); }
 
-    .status-strip {
-      display: flex;
-      justify-content: space-between;
-      padding: 24px 26px 18px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-      gap: 12px;
-    }
-    .status-step {
+    .pipeline-card {
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(10, 14, 30, 0.8);
+      box-shadow: 0 18px 36px rgba(6, 8, 24, 0.48);
+      padding: 18px 20px;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-      flex: 1;
-      opacity: 0.3;
-      transition: opacity 0.18s ease, transform 0.18s ease;
+      gap: 14px;
     }
-    .status-step.active { opacity: 0.85; }
-    .status-step.done { opacity: 1; }
-    .status-step.error { opacity: 1; }
-    .status-step strong { font-size: 0.9rem; }
-    .status-step span { font-size: 0.75rem; color: var(--text-muted); }
-    .status-dot {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid rgba(148, 163, 184, 0.32);
-      background: rgba(148, 163, 184, 0.15);
+    .pipeline-step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 14px;
+      align-items: flex-start;
+      position: relative;
+      opacity: 0.35;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .pipeline-step::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 26px;
+      bottom: -14px;
+      width: 2px;
+      background: rgba(148, 163, 184, 0.16);
+    }
+    .pipeline-step:last-child::before { display: none; }
+    .pipeline-step strong { font-size: 0.9rem; }
+    .pipeline-step span { font-size: 0.78rem; color: var(--text-muted); }
+    .pipeline-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid rgba(148, 163, 184, 0.28);
+      background: rgba(148, 163, 184, 0.14);
       position: relative;
     }
-    .status-step.active .status-dot {
+    .pipeline-step.is-active { opacity: 0.85; }
+    .pipeline-step.is-active .pipeline-dot {
       border-color: var(--accent);
       background: var(--accent-soft);
     }
-    .status-step.active .status-dot::after {
+    .pipeline-step.is-active .pipeline-dot::after {
       content: "";
       position: absolute;
-      inset: 4px;
+      inset: 5px;
       border-radius: 50%;
       background: var(--accent);
       animation: pulse 1.2s ease-in-out infinite;
     }
-    .status-step.done .status-dot {
+    .pipeline-step.is-done { opacity: 1; }
+    .pipeline-step.is-done .pipeline-dot {
       border-color: var(--success);
-      background: rgba(52, 211, 153, 0.2);
+      background: rgba(52, 211, 153, 0.22);
     }
-    .status-step.done .status-dot::after {
+    .pipeline-step.is-done .pipeline-dot::after {
       content: "";
       position: absolute;
-      left: 4px; top: 6px;
-      width: 6px; height: 10px;
+      left: 5px;
+      top: 7px;
+      width: 8px;
+      height: 12px;
       border-right: 2px solid var(--success);
       border-bottom: 2px solid var(--success);
       transform: rotate(45deg);
     }
-    .status-step.error .status-dot {
+    .pipeline-step.is-error { opacity: 1; }
+    .pipeline-step.is-error .pipeline-dot {
       border-color: var(--error);
-      background: rgba(251, 113, 133, 0.18);
+      background: rgba(251, 113, 133, 0.2);
     }
-    .status-step.error .status-dot::after {
+    .pipeline-step.is-error .pipeline-dot::after {
       content: "";
       position: absolute;
-      left: 4px; top: 8px;
-      width: 8px; height: 2px;
+      left: 5px;
+      top: 11px;
+      width: 10px;
+      height: 2px;
       background: var(--error);
       transform: rotate(45deg);
     }
@@ -377,6 +396,59 @@
     .toast.is-visible { opacity: 1; transform: translateY(0); }
     .toast.toast--error { border-color: rgba(251, 113, 133, 0.4); background: rgba(70, 8, 25, 0.92); }
 
+    .code-toggle { border: 1px solid rgba(148, 163, 184, 0.24); border-radius: 999px; padding: 8px 18px; background: rgba(148, 163, 184, 0.12); color: var(--text); cursor: pointer; transition: background 0.18s ease, transform 0.18s ease; }
+    .code-toggle:hover { background: rgba(148, 163, 184, 0.2); transform: translateY(-1px); }
+
+    .code-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .code-modal.is-open { display: flex; }
+    .code-modal__backdrop { position: absolute; inset: 0; background: rgba(2, 3, 10, 0.75); backdrop-filter: blur(8px); }
+    .code-modal__panel {
+      position: relative;
+      width: min(820px, calc(100% - 40px));
+      max-height: min(80vh, 640px);
+      background: rgba(8, 11, 26, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 40px 90px rgba(5, 7, 20, 0.6);
+      overflow: hidden;
+    }
+    .code-modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      gap: 16px;
+    }
+    .code-modal__header h3 { margin: 0; font-size: 1rem; }
+    .code-modal__tabs { display: flex; gap: 10px; }
+    .code-modal__tab {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: rgba(148, 163, 184, 0.14);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.18s ease;
+    }
+    .code-modal__tab.is-active { background: var(--accent-soft); color: var(--accent-strong); }
+    .code-modal__close {
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(148, 163, 184, 0.16);
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .code-modal__close:hover { background: rgba(148, 163, 184, 0.24); }
+    .code-modal__body { flex: 1; overflow: auto; padding: 20px 24px; }
+    .code-modal__body pre { margin: 0; font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; color: var(--text); }
+
     @keyframes pulse {
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.25); opacity: 0.55; }
@@ -395,7 +467,6 @@
       .workspace { padding: 0 20px 48px; }
       .composer { flex-direction: column; align-items: stretch; }
       .composer button { width: 100%; border-radius: 14px; }
-      .status-strip { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -410,34 +481,12 @@
 
   <main class="workspace">
     <section class="panel chat-panel">
-      <div class="status-strip" id="statusTimeline">
-        <div class="status-step" data-step="assess">
-          <div class="status-dot"></div>
-          <strong>Assess</strong>
-          <span>Understanding your request</span>
-        </div>
-        <div class="status-step" data-step="search">
-          <div class="status-dot"></div>
-          <strong>Search</strong>
-          <span>Picking shortcut actions</span>
-        </div>
-        <div class="status-step" data-step="build">
-          <div class="status-dot"></div>
-          <strong>Build</strong>
-          <span>Linking &amp; filling details</span>
-        </div>
-        <div class="status-step" data-step="summarize">
-          <div class="status-dot"></div>
-          <strong>Explain</strong>
-          <span>Summarizing the output</span>
-        </div>
-      </div>
       <div class="chat-scroll" id="conversationList">
         <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
       </div>
       <div class="composer-shell">
         <div class="composer">
-          <textarea id="chatInput" placeholder="Try “Create a shortcut that summarizes text and saves the result to Notes.”"></textarea>
+          <textarea id="chatInput" placeholder="Describe what should happen, e.g. &quot;Ask for text, generate a QR, show it instantly.&quot;"></textarea>
           <button id="btnSend" title="Send">
             <span class="btn-label">Go</span>
             <span class="btn-spinner"></span>
@@ -449,7 +498,10 @@
     <aside class="panel blueprint-panel">
       <div class="blueprint-header">
         <h2>Shortcut blueprint</h2>
-        <button id="btnSign" disabled>Download .shortcut</button>
+        <div style="display:flex; gap:10px;">
+          <button id="btnViewRaw" class="code-toggle" disabled>View raw output</button>
+          <button id="btnSign" disabled>Download .shortcut</button>
+        </div>
       </div>
       <div class="visualizer">
         <div class="flow-scroll" id="flowContainer">
@@ -458,6 +510,23 @@
       </div>
     </aside>
   </main>
+
+  <div id="codeModal" class="code-modal" aria-hidden="true">
+    <div class="code-modal__backdrop" id="codeModalBackdrop"></div>
+    <div class="code-modal__panel" role="dialog" aria-modal="true" aria-labelledby="codeModalTitle">
+      <div class="code-modal__header">
+        <h3 id="codeModalTitle">Raw shortcut output</h3>
+        <div class="code-modal__tabs">
+          <button class="code-modal__tab is-active" data-code-tab="json">Program JSON</button>
+          <button class="code-modal__tab" data-code-tab="plist">Plist XML</button>
+        </div>
+        <button id="codeModalClose" class="code-modal__close" title="Close">×</button>
+      </div>
+      <div class="code-modal__body">
+        <pre id="codeModalContent"></pre>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -471,9 +540,14 @@
   const btnSend = $('btnSend');
   const btnReset = $('btnReset');
   const btnSign = $('btnSign');
+  const btnViewRaw = $('btnViewRaw');
   const flowContainer = $('flowContainer');
   const toast = $('toast');
-  const statusTimelineEls = document.querySelectorAll('.status-step');
+  const codeModal = $('codeModal');
+  const codeModalClose = $('codeModalClose');
+  const codeModalBackdrop = $('codeModalBackdrop');
+  const codeModalContent = $('codeModalContent');
+  const codeModalTabs = document.querySelectorAll('[data-code-tab]');
 
   const state = {
     basePrompt: '',
@@ -483,10 +557,20 @@
     program: null,
     plistText: '',
     isBusy: false,
-    toastTimer: null
+    toastTimer: null,
+    pipelineEntries: new Map(),
+    currentPipelineId: null,
+    isCodeModalOpen: false,
+    codeModalTab: 'json'
   };
 
   const timelineTimers = [];
+  const PIPELINE_STEPS = [
+    { key: 'assess', title: 'Assessing request', hint: 'Parsing your prompt' },
+    { key: 'search', title: 'Selecting actions', hint: 'Browsing the catalog' },
+    { key: 'build', title: 'Building flow', hint: 'Linking inputs and outputs' },
+    { key: 'summarize', title: 'Explaining result', hint: 'Preparing the response' }
+  ];
 
   function showToast(message, isError = false) {
     if (!toast) return;
@@ -510,10 +594,13 @@
   function renderConversation() {
     if (!conversationList) return;
     if (!state.conversation.length) {
-      conversationList.innerHTML = '<p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>';
+      conversationList.innerHTML = '<p class="bubble__label" style="color: var(--text-muted);">Share what the shortcut should do to get started.</p>';
       return;
     }
     conversationList.innerHTML = state.conversation.map((entry) => {
+      if (entry.role === 'pipeline') {
+        return `<div class="pipeline-card" data-pipeline-id="${entry.id}"></div>`;
+      }
       const roleClass = entry.role === 'user' ? 'bubble--user' : entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
       const label = entry.meta?.label ? `<span class="bubble__label">${entry.meta.label}</span>` : '';
       const time = entry.at ? `<span class="bubble__time">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>` : '';
@@ -524,7 +611,27 @@
         .replace(/\n/g, '<br>');
       return `<article class="bubble ${roleClass}"><div class="bubble__inner">${label}<p>${escaped || '<em>(empty)</em>'}</p>${time}</div></article>`;
     }).join('');
+    hydratePipelineCards();
     conversationList.scrollTop = conversationList.scrollHeight;
+  }
+
+  function hydratePipelineCards() {
+    state.pipelineEntries.forEach((entry, id) => {
+      const card = conversationList.querySelector(`[data-pipeline-id="${id}"]`);
+      if (!card) {
+        entry.el = null;
+        return;
+      }
+      card.innerHTML = PIPELINE_STEPS.map(({ key, title, hint }) => {
+        const status = entry.statuses[key] || 'pending';
+        const classes = ['pipeline-step'];
+        if (status === 'active') classes.push('is-active');
+        if (status === 'done') classes.push('is-done');
+        if (status === 'error') classes.push('is-error');
+        return `<div class="${classes.join(' ')}" data-pipe-step="${key}"><div class="pipeline-dot"></div><div><strong>${title}</strong><span>${hint}</span></div></div>`;
+      }).join('');
+      entry.el = card;
+    });
   }
 
   function sanitizeName(name) {
@@ -587,32 +694,100 @@
 
   function updateFlow(program, plist) {
     state.program = program || null;
-    state.plistText = plist || '';
-    flowContainer.innerHTML = buildFlowHtml(program);
+    if (plist !== undefined) state.plistText = plist || '';
+    flowContainer.innerHTML = buildFlowHtml(state.program);
+    btnViewRaw.disabled = !state.program;
+    if (state.isCodeModalOpen) updateCodeModal(state.codeModalTab);
   }
 
   function clearTimelineTimers() { while (timelineTimers.length) clearTimeout(timelineTimers.pop()); }
+
   function resetTimeline() {
     clearTimelineTimers();
-    statusTimelineEls.forEach((el) => el.classList.remove('active', 'done', 'error'));
+    state.pipelineEntries.clear();
+    state.currentPipelineId = null;
   }
-  function setTimeline(stepKey, stateClass) {
-    const el = document.querySelector(`.status-step[data-step="${stepKey}"]`);
-    if (!el) return;
-    el.classList.remove('active', 'done', 'error');
-    if (stateClass) el.classList.add(stateClass);
+
+  function setPipelineStep(id, stepKey, status) {
+    const entry = state.pipelineEntries.get(id);
+    if (!entry) return;
+    entry.statuses[stepKey] = status;
+    if (entry.el) {
+      const node = entry.el.querySelector(`[data-pipe-step="${stepKey}"]`);
+      if (node) {
+        node.classList.remove('is-active', 'is-done', 'is-error');
+        if (status === 'active') node.classList.add('is-active');
+        else if (status === 'done') node.classList.add('is-done');
+        else if (status === 'error') node.classList.add('is-error');
+      }
+    }
   }
+
   function startTimeline() {
-    resetTimeline();
-    setTimeline('assess', 'active');
-    timelineTimers.push(setTimeout(() => setTimeline('search', 'active'), 350));
-    timelineTimers.push(setTimeout(() => setTimeline('build', 'active'), 700));
-    timelineTimers.push(setTimeout(() => setTimeline('summarize', 'active'), 1050));
+    clearTimelineTimers();
+    const pipelineId = `pipeline-${Date.now()}`;
+    const statuses = {};
+    PIPELINE_STEPS.forEach(({ key }) => { statuses[key] = 'pending'; });
+    state.pipelineEntries.set(pipelineId, { statuses, el: null });
+    state.currentPipelineId = pipelineId;
+    state.conversation.push({ role: 'pipeline', id: pipelineId });
+    renderConversation();
+    if (!PIPELINE_STEPS.length) return;
+    setPipelineStep(pipelineId, PIPELINE_STEPS[0].key, 'active');
+    for (let i = 1; i < PIPELINE_STEPS.length; i++) {
+      timelineTimers.push(setTimeout(() => {
+        setPipelineStep(pipelineId, PIPELINE_STEPS[i - 1].key, 'done');
+        setPipelineStep(pipelineId, PIPELINE_STEPS[i].key, 'active');
+      }, i * 420));
+    }
   }
+
   function finishTimeline(status) {
     clearTimelineTimers();
-    if (status === 'success') ['assess', 'search', 'build', 'summarize'].forEach((key) => setTimeline(key, 'done'));
-    else if (status === 'error') setTimeline('summarize', 'error');
+    const id = state.currentPipelineId;
+    if (!id) return;
+    if (status === 'success') {
+      PIPELINE_STEPS.forEach(({ key }) => setPipelineStep(id, key, 'done'));
+    } else if (status === 'error') {
+      const entry = state.pipelineEntries.get(id);
+      if (entry) {
+        let target = PIPELINE_STEPS.find(({ key }) => entry.statuses[key] === 'active');
+        if (!target) target = [...PIPELINE_STEPS].reverse().find(({ key }) => entry.statuses[key] === 'done');
+        if (!target) target = PIPELINE_STEPS[0];
+        setPipelineStep(id, target.key, 'error');
+      }
+    }
+    state.currentPipelineId = null;
+  }
+
+  function updateCodeModal(tab = state.codeModalTab) {
+    if (!codeModal) return;
+    state.codeModalTab = tab;
+    codeModalTabs.forEach((btn) => {
+      const isActive = btn.dataset.codeTab === tab;
+      btn.classList.toggle('is-active', isActive);
+    });
+    let text = '';
+    if (tab === 'plist') {
+      text = state.plistText || 'No plist output yet.';
+    } else {
+      text = state.program ? prettyStringify(state.program) : 'No program output yet.';
+    }
+    codeModalContent.textContent = text;
+  }
+
+  function openCodeModal(tab = 'json') {
+    if (!state.program && !state.plistText) return;
+    state.isCodeModalOpen = true;
+    codeModal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    updateCodeModal(tab);
+  }
+
+  function closeCodeModal() {
+    state.isCodeModalOpen = false;
+    codeModal.classList.remove('is-open');
+    document.body.style.overflow = '';
   }
 
   function setSendLoading(isLoading) {
@@ -657,24 +832,27 @@
 
   function explainResult(info) {
     const actions = Array.isArray(state.program?.actions) ? state.program.actions : [];
-    const flow = actions.map((a) => a?.action || '…').slice(0, 5).join(' → ');
     const count = actions.length;
-    const templates = (info?.usedFiles || []).slice(0, 3).map((file) => file.replace(/\.json$/i, '')).join(', ');
+    const templates = (info?.usedFiles || []).slice(0, 2).map((file) => file.replace(/\.json$/i, '')).join(', ');
 
     const summary = [];
-    if (flow) summary.push(`Flow: ${flow}${count ? ` (${count})` : ''}.`);
-    if (templates) summary.push(`Templates: ${templates}${(info?.usedFiles?.length || 0) > 3 ? '…' : ''}.`);
-
     if (info?.answer) {
-      const firstSentence = String(info.answer).split(/(?<=[.!?])\s+/)[0]?.trim();
-      if (firstSentence) summary.push(firstSentence);
+      const concise = String(info.answer).split(/(?<=[.!?])\s+/).slice(0, 2).join(' ').trim();
+      if (concise) summary.push(concise);
+    } else if (count) {
+      summary.push(`Ready for a ${count}-step shortcut. Give it a spin.`);
+    } else {
+      summary.push('Shortcut scaffolded and waiting for tweaks.');
+    }
+
+    if (!info?.answer && templates) {
+      summary.push(`Pulled in: ${templates}${(info?.usedFiles?.length || 0) > 2 ? '…' : ''}.`);
     }
 
     let cta = 'Say the word if you want tweaks.';
-    if (info?.mode === 'clarify') cta = 'Need more detail? Just ask.';
-    else if (info?.mode === 'explore') cta = 'Tell me which idea to explore next.';
+    if (info?.mode === 'clarify') cta = 'Need more detail? Ask away.';
+    else if (info?.mode === 'explore') cta = 'Want to branch out? Tell me which idea to expand.';
 
-    if (!summary.length && info?.answer) summary.push(info.answer);
     summary.push(cta);
     return summary.join(' ');
   }
@@ -766,6 +944,7 @@
         dslText: null
       });
       state.plistText = plist;
+      updateFlow(state.program, plist);
 
       const file = new File([plist], `${state.lastName || DEFAULT_SHORTCUT_NAME}.plist`, { type: 'application/xml' });
       const form = new FormData();
@@ -811,6 +990,19 @@
     }
   });
   btnSign.addEventListener('click', handleDownload);
+  btnViewRaw.addEventListener('click', () => openCodeModal('json'));
+  codeModalClose.addEventListener('click', closeCodeModal);
+  codeModalBackdrop.addEventListener('click', closeCodeModal);
+  codeModalTabs.forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (!state.isCodeModalOpen) return;
+      updateCodeModal(btn.dataset.codeTab || 'json');
+    });
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && state.isCodeModalOpen) closeCodeModal();
+  });
   btnReset.addEventListener('click', () => {
     if (state.isBusy) return;
     state.basePrompt = '';
@@ -823,6 +1015,7 @@
     renderConversation();
     updateFlow(null, '');
     resetTimeline();
+    if (state.isCodeModalOpen) closeCodeModal();
     showToast('Workspace cleared.');
     btnSign.disabled = true;
   });
