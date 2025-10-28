@@ -6,21 +6,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #05070f;
-      --bg-panel: #0d111d;
-      --bg-panel-strong: #131a2b;
-      --border: rgba(110, 120, 160, 0.25);
-      --border-strong: rgba(110, 120, 160, 0.45);
-      --accent: #6c5ce7;
-      --accent-soft: rgba(108, 92, 231, 0.18);
+      --bg: #02030a;
+      --bg-panel: rgba(5, 8, 20, 0.7);
+      --bg-panel-strong: rgba(12, 16, 32, 0.78);
+      --stroke: rgba(120, 132, 180, 0.25);
+      --accent: #7c5cfc;
+      --accent-glow: rgba(98, 102, 241, 0.35);
+      --accent-soft: rgba(98, 102, 241, 0.2);
       --accent-strong: #a78bfa;
-      --text: #e6ecff;
-      --text-muted: #8a96b9;
+      --text: #edf1ff;
+      --text-muted: #9aa5c6;
       --success: #34d399;
       --error: #fb7185;
-      --shadow: 0 30px 60px rgba(5, 7, 15, 0.55);
-      --radius-lg: 22px;
-      --radius-md: 16px;
+      --shadow: 0 40px 90px rgba(5, 7, 20, 0.65);
+      --radius-lg: 26px;
+      --radius-md: 18px;
     }
 
     * { box-sizing: border-box; }
@@ -28,171 +28,85 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at 15% 20%, rgba(69, 59, 219, 0.25), transparent 55%),
-                  radial-gradient(circle at 85% 0, rgba(14, 165, 233, 0.22), transparent 52%),
-                  linear-gradient(160deg, #04060d, #0a0e18 55%, #05070f);
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 5% -10%, rgba(124, 92, 252, 0.28), transparent 55%),
+                  radial-gradient(circle at 95% -30%, rgba(14, 165, 233, 0.22), transparent 65%),
+                  linear-gradient(170deg, #02030a, #050715 70%, #05040d);
       color: var(--text);
       display: flex;
       flex-direction: column;
     }
 
-    a { color: var(--accent-strong); }
-
     header {
       width: 100%;
-      max-width: 1300px;
+      max-width: 1340px;
       margin: 0 auto;
-      padding: 28px 40px 12px;
+      padding: 32px 40px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
+      font-size: 1.28rem;
       font-weight: 600;
-      font-size: 1.25rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
     }
     .brand__logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #6c5ce7, #a855f7);
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(98, 102, 241, 1), rgba(124, 92, 252, 0.9));
       display: grid;
       place-items: center;
+      color: #05030d;
       font-weight: 700;
-      color: #0b0620;
-      box-shadow: 0 16px 30px rgba(108, 92, 231, 0.35);
+      font-size: 1rem;
+      box-shadow: 0 20px 36px rgba(98, 102, 241, 0.35);
     }
 
     .main {
       width: 100%;
-      max-width: 1300px;
+      max-width: 1340px;
       margin: 0 auto 60px;
-      padding: 0 40px;
+      padding: 0 40px 60px;
       display: grid;
-      grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
       gap: 28px;
     }
 
     .panel {
       background: var(--bg-panel);
+      border: 1px solid var(--stroke);
       border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-      display: flex;
-      flex-direction: column;
-      min-height: calc(100vh - 180px);
+      backdrop-filter: blur(22px);
+      position: relative;
+      overflow: hidden;
     }
 
     .chat-panel {
-      padding: 26px 24px 20px;
-      gap: 18px;
-    }
-
-    .status-timeline {
       display: flex;
       flex-direction: column;
+      padding: 26px 26px 20px;
       gap: 18px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      min-height: calc(100vh - 190px);
     }
-    .status-step {
-      display: grid;
-      grid-template-columns: 24px 1fr;
-      gap: 16px;
-      position: relative;
-    }
-    .status-step::before {
-      content: "";
-      position: absolute;
-      left: 11px;
-      top: 24px;
-      bottom: -18px;
-      width: 2px;
-      background: rgba(148, 163, 184, 0.18);
-    }
-    .status-step:last-child::before { display: none; }
-    .status-dot {
-      width: 24px;
-      height: 24px;
-      border-radius: 999px;
-      border: 2px solid rgba(148, 163, 184, 0.35);
-      background: rgba(148, 163, 184, 0.12);
-      display: grid;
-      place-items: center;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      transition: all 0.25s ease;
-    }
-    .status-dot::after {
-      content: "";
-      display: block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(148, 163, 184, 0.55);
-    }
-    .status-step.active .status-dot {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-    .status-step.active .status-dot::after {
-      background: var(--accent);
-      animation: pulse 1.5s infinite ease-in-out;
-    }
-    .status-step.done .status-dot {
-      border-color: var(--success);
-      background: rgba(52, 211, 153, 0.2);
-      color: var(--success);
-    }
-    .status-step.done .status-dot::after {
-      width: 12px;
-      height: 12px;
-      background: var(--success);
-      border-radius: 4px;
-      transform: rotate(45deg);
-    }
-    .status-step.error .status-dot {
-      border-color: var(--error);
-      background: rgba(251, 113, 133, 0.22);
-    }
-    .status-step.error .status-dot::after {
-      width: 12px;
-      height: 2px;
-      background: var(--error);
-      transform: rotate(45deg);
-      border-radius: 999px;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.3); opacity: 0.5; }
-    }
-    .status-text {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .status-text strong { font-size: 0.95rem; }
-    .status-text span { font-size: 0.8rem; color: var(--text-muted); }
 
     .chat-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 18px 6px 18px 2px;
       display: flex;
       flex-direction: column;
       gap: 18px;
+      padding-right: 10px;
     }
-    .chat-scroll::-webkit-scrollbar { width: 8px; }
+    .chat-scroll::-webkit-scrollbar { width: 9px; }
     .chat-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.22);
+      background: rgba(148, 163, 184, 0.2);
       border-radius: 999px;
     }
 
@@ -200,174 +114,218 @@
       max-width: 92%;
       display: flex;
     }
-    .bubble--user { justify-content: flex-end; align-self: flex-end; }
+    .bubble--user { justify-content: flex-end; }
     .bubble__inner {
-      padding: 14px 16px;
+      padding: 16px 18px;
       border-radius: var(--radius-md);
-      background: rgba(24, 31, 52, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      box-shadow: 0 18px 36px rgba(5, 7, 15, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(10, 15, 31, 0.8);
+      box-shadow: 0 20px 36px rgba(5, 7, 20, 0.5);
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      font-size: 0.95rem;
-      line-height: 1.55;
+      gap: 6px;
+      font-size: 0.96rem;
+      line-height: 1.58;
     }
     .bubble--user .bubble__inner {
-      background: rgba(108, 92, 231, 0.18);
-      border-color: rgba(108, 92, 231, 0.35);
+      background: rgba(124, 92, 252, 0.18);
+      border-color: rgba(124, 92, 252, 0.38);
     }
     .bubble--assistant .bubble__inner {
-      background: rgba(14, 165, 233, 0.12);
-      border-color: rgba(14, 165, 233, 0.25);
+      background: rgba(50, 94, 242, 0.16);
+      border-color: rgba(74, 102, 241, 0.28);
     }
     .bubble__label {
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
       text-transform: uppercase;
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
       color: rgba(148, 163, 184, 0.7);
     }
     .bubble__time {
-      font-size: 0.68rem;
-      color: rgba(148, 163, 184, 0.5);
+      font-size: 0.7rem;
+      color: rgba(148, 163, 184, 0.55);
     }
 
     .composer {
-      margin-top: auto;
+      border-radius: var(--radius-md);
+      background: var(--bg-panel-strong);
+      border: 1px solid rgba(148, 163, 184, 0.2);
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(148, 163, 184, 0.14);
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px;
+      position: relative;
     }
     .composer textarea {
-      width: 100%;
-      border-radius: var(--radius-md);
-      border: 1px solid transparent;
-      background: var(--bg-panel-strong);
+      flex: 1;
+      border: none;
+      background: transparent;
       color: var(--text);
-      min-height: 110px;
-      padding: 14px 16px;
-      font-size: 0.95rem;
-      resize: vertical;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .composer textarea:focus {
+      font-size: 0.96rem;
+      resize: none;
+      min-height: 60px;
+      max-height: 180px;
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
     }
     .composer button {
-      align-self: flex-end;
       border: none;
-      border-radius: 999px;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #08031b;
-      font-weight: 600;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
       cursor: pointer;
-      box-shadow: 0 16px 32px rgba(108, 92, 231, 0.35);
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #07031a;
+      box-shadow: 0 16px 32px var(--accent-glow);
       transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
-    .composer button:hover { transform: translateY(-1px); }
-    .composer button:active { transform: translateY(0); }
     .composer button:disabled {
       opacity: 0.55;
       cursor: not-allowed;
-      transform: none;
       box-shadow: none;
+      transform: none;
     }
+    .composer button:hover:not(:disabled) { transform: translateY(-1px); }
+    .composer button:active:not(:disabled) { transform: translateY(0); }
 
-    .side-panel {
-      background: rgba(12, 16, 28, 0.88);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      padding: 26px 24px;
+    .floating-spinner {
+      position: absolute;
+      right: 16px;
+      bottom: 90px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(98, 102, 241, 0.92);
+      box-shadow: 0 18px 36px rgba(98, 102, 241, 0.42);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .floating-spinner::before {
+      content: "";
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(15, 23, 42, 0.3);
+      border-top-color: rgba(15, 23, 42, 1);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .floating-spinner.is-visible { display: flex; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .visual-panel {
+      padding: 28px;
       display: flex;
       flex-direction: column;
-      gap: 22px;
+      gap: 20px;
     }
-    .side-header {
+    .visual-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .side-header h2 { margin: 0; font-size: 1.05rem; }
-    .chip {
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.18);
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      letter-spacing: 0.05em;
-      text-transform: lowercase;
+    .visual-header h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
     }
-
-    textarea.monospace {
-      width: 100%;
-      padding: 14px 16px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      background: #05070f;
-      color: #f5f7ff;
-      font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Menlo, Consolas, monospace;
-      font-size: 0.86rem;
-      min-height: 220px;
-      resize: vertical;
-      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
-    }
-    textarea.monospace:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
-    }
-
-    .side-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
-    .btn-ghost {
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 999px;
-      padding: 8px 18px;
-      background: rgba(148, 163, 184, 0.12);
-      color: var(--text);
-      cursor: pointer;
-      transition: background 0.18s ease, transform 0.18s ease;
-    }
-    .btn-ghost:hover { background: rgba(148, 163, 184, 0.22); transform: translateY(-1px); }
-    .btn-accent {
+    .visual-header button {
       border: none;
       border-radius: 999px;
-      padding: 10px 22px;
-      background: linear-gradient(135deg, rgba(94, 234, 212, 0.9), rgba(56, 189, 248, 1));
+      padding: 10px 20px;
+      background: linear-gradient(135deg, rgba(94, 234, 212, 0.9), rgba(59, 130, 246, 1));
       color: #04111b;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 18px 32px rgba(59, 130, 246, 0.28);
+      box-shadow: 0 18px 32px rgba(59, 130, 246, 0.35);
       transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
-    .btn-accent:hover { transform: translateY(-1px); }
-    .btn-accent:disabled {
+    .visual-header button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
     }
+    .visual-header button:hover:not(:disabled) { transform: translateY(-1px); }
+
+    .visualizer {
+      flex: 1;
+      min-height: 420px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: radial-gradient(circle at 15% 15%, rgba(98, 102, 241, 0.08), transparent 55%),
+                  rgba(8, 12, 26, 0.88);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+    .visualizer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      border: 1px solid rgba(124, 92, 252, 0.08);
+    }
+
+    .flow-step {
+      border-left: 2px solid rgba(148, 163, 184, 0.2);
+      padding-left: 16px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .flow-step::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.35);
+    }
+    .flow-step strong { font-size: 0.95rem; }
+    .flow-step small { color: var(--text-muted); font-size: 0.78rem; }
+    .flow-step.is-producer::before { background: var(--accent); box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.22); }
+    .flow-step.is-consumer::before { background: rgba(94, 234, 212, 0.9); box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.18); }
+
+    .flow-scroll {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding-right: 12px;
+    }
+    .flow-scroll::-webkit-scrollbar { width: 9px; }
+    .flow-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.18);
+      border-radius: 999px;
+    }
+
+    .empty-visual {
+      margin: auto;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
 
     .toast {
       position: fixed;
-      right: 36px;
+      right: 40px;
       bottom: 36px;
       padding: 14px 18px;
-      border-radius: 16px;
-      background: rgba(5, 7, 15, 0.92);
+      border-radius: 18px;
+      background: rgba(4, 6, 18, 0.92);
       border: 1px solid rgba(148, 163, 184, 0.25);
       color: var(--text);
-      box-shadow: 0 26px 48px rgba(5, 7, 15, 0.5);
+      box-shadow: 0 28px 48px rgba(4, 6, 18, 0.5);
       opacity: 0;
       transform: translateY(16px);
       pointer-events: none;
@@ -384,20 +342,20 @@
       background: rgba(76, 5, 25, 0.92);
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 1100px) {
       .main {
         grid-template-columns: minmax(0, 1fr);
-        padding: 0 24px;
+        padding: 0 26px 40px;
       }
       .panel { min-height: auto; }
     }
     @media (max-width: 640px) {
-      header { padding: 24px 20px 10px; }
-      .main { padding: 0 18px; }
-      .panel { padding: 22px 18px; border-radius: 18px; }
-      .composer textarea { min-height: 100px; }
-      .btn-ghost, .btn-accent { width: 100%; text-align: center; }
-      header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      header { padding: 24px 20px 12px; flex-direction: column; gap: 12px; align-items: flex-start; }
+      .main { padding: 0 18px 40px; }
+      .chat-panel { min-height: auto; padding: 20px 18px; }
+      .visual-panel { padding: 22px 18px; }
+      .composer { flex-direction: column; align-items: stretch; }
+      .composer button { align-self: flex-end; width: 44px; height: 44px; border-radius: 12px; }
     }
   </style>
 </head>
@@ -407,71 +365,32 @@
       <span class="brand__logo">SS</span>
       <span>Shortcut Studio</span>
     </div>
-    <button id="btnReset" class="btn-ghost">Reset workspace</button>
+    <button id="btnReset" style="border:none;border-radius:999px;padding:10px 20px;background:rgba(124,92,252,0.18);color:var(--text);cursor:pointer;">Reset workspace</button>
   </header>
 
   <main class="main">
     <section class="panel chat-panel">
-      <div class="status-timeline" id="statusTimeline">
-        <div class="status-step" data-step="assess">
-          <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Assessing request</strong>
-            <span>Understanding your goal and previous context</span>
-          </div>
-        </div>
-        <div class="status-step" data-step="search">
-          <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Selecting actions</strong>
-            <span>Scanning the action catalog for best-fit templates</span>
-          </div>
-        </div>
-        <div class="status-step" data-step="build">
-          <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Building program</strong>
-            <span>Linking actions &amp; filling parameters</span>
-          </div>
-        </div>
-        <div class="status-step" data-step="summarize">
-          <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Summarizing</strong>
-            <span>Explaining changes &amp; next steps</span>
-          </div>
-        </div>
-      </div>
-
       <div class="chat-scroll" id="conversationList">
-        <p class="bubble__label" style="color: var(--text-muted);">Ready to craft your shortcut.</p>
+        <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
       </div>
-
+      <div class="floating-spinner" id="floatingSpinner"></div>
       <div class="composer">
-        <textarea id="chatInput" placeholder="Describe the shortcut you want. Ask follow-up questions anytime."></textarea>
-        <button id="btnSend">Send prompt</button>
+        <textarea id="chatInput" placeholder="Tell Shortcut Studio what to build…"></textarea>
+        <button id="btnSend" title="Send prompt">➤</button>
       </div>
     </section>
 
-    <aside class="side-panel">
-      <div class="side-header">
-        <h2>Program JSON / DSL</h2>
-        <span id="genStatus" class="chip">idle</span>
+    <aside class="panel visual-panel">
+      <div class="visual-header">
+        <h2>Shortcut flow</h2>
+        <button id="btnSign" disabled>Download .shortcut</button>
       </div>
-      <textarea id="dslBox" class="monospace" spellcheck="false" placeholder="Program output will appear here after the first response."></textarea>
-
-      <div class="side-header">
-        <h2>.plist XML</h2>
-        <span id="convStatus" class="chip">waiting</span>
-      </div>
-      <textarea id="plistBox" class="monospace" spellcheck="false" placeholder="Convert the program to view the plist."></textarea>
-
-      <div class="side-actions">
-        <button id="btnCopyDSL" class="btn-ghost">Copy program</button>
-        <button id="btnConvert" class="btn-ghost">Convert → plist</button>
-        <button id="btnCopyPlist" class="btn-ghost">Copy plist</button>
-        <button id="btnSign" class="btn-accent" disabled>Sign &amp; download</button>
-        <span id="signStatus" class="chip">waiting</span>
+      <div class="visualizer">
+        <div class="flow-scroll" id="flowContainer">
+          <div class="empty-visual">
+            The flow visualization will appear after the first plan.
+          </div>
+        </div>
       </div>
     </aside>
   </main>
@@ -480,61 +399,30 @@
 
   <script>
   const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
+  const DEFAULT_SHORTCUT_NAME = 'My Shortcut';
 
   const $ = (id) => document.getElementById(id);
-  const chatInput = $('chatInput');
   const conversationList = $('conversationList');
+  const chatInput = $('chatInput');
   const btnSend = $('btnSend');
   const btnReset = $('btnReset');
-  const btnCopyDSL = $('btnCopyDSL');
-  const btnCopyPlist = $('btnCopyPlist');
-  const btnConvert = $('btnConvert');
   const btnSign = $('btnSign');
+  const flowContainer = $('flowContainer');
+  const floatingSpinner = $('floatingSpinner');
   const toast = $('toast');
-
-  const dslBox = $('dslBox');
-  const plistBox = $('plistBox');
-  const genStatus = $('genStatus');
-  const convStatus = $('convStatus');
-  const signStatus = $('signStatus');
-
-  const statusTimeline = document.querySelectorAll('.status-step');
 
   const state = {
     basePrompt: '',
     lastPrompt: '',
-    lastName: '',
+    lastName: DEFAULT_SHORTCUT_NAME,
     conversation: [],
-    toastTimer: null,
-    isBusy: false
+    program: null,
+    plistText: '',
+    isBusy: false,
+    toastTimer: null
   };
 
-  const DEFAULT_SHORTCUT_NAME = 'My Shortcut';
-
-  function resetPipeline() {
-    statusTimeline.forEach((step) => {
-      step.classList.remove('active', 'done', 'error');
-    });
-  }
-
-  function setPipeline(stepKey, status) {
-    const stepEl = document.querySelector(`.status-step[data-step="${stepKey}"]`);
-    if (!stepEl) return;
-    if (status === 'active') {
-      stepEl.classList.remove('done', 'error');
-      stepEl.classList.add('active');
-    } else if (status === 'done') {
-      stepEl.classList.remove('active', 'error');
-      stepEl.classList.add('done');
-    } else if (status === 'error') {
-      stepEl.classList.remove('active', 'done');
-      stepEl.classList.add('error');
-    } else {
-      stepEl.classList.remove('active', 'done', 'error');
-    }
-  }
-
-  function showMessage(message, isError = false) {
+  function showToast(message, isError = false) {
     if (!toast) return;
     toast.textContent = message;
     toast.classList.toggle('toast--error', Boolean(isError));
@@ -543,13 +431,8 @@
     state.toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
   }
 
-  function setChipStatus(node, text, variant = 'idle') {
-    if (!node) return;
-    node.textContent = text;
-    node.classList.remove('chip--success', 'chip--error', 'chip--working');
-    if (variant === 'success') node.classList.add('chip--success');
-    if (variant === 'error') node.classList.add('chip--error');
-    if (variant === 'working') node.classList.add('chip--working');
+  function setSpinner(visible) {
+    floatingSpinner.classList.toggle('is-visible', visible);
   }
 
   function pushMessage(role, content, meta = {}) {
@@ -565,14 +448,14 @@
   function renderConversation() {
     if (!conversationList) return;
     if (!state.conversation.length) {
-      conversationList.innerHTML = '<p class="bubble__label" style="color: var(--text-muted);">Ready to craft your shortcut.</p>';
+      conversationList.innerHTML = '<p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>';
       return;
     }
     conversationList.innerHTML = state.conversation.map((entry) => {
       const roleClass = entry.role === 'user' ? 'bubble--user' :
                         entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
       const label = entry.meta?.label ? `<span class="bubble__label">${entry.meta.label}</span>` : '';
-      const time = entry.at ? `<time class="bubble__time">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>` : '';
+      const time = entry.at ? `<span class="bubble__time">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>` : '';
       const escaped = entry.content
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -589,20 +472,6 @@
       `;
     }).join('');
     conversationList.scrollTop = conversationList.scrollHeight;
-  }
-
-  function guessMode(text) {
-    const input = text.toLowerCase();
-    if (input.includes('find') || input.includes('search') || input.includes('action') && input.includes('what')) {
-      return 'explore';
-    }
-    if (/\?/.test(input) || input.startsWith('how ') || input.startsWith('why ') || input.includes('clarify')) {
-      return 'clarify';
-    }
-    if (input.includes('add ') || input.includes('update') || input.includes('change') || input.includes('modify') || input.includes('replace') || input.includes('can you')) {
-      return 'update';
-    }
-    return 'update';
   }
 
   function sanitizeName(name) {
@@ -634,26 +503,46 @@
     try { return JSON.stringify(v, null, 2); } catch { return String(v); }
   }
 
-  function coerceProgram(value, fallbackName) {
-    let p = value;
-    if (typeof p === 'string') {
-      const maybe = parseMaybeJSON(p);
-      if (maybe !== null) p = maybe;
-      else return null;
+  function guessMode(text) {
+    const lower = text.toLowerCase();
+    if (lower.includes('find ') || lower.includes('search') || lower.includes('what action')) return 'explore';
+    if (lower.includes('add ') || lower.includes('update') || lower.includes('change') || lower.includes('modify')) return 'update';
+    if (/\?/.test(text) || lower.startsWith('how ') || lower.startsWith('why ') || lower.includes('clarify')) return 'clarify';
+    return 'update';
+  }
+
+  function buildFlowHtml(program) {
+    if (!program || !Array.isArray(program.actions) || !program.actions.length) {
+      return '<div class="empty-visual">No actions yet. Describe a shortcut to visualize it.</div>';
     }
-    if (p && typeof p === 'object' && p.program && typeof p.program === 'object') {
-      p = { name: p.name || fallbackName, ...p.program };
-    }
-    if (Array.isArray(p)) {
-      p = { name: fallbackName, actions: p };
-    }
-    if (p && typeof p === 'object') {
-      if (!p.actions) p.actions = Array.isArray(p) ? p : [];
-      if (!Array.isArray(p.actions)) p.actions = [];
-      if (!p.name) p.name = fallbackName || DEFAULT_SHORTCUT_NAME;
-      return p;
-    }
-    return null;
+    return program.actions.map((action, idx) => {
+      const actionName = action?.action || 'Unknown action';
+      const params = action?.params || {};
+      const paramList = Object.entries(params).map(([key, value]) => {
+        const v = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        return `<small><strong>${key}</strong>: ${v}</small>`;
+      }).join('') || '<small>No params</small>';
+
+      const isProducer = Object.values(params).some((val) => typeof val === 'string' && /^!link:/.test(val));
+      const isConsumer = Object.values(params).some((val) => typeof val === 'string' && /!link:/.test(val) && !/^!link:/.test(val));
+
+      const classList = ['flow-step'];
+      if (isProducer) classList.push('is-producer');
+      if (isConsumer) classList.push('is-consumer');
+
+      return `
+        <div class="${classList.join(' ')}">
+          <strong>${idx + 1}. ${actionName}</strong>
+          ${paramList}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updateFlow(program, plist) {
+    state.program = program || null;
+    state.plistText = plist || '';
+    flowContainer.innerHTML = buildFlowHtml(program);
   }
 
   async function ensurePlist({ name, inputRaw, programObj, dslText }) {
@@ -705,46 +594,24 @@
 </plist>`;
   }
 
-  function summaryFromResponse(data, programObj, dslCandidate) {
-    if (data?.answer) {
-      return String(data.answer).trim();
-    }
+  function explainResult(info) {
     const parts = [];
-    if (programObj && Array.isArray(programObj.actions)) {
-      parts.push('Program updated (' + programObj.actions.length + ' actions).');
-    } else if (dslCandidate) {
-      parts.push('DSL snippet ready.');
+    if (info?.mode === 'clarify') parts.push("Here's what I found to clarify things:");
+    else if (info?.mode === 'explore') parts.push("I looked for new actions that might help.");
+    else parts.push("I updated the shortcut based on your request.");
+
+    if (state.program?.actions?.length) {
+      parts.push(`The shortcut now has ${state.program.actions.length} action${state.program.actions.length === 1 ? '' : 's'}.`);
     }
-    if (Array.isArray(data?.planArray) && data.planArray.length) {
-      parts.push('Selected ' + data.planArray.length + ' template(s).');
+    if (info?.usedFiles?.length) {
+      const sample = info.usedFiles.slice(0, 3).map((file) => file.replace(/\.json$/i, '')).join(', ');
+      parts.push(`Key templates referenced: ${sample}${info.usedFiles.length > 3 ? '…' : ''}.`);
     }
-    if (!parts.length) parts.push('AI response ready.');
+    if (info?.answer) {
+      parts.push(info.answer);
+    }
+
     return parts.join(' ');
-  }
-
-  function applyGeneratedProgram(data, name, statusNode) {
-    const programCandidate = data?.programRaw ?? data?.program ?? null;
-    const dslCandidate = programCandidate ? null : (data?.program ? null : data?.dslRaw ?? data?.dsl ?? null);
-    let programObj = null;
-
-    if (programCandidate) {
-      programObj = typeof programCandidate === 'object' ? programCandidate : parseMaybeJSON(programCandidate);
-      if (programObj && typeof programObj === 'object') {
-        if (!programObj.name) programObj.name = name;
-        dslBox.value = prettyStringify(programObj);
-        setChipStatus(statusNode, 'Program ready ✔', 'success');
-      }
-    }
-
-    if (!programObj && dslCandidate != null) {
-      dslBox.value = typeof dslCandidate === 'string' ? dslCandidate : prettyStringify(dslCandidate);
-      setChipStatus(statusNode, 'Snippet ready ✔', 'success');
-    } else if (!programObj && !dslCandidate) {
-      dslBox.value = prettyStringify(data);
-      setChipStatus(statusNode, 'Response captured', 'success');
-    }
-
-    return { programObj, dslCandidate };
   }
 
   async function handleSend() {
@@ -756,15 +623,14 @@
     const name = sanitizeName(state.lastName || DEFAULT_SHORTCUT_NAME);
     const mode = isInitial ? 'plan' : guessMode(text);
 
-    pushMessage('user', text, { label: isInitial ? 'Idea' : 'Follow-up' });
-
+    pushMessage('user', text, { label: isInitial ? 'Prompt' : 'Follow-up' });
     chatInput.value = '';
-    btnSend.disabled = true;
-    state.isBusy = true;
 
-    resetPipeline();
-    setPipeline('assess', 'active');
-    setChipStatus(genStatus, 'working…', 'working');
+    btnSend.disabled = true;
+    btnReset.disabled = true;
+    btnSign.disabled = true;
+    state.isBusy = true;
+    setSpinner(true);
 
     try {
       const payload = {
@@ -774,8 +640,8 @@
         mode: isInitial ? 'plan' : mode,
         context: {
           basePrompt: state.basePrompt || state.lastPrompt,
-          programText: dslBox.value,
-          plistText: plistBox.value
+          programText: state.program ? prettyStringify(state.program) : '',
+          plistText: state.plistText || ''
         }
       };
 
@@ -793,102 +659,55 @@
         throw new Error(message);
       }
 
-      setPipeline('assess', 'done');
-      setPipeline('search', 'active');
-
       state.lastName = name;
       if (isInitial && !state.basePrompt) state.basePrompt = text;
       state.lastPrompt = text;
 
-      const { programObj, dslCandidate } = applyGeneratedProgram(data, name, genStatus);
+      let programObj = data?.program;
+      if (!programObj && data?.programRaw) {
+        programObj = parseMaybeJSON(data.programRaw);
+      }
 
-      setPipeline('search', 'done');
-      setPipeline('build', 'active');
+      updateFlow(programObj, '');
 
-      setChipStatus(convStatus, 'ready to convert', 'idle');
-      setPipeline('build', 'done');
-      setPipeline('summarize', 'active');
+      const summary = explainResult({
+        mode: data.mode || mode,
+        usedFiles: data.usedFiles,
+        answer: data.answer
+      });
+      pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
 
-      const summary = summaryFromResponse(data, programObj, dslCandidate);
-      const label =
-        isInitial ? 'AI plan' :
-        mode === 'clarify' ? 'AI clarification' :
-        mode === 'explore' ? 'Action ideas' :
-        'AI update';
-      pushMessage('assistant', summary, { label });
-
-      setPipeline('summarize', 'done');
-      showMessage('Shortcut updated. Convert for plist whenever you\'re ready.');
+      showToast('Shortcut updated. Download whenever you\'re ready.');
+      btnSign.disabled = false;
     } catch (err) {
       console.error(err);
-      setChipStatus(genStatus, err.message || 'error', 'error');
-      setPipeline('assess', 'error');
-      showMessage(err.message || 'Something went wrong.', true);
       pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
+      showToast(err.message || 'Something went wrong.', true);
     } finally {
       state.isBusy = false;
+      setSpinner(false);
       btnSend.disabled = false;
+      btnReset.disabled = false;
     }
   }
 
-  btnSend.addEventListener('click', handleSend);
-  chatInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
+  async function handleDownload() {
+    if (state.isBusy) return;
+    if (!state.program) {
+      showToast('Nothing to download yet. Describe a shortcut first.', true);
+      return;
     }
-  });
-
-  btnConvert.addEventListener('click', async () => {
-    const raw = (dslBox.value || '').trim();
-    if (!raw) { alert('Nothing to convert — the program box is empty.'); return; }
-    setChipStatus(convStatus, 'converting…', 'working');
+    setSpinner(true);
     btnSign.disabled = true;
     try {
-      const maybeJSON = parseMaybeJSON(raw);
-      const programObj = maybeJSON !== null ? coerceProgram(maybeJSON, state.lastName || DEFAULT_SHORTCUT_NAME) : null;
-      const plistXML = await ensurePlist({
+      const plist = await ensurePlist({
         name: state.lastName || DEFAULT_SHORTCUT_NAME,
-        inputRaw: raw,
-        programObj,
-        dslText: programObj ? null : raw
+        inputRaw: prettyStringify(state.program),
+        programObj: state.program,
+        dslText: null
       });
-      plistBox.value = plistXML;
-      btnSign.disabled = false;
-      setChipStatus(convStatus, 'converted ✔', 'success');
-      showMessage('.plist ready.');
-    } catch (err) {
-      console.error(err);
-      setChipStatus(convStatus, err.message || 'error', 'error');
-      showMessage(err.message || 'Conversion failed', true);
-    }
-  });
+      state.plistText = plist;
 
-  btnCopyDSL.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(dslBox.value || '');
-      showMessage('Program copied to clipboard.');
-    } catch {
-      showMessage('Clipboard copy failed.', true);
-    }
-  });
-
-  btnCopyPlist.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(plistBox.value || '');
-      showMessage('plist copied to clipboard.');
-    } catch {
-      showMessage('Clipboard copy failed.', true);
-    }
-  });
-
-  btnSign.addEventListener('click', async () => {
-    const plist = (plistBox.value || '').trim();
-    if (!plist.startsWith('<?xml')) { alert('Your plist must be valid XML.'); return; }
-
-    setChipStatus(signStatus, 'uploading…', 'working');
-    btnSign.disabled = true;
-    try {
       const file = new File([plist], `${state.lastName || DEFAULT_SHORTCUT_NAME}.plist`, { type: 'application/xml' });
       const form = new FormData();
       form.append('file', file);
@@ -917,39 +736,44 @@
       a.remove();
       URL.revokeObjectURL(url);
 
-      setChipStatus(signStatus, 'downloaded ✔', 'success');
-      showMessage('Signed shortcut downloaded.');
+      showToast('Signed shortcut downloaded.');
     } catch (err) {
       console.error(err);
-      setChipStatus(signStatus, err.message || 'error', 'error');
-      showMessage(err.message || 'Signing failed', true);
-      pushMessage('system', err.message || 'Signing failed.', { label: 'Signer error' });
+      showToast(err.message || 'Download failed', true);
     } finally {
+      setSpinner(false);
       btnSign.disabled = false;
+    }
+  }
+
+  btnSend.addEventListener('click', handleSend);
+  chatInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
     }
   });
 
+  btnSign.addEventListener('click', handleDownload);
+
   btnReset.addEventListener('click', () => {
-    chatInput.value = '';
-    dslBox.value = '';
-    plistBox.value = '';
-    resetPipeline();
-    setChipStatus(genStatus, 'idle', 'idle');
-    setChipStatus(convStatus, 'waiting', 'idle');
-    setChipStatus(signStatus, 'waiting', 'idle');
-    btnSign.disabled = true;
-    state.conversation = [];
+    if (state.isBusy) return;
     state.basePrompt = '';
     state.lastPrompt = '';
-    state.lastName = '';
+    state.lastName = DEFAULT_SHORTCUT_NAME;
+    state.conversation = [];
+    state.program = null;
+    state.plistText = '';
+    chatInput.value = '';
     renderConversation();
-    showMessage('Workspace cleared.');
+    updateFlow(null, '');
+    showToast('Workspace cleared.');
+    btnSign.disabled = true;
   });
 
   renderConversation();
-  setChipStatus(genStatus, 'idle', 'idle');
-  setChipStatus(convStatus, 'waiting', 'idle');
-  setChipStatus(signStatus, 'waiting', 'idle');
+  updateFlow(null, '');
+  btnSign.disabled = true;
   </script>
 </body>
 </html>
