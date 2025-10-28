@@ -6,204 +6,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #02030a;
-      --bg-panel: rgba(5, 8, 20, 0.7);
-      --bg-panel-strong: rgba(12, 16, 32, 0.78);
-      --stroke: rgba(120, 132, 180, 0.25);
-      --accent: #7c5cfc;
-      --accent-glow: rgba(98, 102, 241, 0.35);
-      --accent-soft: rgba(98, 102, 241, 0.2);
+      --bg: #03040d;
+      --bg-surface: rgba(11, 14, 30, 0.78);
+      --bg-panel: rgba(15, 19, 40, 0.9);
+      --stroke: rgba(120, 132, 180, 0.22);
+      --accent: #8a63ff;
       --accent-strong: #a78bfa;
-      --text: #edf1ff;
+      --accent-soft: rgba(138, 99, 255, 0.18);
+      --text: #eef1ff;
       --text-muted: #9aa5c6;
       --success: #34d399;
       --error: #fb7185;
-      --shadow: 0 40px 90px rgba(5, 7, 20, 0.65);
-      --radius-lg: 26px;
+      --shadow: 0 42px 90px rgba(5, 8, 24, 0.6);
+      --radius-lg: 28px;
       --radius-md: 18px;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at 5% -10%, rgba(124, 92, 252, 0.28), transparent 55%),
-                  radial-gradient(circle at 95% -30%, rgba(14, 165, 233, 0.22), transparent 65%),
-                  linear-gradient(170deg, #02030a, #050715 70%, #05040d);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 0% -10%, rgba(138, 99, 255, 0.28), transparent 55%),
+        radial-gradient(circle at 100% -30%, rgba(14, 165, 233, 0.22), transparent 55%),
+        linear-gradient(180deg, #02030a, #040618 60%, #03040d);
       color: var(--text);
       display: flex;
       flex-direction: column;
     }
-
     header {
       width: 100%;
-      max-width: 1340px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 32px 40px 14px;
+      padding: 32px 42px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
     }
-
     .brand {
       display: flex;
       align-items: center;
       gap: 16px;
-      font-size: 1.28rem;
+      font-size: 1.3rem;
       font-weight: 600;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
     }
     .brand__logo {
       width: 48px;
       height: 48px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(98, 102, 241, 1), rgba(124, 92, 252, 0.9));
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(138, 99, 255, 0.95));
       display: grid;
       place-items: center;
-      color: #05030d;
+      color: #050318;
       font-weight: 700;
-      font-size: 1rem;
-      box-shadow: 0 20px 36px rgba(98, 102, 241, 0.35);
+      box-shadow: 0 20px 34px rgba(120, 99, 255, 0.32);
     }
+    .btn-secondary {
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 999px;
+      padding: 10px 20px;
+      background: rgba(148, 163, 184, 0.1);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .btn-secondary:hover { background: rgba(148, 163, 184, 0.18); transform: translateY(-1px); }
 
-    .main {
+    .workspace {
       width: 100%;
-      max-width: 1340px;
+      max-width: 1320px;
       margin: 0 auto 60px;
-      padding: 0 40px 60px;
+      padding: 0 42px 60px;
       display: grid;
-      grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
       gap: 28px;
     }
-
     .panel {
-      background: var(--bg-panel);
-      border: 1px solid var(--stroke);
+      background: var(--bg-surface);
       border-radius: var(--radius-lg);
+      border: 1px solid var(--stroke);
+      backdrop-filter: blur(24px);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(22px);
       position: relative;
       overflow: hidden;
     }
-
-    .chat-panel {
-      display: flex;
-      flex-direction: column;
-      padding: 26px 26px 20px;
-      gap: 18px;
-      min-height: calc(100vh - 190px);
-    }
-
-    .status-timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      padding: 6px 0 18px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-    }
-    .status-step {
-      display: grid;
-      grid-template-columns: 26px 1fr;
-      gap: 16px;
-      position: relative;
-      opacity: 0.3;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-    .status-step::before {
+    .panel::after {
       content: "";
       position: absolute;
-      left: 11px;
-      top: 26px;
-      bottom: -18px;
-      width: 2px;
-      background: rgba(148, 163, 184, 0.18);
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      border: 1px solid rgba(138, 99, 255, 0.05);
     }
-    .status-step:last-child::before { display: none; }
+
+    .chat-panel { display: flex; flex-direction: column; min-height: calc(100vh - 200px); }
+
+    .status-strip {
+      display: flex;
+      justify-content: space-between;
+      padding: 24px 26px 18px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      gap: 12px;
+    }
+    .status-step {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      flex: 1;
+      opacity: 0.3;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .status-step.active { opacity: 0.85; }
+    .status-step.done { opacity: 1; }
+    .status-step.error { opacity: 1; }
+    .status-step strong { font-size: 0.9rem; }
+    .status-step span { font-size: 0.75rem; color: var(--text-muted); }
     .status-dot {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 2px solid rgba(148, 163, 184, 0.3);
-      background: rgba(148, 163, 184, 0.12);
-      display: grid;
-      place-items: center;
-      font-size: 0.8rem;
-      color: rgba(148, 163, 184, 0.6);
-      transition: all 0.25s ease;
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid rgba(148, 163, 184, 0.32);
+      background: rgba(148, 163, 184, 0.15);
+      position: relative;
     }
-    .status-step.active { opacity: 0.9; }
     .status-step.active .status-dot {
       border-color: var(--accent);
       background: var(--accent-soft);
-      color: var(--accent-strong);
     }
     .status-step.active .status-dot::after {
       content: "";
-      width: 8px;
-      height: 8px;
+      position: absolute;
+      inset: 4px;
       border-radius: 50%;
       background: var(--accent);
-      animation: pulse 1.4s ease-in-out infinite;
+      animation: pulse 1.2s ease-in-out infinite;
     }
-    .status-step.done { opacity: 1; }
     .status-step.done .status-dot {
       border-color: var(--success);
       background: rgba(52, 211, 153, 0.2);
-      color: var(--success);
     }
     .status-step.done .status-dot::after {
       content: "";
-      width: 12px;
-      height: 6px;
+      position: absolute;
+      left: 4px; top: 6px;
+      width: 6px; height: 10px;
+      border-right: 2px solid var(--success);
       border-bottom: 2px solid var(--success);
-      border-left: 2px solid var(--success);
-      transform: rotate(-45deg) translateY(-1px);
+      transform: rotate(45deg);
     }
-    .status-step.error { opacity: 1; }
     .status-step.error .status-dot {
       border-color: var(--error);
       background: rgba(251, 113, 133, 0.18);
-      color: var(--error);
     }
     .status-step.error .status-dot::after {
       content: "";
-      width: 12px;
-      height: 2px;
+      position: absolute;
+      left: 4px; top: 8px;
+      width: 8px; height: 2px;
       background: var(--error);
-      border-radius: 999px;
       transform: rotate(45deg);
     }
-    .status-text { display: flex; flex-direction: column; gap: 4px; }
-    .status-text strong { font-size: 0.92rem; }
-    .status-text span { font-size: 0.78rem; color: var(--text-muted); }
 
     .chat-scroll {
       flex: 1;
       overflow-y: auto;
+      padding: 24px 28px;
       display: flex;
       flex-direction: column;
       gap: 18px;
-      padding-right: 10px;
     }
     .chat-scroll::-webkit-scrollbar { width: 9px; }
     .chat-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.2);
+      background: rgba(148, 163, 184, 0.24);
       border-radius: 999px;
     }
 
-    .bubble {
-      max-width: 92%;
-      display: flex;
-    }
-    .bubble--user { justify-content: flex-end; }
+    .bubble { max-width: 92%; display: flex; }
+    .bubble--user { justify-content: flex-end; align-self: flex-end; }
     .bubble__inner {
       padding: 16px 18px;
       border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: rgba(10, 15, 31, 0.8);
-      box-shadow: 0 20px 36px rgba(5, 7, 20, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(15, 18, 36, 0.85);
+      box-shadow: 0 24px 40px rgba(6, 8, 24, 0.52);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -211,167 +198,122 @@
       line-height: 1.58;
     }
     .bubble--user .bubble__inner {
-      background: rgba(124, 92, 252, 0.18);
-      border-color: rgba(124, 92, 252, 0.38);
+      background: rgba(132, 99, 255, 0.2);
+      border-color: rgba(132, 99, 255, 0.4);
     }
     .bubble--assistant .bubble__inner {
-      background: rgba(50, 94, 242, 0.16);
-      border-color: rgba(74, 102, 241, 0.28);
+      background: rgba(45, 85, 241, 0.18);
+      border-color: rgba(45, 85, 241, 0.32);
     }
     .bubble__label {
       text-transform: uppercase;
-      font-size: 0.76rem;
+      font-size: 0.75rem;
       letter-spacing: 0.08em;
-      color: rgba(148, 163, 184, 0.7);
+      color: rgba(148, 163, 184, 0.72);
     }
-    .bubble__time {
-      font-size: 0.7rem;
-      color: rgba(148, 163, 184, 0.55);
-    }
+    .bubble__time { font-size: 0.7rem; color: rgba(148, 163, 184, 0.5); }
 
+    .composer-shell {
+      position: sticky;
+      bottom: 0;
+      padding: 20px 26px 26px;
+      background: linear-gradient(180deg, rgba(3, 4, 13, 0), rgba(3, 4, 13, 0.6));
+    }
     .composer {
       border-radius: var(--radius-md);
-      background: var(--bg-panel-strong);
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: var(--bg-panel);
+      border: 1px solid rgba(148, 163, 184, 0.22);
       display: flex;
       align-items: flex-start;
-      gap: 16px;
-      padding: 16px;
-      position: relative;
+      padding: 18px;
+      gap: 18px;
     }
     .composer textarea {
       flex: 1;
+      min-height: 90px;
+      max-height: 220px;
+      resize: none;
       border: none;
       background: transparent;
       color: var(--text);
-      font-size: 0.96rem;
-      resize: none;
-      min-height: 60px;
-      max-height: 180px;
+      font-size: 1rem;
+      line-height: 1.55;
       outline: none;
     }
     .composer button {
       border: none;
-      border-radius: 50%;
-      width: 46px;
-      height: 46px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
+      border-radius: 16px;
+      padding: 12px 24px;
       background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #07031a;
-      box-shadow: 0 16px 32px var(--accent-glow);
+      color: #040117;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 18px 32px rgba(138, 99, 255, 0.3);
       transition: transform 0.18s ease, box-shadow 0.18s ease;
-      position: relative;
     }
-    .composer button .btn-label { font-weight: 600; font-size: 0.95rem; }
     .composer button .btn-spinner {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 3px solid rgba(7, 3, 26, 0.35);
-      border-top-color: rgba(7, 3, 26, 0.95);
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 3px solid rgba(4, 1, 23, 0.35);
+      border-top-color: rgba(4, 1, 23, 0.95);
       animation: spin 0.8s linear infinite;
-      opacity: 0;
-      transition: opacity 0.2s ease;
+      display: none;
     }
-    .composer button.is-loading {
-      cursor: wait;
-      box-shadow: none;
-    }
-    .composer button.is-loading .btn-label { opacity: 0; }
-    .composer button.is-loading .btn-spinner { opacity: 1; }
-    .composer button:disabled { opacity: 0.55; box-shadow: none; }
+    .composer button.is-loading .btn-label { display: none; }
+    .composer button.is-loading .btn-spinner { display: block; }
+    .composer button:disabled { opacity: 0.6; cursor: progress; box-shadow: none; }
     .composer button:hover:not(:disabled) { transform: translateY(-1px); }
-    .composer button:active:not(:disabled) { transform: translateY(0); }
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.25); opacity: 0.55; }
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .visual-panel {
-      padding: 28px;
+    .blueprint-panel {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 22px;
+      padding: 30px;
     }
-    .visual-header {
+    .blueprint-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .visual-header h2 {
-      margin: 0;
-      font-size: 1.05rem;
-      letter-spacing: -0.01em;
-    }
-    .visual-header button {
+    .blueprint-header h2 { margin: 0; font-size: 1.08rem; }
+    .blueprint-header button {
       border: none;
       border-radius: 999px;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, rgba(94, 234, 212, 0.9), rgba(59, 130, 246, 1));
-      color: #04111b;
+      padding: 10px 22px;
+      background: linear-gradient(135deg, rgba(94, 234, 212, 0.92), rgba(59, 130, 246, 1));
+      color: #040d13;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 18px 32px rgba(59, 130, 246, 0.35);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 20px 34px rgba(59, 130, 246, 0.3);
+      transition: transform 0.18s ease;
     }
-    .visual-header button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    .visual-header button:hover:not(:disabled) { transform: translateY(-1px); }
+    .blueprint-header button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+    .blueprint-header button:hover:not(:disabled) { transform: translateY(-1px); }
 
     .visualizer {
-      flex: 1;
-      min-height: 420px;
       border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: radial-gradient(circle at 15% 15%, rgba(98, 102, 241, 0.08), transparent 55%),
-                  rgba(8, 12, 26, 0.88);
-      padding: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: radial-gradient(circle at 20% 10%, rgba(138, 99, 255, 0.1), transparent 55%), rgba(9, 12, 26, 0.92);
+      padding: 26px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      overflow: hidden;
+      gap: 20px;
+      min-height: 460px;
       position: relative;
+      overflow: hidden;
     }
     .visualizer::after {
       content: "";
       position: absolute;
       inset: 0;
-      pointer-events: none;
       border-radius: inherit;
-      border: 1px solid rgba(124, 92, 252, 0.08);
+      border: 1px solid rgba(138, 99, 255, 0.08);
+      pointer-events: none;
     }
-
-    .flow-step {
-      border-left: 2px solid rgba(148, 163, 184, 0.2);
-      padding-left: 16px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .flow-step::before {
-      content: "";
-      position: absolute;
-      left: -10px;
-      top: 6px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: rgba(148, 163, 184, 0.35);
-    }
-    .flow-step strong { font-size: 0.95rem; }
-    .flow-step small { color: var(--text-muted); font-size: 0.78rem; }
-    .flow-step.is-producer::before { background: var(--accent); box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.22); }
-    .flow-step.is-consumer::before { background: rgba(94, 234, 212, 0.9); box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.18); }
 
     .flow-scroll {
       flex: 1;
@@ -382,58 +324,78 @@
       padding-right: 12px;
     }
     .flow-scroll::-webkit-scrollbar { width: 9px; }
-    .flow-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.18);
-      border-radius: 999px;
-    }
+    .flow-scroll::-webkit-scrollbar-thumb { background: rgba(138, 99, 255, 0.28); border-radius: 999px; }
 
-    .empty-visual {
-      margin: auto;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
+    .flow-step {
+      position: relative;
+      padding-left: 26px;
+      border-left: 2px solid rgba(148, 163, 184, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
+    .flow-step::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      top: 6px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.32);
+      box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.08);
+    }
+    .flow-step.is-producer::before {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(138, 99, 255, 0.22);
+    }
+    .flow-step.is-consumer::before {
+      background: rgba(94, 234, 212, 0.9);
+      box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.18);
+    }
+    .flow-step strong { font-size: 0.96rem; }
+    .flow-step small { font-size: 0.8rem; color: var(--text-muted); font-family: var(--mono); }
+
+    .empty-visual { margin: auto; text-align: center; color: var(--text-muted); font-size: 0.92rem; }
 
     .toast {
       position: fixed;
-      right: 40px;
-      bottom: 36px;
-      padding: 14px 18px;
-      border-radius: 18px;
-      background: rgba(4, 6, 18, 0.92);
-      border: 1px solid rgba(148, 163, 184, 0.25);
+      right: 42px;
+      bottom: 38px;
+      padding: 16px 20px;
+      border-radius: 20px;
+      background: rgba(5, 7, 20, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.24);
       color: var(--text);
-      box-shadow: 0 28px 48px rgba(4, 6, 18, 0.5);
+      box-shadow: 0 32px 60px rgba(5, 7, 20, 0.55);
       opacity: 0;
       transform: translateY(16px);
       pointer-events: none;
       transition: opacity 0.25s ease, transform 0.25s ease;
-      max-width: min(340px, calc(100% - 32px));
+      max-width: min(360px, calc(100% - 32px));
       z-index: 999;
     }
-    .toast.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .toast.toast--error {
-      border-color: rgba(251, 113, 133, 0.4);
-      background: rgba(76, 5, 25, 0.92);
-    }
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+    .toast.toast--error { border-color: rgba(251, 113, 133, 0.4); background: rgba(70, 8, 25, 0.92); }
 
-    @media (max-width: 1100px) {
-      .main {
-        grid-template-columns: minmax(0, 1fr);
-        padding: 0 26px 40px;
-      }
-      .panel { min-height: auto; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.55; }
     }
-    @media (max-width: 640px) {
-      header { padding: 24px 20px 12px; flex-direction: column; gap: 12px; align-items: flex-start; }
-      .main { padding: 0 18px 40px; }
-      .chat-panel { min-height: auto; padding: 20px 18px; }
-      .visual-panel { padding: 22px 18px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1120px) {
+      .workspace {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 0 28px 48px;
+      }
+      .chat-panel { min-height: auto; }
+    }
+    @media (max-width: 680px) {
+      header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 26px 20px 10px; }
+      .workspace { padding: 0 20px 48px; }
       .composer { flex-direction: column; align-items: stretch; }
-      .composer button { align-self: flex-end; width: 44px; height: 44px; border-radius: 12px; }
+      .composer button { width: 100%; border-radius: 14px; }
+      .status-strip { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -443,62 +405,55 @@
       <span class="brand__logo">SS</span>
       <span>Shortcut Studio</span>
     </div>
-    <button id="btnReset" style="border:none;border-radius:999px;padding:10px 20px;background:rgba(124,92,252,0.18);color:var(--text);cursor:pointer;">Reset workspace</button>
+    <button id="btnReset" class="btn-secondary">Reset workspace</button>
   </header>
 
-  <main class="main">
+  <main class="workspace">
     <section class="panel chat-panel">
-      <div class="chat-scroll" id="conversationList">
-        <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
-      <div class="status-timeline" id="statusTimeline">
+      <div class="status-strip" id="statusTimeline">
         <div class="status-step" data-step="assess">
           <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Assessing request</strong>
-            <span>Reading your prompt and context</span>
-          </div>
+          <strong>Assess</strong>
+          <span>Understanding your request</span>
         </div>
         <div class="status-step" data-step="search">
           <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Searching actions</strong>
-            <span>Picking templates that match best</span>
-          </div>
+          <strong>Search</strong>
+          <span>Picking shortcut actions</span>
         </div>
         <div class="status-step" data-step="build">
           <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Building flow</strong>
-            <span>Linking outputs &amp; filling parameters</span>
-          </div>
+          <strong>Build</strong>
+          <span>Linking &amp; filling details</span>
         </div>
         <div class="status-step" data-step="summarize">
           <div class="status-dot"></div>
-          <div class="status-text">
-            <strong>Wrapping up</strong>
-            <span>Explaining what changed</span>
-          </div>
+          <strong>Explain</strong>
+          <span>Summarizing the output</span>
         </div>
       </div>
       <div class="chat-scroll" id="conversationList">
         <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
       </div>
-      <div class="composer">
-        <textarea id="chatInput" placeholder="Tell Shortcut Studio what to build…"></textarea>
-        <button id="btnSend" title="Send prompt"><span class="btn-label">Go</span><span class="btn-spinner"></span></button>
+      <div class="composer-shell">
+        <div class="composer">
+          <textarea id="chatInput" placeholder="Try “Create a shortcut that summarizes text and saves the result to Notes.”"></textarea>
+          <button id="btnSend" title="Send">
+            <span class="btn-label">Go</span>
+            <span class="btn-spinner"></span>
+          </button>
+        </div>
       </div>
     </section>
 
-    <aside class="panel visual-panel">
-      <div class="visual-header">
-        <h2>Shortcut flow</h2>
+    <aside class="panel blueprint-panel">
+      <div class="blueprint-header">
+        <h2>Shortcut blueprint</h2>
         <button id="btnSign" disabled>Download .shortcut</button>
       </div>
       <div class="visualizer">
         <div class="flow-scroll" id="flowContainer">
-          <div class="empty-visual">
-            The flow visualization will appear after the first plan.
-          </div>
+          <div class="empty-visual">Blueprint will appear as soon as we plan your shortcut.</div>
         </div>
       </div>
     </aside>
@@ -531,6 +486,8 @@
     toastTimer: null
   };
 
+  const timelineTimers = [];
+
   function showToast(message, isError = false) {
     if (!toast) return;
     toast.textContent = message;
@@ -557,8 +514,7 @@
       return;
     }
     conversationList.innerHTML = state.conversation.map((entry) => {
-      const roleClass = entry.role === 'user' ? 'bubble--user' :
-                        entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
+      const roleClass = entry.role === 'user' ? 'bubble--user' : entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
       const label = entry.meta?.label ? `<span class="bubble__label">${entry.meta.label}</span>` : '';
       const time = entry.at ? `<span class="bubble__time">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>` : '';
       const escaped = entry.content
@@ -566,15 +522,7 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/\n/g, '<br>');
-      return `
-        <article class="bubble ${roleClass}">
-          <div class="bubble__inner">
-            ${label}
-            <p>${escaped || '<em>(empty)</em>'}</p>
-            ${time}
-          </div>
-        </article>
-      `;
+      return `<article class="bubble ${roleClass}"><div class="bubble__inner">${label}<p>${escaped || '<em>(empty)</em>'}</p>${time}</div></article>`;
     }).join('');
     conversationList.scrollTop = conversationList.scrollHeight;
   }
@@ -611,14 +559,14 @@
   function guessMode(text) {
     const lower = text.toLowerCase();
     if (lower.includes('find ') || lower.includes('search') || lower.includes('what action')) return 'explore';
-    if (lower.includes('add ') || lower.includes('update') || lower.includes('change') || lower.includes('modify')) return 'update';
-    if (/\?/.test(text) || lower.startsWith('how ') || lower.startsWith('why ') || lower.includes('clarify')) return 'clarify';
+    if (lower.includes('add ') || lower.includes('update') || lower.includes('change')) return 'update';
+    if (/\?/.test(text) || lower.startsWith('how') || lower.startsWith('why') || lower.includes('clarify')) return 'clarify';
     return 'update';
   }
 
   function buildFlowHtml(program) {
     if (!program || !Array.isArray(program.actions) || !program.actions.length) {
-      return '<div class="empty-visual">No actions yet. Describe a shortcut to visualize it.</div>';
+      return '<div class="empty-visual">Blueprint will appear as soon as we plan your shortcut.</div>';
     }
     return program.actions.map((action, idx) => {
       const actionName = action?.action || 'Unknown action';
@@ -627,20 +575,13 @@
         const v = typeof value === 'object' ? JSON.stringify(value) : String(value);
         return `<small><strong>${key}</strong>: ${v}</small>`;
       }).join('') || '<small>No params</small>';
-
-      const isProducer = Object.values(params).some((val) => typeof val === 'string' && /^!link:/.test(val));
-      const isConsumer = Object.values(params).some((val) => typeof val === 'string' && /!link:/.test(val) && !/^!link:/.test(val));
-
+      const values = Object.values(params);
+      const isProducer = values.some((val) => typeof val === 'string' && /^!link:/.test(val));
+      const isConsumer = values.some((val) => typeof val === 'string' && /!link:/.test(val) && !/^!link:/.test(val));
       const classList = ['flow-step'];
       if (isProducer) classList.push('is-producer');
       if (isConsumer) classList.push('is-consumer');
-
-      return `
-        <div class="${classList.join(' ')}">
-          <strong>${idx + 1}. ${actionName}</strong>
-          ${paramList}
-        </div>
-      `;
+      return `<div class="${classList.join(' ')}"><strong>${idx + 1}. ${actionName}</strong>${paramList}</div>`;
     }).join('');
   }
 
@@ -650,24 +591,17 @@
     flowContainer.innerHTML = buildFlowHtml(program);
   }
 
-  const timelineTimers = [];
-
-  function clearTimelineTimers() {
-    while (timelineTimers.length) clearTimeout(timelineTimers.pop());
-  }
-
+  function clearTimelineTimers() { while (timelineTimers.length) clearTimeout(timelineTimers.pop()); }
   function resetTimeline() {
     clearTimelineTimers();
-    statusTimelineEls.forEach((step) => step.classList.remove('active', 'done', 'error'));
+    statusTimelineEls.forEach((el) => el.classList.remove('active', 'done', 'error'));
   }
-
-  function setTimeline(stepKey, state) {
+  function setTimeline(stepKey, stateClass) {
     const el = document.querySelector(`.status-step[data-step="${stepKey}"]`);
     if (!el) return;
     el.classList.remove('active', 'done', 'error');
-    if (state) el.classList.add(state);
+    if (stateClass) el.classList.add(stateClass);
   }
-
   function startTimeline() {
     resetTimeline();
     setTimeline('assess', 'active');
@@ -675,29 +609,14 @@
     timelineTimers.push(setTimeout(() => setTimeline('build', 'active'), 700));
     timelineTimers.push(setTimeout(() => setTimeline('summarize', 'active'), 1050));
   }
-
   function finishTimeline(status) {
     clearTimelineTimers();
-    if (status === 'success') {
-      ['assess', 'search', 'build', 'summarize'].forEach((key) => setTimeline(key, 'done'));
-    } else if (status === 'error') {
-      let marked = false;
-      ['summarize', 'build', 'search', 'assess'].some((key) => {
-        const el = document.querySelector(`.status-step[data-step="${key}"]`);
-        if (el && el.classList.contains('active')) {
-          setTimeline(key, 'error');
-          marked = true;
-          return true;
-        }
-        return false;
-      });
-      if (!marked) setTimeline('assess', 'error');
-    }
+    if (status === 'success') ['assess', 'search', 'build', 'summarize'].forEach((key) => setTimeline(key, 'done'));
+    else if (status === 'error') setTimeline('summarize', 'error');
   }
 
   function setSendLoading(isLoading) {
-    if (isLoading) btnSend.classList.add('is-loading');
-    else btnSend.classList.remove('is-loading');
+    if (isLoading) btnSend.classList.add('is-loading'); else btnSend.classList.remove('is-loading');
     btnSend.disabled = isLoading;
   }
 
@@ -731,23 +650,9 @@
       }
     }
     if (window.ConversionUniversal && typeof window.ConversionUniversal.__makeCommentPlist === 'function') {
-      return window.ConversionUniversal.__makeCommentPlist(name, 'Conversion failed. Input preview:\\n' + String(inputRaw).slice(0, 2000));
+      return window.ConversionUniversal.__makeCommentPlist(name, 'Conversion failed. Input preview:\n' + String(inputRaw).slice(0, 2000));
     }
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>WFWorkflowName</key><string>${(name || DEFAULT_SHORTCUT_NAME)}</string>
-  <key>WFWorkflowActions</key><array>
-    <dict>
-      <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>
-      <key>WFWorkflowActionParameters</key><dict>
-        <key>WFCommentActionText</key><string>Conversion failed or unsupported input.</string>
-      </dict>
-    </dict>
-  </array>
-</dict>
-</plist>`;
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n  <key>WFWorkflowName</key><string>${(name || DEFAULT_SHORTCUT_NAME)}</string>\n  <key>WFWorkflowActions</key><array>\n    <dict>\n      <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>\n      <key>WFWorkflowActionParameters</key><dict>\n        <key>WFCommentActionText</key><string>Conversion failed or unsupported input.</string>\n      </dict>\n    </dict>\n  </array>\n</dict>\n</plist>`;
   }
 
   function explainResult(info) {
@@ -767,7 +672,7 @@
 
     let cta = 'Say the word if you want tweaks.';
     if (info?.mode === 'clarify') cta = 'Need more detail? Just ask.';
-    else if (info?.mode === 'explore') cta = 'Tell me which idea we should expand.';
+    else if (info?.mode === 'explore') cta = 'Tell me which idea to explore next.';
 
     if (!summary.length && info?.answer) summary.push(info.answer);
     summary.push(cta);
@@ -812,33 +717,21 @@
       });
       const raw = await res.text();
       let data = {};
-      try { data = JSON.parse(raw); } catch { throw new Error('Worker returned non-JSON.'); }
-
-      if (!res.ok || !data.ok) {
-        const message = data?.error || `Worker error ${res.status}`;
-        throw new Error(message);
-      }
+      try { data = JSON.parse(raw); } catch { throw new Error('Worker returned non-JSON response.'); }
+      if (!res.ok || !data.ok) throw new Error(data?.error || `Worker error ${res.status}`);
 
       state.lastName = name;
       if (isInitial && !state.basePrompt) state.basePrompt = text;
       state.lastPrompt = text;
 
       let programObj = data?.program;
-      if (!programObj && data?.programRaw) {
-        programObj = parseMaybeJSON(data.programRaw);
-      }
-
+      if (!programObj && data?.programRaw) programObj = parseMaybeJSON(data.programRaw);
       updateFlow(programObj, '');
 
-      const summary = explainResult({
-        mode: data.mode || mode,
-        usedFiles: data.usedFiles,
-        answer: data.answer
-      });
+      const summary = explainResult({ mode: data.mode || mode, usedFiles: data.usedFiles, answer: data.answer });
       pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
 
       finishTimeline('success');
-
       showToast('Shortcut updated. Download whenever you\'re ready.');
       btnSign.disabled = false;
     } catch (err) {
@@ -860,7 +753,7 @@
       showToast('Nothing to download yet. Describe a shortcut first.', true);
       return;
     }
-    const originalLabel = btnSign.textContent;
+    const label = btnSign.textContent;
     btnSign.textContent = 'Signing…';
     btnSign.disabled = true;
     btnSend.disabled = true;
@@ -877,14 +770,12 @@
       const file = new File([plist], `${state.lastName || DEFAULT_SHORTCUT_NAME}.plist`, { type: 'application/xml' });
       const form = new FormData();
       form.append('file', file);
-
       const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
       if (!res.ok) {
         let msg = '';
         try { msg = await res.text(); } catch {}
         throw new Error(`Signer error ${res.status}: ${msg.slice(0, 120)}`);
       }
-
       const blob = await res.blob();
       const cd = res.headers.get('Content-Disposition') || '';
       let filename = `${state.lastName || DEFAULT_SHORTCUT_NAME}.signed.shortcut`;
@@ -892,7 +783,6 @@
       if (m && m[1]) {
         try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
       }
-
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -901,13 +791,12 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-
       showToast('Signed shortcut downloaded.');
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Download failed', true);
     } finally {
-      btnSign.textContent = originalLabel;
+      btnSign.textContent = label;
       btnSign.disabled = false;
       btnSend.disabled = false;
       state.isBusy = false;
@@ -921,9 +810,7 @@
       handleSend();
     }
   });
-
   btnSign.addEventListener('click', handleDownload);
-
   btnReset.addEventListener('click', () => {
     if (state.isBusy) return;
     state.basePrompt = '';
