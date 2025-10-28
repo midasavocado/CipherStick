@@ -1679,17 +1679,49 @@ const userConversions = (() => {
       .trim();
   }
 
+  function normalizeLinkLabel(label) {
+    if (label == null) return null;
+    const normalized = String(label).trim();
+    return normalized ? normalized : null;
+  }
+
+  function ensureLinkEntry(label) {
+    const normalized = normalizeLinkLabel(label);
+    if (!normalized) return null;
+    let entry = linkRegistry.get(normalized);
+    if (!entry) {
+      entry = {
+        label: normalized,
+        action: null,
+        friendly: null,
+        uuid: null
+      };
+      linkRegistry.set(normalized, entry);
+    }
+    return entry;
+  }
+
   function registerLinkLabel(label, actionName) {
-    if (!label) return;
-    if (linkRegistry.has(label)) return;
-    linkRegistry.set(label, {
-      action: actionName,
-      friendly: humanizeActionName(actionName) || label
-    });
+    const entry = ensureLinkEntry(label);
+    if (!entry) return;
+    if (actionName && !entry.action) entry.action = actionName;
+    if (actionName) {
+      const friendly = humanizeActionName(actionName);
+      if (friendly) entry.friendly = friendly;
+    }
   }
 
   function lookupLinkMetadata(label) {
-    return linkRegistry.get(label);
+    const normalized = normalizeLinkLabel(label);
+    if (!normalized) return null;
+    return linkRegistry.get(normalized) ?? null;
+  }
+
+  function resolveLinkUUID(label) {
+    const entry = ensureLinkEntry(label);
+    if (!entry) return null;
+    if (!entry.uuid) entry.uuid = genUUID();
+    return entry.uuid;
   }
 
   function parseTokenizedText(raw) {
@@ -1711,9 +1743,18 @@ const userConversions = (() => {
       if (varName) {
         attachments.push({ range, type: 'Variable', VariableName: varName });
       } else if (linkLabel) {
+        const uuid = resolveLinkUUID(linkLabel);
         const meta = lookupLinkMetadata(linkLabel) || {};
-        const attachment = { range, type: 'ActionOutput', OutputUUID: linkLabel };
-        if (meta.friendly) attachment.OutputName = meta.friendly;
+        const attachment = {
+          range,
+          type: 'ActionOutput',
+          OutputUUID: uuid || linkLabel
+        };
+        const friendly =
+          (meta && meta.friendly) ||
+          humanizeActionName((meta && meta.action) || linkLabel) ||
+          linkLabel;
+        if (friendly) attachment.OutputName = friendly;
         attachments.push(attachment);
       }
       cursor = match.index + all.length;
@@ -1854,8 +1895,14 @@ const userConversions = (() => {
       const quick = interpretQuickReference(value);
       if (quick) {
         if (quick.type === 'link') {
-          const meta = lookupLinkMetadata(quick.value) || {};
-          return renderValue(variableValue({ uuid: quick.value, name: meta.friendly || quick.value }));
+          const label = quick.value;
+          const uuid = resolveLinkUUID(label);
+          const meta = lookupLinkMetadata(label) || {};
+          const friendly =
+            (meta && meta.friendly) ||
+            humanizeActionName((meta && meta.action) || label) ||
+            label;
+          return renderValue(variableValue({ uuid: uuid || label, name: friendly }));
         }
         if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
         return XML.str(quick.value || '');
@@ -2011,7 +2058,10 @@ const userConversions = (() => {
         {
           const quick = interpretQuickReference(value);
           if (quick) {
-            if (quick.type === 'link') return XML.str(quick.value);
+            if (quick.type === 'link') {
+              const uuid = resolveLinkUUID(quick.value);
+              return XML.str(uuid || quick.value);
+            }
             if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
             return XML.str(quick.value || '');
           }
@@ -2035,7 +2085,10 @@ const userConversions = (() => {
     if (upperKey === 'UUID') {
       const quick = interpretQuickReference(value);
       if (quick) {
-        if (quick.type === 'link') return XML.str(quick.value);
+        if (quick.type === 'link') {
+          const uuid = resolveLinkUUID(quick.value);
+          return XML.str(uuid || quick.value);
+        }
         if (quick.type === 'variable') return XML.str(`{{${quick.value}}}`);
         return XML.str(quick.value || '');
       }
