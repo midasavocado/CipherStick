@@ -2955,46 +2955,82 @@ const userConversions = (() => {
 
       const specialBuilder = SPECIAL_ACTION_BUILDERS.get(normalizeName(kind));
       if (specialBuilder) {
-        out.push(...await specialBuilder(item));
+        try {
+          out.push(...await specialBuilder(item));
+        } catch (err) {
+          if (typeof console !== 'undefined' && console.warn) {
+            console.warn('SPECIAL_ACTION_BUILDERS failed', kind, err);
+          }
+          const detail =
+            err && typeof err === 'object' && err.detail
+              ? `\nDetail: ${safePreview(err.detail)}`
+              : '';
+          const msg = err && err.message ? err.message : String(err);
+          out.push(comment(`Conversion error (${kind} block): ${msg}${detail}`));
+        }
         continue;
       }
 
       // Regular action
-      out.push(await buildActionFromConversions(kind, item.params || {}));
+      try {
+        out.push(await buildActionFromConversions(kind, item.params || {}));
+      } catch (err) {
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('buildActionsArrayFromJSON fallback', kind, err);
+        }
+        const detail =
+          err && typeof err === 'object' && err.detail
+            ? `\nDetail: ${safePreview(err.detail)}`
+            : '';
+        const msg = err && err.message ? err.message : String(err);
+        out.push(comment(`Conversion error (${kind}): ${msg}${detail}`));
+      }
     }
     return out;
   }
 
   // ---- Build one action from Conversions/ dict template ----
   async function buildActionFromConversions(actionName, params) {
-    // Find file
-    const filename = await lookupConversionFileForAction(actionName);
-    if (!filename) {
-      // fallback comment so user sees problem
-      return comment(`Unmapped action: ${actionName}\nParams: ${safePreview(params)}`);
-    }
-    // Load <dict>…</dict> snippet
-    const dictXML = await loadConvFile(filename);
+    try {
+      // Find file
+      const filename = await lookupConversionFileForAction(actionName);
+      if (!filename) {
+        // fallback comment so user sees problem
+        return comment(`Unmapped action: ${actionName}\nParams: ${safePreview(params)}`);
+      }
+      // Load <dict>…</dict> snippet
+      const dictXML = await loadConvFile(filename);
 
-    const normalizedParams = applyParamAliases(dictXML, params || {});
-    for (const [key, value] of Object.entries(normalizedParams)) {
-      if (typeof value !== 'string') continue;
-      const trimmed = value.trim();
-      if (!/^!link:/i.test(trimmed)) continue;
-      if (!OUTPUT_FIELD_REGEX.test(key)) continue;
-      const label = trimmed.slice(6).trim();
-      registerLinkLabel(label, actionName);
-    }
-    // Substitutions
-    let substituted = substitutePlaceholders(dictXML, normalizedParams);
-    substituted = postProcessAskLLM(substituted, normalizedParams);
+      const normalizedParams = applyParamAliases(dictXML, params || {});
+      for (const [key, value] of Object.entries(normalizedParams)) {
+        if (typeof value !== 'string') continue;
+        const trimmed = value.trim();
+        if (!/^!link:/i.test(trimmed)) continue;
+        if (!OUTPUT_FIELD_REGEX.test(key)) continue;
+        const label = trimmed.slice(6).trim();
+        registerLinkLabel(label, actionName);
+      }
+      // Substitutions
+      let substituted = substitutePlaceholders(dictXML, normalizedParams);
+      substituted = postProcessAskLLM(substituted, normalizedParams);
 
-    // Ensure it *looks* like a dict (we won't attempt to validate fully)
-    if (!/^\s*<dict>[\s\S]*<\/dict>\s*$/i.test(substituted)) {
-      // Wrap if the file accidentally contains only inner content
-      return `<dict>${substituted}</dict>`;
+      // Ensure it *looks* like a dict (we won't attempt to validate fully)
+      if (!/^\s*<dict>[\s\S]*<\/dict>\s*$/i.test(substituted)) {
+        // Wrap if the file accidentally contains only inner content
+        return `<dict>${substituted}</dict>`;
+      }
+      return substituted;
+    } catch (err) {
+      const detail =
+        err && typeof err === 'object' && err.detail
+          ? `\nDetail: ${safePreview(err.detail)}`
+          : '';
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('buildActionFromConversions failed', actionName, err);
+      }
+      const msg = err && err.message ? err.message : String(err);
+      return comment(`Conversion error (${actionName}): ${msg}${detail}`);
     }
-    return substituted;
   }
 
   // ---- Control flow builders (IDs based on common Shortcuts internals) ----
