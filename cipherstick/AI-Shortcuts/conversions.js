@@ -2961,12 +2961,7 @@ const userConversions = (() => {
           if (typeof console !== 'undefined' && console.warn) {
             console.warn('SPECIAL_ACTION_BUILDERS failed', kind, err);
           }
-          const detail =
-            err && typeof err === 'object' && err.detail
-              ? `\nDetail: ${safePreview(err.detail)}`
-              : '';
-          const msg = err && err.message ? err.message : String(err);
-          out.push(comment(`Conversion error (${kind} block): ${msg}${detail}`));
+          out.push(buildFallbackAction(kind, item.params || {}));
         }
         continue;
       }
@@ -2978,15 +2973,50 @@ const userConversions = (() => {
         if (typeof console !== 'undefined' && console.warn) {
           console.warn('buildActionsArrayFromJSON fallback', kind, err);
         }
-        const detail =
-          err && typeof err === 'object' && err.detail
-            ? `\nDetail: ${safePreview(err.detail)}`
-            : '';
-        const msg = err && err.message ? err.message : String(err);
-        out.push(comment(`Conversion error (${kind}): ${msg}${detail}`));
+        out.push(buildFallbackAction(kind, item.params || {}));
       }
     }
     return out;
+  }
+
+  function guessActionIdentifier(actionName) {
+    if (!actionName) return 'is.workflow.actions.comment';
+    const trimmed = String(actionName).trim();
+    if (/^is\.workflow\./i.test(trimmed)) return trimmed.toLowerCase();
+    const sanitized = trimmed
+      .replace(/\.json$/i, '')
+      .replace(/[^A-Za-z0-9.]+/g, '')
+      .replace(/\s+/g, '');
+    if (!sanitized) return 'is.workflow.actions.comment';
+    return `is.workflow.actions.${sanitized.toLowerCase()}`;
+  }
+
+  function buildFallbackParameters(params, actionName) {
+    if (!params || typeof params !== 'object' || Array.isArray(params)) return '<dict/>';
+    const normalized = applyParamAliases('', params);
+    for (const [key, value] of Object.entries(normalized)) {
+      if (typeof value !== 'string') continue;
+      const trimmed = value.trim();
+      if (!/^!link:/i.test(trimmed)) continue;
+      const label = trimmed.slice(6).trim();
+      if (label) registerLinkLabel(label, actionName);
+    }
+    const rendered = renderValue(normalized);
+    const trimmedRendered = rendered.trim();
+    if (!trimmedRendered) return '<dict/>';
+    if (/^<dict[\s>]/i.test(trimmedRendered)) return rendered;
+    return renderValue({ Value: normalized });
+  }
+
+  function buildFallbackAction(actionName, params) {
+    const identifier = guessActionIdentifier(actionName);
+    const parameters = buildFallbackParameters(params, actionName);
+    return `<dict>
+  <key>WFWorkflowActionIdentifier</key>
+  ${XML.str(identifier)}
+  <key>WFWorkflowActionParameters</key>
+  ${parameters}
+</dict>`;
   }
 
   // ---- Build one action from Conversions/ dict template ----
@@ -2995,8 +3025,10 @@ const userConversions = (() => {
       // Find file
       const filename = await lookupConversionFileForAction(actionName);
       if (!filename) {
-        // fallback comment so user sees problem
-        return comment(`Unmapped action: ${actionName}\nParams: ${safePreview(params)}`);
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('lookupConversionFileForAction missing template', actionName);
+        }
+        return buildFallbackAction(actionName, params);
       }
       // Load <dict>…</dict> snippet
       const dictXML = await loadConvFile(filename);
@@ -3021,15 +3053,10 @@ const userConversions = (() => {
       }
       return substituted;
     } catch (err) {
-      const detail =
-        err && typeof err === 'object' && err.detail
-          ? `\nDetail: ${safePreview(err.detail)}`
-          : '';
       if (typeof console !== 'undefined' && console.warn) {
         console.warn('buildActionFromConversions failed', actionName, err);
       }
-      const msg = err && err.message ? err.message : String(err);
-      return comment(`Conversion error (${actionName}): ${msg}${detail}`);
+      return buildFallbackAction(actionName, params);
     }
   }
 
