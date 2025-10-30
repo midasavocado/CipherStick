@@ -102,13 +102,18 @@
       border: 1px solid rgba(138, 99, 255, 0.05);
     }
 
-    .chat-panel { display: flex; flex-direction: column; min-height: calc(100vh - 200px); }
-
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 200px);
+      height: 100%;
+      gap: 0;
+    }
 
     .chat-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 28px;
+      padding: 24px 28px 42px;
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -141,6 +146,13 @@
       background: rgba(45, 85, 241, 0.18);
       border-color: rgba(45, 85, 241, 0.32);
     }
+    .pipeline-entry {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .pipeline-entry.is-pending { opacity: 0.65; }
+    .pipeline-entry.is-active { opacity: 1; }
+    .pipeline-entry.is-done { opacity: 0.85; }
+    .pipeline-entry.is-error { opacity: 1; }
     .pipeline-entry .bubble__inner {
       display: flex;
       align-items: flex-start;
@@ -211,8 +223,10 @@
     .composer-shell {
       position: sticky;
       bottom: 0;
-      padding: 20px 26px 26px;
-      background: linear-gradient(180deg, rgba(3, 4, 13, 0), rgba(3, 4, 13, 0.6));
+      padding: 18px 26px 24px;
+      background: linear-gradient(180deg, rgba(3, 4, 13, 0.18), rgba(3, 4, 13, 0.82));
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+      backdrop-filter: blur(12px);
     }
     .composer {
       border-radius: var(--radius-md);
@@ -222,6 +236,7 @@
       align-items: flex-start;
       padding: 18px;
       gap: 18px;
+      box-shadow: 0 18px 40px rgba(4, 7, 22, 0.45);
     }
     .composer textarea {
       flex: 1;
@@ -317,38 +332,109 @@
       flex-direction: column;
       gap: 18px;
       padding-right: 12px;
+      padding-bottom: 18px;
     }
     .flow-scroll::-webkit-scrollbar { width: 9px; }
     .flow-scroll::-webkit-scrollbar-thumb { background: rgba(138, 99, 255, 0.28); border-radius: 999px; }
 
     .flow-step {
       position: relative;
-      padding-left: 26px;
-      border-left: 2px solid rgba(148, 163, 184, 0.18);
+      padding: 20px 24px 20px 34px;
+      border-radius: 20px;
+      background: rgba(18, 22, 45, 0.9);
+      border: 1px solid rgba(138, 99, 255, 0.18);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 12px;
+      box-shadow: 0 22px 42px rgba(5, 7, 20, 0.45);
     }
     .flow-step::before {
       content: "";
       position: absolute;
-      left: -10px;
-      top: 6px;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: rgba(148, 163, 184, 0.32);
-      box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.08);
+      left: 16px;
+      top: 22px;
+      bottom: 22px;
+      width: 2px;
+      border-radius: 2px;
+      background: rgba(138, 99, 255, 0.25);
     }
-    .flow-step.is-producer::before {
-      background: var(--accent);
-      box-shadow: 0 0 0 4px rgba(138, 99, 255, 0.22);
+    .flow-step.is-producer::before { background: rgba(138, 99, 255, 0.6); }
+    .flow-step.is-consumer::before { background: rgba(56, 189, 248, 0.5); }
+    .flow-step__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .flow-step.is-consumer::before {
-      background: rgba(94, 234, 212, 0.9);
-      box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.18);
+    .flow-step__title { font-size: 0.96rem; font-weight: 600; }
+    .flow-step__meta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .flow-params { display: flex; flex-direction: column; gap: 8px; }
+    .flow-param { display: flex; align-items: flex-start; gap: 10px; }
+    .flow-param__key {
+      min-width: 110px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
-    .flow-step strong { font-size: 0.96rem; }
-    .flow-step small { font-size: 0.8rem; color: var(--text-muted); font-family: var(--mono); }
+    .flow-param__value {
+      flex: 1;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .flow-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      background: rgba(148, 163, 184, 0.12);
+      color: rgba(226, 232, 240, 0.8);
+    }
+    .flow-chip--link { background: rgba(56, 189, 248, 0.18); color: #bae6fd; }
+    .flow-chip--var { background: rgba(167, 139, 250, 0.2); color: #ede9fe; }
+    .flow-chip--empty { background: rgba(148, 163, 184, 0.14); color: rgba(226, 232, 240, 0.8); }
+    .flow-code {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(9, 12, 28, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .flow-text { display: inline-block; }
+    .flow-subflow {
+      margin-top: 6px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(14, 18, 40, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .flow-subflow__title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent-strong);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow-subflow__list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
 
     .empty-visual { margin: auto; text-align: center; color: var(--text-muted); font-size: 0.92rem; }
 
@@ -557,6 +643,15 @@
     state.toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
   }
 
+  function escapeHtml(input) {
+    return String(input ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function pushMessage(role, content, meta = {}) {
     state.conversation.push({
       role,
@@ -577,17 +672,21 @@
       if (entry.role === 'pipeline') {
         const meta = state.pipelineEntries.get(entry.id);
         if (!meta) return '';
-        const statusClass = meta.status === 'active' ? 'is-active' : meta.status === 'done' ? 'is-done' : meta.status === 'error' ? 'is-error' : '';
-        return `<article class="bubble bubble--system pipeline-entry ${statusClass}" data-pipeline-id="${entry.id}"><div class="bubble__inner pipeline-inner"><div class="pipeline-dot"></div><div><strong>${meta.title}</strong><span>${meta.hint}</span></div></div></article>`;
+        const statusMap = {
+          pending: 'is-pending',
+          active: 'is-active',
+          done: 'is-done',
+          error: 'is-error'
+        };
+        const statusClass = statusMap[meta.status] || '';
+        const title = escapeHtml(meta.title || '');
+        const hint = escapeHtml(meta.hint || '');
+        return `<article class="bubble bubble--system pipeline-entry ${statusClass}" data-pipeline-id="${entry.id}"><div class="bubble__inner pipeline-inner"><div class="pipeline-dot"></div><div><strong>${title}</strong><span>${hint}</span></div></div></article>`;
       }
       const roleClass = entry.role === 'user' ? 'bubble--user' : entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
-      const label = entry.meta?.label ? `<span class="bubble__label">${entry.meta.label}</span>` : '';
-      const time = entry.at ? `<span class="bubble__time">${entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>` : '';
-      const escaped = entry.content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
+      const label = entry.meta?.label ? `<span class="bubble__label">${escapeHtml(entry.meta.label)}</span>` : '';
+      const time = entry.at ? `<span class="bubble__time">${escapeHtml(entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span>` : '';
+      const escaped = escapeHtml(entry.content).replace(/\n/g, '<br>');
       return `<article class="bubble ${roleClass}"><div class="bubble__inner">${label}<p>${escaped || '<em>(empty)</em>'}</p>${time}</div></article>`;
     }).join('');
     conversationList.scrollTop = conversationList.scrollHeight;
@@ -630,24 +729,112 @@
     return 'update';
   }
 
+  const INLINE_PARAM_LIMIT = 140;
+
+  function formatParamValue(value) {
+    if (value == null) return '<span class="flow-chip flow-chip--empty">None</span>';
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return '<span class="flow-chip flow-chip--empty">Empty</span>';
+      if (/^!link:/i.test(trimmed)) {
+        const label = trimmed.slice(6).trim() || 'Link';
+        return `<span class="flow-chip flow-chip--link">↗ ${escapeHtml(label)}</span>`;
+      }
+      if (/^!var:/i.test(trimmed)) {
+        const label = trimmed.slice(5).trim() || 'Variable';
+        return `<span class="flow-chip flow-chip--var">Variable ${escapeHtml(label)}</span>`;
+      }
+      if (/^\{\{.+\}\}$/.test(trimmed)) {
+        return `<span class="flow-chip flow-chip--empty">${escapeHtml(trimmed)}</span>`;
+      }
+      if (trimmed.length > INLINE_PARAM_LIMIT || /[\n\r]/.test(trimmed)) {
+        return `<pre class="flow-code">${escapeHtml(trimmed)}</pre>`;
+      }
+      return `<span class="flow-text">${escapeHtml(trimmed)}</span>`;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return `<span class="flow-text">${escapeHtml(String(value))}</span>`;
+    }
+    try {
+      const pretty = JSON.stringify(value, null, 2);
+      return `<pre class="flow-code">${escapeHtml(pretty)}</pre>`;
+    } catch {
+      return `<span class="flow-text">${escapeHtml(String(value))}</span>`;
+    }
+  }
+
+  function computeFlowMeta(params, action) {
+    const classes = new Set();
+    const chips = [];
+    const entries = Object.entries(params || {});
+    let isProducer = false;
+    let isConsumer = false;
+
+    entries.forEach(([key, val]) => {
+      if (typeof val !== 'string') return;
+      const trimmed = val.trim();
+      if (!trimmed.includes('!link:')) return;
+      const lowerKey = key.toLowerCase();
+      if ((lowerKey.includes('output') || lowerKey.endsWith('uuid') || lowerKey.includes('uuid')) && /^!link:/i.test(trimmed)) {
+        isProducer = true;
+      } else {
+        isConsumer = true;
+      }
+    });
+
+    if (isProducer) {
+      classes.add('is-producer');
+      chips.push('<span class="flow-chip flow-chip--link">Outputs link</span>');
+    }
+    if (isConsumer) {
+      classes.add('is-consumer');
+      chips.push('<span class="flow-chip flow-chip--var">Uses link</span>');
+    }
+    const hasBranches =
+      (Array.isArray(action?.then) && action.then.length) ||
+      (Array.isArray(action?.else) && action.else.length) ||
+      (Array.isArray(action?.do) && action.do.length);
+    if (hasBranches) chips.push('<span class="flow-chip">Control flow</span>');
+
+    return {
+      className: classes.size ? [...classes].join(' ') : '',
+      chipsHtml: chips.length ? `<div class="flow-step__meta">${chips.join('')}</div>` : ''
+    };
+  }
+
+  function renderSubflow(label, actions) {
+    if (!Array.isArray(actions) || !actions.length) return '';
+    const limit = 4;
+    const items = actions.slice(0, limit).map((entry, index) => {
+      const name = entry?.action || `Step ${index + 1}`;
+      return `<li>${escapeHtml(name)}</li>`;
+    }).join('');
+    const extra = actions.length > limit ? `<li>… +${actions.length - limit} more</li>` : '';
+    return `<div class="flow-subflow"><div class="flow-subflow__title">${escapeHtml(label)}</div><ol class="flow-subflow__list">${items}${extra}</ol></div>`;
+  }
+
   function buildFlowHtml(program) {
     if (!program || !Array.isArray(program.actions) || !program.actions.length) {
       return '<div class="empty-visual">Blueprint will appear as soon as we plan your shortcut.</div>';
     }
     return program.actions.map((action, idx) => {
-      const actionName = action?.action || 'Unknown action';
-      const params = action?.params || {};
-      const paramList = Object.entries(params).map(([key, value]) => {
-        const v = typeof value === 'object' ? JSON.stringify(value) : String(value);
-        return `<small><strong>${key}</strong>: ${v}</small>`;
-      }).join('') || '<small>No params</small>';
-      const values = Object.values(params);
-      const isProducer = values.some((val) => typeof val === 'string' && /^!link:/.test(val));
-      const isConsumer = values.some((val) => typeof val === 'string' && /!link:/.test(val) && !/^!link:/.test(val));
-      const classList = ['flow-step'];
-      if (isProducer) classList.push('is-producer');
-      if (isConsumer) classList.push('is-consumer');
-      return `<div class="${classList.join(' ')}"><strong>${idx + 1}. ${actionName}</strong>${paramList}</div>`;
+      const actionName = action?.action || `Action ${idx + 1}`;
+      const paramsObj =
+        action && typeof action === 'object' && action.params && typeof action.params === 'object' && !Array.isArray(action.params)
+          ? action.params
+          : {};
+      const paramEntries = Object.entries(paramsObj);
+      const paramHtml = paramEntries.length
+        ? `<div class="flow-params">${paramEntries.map(([key, value]) => `<div class="flow-param"><span class="flow-param__key">${escapeHtml(key)}</span><span class="flow-param__value">${formatParamValue(value)}</span></div>`).join('')}</div>`
+        : '<div class="flow-params"><span class="flow-chip flow-chip--empty">No parameters</span></div>';
+      const meta = computeFlowMeta(paramsObj, action || {});
+      const branches = [
+        renderSubflow('Then', action?.then),
+        renderSubflow('Otherwise', action?.else),
+        renderSubflow('Repeat', action?.do)
+      ].filter(Boolean).join('');
+      const className = meta.className ? ` ${meta.className}` : '';
+      return `<article class="flow-step${className}"><div class="flow-step__header"><div class="flow-step__title">${idx + 1}. ${escapeHtml(actionName)}</div>${meta.chipsHtml || ''}</div>${paramHtml}${branches}</article>`;
     }).join('');
   }
 
@@ -659,62 +846,68 @@
     if (state.isCodeModalOpen) updateCodeModal(state.codeModalTab);
   }
 
-  function resetTimeline() {
+  function pipelineReset() {
+    state.pipelineEntries = new Map();
     state.pipelineContext = null;
-  }
-
-  function addPipelineEntry(stepKey, status = 'active') {
-    const meta = PIPELINE_STEPS.find((step) => step.key === stepKey);
-    if (!meta) return null;
-    const id = `pipe-${stepKey}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    state.pipelineEntries.set(id, { stepKey, status, title: meta.title, hint: meta.hint });
-    state.conversation.push({ role: 'pipeline', id });
-    renderConversation();
-    return id;
-  }
-
-  function setPipelineStatus(id, status) {
-    const entry = state.pipelineEntries.get(id);
-    if (!entry || entry.status === status) return;
-    entry.status = status;
-    renderConversation();
+    const before = state.conversation.length;
+    state.conversation = state.conversation.filter((entry) => entry.role !== 'pipeline');
+    if (state.conversation.length !== before) renderConversation();
   }
 
   function pipelineStart() {
-    resetTimeline();
-    const first = PIPELINE_STEPS[0];
-    if (!first) return;
-    const id = addPipelineEntry(first.key, 'active');
-    state.pipelineContext = {
-      currentStepKey: first.key,
-      currentStepId: id
-    };
+    pipelineReset();
+    PIPELINE_STEPS.forEach((step, index) => {
+      state.pipelineEntries.set(step.key, {
+        stepKey: step.key,
+        status: index === 0 ? 'active' : 'pending',
+        title: step.title,
+        hint: step.hint
+      });
+      state.conversation.push({ role: 'pipeline', id: step.key });
+    });
+    state.pipelineContext = { currentStepKey: PIPELINE_STEPS[0]?.key || null };
+    renderConversation();
   }
 
-  function pipelineGoTo(stepKey) {
-    const ctx = state.pipelineContext;
-    if (!ctx) return;
-    if (ctx.currentStepKey === stepKey) return;
-    if (ctx.currentStepId) {
-      setPipelineStatus(ctx.currentStepId, 'done');
+  function pipelineSetStatus(stepKey, status, hint) {
+    const entry = state.pipelineEntries.get(stepKey);
+    if (!entry) return;
+    let changed = false;
+    if (hint != null && hint !== entry.hint) {
+      entry.hint = hint;
+      changed = true;
     }
-    const id = addPipelineEntry(stepKey, 'active');
-    ctx.currentStepKey = stepKey;
-    ctx.currentStepId = id;
+    if (status) {
+      if (status === 'active') {
+        state.pipelineEntries.forEach((item, key) => {
+          if (key !== stepKey && item.status === 'active') {
+            item.status = 'done';
+            changed = true;
+          }
+        });
+        state.pipelineContext = { currentStepKey: stepKey };
+      }
+      if (entry.status !== status) {
+        entry.status = status;
+        changed = true;
+      }
+    }
+    if (changed) renderConversation();
   }
 
   function pipelineComplete(status) {
-    const ctx = state.pipelineContext;
-    if (!ctx) return;
+    if (!state.pipelineEntries.size) return;
     if (status === 'success') {
-      if (ctx.currentStepKey !== 'summarize') {
-        pipelineGoTo('summarize');
-      }
-      if (ctx.currentStepId) setPipelineStatus(ctx.currentStepId, 'done');
+      state.pipelineEntries.forEach((entry) => {
+        if (entry.status === 'active' || entry.status === 'pending') entry.status = 'done';
+      });
     } else if (status === 'error') {
-      if (ctx.currentStepId) setPipelineStatus(ctx.currentStepId, 'error');
+      state.pipelineEntries.forEach((entry) => {
+        if (entry.status === 'active') entry.status = 'error';
+      });
     }
     state.pipelineContext = null;
+    renderConversation();
   }
 
   function updateCodeModal(tab = state.codeModalTab) {
@@ -884,6 +1077,94 @@
     return summary.join(' ');
   }
 
+  async function streamWorkerGenerate(payload) {
+    const res = await fetch(`${WORKER_ORIGIN}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(text || `Worker error ${res.status}`);
+    }
+    if (!res.body) {
+      const text = await res.text().catch(() => '');
+      throw new Error(text || 'Worker returned no data.');
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalPacket = null;
+    let streamError = null;
+
+    const processPacket = (packet) => {
+      if (!packet || typeof packet !== 'object') return;
+      if (packet.type === 'progress') {
+        const stepKey = packet.step;
+        if (!stepKey) return;
+        const statusRaw = typeof packet.status === 'string' ? packet.status.toLowerCase() : '';
+        let mappedStatus = null;
+        if (['start', 'started', 'active', 'progress', 'working'].includes(statusRaw)) mappedStatus = 'active';
+        else if (['pending', 'queued', 'waiting'].includes(statusRaw)) mappedStatus = 'pending';
+        else if (['complete', 'completed', 'done', 'finished', 'success'].includes(statusRaw)) mappedStatus = 'done';
+        else if (['error', 'failed', 'fail'].includes(statusRaw)) mappedStatus = 'error';
+        const hint = packet.hint || packet.message || packet.detail;
+        pipelineSetStatus(stepKey, mappedStatus, hint);
+        return;
+      }
+      if (packet.type === 'message') {
+        const stepKey = packet.step;
+        const hint = packet.hint || packet.message || packet.detail;
+        if (stepKey && hint) pipelineSetStatus(stepKey, null, hint);
+        return;
+      }
+      if (packet.type === 'error') {
+        const stepKey = packet.step || packet.stage;
+        const hint = packet.hint || packet.message || packet.error;
+        if (stepKey) pipelineSetStatus(stepKey, 'error', hint);
+        const err = new Error(packet.message || packet.error || 'Worker error');
+        err.detail = packet;
+        streamError = err;
+        return;
+      }
+      if (packet.type === 'final') {
+        finalPacket = packet;
+      }
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let newlineIndex;
+      while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+        const chunk = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+        if (!chunk) continue;
+        try {
+          const packet = JSON.parse(chunk);
+          processPacket(packet);
+        } catch (err) {
+          console.warn('Worker chunk parse failed', chunk, err);
+        }
+      }
+    }
+
+    if (buffer.trim()) {
+      try {
+        const packet = JSON.parse(buffer.trim());
+        processPacket(packet);
+      } catch (err) {
+        console.warn('Worker trailing chunk parse failed', buffer.trim(), err);
+      }
+    }
+
+    if (streamError) throw streamError;
+    if (!finalPacket) throw new Error('Worker finished without final payload.');
+    return finalPacket;
+  }
+
   async function handleSend() {
     if (state.isBusy) return;
     const text = (chatInput.value || '').trim();
@@ -915,15 +1196,11 @@
         }
       };
 
-      const res = await fetch(`${WORKER_ORIGIN}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const raw = await res.text();
-      let data = {};
-      try { data = JSON.parse(raw); } catch { throw new Error('Worker returned non-JSON response.'); }
-      if (!res.ok || !data.ok) throw new Error(data?.error || `Worker error ${res.status}`);
+      const data = await streamWorkerGenerate(payload);
+      if (!data?.ok) {
+        const message = data?.error || data?.message || 'Worker reported an error.';
+        throw Object.assign(new Error(message), { detail: data });
+      }
 
       const finalName = sanitizeName(data.finalName || name);
       state.lastName = finalName;
@@ -932,14 +1209,8 @@
 
       let programObj = data?.program;
       if (!programObj && data?.programRaw) programObj = parseMaybeJSON(data.programRaw);
-      if (Array.isArray(data.planArray) && data.planArray.length) {
-        pipelineGoTo('search');
-      }
-      if (programObj && Array.isArray(programObj.actions) && programObj.actions.length) {
-        pipelineGoTo('build');
-      }
       updateFlow(programObj, '');
-      pipelineGoTo('summarize');
+      pipelineSetStatus('summarize', 'done');
 
       const summary = explainResult({ mode: data.mode || mode, usedFiles: data.usedFiles, answer: data.answer, name: finalName });
       pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
@@ -1050,14 +1321,13 @@
     state.basePrompt = '';
     state.lastPrompt = '';
     state.lastName = DEFAULT_SHORTCUT_NAME;
-    state.conversation = [];
     state.program = null;
     state.plistText = '';
     chatInput.value = '';
-    state.pipelineEntries = new Map();
+    pipelineReset();
+    state.conversation = [];
     renderConversation();
     updateFlow(null, '');
-    resetTimeline();
     if (state.isCodeModalOpen) closeCodeModal();
     showToast('Workspace cleared.');
     btnSign.disabled = true;
@@ -1065,7 +1335,7 @@
 
   renderConversation();
   updateFlow(null, '');
-  resetTimeline();
+  pipelineReset();
   btnSign.disabled = true;
   </script>
 </body>

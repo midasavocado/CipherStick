@@ -2624,6 +2624,51 @@ const userConversions = (() => {
     return XML.str(v);
   }
 
+  const VARIABLE_NODE_KEYS = new Set(['input', 'wfinput', 'items', 'itemsin']);
+
+  function shouldPreferVariableNode(name) {
+    if (!name) return false;
+    return VARIABLE_NODE_KEYS.has(String(name).toLowerCase());
+  }
+
+  function buildVariableNodeFromQuick(quick) {
+    if (!quick || !quick.type) return null;
+    if (quick.type === 'link') {
+      const label = quick.value;
+      if (!label) return null;
+      const uuid = resolveLinkUUID(label) || label;
+      const meta = lookupLinkMetadata(label) || {};
+      const outputName =
+        meta?.friendly ??
+        humanizeActionName(meta?.action || label) ??
+        label;
+      return renderValue(
+        variableValue({
+          fields: { Type: 'Variable' },
+          value: {
+            Type: 'ActionOutput',
+            OutputName: outputName,
+            OutputUUID: uuid
+          }
+        })
+      );
+    }
+    if (quick.type === 'variable') {
+      const name = quick.value;
+      if (!name) return null;
+      return renderValue(
+        variableValue({
+          fields: { Type: 'Variable' },
+          value: {
+            Type: 'Variable',
+            VariableName: name
+          }
+        })
+      );
+    }
+    return null;
+  }
+
   function ensureAnyNode(value, placeholderName, fallback) {
     let v = value;
     if (v == null) v = fallback !== undefined ? fallback : placeholderToken(placeholderName);
@@ -2631,6 +2676,11 @@ const userConversions = (() => {
       const trimmed = v.trim();
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
+      if (shouldPreferVariableNode(placeholderName)) {
+        const quick = interpretQuickReference(trimmed);
+        const variableNode = buildVariableNodeFromQuick(quick);
+        if (variableNode) return variableNode;
+      }
       return renderValue(v);
     }
     return renderValue(v);
