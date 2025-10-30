@@ -3293,26 +3293,6 @@ const userConversions = (() => {
 
 /* --- Universal tolerant wrapper: accepts JSON/DSL/XML/plain text --- */
 (function (global){
-  function __makeCommentPlist(name, comment){
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>WFWorkflowName</key><string>${name || 'My Shortcut'}</string>
-  <key>WFWorkflowActions</key>
-  <array>
-    <dict>
-      <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>
-      <key>WFWorkflowActionParameters</key>
-      <dict>
-        <key>WFCommentActionText</key><string>${String(comment || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</string>
-      </dict>
-    </dict>
-  </array>
-</dict>
-</plist>`;
-  }
-
   function tryParseJSON(text){
     try {
       const t = String(text || '').trim();
@@ -3321,13 +3301,27 @@ const userConversions = (() => {
     } catch { return null; }
   }
 
+  function previewValue(value, max = 400) {
+    if (typeof value === 'string') return value.slice(0, max);
+    try {
+      return JSON.stringify(value, null, 2).slice(0, max);
+    } catch {
+      return String(value ?? '').slice(0, max);
+    }
+  }
+
   function normalizeInput(input, name){
     if (typeof input === 'string'){
       const s = input.trim();
+      if (!s) return { error: 'Empty input string.', name, preview: '' };
       if (s.startsWith('<?xml')) return { plist: s, name };
       const maybe = tryParseJSON(s);
       if (maybe !== null) return { program: maybe, name };
-      return { comment: 'Expected JSON input (string did not start with { or [).', name };
+      return {
+        error: 'Expected JSON input (string did not start with { or [).',
+        name,
+        preview: previewValue(s)
+      };
     }
     if (Array.isArray(input)) return { program: { name, actions: input } };
     if (input && typeof input === 'object'){
@@ -3339,11 +3333,17 @@ const userConversions = (() => {
       if (input.actions && Array.isArray(input.actions)){
         return { program: { name: input.name || name, actions: input.actions } };
       }
-      // last-ditch: unknown object -> JSON stringify into comment
-      return { comment: JSON.stringify(input).slice(0,2000), name };
+      return {
+        error: 'Unsupported program object shape.',
+        name,
+        preview: previewValue(input)
+      };
     }
-    // Fallback for numbers/booleans/etc.
-    return { comment: String(input), name };
+    return {
+      error: 'Unsupported input type.',
+      name,
+      preview: previewValue(input)
+    };
   }
 
   // --- Shims for legacy callers ---
@@ -3354,46 +3354,52 @@ const userConversions = (() => {
     };
   }
 
-  function toPlistUniversal(input, name){
+  async function toPlistUniversal(input, name){
     const norm = normalizeInput(input, name);
     const n = norm.name || name || 'My Shortcut';
 
     if (norm.plist) return norm.plist;
-
-    if (norm.program){
-      const prog = norm.program;
-      const bundle = { name: prog.name || n, program: prog };
-
-      // Preferred: our Conversion JSON path (expects { name, program })
-      if (global.Conversion && typeof global.Conversion.toPlistFromJSON === 'function'){
-        try { return global.Conversion.toPlistFromJSON(bundle); } catch(e){}
-      }
-
-      // Optional facade if present
-      if (global.ConversionJSON && typeof global.ConversionJSON.toPlist === 'function'){
-        try { return global.ConversionJSON.toPlist(bundle); } catch(e){}
-      }
-
-      // As a last resort, try the generic toPlist with explicit text if caller shoved JSON as text.
-      if (global.Conversion && typeof global.Conversion.toPlist === 'function'){
-        try { return global.Conversion.toPlist({ name: bundle.name, text: JSON.stringify(prog) }); } catch(e){}
-      }
-
-      // Fall through to comment plist
-      return __makeCommentPlist(n, 'JSON conversion failed.');
+    if (norm.error) {
+      const err = new Error(norm.error);
+      err.detail = { name: n, preview: norm.preview };
+      throw err;
     }
 
-    // (No DSL branch — JSON only. Non-JSON strings become comment plists.)
-
-    if (norm.comment) {
-      return __makeCommentPlist(n, norm.comment);
+    if (!norm.program) {
+      const err = new Error('No program provided.');
+      err.detail = { name: n, preview: previewValue(input) };
+      throw err;
     }
 
-    return __makeCommentPlist(n, 'Unrecognized input.');
+    const prog = norm.program;
+    const bundle = { name: prog.name || n, program: prog };
+    const attemptErrors = [];
+
+    if (global.Conversion && typeof global.Conversion.toPlistFromJSON === 'function'){
+      try { return await global.Conversion.toPlistFromJSON(bundle); }
+      catch (e){ attemptErrors.push({ source: 'Conversion.toPlistFromJSON', message: e?.message || String(e) }); }
+    }
+
+    if (global.ConversionJSON && typeof global.ConversionJSON.toPlist === 'function'){
+      try { return await global.ConversionJSON.toPlist(bundle); }
+      catch (e){ attemptErrors.push({ source: 'ConversionJSON.toPlist', message: e?.message || String(e) }); }
+    }
+
+    if (global.Conversion && typeof global.Conversion.toPlist === 'function'){
+      try { return await global.Conversion.toPlist({ name: bundle.name, text: JSON.stringify(prog) }); }
+      catch (e){ attemptErrors.push({ source: 'Conversion.toPlist', message: e?.message || String(e) }); }
+    }
+
+    const err = new Error('JSON conversion failed.');
+    err.detail = {
+      name: n,
+      attempts: attemptErrors,
+      programPreview: previewValue(prog)
+    };
+    throw err;
   }
 
   global.ConversionUniversal = {
-    toPlist: toPlistUniversal,
-    __makeCommentPlist
+    toPlist: toPlistUniversal
   };
 })(window);

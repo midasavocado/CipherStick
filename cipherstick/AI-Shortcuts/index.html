@@ -753,38 +753,107 @@
   }
 
   async function ensurePlist({ name, inputRaw, programObj, dslText }) {
+    const attempts = [];
+    const recordFailure = (source, error) => {
+      if (!error) return;
+      const message = error?.message || String(error);
+      attempts.push(`${source}: ${message}`);
+    };
+
+    const primaryInput = programObj ?? dslText ?? inputRaw;
+
     if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
-      try { return window.ConversionUniversal.toPlist(programObj ?? dslText ?? inputRaw, name); } catch (e) {}
+      try { return await window.ConversionUniversal.toPlist(primaryInput, name); }
+      catch (err) { recordFailure('ConversionUniversal.toPlist', err); }
     }
+
     if (programObj) {
       const cj = window.ConversionJSON;
       if (cj && typeof cj.toPlist === 'function') {
-        try { return cj.toPlist({ name, program: programObj }); } catch (e1) {
-          try { return cj.toPlist(programObj, name); } catch (e2) {
-            try { return cj.toPlist(programObj); } catch (e3) {}
-          }
-        }
+        try { return await cj.toPlist({ name, program: programObj }); }
+        catch (e1) { recordFailure('ConversionJSON.toPlist({ name, program })', e1); }
+        try { return await cj.toPlist(programObj, name); }
+        catch (e2) { recordFailure('ConversionJSON.toPlist(programObj, name)', e2); }
+        try { return await cj.toPlist(programObj); }
+        catch (e3) { recordFailure('ConversionJSON.toPlist(programObj)', e3); }
       }
+
       const c = window.Conversion;
       if (c) {
-        if (typeof c.toPlistFromJSON === 'function') { try { return c.toPlistFromJSON(programObj, name); } catch (e4) {} }
-        if (typeof c.toPlist === 'function')       { try { return c.toPlist(programObj, name); }       catch (e5) {} }
+        if (typeof c.toPlistFromJSON === 'function') {
+          try { return await c.toPlistFromJSON(programObj, name); }
+          catch (e4) { recordFailure('Conversion.toPlistFromJSON', e4); }
+        }
+        if (typeof c.toPlist === 'function') {
+          try { return await c.toPlist(programObj, name); }
+          catch (e5) { recordFailure('Conversion.toPlist', e5); }
+        }
       }
+
       const cdsl = window.ConversionDSL;
       if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
-        try { return cdsl.toPlistFromJSON(programObj, name); } catch (e6) {}
+        try { return await cdsl.toPlistFromJSON(programObj, name); }
+        catch (e6) { recordFailure('ConversionDSL.toPlistFromJSON', e6); }
       }
     }
+
     if (dslText) {
       const cdsl = window.ConversionDSL;
       if (cdsl && typeof cdsl.toPlist === 'function') {
-        try { return cdsl.toPlist({ name, dsl: dslText }); } catch (e7) {}
+        try { return await cdsl.toPlist({ name, dsl: dslText }); }
+        catch (e7) { recordFailure('ConversionDSL.toPlist', e7); }
       }
     }
-    if (window.ConversionUniversal && typeof window.ConversionUniversal.__makeCommentPlist === 'function') {
-      return window.ConversionUniversal.__makeCommentPlist(name, 'Conversion failed. Input preview:\n' + String(inputRaw).slice(0, 2000));
+
+    const detail = {
+      name: name || DEFAULT_SHORTCUT_NAME,
+      attempts,
+      inputPreview: String(inputRaw ?? '').slice(0, 500)
+    };
+    const error = new Error(
+      attempts.length
+        ? `Could not convert shortcut. Attempts: ${attempts.join(' | ')}`
+        : 'Could not convert shortcut: no conversion path succeeded.'
+    );
+    error.detail = detail;
+    throw error;
+  }
+
+  function downloadBadShortcutSnapshot(error) {
+    if (!state.program) return;
+    try {
+      const payload = {
+        timestamp: new Date().toISOString(),
+        name: state.lastName || DEFAULT_SHORTCUT_NAME,
+        message: error?.message || 'Conversion failed',
+        detail: error?.detail || null,
+        program: state.program
+      };
+      let text;
+      try {
+        text = JSON.stringify(payload, null, 2);
+      } catch {
+        text = [
+          `message: ${payload.message}`,
+          `name: ${payload.name}`,
+          `detail: ${JSON.stringify(payload.detail)}`,
+          'program:',
+          prettyStringify(state.program)
+        ].join('\n');
+      }
+      const blob = new Blob([text], { type: 'application/json' });
+      const safeName = sanitizeName(payload.name || 'Shortcut');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeName || 'Shortcut'}-bad.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (downloadErr) {
+      console.error('Failed to download bad shortcut snapshot', downloadErr);
     }
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n  <key>WFWorkflowName</key><string>${(name || DEFAULT_SHORTCUT_NAME)}</string>\n  <key>WFWorkflowActions</key><array>\n    <dict>\n      <key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.comment</string>\n      <key>WFWorkflowActionParameters</key><dict>\n        <key>WFCommentActionText</key><string>Conversion failed or unsupported input.</string>\n      </dict>\n    </dict>\n  </array>\n</dict>\n</plist>`;
   }
 
   function explainResult(info) {
@@ -939,7 +1008,14 @@
       showToast('Signed shortcut downloaded.');
     } catch (err) {
       console.error(err);
-      showToast(err.message || 'Download failed', true);
+      const message = err?.message || 'Download failed';
+      showToast(message, true);
+      const isConversionFailure =
+        Boolean(err?.detail?.attempts?.length) || /could not convert shortcut/i.test(message);
+      if (isConversionFailure && typeof window !== 'undefined' && typeof window.alert === 'function') {
+        try { window.alert(message); } catch (alertErr) { console.warn('Alert failed', alertErr); }
+      }
+      if (isConversionFailure) downloadBadShortcutSnapshot(err);
     } finally {
       btnSign.textContent = label;
       btnSign.disabled = false;
