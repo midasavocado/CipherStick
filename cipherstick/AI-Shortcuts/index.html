@@ -992,7 +992,7 @@
       }
       const blob = await res.blob();
       const cd = res.headers.get('Content-Disposition') || '';
-      let filename = `${state.lastName || DEFAULT_SHORTCUT_NAME}.signed.shortcut`;
+      let filename = `${state.lastName || DEFAULT_SHORTCUT_NAME}.shortcut`;
       const m = /filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i.exec(cd);
       if (m && m[1]) {
         try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
