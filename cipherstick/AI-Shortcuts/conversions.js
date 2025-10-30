@@ -1722,25 +1722,13 @@ const userConversions = (() => {
   }
 
   function registerLinkLabel(label, actionName, extra = {}) {
-    const entry = ensureLinkEntry(label);
-    if (!entry) return;
-    const labelFriendly = label ? humanizeActionName(label) : null;
-    let actionFriendly = null;
-    if (actionName) {
-      if (!entry.action) entry.action = actionName;
-      actionFriendly = extra.friendly || humanizeActionName(actionName);
-      if (actionFriendly) entry.friendly = actionFriendly;
-    }
-    if (extra.friendly && extra.friendly.trim()) entry.friendly = extra.friendly.trim();
-    if (!extra.friendly && labelFriendly) {
-      const current = entry.friendly;
-      const normalizedCurrent = current ? current.replace(/\s+/g, '').toLowerCase() : '';
-      const normalizedAction = actionFriendly ? actionFriendly.replace(/\s+/g, '').toLowerCase() : '';
-      if (!current || normalizedCurrent === normalizedAction) {
-        entry.friendly = labelFriendly;
-      }
-    }
-    if (extra.uuid && (!entry.uuid || entry.uuid === extra.uuid)) entry.uuid = extra.uuid;
+    const labelFriendlyFallback = label ? humanizeActionName(label) : null;
+    const actionFriendly = extra.friendly || (actionName ? humanizeActionName(actionName) : null);
+    updateLinkMetadata(label, {
+      action: actionName,
+      friendly: extra.friendly?.trim() || actionFriendly || labelFriendlyFallback,
+      uuid: extra.uuid
+    });
   }
 
   function lookupLinkMetadata(label) {
@@ -2488,21 +2476,22 @@ const userConversions = (() => {
       spec.name ??
       null;
 
-    if (typeof outputUUID === 'string') {
-      const trimmed = outputUUID.trim();
-      if (/^!link:/i.test(trimmed)) {
-        const label = trimmed.slice(6).trim();
-        const resolved = resolveLinkUUID(label);
-        outputUUID = resolved || label;
-        if (!outputName) {
-          const meta = lookupLinkMetadata(label) || {};
-          outputName =
-            meta?.friendly ??
-            humanizeActionName(meta?.action || label) ??
-            label;
+      if (typeof outputUUID === 'string') {
+        const trimmed = outputUUID.trim();
+        if (/^!link:/i.test(trimmed)) {
+          const label = trimmed.slice(6).trim();
+          const resolved = resolveLinkUUID(label);
+          outputUUID = resolved || label;
+          if (!outputName) {
+            const meta = lookupLinkMetadata(label) || {};
+            outputName =
+              meta?.friendly ??
+              humanizeActionName(meta?.action || label) ??
+              label;
+          }
+          updateLinkMetadata(label, { friendly: outputName, uuid: outputUUID });
         }
       }
-    }
 
     if (outputUUID != null) spec.outputUUID = outputUUID;
     if (outputName != null) spec.outputName = outputName;
@@ -3384,13 +3373,16 @@ const userConversions = (() => {
       const dictXML = await loadConvFile(filename);
 
       const normalizedParams = applyParamAliases(dictXML, params || {});
+      const friendlyFields = ['OutputName', 'WFOutputName', 'Name', 'Label'];
+      const friendlyValue = friendlyFields.map((field) => normalizedParams[field]).find((val) => typeof val === 'string' && val.trim());
+
       for (const [key, value] of Object.entries(normalizedParams)) {
         if (typeof value !== 'string') continue;
         const trimmed = value.trim();
         if (!/^!link:/i.test(trimmed)) continue;
         if (!OUTPUT_FIELD_REGEX.test(key)) continue;
         const label = trimmed.slice(6).trim();
-        registerLinkLabel(label, actionName);
+        registerLinkLabel(label, actionName, { friendly: friendlyValue });
       }
       // Substitutions
       let substituted = substitutePlaceholders(dictXML, normalizedParams);
