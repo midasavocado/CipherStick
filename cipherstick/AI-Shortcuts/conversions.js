@@ -2631,7 +2631,7 @@ const userConversions = (() => {
       const trimmed = v.trim();
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
-      return XML.str(v);
+      return renderValue(v);
     }
     return renderValue(v);
   }

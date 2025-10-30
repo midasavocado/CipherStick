@@ -3,7 +3,7 @@
   "params": {
     "Condition": "Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To",
     "Input": "{{VARIABLE}}",
-    "CompareTo": "{{STRING}}" #String or number
+    "CompareTo": "{{STRING}}"
   },
   "then": [
     {
