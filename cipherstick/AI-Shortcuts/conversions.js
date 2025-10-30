@@ -1695,14 +1695,35 @@ const userConversions = (() => {
     return entry;
   }
 
-  function registerLinkLabel(label, actionName) {
+  function updateLinkMetadata(label, { action, friendly, uuid } = {}) {
+    const entry = ensureLinkEntry(label);
+    if (!entry) return null;
+    if (action && !entry.action) entry.action = action;
+    if (friendly && friendly.trim()) entry.friendly = friendly.trim();
+    if (uuid && (!entry.uuid || entry.uuid === uuid)) entry.uuid = uuid;
+    return entry;
+  }
+
+  function registerLinkLabel(label, actionName, extra = {}) {
     const entry = ensureLinkEntry(label);
     if (!entry) return;
-    if (actionName && !entry.action) entry.action = actionName;
+    const labelFriendly = label ? humanizeActionName(label) : null;
+    let actionFriendly = null;
     if (actionName) {
-      const friendly = humanizeActionName(actionName);
-      if (friendly) entry.friendly = friendly;
+      if (!entry.action) entry.action = actionName;
+      actionFriendly = extra.friendly || humanizeActionName(actionName);
+      if (actionFriendly) entry.friendly = actionFriendly;
     }
+    if (extra.friendly && extra.friendly.trim()) entry.friendly = extra.friendly.trim();
+    if (!extra.friendly && labelFriendly) {
+      const current = entry.friendly;
+      const normalizedCurrent = current ? current.replace(/\s+/g, '').toLowerCase() : '';
+      const normalizedAction = actionFriendly ? actionFriendly.replace(/\s+/g, '').toLowerCase() : '';
+      if (!current || normalizedCurrent === normalizedAction) {
+        entry.friendly = labelFriendly;
+      }
+    }
+    if (extra.uuid && (!entry.uuid || entry.uuid === extra.uuid)) entry.uuid = extra.uuid;
   }
 
   function lookupLinkMetadata(label) {
@@ -1723,7 +1744,7 @@ const userConversions = (() => {
     let cursor = 0;
     let text = '';
     const attachments = [];
-    const tokenRegex = /!var:([A-Za-z0-9_.-]+)|!link:([A-Za-z0-9_.-]+)/gi;
+    const tokenRegex = /!var:([A-Za-z0-9_.-]+)|!link:([A-Za-z0-9_.\-|#@]+)/gi;
     let match;
     while ((match = tokenRegex.exec(input))) {
       const [all, varName, linkLabel] = match;
@@ -1734,21 +1755,26 @@ const userConversions = (() => {
       const rangeStart = text.length;
       text += ATTACHMENT_SENTINEL;
       const range = `{${rangeStart}, 1}`;
-      if (varName) {
-        attachments.push({ range, type: 'Variable', VariableName: varName });
-      } else if (linkLabel) {
-        const uuid = resolveLinkUUID(linkLabel);
-        const meta = lookupLinkMetadata(linkLabel) || {};
+      const quick = interpretQuickReference(all);
+      if (quick?.type === 'variable') {
+        attachments.push({ range, type: 'Variable', VariableName: quick.value });
+      } else if (quick?.type === 'link') {
+        const label = quick.value;
+        const uuid = resolveLinkUUID(label);
+        const meta = lookupLinkMetadata(label) || {};
         const attachment = {
           range,
           type: 'ActionOutput',
-          OutputUUID: uuid || linkLabel
+          OutputUUID: uuid || label
         };
         const friendly =
           (meta && meta.friendly) ||
-          humanizeActionName((meta && meta.action) || linkLabel) ||
-          linkLabel;
+          humanizeActionName((meta && meta.action) || label) ||
+          label;
         if (friendly) attachment.OutputName = friendly;
+        if (quick.aggrandizements?.length) {
+          attachment.Aggrandizements = quick.aggrandizements.map((agg) => ({ ...agg }));
+        }
         attachments.push(attachment);
       }
       cursor = match.index + all.length;
@@ -1864,13 +1890,103 @@ const userConversions = (() => {
     }
   }
 
+  function normalizePropertySegment(segment) {
+    if (!segment) return null;
+    const trimmed = String(segment).trim();
+    if (!trimmed) return null;
+    const cleaned = trimmed
+      .replace(/[\[\]{}|#@=]+/g, ' ')
+      .replace(/[^A-Za-z0-9]+/g, ' ')
+      .trim();
+    if (!cleaned) return null;
+    return cleaned
+      .split(/\s+/)
+      .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : ''))
+      .join('');
+  }
+
+  function parseAggrandizementSegment(segment) {
+    if (!segment) return null;
+    let spec = String(segment).trim();
+    if (!spec) return null;
+
+    let type = 'WFPropertyVariableAggrandizement';
+    if (spec.includes('@')) {
+      const [before, after] = spec.split('@');
+      if (after && after.trim()) {
+        type = after.trim();
+        spec = before.trim();
+      }
+    }
+
+    let userInfo = null;
+    if (spec.includes('|')) {
+      const [before, after] = spec.split('|');
+      spec = before.trim();
+      userInfo = after.trim() || null;
+    } else if (spec.includes('#')) {
+      const [before, after] = spec.split('#');
+      spec = before.trim();
+      userInfo = after.trim() || null;
+    }
+
+    const propertyName = normalizePropertySegment(spec);
+    if (!propertyName) return null;
+    const propertyUserInfo = userInfo && userInfo.trim()
+      ? userInfo.trim()
+      : `WFItem${propertyName}`;
+    const aggrandizement = {
+      Type: type,
+      PropertyName: propertyName
+    };
+    if (propertyUserInfo) aggrandizement.PropertyUserInfo = propertyUserInfo;
+    return aggrandizement;
+  }
+
+  function parseAggrandizementChain(spec) {
+    if (!spec) return [];
+    const chain = String(spec).split('.').map((segment) => segment.trim()).filter(Boolean);
+    const aggs = [];
+    for (const segment of chain) {
+      const agg = parseAggrandizementSegment(segment);
+      if (agg) aggs.push(agg);
+    }
+    return aggs;
+  }
+
+  function prepareLinkOutput(labelValue, { actionName, friendly } = {}) {
+    if (typeof labelValue !== 'string') return null;
+    const quick = interpretQuickReference(labelValue);
+    if (!quick || quick.type !== 'link') return null;
+    const label = quick.value;
+    if (!label) return null;
+    const entry = ensureLinkEntry(label);
+    const uuid = entry?.uuid || resolveLinkUUID(label);
+    const preferredFriendly = friendly || quick.friendly;
+    const derivedFriendly = preferredFriendly || entry?.friendly || humanizeActionName(actionName || label) || (label ? label[0].toUpperCase() + label.slice(1) : 'Value');
+    updateLinkMetadata(label, {
+      action: actionName,
+      friendly: derivedFriendly,
+      uuid
+    });
+    return { label, uuid };
+  }
+
   function interpretQuickReference(raw) {
     if (typeof raw !== 'string') return null;
     const trimmed = raw.trim();
     if (trimmed.startsWith('!link:')) {
       const target = trimmed.slice(6).trim();
       if (!target) return { type: 'string', value: '' };
-      return { type: 'link', value: target };
+      let label = target;
+      let propertySpec = null;
+      const dotIndex = target.indexOf('.');
+      if (dotIndex !== -1) {
+        label = target.slice(0, dotIndex).trim();
+        propertySpec = target.slice(dotIndex + 1).trim();
+      }
+      const aggrandizements = parseAggrandizementChain(propertySpec);
+      return { type: 'link', value: label, aggrandizements };
     }
     if (trimmed.startsWith('!var:')) {
       const name = trimmed.slice(5).trim().replace(/[{}]/g, '');
@@ -2194,6 +2310,7 @@ const userConversions = (() => {
       }
     }
 
+
     if (hasPlaceholder('UUID')) {
       ensure('UUID', ['OutputUUID', 'Uuid', 'Value', 'Variable'], (val, source) => {
         if (isLinkToken(val)) return true;
@@ -2203,6 +2320,21 @@ const userConversions = (() => {
     }
     if (hasPlaceholder('OutputUUID')) {
       ensure('OutputUUID', ['UUID', 'Value'], (val) => isLinkToken(val));
+    }
+    if (getValue('UUID') === undefined && typeof getValue('OutputUUID') === 'string') {
+      setValue('UUID', getValue('OutputUUID'));
+    }
+    if (getValue('OutputName') === undefined && typeof getValue('OutputUUID') === 'string') {
+      const quick = interpretQuickReference(getValue('OutputUUID'));
+      if (quick?.type === 'link') {
+        const label = quick.value;
+        const meta = lookupLinkMetadata(label);
+        const friendly =
+          meta?.friendly ??
+          humanizeActionName(meta?.action || label) ??
+          (label ? label[0].toUpperCase() + label.slice(1) : 'Value');
+        setValue('OutputName', friendly);
+      }
     }
     if (hasPlaceholder('VariableName')) {
       ensure('VariableName', ['Name', 'VarName', 'Variable']);
@@ -2259,6 +2391,19 @@ const userConversions = (() => {
     }
 
     Object.defineProperty(out, '__normalized', { value: true, enumerable: false });
+
+    for (const [lower, canonical] of lowerKeyByCanonical.entries()) {
+      const normalizedLower = String(lower || '');
+      if (!normalizedLower) continue;
+      if (normalizedLower === canonical) continue;
+      if (Object.prototype.hasOwnProperty.call(out, normalizedLower)) continue;
+      Object.defineProperty(out, normalizedLower, {
+        get() { return out[canonical]; },
+        set(value) { setValue(canonical, value); },
+        enumerable: false,
+        configurable: true
+      });
+    }
     return out;
   }
 
@@ -2280,6 +2425,9 @@ const userConversions = (() => {
           humanizeActionName(meta?.action || label) ??
           label;
         spec.type = 'ActionOutput';
+        if (quick.aggrandizements?.length) {
+          spec.aggrandizements = quick.aggrandizements.map((agg) => ({ ...agg }));
+        }
       } else if (quick?.type === 'variable') {
         spec.variableName = quick.value;
         spec.type = 'Variable';
@@ -2290,6 +2438,10 @@ const userConversions = (() => {
       spec = { ...raw, __raw: raw };
     } else {
       spec = { value: raw, __raw: raw };
+    }
+
+    if (!spec.aggrandizements && Array.isArray(spec.Aggrandizements)) {
+      spec.aggrandizements = spec.Aggrandizements;
     }
 
     if (spec.range == null && spec.Range != null) spec.range = spec.Range;
@@ -2396,6 +2548,11 @@ const userConversions = (() => {
       const serializationType = spec.serializationType ?? spec.WFSerializationType ?? null;
       if (serializationType != null) {
         payload.WFSerializationType = XML.str(String(serializationType));
+      }
+
+      const aggsList = spec.aggrandizements || spec.Aggrandizements;
+      if (aggsList && aggsList.length) {
+        payload.Aggrandizements = renderValue(aggsList);
       }
 
       if (!Object.keys(payload).length) {
@@ -2665,13 +2822,15 @@ const userConversions = (() => {
         meta?.friendly ??
         humanizeActionName(meta?.action || label) ??
         label;
+      const aggs = Array.isArray(quick.aggrandizements) ? quick.aggrandizements.filter(Boolean) : [];
       return renderValue(
         variableValue({
           fields: { Type: 'Variable' },
           value: {
             Type: 'ActionOutput',
             OutputName: outputName,
-            OutputUUID: uuid
+            OutputUUID: uuid,
+            ...(aggs.length ? { Aggrandizements: aggs.map((agg) => ({ ...agg })) } : {})
           }
         })
       );
@@ -2859,6 +3018,7 @@ const userConversions = (() => {
   <dict>
     <key>GroupingIdentifier</key>
     {{GroupingIdentifier}}
+    {{StartUUIDBlock}}
     <key>WFControlFlowMode</key>
     <integer>0</integer>
     <key>WFRepeatCount</key>
@@ -2888,6 +3048,7 @@ const userConversions = (() => {
   <dict>
     <key>GroupingIdentifier</key>
     {{GroupingIdentifier}}
+    {{StartUUIDBlock}}
     <key>WFControlFlowMode</key>
     <integer>0</integer>
     <key>WFInput</key>
@@ -2998,6 +3159,14 @@ const userConversions = (() => {
       null;
     const countNode = ensureAnyNode(countValue, 'Count', placeholderToken('Count'));
 
+    const repeatOutput = prepareLinkOutput(
+      typeof params.OutputUUID === 'string' ? params.OutputUUID : params.UUID,
+      {
+        actionName: item?.action || 'Repeat',
+        friendly: typeof params.OutputName === 'string' ? params.OutputName : 'Repeat Result'
+      }
+    );
+
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
@@ -3010,7 +3179,8 @@ const userConversions = (() => {
       GroupingIdentifier: groupingIdentifier,
       Count: countNode,
       UUID: endUUIDNode,
-      BODY: bodyBlock
+      BODY: bodyBlock,
+      StartUUIDBlock: repeatOutput?.uuid ? `<key>UUID</key>\n    ${XML.str(repeatOutput.uuid)}` : ''
     };
 
     return SPECIAL_ACTION_TEMPLATES.REPEAT.map((part) => replaceTemplate(part, templateValues));
@@ -3036,6 +3206,14 @@ const userConversions = (() => {
       null;
     const itemsNode = ensureAnyNode(itemsValue, 'ItemsIn', placeholderToken('ItemsIn'));
 
+    const loopOutput = prepareLinkOutput(
+      typeof params.OutputUUID === 'string' ? params.OutputUUID : params.UUID,
+      {
+        actionName: item?.action || 'RepeatWithEach',
+        friendly: typeof params.OutputName === 'string' ? params.OutputName : 'Repeat Item'
+      }
+    );
+
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
@@ -3048,7 +3226,9 @@ const userConversions = (() => {
       GroupingIdentifier: groupingIdentifier,
       ItemsIn: itemsNode,
       UUID: endUUIDNode,
-      BODY: bodyBlock
+      BODY: bodyBlock,
+      StartUUIDBlock: loopOutput?.uuid ? `<key>UUID</key>
+    ${XML.str(loopOutput.uuid)}` : ''
     };
 
     return SPECIAL_ACTION_TEMPLATES.REPEAT_EACH.map((part) => replaceTemplate(part, templateValues));
@@ -3137,6 +3317,11 @@ const userConversions = (() => {
       if (!/^!link:/i.test(trimmed)) continue;
       const label = trimmed.slice(6).trim();
       if (label) registerLinkLabel(label, actionName);
+      if (/^uuid$/i.test(key) && label) {
+        const uuid = resolveLinkUUID(label) || label;
+        updateLinkMetadata(label, { action: actionName, uuid });
+        normalized[key] = uuid;
+      }
     }
     const rendered = renderValue(normalized);
     const trimmedRendered = rendered.trim();
@@ -3245,7 +3430,15 @@ const userConversions = (() => {
     else if (Object.prototype.hasOwnProperty.call(params, 'repeatCount')) repeatCountValue = params.repeatCount;
     else repeatCountValue = 1;
 
-    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? null;
+    const repeatOutput = prepareLinkOutput(
+      typeof params.OutputUUID === 'string' ? params.OutputUUID : params.UUID,
+      {
+        actionName: item?.action || 'Repeat',
+        friendly: typeof params.OutputName === 'string' ? params.OutputName : 'Repeat Result'
+      }
+    );
+
+    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? repeatOutput?.uuid ?? null;
 
     const startParams = mergeParams(
       { GroupingIdentifier: groupId, WFControlFlowMode: 0, WFRepeatCount: repeatCountValue },
@@ -3292,7 +3485,15 @@ const userConversions = (() => {
     else if (Object.prototype.hasOwnProperty.call(params, 'List')) itemsValue = params.List;
     else if (Object.prototype.hasOwnProperty.call(params, 'items')) itemsValue = params.items;
 
-    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? null;
+    const loopOutput = prepareLinkOutput(
+      typeof params.OutputUUID === 'string' ? params.OutputUUID : params.UUID,
+      {
+        actionName: item?.action || 'RepeatEach',
+        friendly: typeof params.OutputName === 'string' ? params.OutputName : 'Repeat Item'
+      }
+    );
+
+    const startUUID = params.StartUUID ?? params.UUIDStart ?? params.UUID ?? loopOutput?.uuid ?? null;
     const baseStart = { GroupingIdentifier: groupId, WFControlFlowMode: 0 };
     if (itemsValue !== undefined) baseStart.WFInput = itemsValue;
     if (startUUID != null) baseStart.UUID = startUUID;
