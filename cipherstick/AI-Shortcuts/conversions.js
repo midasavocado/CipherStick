@@ -1612,6 +1612,16 @@ const userConversions = (() => {
   const linkRegistry = new Map(); // link label -> metadata about producing action
 
   // ---- XML helpers ----
+  function indentXMLBlock(xml, indentSpaces = 2) {
+    const prefix = typeof indentSpaces === 'number' ? ' '.repeat(indentSpaces) : String(indentSpaces || '');
+    const str = xml == null ? '' : String(xml);
+    if (!prefix) return str;
+    return str
+      .split('\n')
+      .map((line) => (line ? `${prefix}${line}` : line))
+      .join('\n');
+  }
+
   const XML = {
     esc(s) {
       return String(s)
@@ -1626,11 +1636,19 @@ const userConversions = (() => {
     num(n)  { return Number.isInteger(n) ? XML.int(n) : `<real>${String(n)}</real>`; },
     str(s)  { return `<string>${XML.esc(String(s))}</string>`; },
     dict(obj) {
-      return `<dict>${Object.entries(obj)
-        .map(([k,v]) => `<key>${XML.esc(k)}</key>${v}`).join('')}</dict>`;
+      const entries = Object.entries(obj ?? {});
+      if (!entries.length) return '<dict></dict>';
+      const lines = [];
+      for (const [key, value] of entries) {
+        lines.push(`  <key>${XML.esc(key)}</key>`);
+        lines.push(indentXMLBlock(value == null ? '' : value, 2));
+      }
+      return `<dict>\n${lines.join('\n')}\n</dict>`;
     },
     array(items) {
-      return `<array>${items.join('')}</array>`;
+      if (!items || !items.length) return '<array></array>';
+      const formatted = items.map((item) => indentXMLBlock(item == null ? '' : item, 2));
+      return `<array>\n${formatted.join('\n')}\n</array>`;
     }
   };
 
@@ -2523,7 +2541,7 @@ const userConversions = (() => {
     if (!xml) return '';
     const cleaned = String(xml)
       .replace(/\r\n/g, '\n')
-      .replace(/>\s+</g, '>\n<')
+      .replace(/>\s*</g, '>\n<')
       .replace(/\n{2,}/g, '\n')
       .trim();
     const lines = cleaned.split('\n');
