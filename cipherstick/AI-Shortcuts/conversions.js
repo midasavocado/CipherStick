@@ -2538,6 +2538,30 @@ const userConversions = (() => {
 
   // ---- Public entry points ----
 
+  function formatPlist(xml) {
+    if (!xml) return '';
+    const cleaned = String(xml)
+      .replace(/\r\n/g, '\n')
+      .replace(/>\s+</g, '>\n<')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+    const lines = cleaned.split('\n');
+    const formatted = [];
+    let indent = 0;
+    const indentUnit = '  ';
+    const openBlock = /^<(?:plist|dict|array)\b(?![^>]*\/>)/i;
+    const closeBlock = /^<\/(?:plist|dict|array)>/i;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      if (closeBlock.test(line)) indent = Math.max(indent - 1, 0);
+      formatted.push(`${indentUnit.repeat(indent)}${line}`);
+      if (openBlock.test(line)) indent += 1;
+    }
+    return formatted.join('\n');
+  }
+
   // ---- Public entry points ----
   // JSON-only entry point (no DSL auto-conversion)
   Conversion.toPlist = async ({ name, text, program }) => {
@@ -2582,7 +2606,7 @@ const userConversions = (() => {
   ${XML.array(plistActions)}
 </dict>
 </plist>`;
-    return plist;
+    return formatPlist(plist);
   };
 
   // ---- Special action helpers ----
