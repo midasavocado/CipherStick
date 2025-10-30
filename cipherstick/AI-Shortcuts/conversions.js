@@ -2741,6 +2741,44 @@ const userConversions = (() => {
     return out;
   }
 
+  function resolveRepeatBodyList(item) {
+    if (!item || typeof item !== 'object') return null;
+    const params = (item.params && typeof item.params === 'object') ? item.params : {};
+    const candidates = [
+      item.do,
+      item.Do,
+      item.DO,
+      item.body,
+      item.Body,
+      params.do,
+      params.Do,
+      params.DO,
+      params.body,
+      params.Body,
+      params.actions,
+      params.Actions,
+      params.steps,
+      params.Steps,
+      params.WFWorkflowActions
+    ];
+
+    const normalizeCandidate = (candidate) => {
+      if (Array.isArray(candidate)) return candidate;
+      if (candidate && typeof candidate === 'object') {
+        if (Array.isArray(candidate.actions)) return candidate.actions;
+        if (Array.isArray(candidate.do)) return candidate.do;
+        if (Array.isArray(candidate.body)) return candidate.body;
+      }
+      return null;
+    };
+
+    for (const candidate of candidates) {
+      const resolved = normalizeCandidate(candidate);
+      if (resolved) return resolved;
+    }
+    return null;
+  }
+
   function comment(text) {
     return `<dict>
   <key>WFWorkflowActionIdentifier</key>
@@ -2963,15 +3001,16 @@ const userConversions = (() => {
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
-    const bodyActions = Array.isArray(item?.do) && item.do.length
-      ? await buildActionsArrayFromJSON(item.do)
-      : [comment('Repeat has no actions')];
+    const bodyList = resolveRepeatBodyList(item);
+    const bodyBlock = bodyList
+      ? (await buildActionsArrayFromJSON(bodyList)).join('\n')
+      : comment('Repeat has no actions');
 
     const templateValues = {
       GroupingIdentifier: groupingIdentifier,
       Count: countNode,
       UUID: endUUIDNode,
-      BODY: bodyActions.join('\n')
+      BODY: bodyBlock
     };
 
     return SPECIAL_ACTION_TEMPLATES.REPEAT.map((part) => replaceTemplate(part, templateValues));
@@ -3000,15 +3039,16 @@ const userConversions = (() => {
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
-    const bodyActions = Array.isArray(item?.do) && item.do.length
-      ? await buildActionsArrayFromJSON(item.do)
-      : [comment('Repeat Each has no actions')];
+    const bodyList = resolveRepeatBodyList(item);
+    const bodyBlock = bodyList
+      ? (await buildActionsArrayFromJSON(bodyList)).join('\n')
+      : comment('Repeat Each has no actions');
 
     const templateValues = {
       GroupingIdentifier: groupingIdentifier,
       ItemsIn: itemsNode,
       UUID: endUUIDNode,
-      BODY: bodyActions.join('\n')
+      BODY: bodyBlock
     };
 
     return SPECIAL_ACTION_TEMPLATES.REPEAT_EACH.map((part) => replaceTemplate(part, templateValues));
@@ -3218,8 +3258,9 @@ const userConversions = (() => {
 
     const startAction = makeAction(IDS.REPEAT_COUNT, startParams);
 
-    const bodyActions = Array.isArray(item?.do)
-      ? await buildActionsArrayFromJSON(item.do)
+    const bodySource = resolveRepeatBodyList(item);
+    const bodyActions = bodySource
+      ? await buildActionsArrayFromJSON(bodySource)
       : [comment('Repeat has no "do" array')];
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
@@ -3264,8 +3305,9 @@ const userConversions = (() => {
     );
     const startAction = makeAction(IDS.REPEAT_EACH, startParams);
 
-    const bodyActions = Array.isArray(item?.do)
-      ? await buildActionsArrayFromJSON(item.do)
+    const bodySource = resolveRepeatBodyList(item);
+    const bodyActions = bodySource
+      ? await buildActionsArrayFromJSON(bodySource)
       : [comment('RepeatEach has no "do" array')];
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? null;
