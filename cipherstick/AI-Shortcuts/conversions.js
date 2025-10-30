@@ -1622,6 +1622,23 @@ const userConversions = (() => {
       .join('\n');
   }
 
+  function askEachTimeNode() {
+    return `<dict>
+  <key>Value</key>
+  <dict>
+    <key>Type</key>
+    <string>Ask</string>
+  </dict>
+  <key>WFSerializationType</key>
+  <string>WFTextTokenAttachment</string>
+</dict>`;
+  }
+
+  function joinActionsWithIndent(actions, indentSpaces = 2) {
+    if (!Array.isArray(actions) || !actions.length) return '';
+    return actions.map((action) => indentXMLBlock(action, indentSpaces)).join('\n');
+  }
+
   const XML = {
     esc(s) {
       return String(s)
@@ -2002,6 +2019,9 @@ const userConversions = (() => {
     }
     if (value == null) return XML.str('');
     if (typeof value === 'string') {
+      if (/^AskEachTime$/i.test(value.trim())) {
+        return askEachTimeNode();
+      }
       const quick = interpretQuickReference(value);
       if (quick) {
         if (quick.type === 'link') {
@@ -2823,31 +2843,35 @@ const userConversions = (() => {
         humanizeActionName(meta?.action || label) ??
         label;
       const aggs = Array.isArray(quick.aggrandizements) ? quick.aggrandizements.filter(Boolean) : [];
-      return renderValue(
-        variableValue({
-          fields: { Type: 'Variable' },
-          value: {
-            Type: 'ActionOutput',
-            OutputName: outputName,
-            OutputUUID: uuid,
-            ...(aggs.length ? { Aggrandizements: aggs.map((agg) => ({ ...agg })) } : {})
-          }
-        })
-      );
+      const aggsXML = aggs.length ? `\n    <key>Aggrandizements</key>\n${indentXMLBlock(renderValue(aggs), 6)}` : '';
+      return `<dict>
+  <key>Type</key>
+  <string>Variable</string>
+  <key>Value</key>
+  <dict>
+    <key>Type</key>
+    <string>ActionOutput</string>
+    <key>OutputName</key>
+    ${XML.str(outputName || 'Value')}
+    <key>OutputUUID</key>
+    ${XML.str(uuid || label)}${aggsXML}
+  </dict>
+</dict>`;
     }
     if (quick.type === 'variable') {
       const name = quick.value;
       if (!name) return null;
-      return renderValue(
-        variableValue({
-          type: 'Variable',
-          fields: { Type: 'Variable' },
-          value: {
-            Type: 'Variable',
-            VariableName: name
-          }
-        })
-      );
+      return `<dict>
+  <key>Type</key>
+  <string>Variable</string>
+  <key>Value</key>
+  <dict>
+    <key>Type</key>
+    <string>Variable</string>
+    <key>VariableName</key>
+    ${XML.str(name)}
+  </dict>
+</dict>`;
     }
     return null;
   }
@@ -2882,6 +2906,7 @@ const userConversions = (() => {
       const trimmed = v.trim();
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
+      if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
       if (shouldPreferVariableNode(placeholderName)) {
         const quick = interpretQuickReference(trimmed);
         const variableNode = buildVariableNodeFromQuick(quick);
@@ -3121,10 +3146,11 @@ const userConversions = (() => {
     const thenActions = Array.isArray(item?.then) && item.then.length
       ? await buildActionsArrayFromJSON(item.then)
       : [comment('If (then) has no actions')];
-
     const elseActions = Array.isArray(item?.else) && item.else.length
       ? await buildActionsArrayFromJSON(item.else)
       : [comment('If (else) has no actions')];
+    const thenBlock = joinActionsWithIndent(thenActions);
+    const elseBlock = joinActionsWithIndent(elseActions);
 
     const templateValues = {
       GroupingIdentifier: groupingIdentifier,
@@ -3134,8 +3160,8 @@ const userConversions = (() => {
       Input: inputNode,
       WFNumberValue: numberNode,
       UUID: endUUIDNode,
-      THEN: thenActions.join('\n'),
-      ELSE: elseActions.join('\n')
+      THEN: thenBlock,
+      ELSE: elseBlock
     };
 
     return SPECIAL_ACTION_TEMPLATES.IF.map((part) => replaceTemplate(part, templateValues));
@@ -3171,9 +3197,10 @@ const userConversions = (() => {
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const bodyList = resolveRepeatBodyList(item);
-    const bodyBlock = bodyList
-      ? (await buildActionsArrayFromJSON(bodyList)).join('\n')
-      : comment('Repeat has no actions');
+    const bodyActions = bodyList
+      ? await buildActionsArrayFromJSON(bodyList)
+      : [comment('Repeat has no actions')];
+    const bodyBlock = joinActionsWithIndent(bodyActions);
 
     const templateValues = {
       GroupingIdentifier: groupingIdentifier,
@@ -3218,9 +3245,10 @@ const userConversions = (() => {
     const endUUIDNode = ensureStringNode(endUUID ?? genUUID(), 'UUID');
 
     const bodyList = resolveRepeatBodyList(item);
-    const bodyBlock = bodyList
-      ? (await buildActionsArrayFromJSON(bodyList)).join('\n')
-      : comment('Repeat Each has no actions');
+    const bodyActions = bodyList
+      ? await buildActionsArrayFromJSON(bodyList)
+      : [comment('Repeat Each has no actions')];
+    const bodyBlock = joinActionsWithIndent(bodyActions);
 
     const templateValues = {
       GroupingIdentifier: groupingIdentifier,
