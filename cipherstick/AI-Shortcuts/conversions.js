@@ -1724,9 +1724,23 @@ const userConversions = (() => {
   function registerLinkLabel(label, actionName, extra = {}) {
     const labelFriendlyFallback = label ? humanizeActionName(label) : null;
     const actionFriendly = extra.friendly || (actionName ? humanizeActionName(actionName) : null);
+    let friendlyCandidate = extra.friendly?.trim() || null;
+    if (!friendlyCandidate) {
+      if (labelFriendlyFallback && actionFriendly) {
+        const actionLower = actionFriendly.toLowerCase();
+        const labelLower = labelFriendlyFallback.toLowerCase();
+        if (labelLower.startsWith(actionLower) && labelFriendlyFallback.length > actionFriendly.length) {
+          friendlyCandidate = actionFriendly;
+        } else {
+          friendlyCandidate = labelFriendlyFallback;
+        }
+      } else {
+        friendlyCandidate = labelFriendlyFallback || actionFriendly || null;
+      }
+    }
     updateLinkMetadata(label, {
       action: actionName,
-      friendly: extra.friendly?.trim() || actionFriendly || labelFriendlyFallback,
+      friendly: friendlyCandidate,
       uuid: extra.uuid
     });
   }
@@ -2210,6 +2224,25 @@ const userConversions = (() => {
 
   function renderAutoPlaceholder(key, value) {
     const keyString = String(key || '');
+    const lowerKey = keyString.toLowerCase();
+    let linkQuick = null;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (/^!link:/i.test(trimmed)) {
+        linkQuick = interpretQuickReference(trimmed);
+        const bareValue = shouldReturnBareActionOutputNode(lowerKey);
+        if (shouldWrapActionOutputNode(lowerKey)) {
+          const wrapped = buildActionOutputNodeFromQuick(linkQuick, { wrapVariable: true });
+          if (wrapped) return wrapped;
+        }
+        if (shouldUseActionOutputNode(lowerKey)) {
+          const node = buildActionOutputNodeFromQuick(linkQuick, { bareValue });
+          if (node) return node;
+        }
+      }
+      if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
+    }
+
     if (shouldPreferVariableNode(keyString)) {
       return renderVariablePlaceholderValue(value);
     }
@@ -2223,7 +2256,7 @@ const userConversions = (() => {
       return renderValue(value);
     }
     if (upperKey === 'UUID') {
-      const quick = interpretQuickReference(value);
+      const quick = linkQuick || interpretQuickReference(value);
       if (quick) {
         if (quick.type === 'link') {
           const uuid = resolveLinkUUID(quick.value);
@@ -2331,18 +2364,6 @@ const userConversions = (() => {
     }
     if (getValue('UUID') === undefined && typeof getValue('OutputUUID') === 'string') {
       setValue('UUID', getValue('OutputUUID'));
-    }
-    if (getValue('OutputName') === undefined && typeof getValue('OutputUUID') === 'string') {
-      const quick = interpretQuickReference(getValue('OutputUUID'));
-      if (quick?.type === 'link') {
-        const label = quick.value;
-        const meta = lookupLinkMetadata(label);
-        const friendly =
-          meta?.friendly ??
-          humanizeActionName(meta?.action || label) ??
-          (label ? label[0].toUpperCase() + label.slice(1) : 'Value');
-        setValue('OutputName', friendly);
-      }
     }
     if (hasPlaceholder('VariableName')) {
       ensure('VariableName', ['Name', 'VarName', 'Variable']);
@@ -2813,7 +2834,78 @@ const userConversions = (() => {
     return XML.str(v);
   }
 
-  const VARIABLE_NODE_KEYS = new Set(['input', 'wfinput', 'items', 'itemsin']);
+  const VARIABLE_NODE_KEYS = new Set(['variable', 'wfvariable', 'variablevalue', 'variableinput']);
+  const ACTION_OUTPUT_PLACEHOLDER_KEYS = new Set([
+    'input',
+    'wfinput',
+    'items',
+    'itemsin',
+    'value',
+    'values',
+    'count',
+    'repeatcount',
+    'wfinputvalue',
+    'wfinput',
+    'wfvalue',
+    'wfcount'
+  ]);
+  const ACTION_OUTPUT_BARE_PLACEHOLDER_KEYS = new Set([
+    'input',
+    'value'
+  ]);
+  const VARIABLE_WRAPPER_PLACEHOLDER_KEYS = new Set([
+    'variable',
+    'wfvariable',
+    'variablevalue',
+    'variableinput'
+  ]);
+
+  const shouldUseActionOutputNode = (name) => ACTION_OUTPUT_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
+  const shouldWrapActionOutputNode = (name) => VARIABLE_WRAPPER_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
+  const shouldReturnBareActionOutputNode = (name) => ACTION_OUTPUT_BARE_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
+
+  function buildActionOutputNodeFromQuick(
+    quick,
+    { wrapVariable = false, bareValue = false, friendly: preferredFriendly } = {}
+  ) {
+    if (!quick || quick.type !== 'link') return null;
+    const label = quick.value;
+    if (!label) return null;
+    const uuid = resolveLinkUUID(label) || label;
+    const meta = lookupLinkMetadata(label) || {};
+    const friendly =
+      preferredFriendly ??
+      meta?.friendly ??
+      humanizeActionName(meta?.action || label) ??
+      label;
+    updateLinkMetadata(label, { friendly, uuid });
+    const aggs = Array.isArray(quick.aggrandizements) ? quick.aggrandizements.filter(Boolean) : [];
+    const valueEntries = {
+      Type: XML.str('ActionOutput'),
+      OutputName: XML.str(friendly || 'Value'),
+      OutputUUID: XML.str(uuid || label)
+    };
+    if (aggs.length) valueEntries.Aggrandizements = renderValue(aggs);
+    const valueXML = XML.dict(valueEntries);
+    if (bareValue && !wrapVariable) {
+      return valueXML;
+    }
+    const baseNode = `<dict>
+  <key>Value</key>
+${indentXMLBlock(valueXML, 2)}
+  <key>WFSerializationType</key>
+  <string>WFTextTokenAttachment</string>
+</dict>`;
+    if (wrapVariable) {
+      return `<dict>
+  <key>Type</key>
+  <string>Variable</string>
+  <key>Variable</key>
+${indentXMLBlock(baseNode, 2)}
+</dict>`;
+    }
+    return baseNode;
+  }
 
   function shouldPreferVariableNode(name) {
     if (!name) return false;
@@ -2823,29 +2915,7 @@ const userConversions = (() => {
   function buildVariableNodeFromQuick(quick) {
     if (!quick || !quick.type) return null;
     if (quick.type === 'link') {
-      const label = quick.value;
-      if (!label) return null;
-      const uuid = resolveLinkUUID(label) || label;
-      const meta = lookupLinkMetadata(label) || {};
-      const outputName =
-        meta?.friendly ??
-        humanizeActionName(meta?.action || label) ??
-        label;
-      const aggs = Array.isArray(quick.aggrandizements) ? quick.aggrandizements.filter(Boolean) : [];
-      const aggsXML = aggs.length ? `\n    <key>Aggrandizements</key>\n${indentXMLBlock(renderValue(aggs), 6)}` : '';
-      return `<dict>
-  <key>Type</key>
-  <string>Variable</string>
-  <key>Value</key>
-  <dict>
-    <key>Type</key>
-    <string>ActionOutput</string>
-    <key>OutputName</key>
-    ${XML.str(outputName || 'Value')}
-    <key>OutputUUID</key>
-    ${XML.str(uuid || label)}${aggsXML}
-  </dict>
-</dict>`;
+      return buildActionOutputNodeFromQuick(quick, { wrapVariable: true });
     }
     if (quick.type === 'variable') {
       const name = quick.value;
@@ -2896,7 +2966,23 @@ const userConversions = (() => {
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
       if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
-      if (shouldPreferVariableNode(placeholderName)) {
+      const lowerName = String(placeholderName || '').toLowerCase();
+      if (/^!link:/i.test(trimmed)) {
+        const quick = interpretQuickReference(trimmed);
+        if (quick?.type === 'link') {
+          const bareValue = shouldReturnBareActionOutputNode(lowerName);
+          if (shouldWrapActionOutputNode(lowerName) || shouldPreferVariableNode(placeholderName)) {
+            const wrapped = buildActionOutputNodeFromQuick(quick, { wrapVariable: true });
+            if (wrapped) return wrapped;
+          }
+          if (shouldUseActionOutputNode(lowerName)) {
+            const node = buildActionOutputNodeFromQuick(quick, { bareValue });
+            if (node) return node;
+          }
+        }
+        const variableNode = buildVariableNodeFromQuick(quick);
+        if (variableNode) return variableNode;
+      } else if (shouldPreferVariableNode(placeholderName)) {
         const quick = interpretQuickReference(trimmed);
         const variableNode = buildVariableNodeFromQuick(quick);
         if (variableNode) return variableNode;
@@ -3124,7 +3210,10 @@ const userConversions = (() => {
       params.Input ??
       params.input ??
       null;
-    const inputNode = ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
+    const inputQuick = interpretQuickReference(inputValue);
+    const inputNode = inputQuick?.type === 'link'
+      ? buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true })
+      : ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
 
     const numberValue = params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? '124';
     const numberNode = ensureAnyNode(numberValue, 'WFNumberValue', '124');
@@ -3281,6 +3370,22 @@ const userConversions = (() => {
         out.push(comment(`Unrecognized action item: ${JSON.stringify(item).slice(0,200)}`));
         continue;
       }
+      const mergedParams = item.params && typeof item.params === 'object' ? { ...item.params } : {};
+      const passthroughKeys = [
+        'UUID',
+        'OutputUUID',
+        'OutputName',
+        'GroupingIdentifier',
+        'StartUUID',
+        'EndUUID'
+      ];
+      for (const key of passthroughKeys) {
+        if (item[key] !== undefined && mergedParams[key] === undefined) {
+          mergedParams[key] = item[key];
+        }
+      }
+      item.params = mergedParams;
+
       const kind = String(item.action || '').trim();
       if (!kind) {
         out.push(comment(`Missing "action" in ${JSON.stringify(item).slice(0,200)}`));
