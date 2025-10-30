@@ -1338,19 +1338,7 @@
       <key>WFWorkflowActionParameters</key>
       <dict>
         <key>WFInput</key>
-        <dict>
-          <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            {{OutputName}}
-            <key>OutputUUID</key>
-            {{UUID}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
-          <key>WFSerializationType</key>
-          <string>WFTextTokenAttachment</string>
-        </dict>
+        {{WFInput}}
         <key>WFVariableName</key>
         {{VariableName}}
       </dict>
@@ -1553,19 +1541,7 @@
       <key>WFWorkflowActionParameters</key>
       <dict>
         <key>WFInput</key>
-        <dict>
-          <key>Value</key>
-          <dict>
-            <key>OutputName</key>
-            {{OutputName}}
-            <key>OutputUUID</key>
-            {{Input}}
-            <key>Type</key>
-            <string>ActionOutput</string>
-          </dict>
-          <key>WFSerializationType</key>
-          <string>WFTextTokenAttachment</string>
-        </dict>
+        {{WFInput}}
         <key>WFVariableName</key>
         {{VariableName}}
       </dict>
@@ -2091,7 +2067,12 @@ const userConversions = (() => {
   }
 
   function renderAutoPlaceholder(key, value) {
-    const upperKey = String(key || '').toUpperCase();
+    const keyString = String(key || '');
+    if (shouldPreferVariableNode(keyString)) {
+      return renderVariablePlaceholderValue(value);
+    }
+
+    const upperKey = keyString.toUpperCase();
     if (upperKey === 'ALERTACTIONMESSAGE') {
       return renderAlertMessage(value);
     }
@@ -2682,6 +2663,7 @@ const userConversions = (() => {
       if (!name) return null;
       return renderValue(
         variableValue({
+          type: 'Variable',
           fields: { Type: 'Variable' },
           value: {
             Type: 'Variable',
@@ -2691,6 +2673,29 @@ const userConversions = (() => {
       );
     }
     return null;
+  }
+
+  function renderVariablePlaceholderValue(value) {
+    if (value && value[SPECIAL_VALUE]) return renderValue(value);
+    if (value === undefined || value === null) {
+      return renderValue(textTokenValue('', []));
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return renderValue(textTokenValue('', []));
+      if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) {
+        return trimmed;
+      }
+      const quick = interpretQuickReference(trimmed);
+      const variableNode = buildVariableNodeFromQuick(quick);
+      if (variableNode) return variableNode;
+      const { text, attachments } = parseTokenizedText(value);
+      return renderValue(textTokenValue(text, attachments));
+    }
+    if (Array.isArray(value) || isPlainObject(value)) {
+      return renderValue(value);
+    }
+    return renderValue(textTokenValue(String(value), []));
   }
 
   function ensureAnyNode(value, placeholderName, fallback) {
