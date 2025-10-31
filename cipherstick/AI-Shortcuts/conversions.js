@@ -275,11 +275,17 @@
         <key>UUID</key>
         {{UUID}}
         <key>WFAllowsMultilineText</key>
-        {{Multiline}}
+        {{BOOLEAN:Multiline}}
+        <key>WFAskActionAllowsDecimalNumbers</key>
+        {{BOOLEAN:AllowDecimalNumbers}}
+        <key>WFAskActionAllowsNegativeNumbers</key>
+        {{BOOLEAN:AllowNegativeNumbers}}
         <key>WFAskActionDefaultAnswer</key>
         {{DefaultAnswer}}
         <key>WFAskActionPrompt</key>
         {{Prompt}}
+        <key>WFInputType</key>
+        {{STRING:InputType}}
       </dict>
     </dict>
   `,
@@ -1627,52 +1633,6 @@ const userConversions = (() => {
       .join('\n');
   }
 
-  function expandAskPrompt(promptText) {
-    if (!promptText) return '';
-    const { text, attachments } = parseTokenizedText(String(promptText));
-    let expanded = text;
-    for (const attachment of attachments) {
-      let friendly = '';
-      if (attachment.type === 'Variable') {
-        friendly = attachment.VariableName || attachment.Variable || 'Variable';
-      } else if (attachment.type === 'ActionOutput') {
-        friendly =
-          attachment.OutputName ||
-          lookupLinkMetadata(attachment.OutputUUID)?.friendly ||
-          humanizeActionName(attachment.OutputUUID) ||
-          'Value';
-      } else if (attachment.type === 'Text') {
-        friendly = attachment.Text || '';
-      }
-      expanded = expanded.replace(ATTACHMENT_SENTINEL, friendly);
-    }
-    return expanded;
-  }
-
-  function askEachTimeNode(promptText) {
-    const expandedPrompt = expandAskPrompt(promptText);
-    const finalPrompt = expandedPrompt.trim() || 'Provide input';
-    return `<dict>
-  <key>Value</key>
-  <dict>
-    <key>attachmentsByRange</key>
-    <dict>
-      <key>{0, 1}</key>
-      <dict>
-        <key>Prompt</key>
-        ${XML.str(finalPrompt)}
-        <key>Type</key>
-        <string>Ask</string>
-      </dict>
-    </dict>
-    <key>string</key>
-    <string>${ATTACHMENT_SENTINEL}</string>
-  </dict>
-  <key>WFSerializationType</key>
-  <string>WFTextTokenString</string>
-</dict>`;
-  }
-
   function joinActionsWithIndent(actions, indentSpaces = 2) {
     if (!Array.isArray(actions) || !actions.length) return '';
     return actions.map((action) => indentXMLBlock(action, indentSpaces)).join('\n');
@@ -2014,7 +1974,7 @@ const userConversions = (() => {
 
   function prepareLinkOutput(labelValue, { actionName, friendly } = {}) {
     if (typeof labelValue !== 'string') return null;
-    const quick = interpretQuickReference(labelValue);
+    const quick = extractPureQuickReference(labelValue);
     if (!quick || quick.type !== 'link') return null;
     const label = quick.value;
     if (!label) return null;
@@ -2054,6 +2014,33 @@ const userConversions = (() => {
     return null;
   }
 
+  function isPureLinkTokenString(raw) {
+    if (typeof raw !== 'string') return false;
+    const trimmed = raw.trim();
+    if (!trimmed.toLowerCase().startsWith('!link:')) return false;
+    const label = trimmed.slice(6).trim();
+    if (!label) return false;
+    return !/\s/.test(label);
+  }
+
+  function isPureVariableTokenString(raw) {
+    if (typeof raw !== 'string') return false;
+    const trimmed = raw.trim();
+    if (!trimmed.toLowerCase().startsWith('!var:')) return false;
+    const name = trimmed.slice(5).trim();
+    if (!name) return false;
+    return !/\s/.test(name);
+  }
+
+  function isPureQuickTokenString(raw) {
+    return isPureLinkTokenString(raw) || isPureVariableTokenString(raw);
+  }
+
+  function extractPureQuickReference(raw) {
+    if (!isPureQuickTokenString(raw)) return null;
+    return interpretQuickReference(raw);
+  }
+
   function renderValue(value) {
     if (value && value[SPECIAL_VALUE]) {
       return renderSpecialValue(value);
@@ -2061,15 +2048,14 @@ const userConversions = (() => {
     if (value == null) return XML.str('');
     if (typeof value === 'string') {
       const trimmedValue = value.trim();
-      if (/^AskEachTime$/i.test(trimmedValue)) {
-        return askEachTimeNode();
+      if (/^AskEachTime$/i.test(trimmedValue) || /^!AskEachTime:/i.test(trimmedValue)) {
+        fail('AskEachTime tokens are no longer supported. Use Ask.ForInput instead.', {
+          value: trimmedValue
+        });
       }
-      if (/^!AskEachTime:/i.test(trimmedValue)) {
-        const prompt = trimmedValue.replace(/^!AskEachTime:/i, '').trim();
-        return askEachTimeNode(prompt);
-      }
-      const quick = interpretQuickReference(value);
-      if (quick) {
+      const pureQuick = extractPureQuickReference(trimmedValue);
+      if (pureQuick) {
+        const quick = pureQuick;
         if (quick.type === 'link') {
           const label = quick.value;
           const uuid = resolveLinkUUID(label);
@@ -2254,7 +2240,7 @@ const userConversions = (() => {
         return value == null ? '' : String(value);
       case 'UUID':
         {
-          const quick = interpretQuickReference(value);
+          const quick = extractPureQuickReference(value);
           if (quick) {
             if (quick.type === 'link') {
               const uuid = resolveLinkUUID(quick.value);
@@ -2277,7 +2263,7 @@ const userConversions = (() => {
     let linkQuick = null;
     if (typeof value === 'string') {
       const trimmed = value.trim();
-      if (/^!link:/i.test(trimmed)) {
+      if (isPureLinkTokenString(trimmed)) {
         linkQuick = interpretQuickReference(trimmed);
         const bareValue = shouldReturnBareActionOutputNode(lowerKey);
         if (shouldWrapActionOutputNode(lowerKey)) {
@@ -2289,7 +2275,6 @@ const userConversions = (() => {
           if (node) return node;
         }
       }
-      if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
     }
 
     if (shouldPreferVariableNode(keyString)) {
@@ -2305,7 +2290,7 @@ const userConversions = (() => {
       return renderValue(value);
     }
     if (upperKey === 'UUID') {
-      const quick = linkQuick || interpretQuickReference(value);
+      const quick = linkQuick || extractPureQuickReference(value);
       if (quick) {
         if (quick.type === 'link') {
           const uuid = resolveLinkUUID(quick.value);
@@ -2377,9 +2362,10 @@ const userConversions = (() => {
       lowerKeyByCanonical.set(target.toLowerCase(), target);
     };
 
-    const hasPlaceholder = (name) => new RegExp(`\\{\\{\\s*${name}\\s*\\}\}`, 'i').test(dictXML);
-    const isLinkToken = (val) => typeof val === 'string' && /^\s*!link:/i.test(val);
-    const isVariableToken = (val) => typeof val === 'string' && /^\s*!var:/i.test(val);
+    const hasPlaceholder = (name) =>
+      new RegExp(`\\{\\{\\s*(?:[A-Za-z]+\\s*:\\s*)?${name}\\s*\\}\\}`, 'i').test(dictXML);
+    const isLinkToken = (val) => typeof val === 'string' && isPureLinkTokenString(val);
+    const isVariableToken = (val) => typeof val === 'string' && isPureVariableTokenString(val);
 
     const ensure = (target, candidates, predicate) => {
       if (getValue(target) !== undefined) return;
@@ -2429,6 +2415,9 @@ const userConversions = (() => {
     if (hasPlaceholder('WFInput')) {
       ensure('WFInput', ['Input', 'URL', 'Value', 'Text']);
     }
+    if (hasPlaceholder('Variable')) {
+      ensure('Variable', ['VariableName', 'Name', 'Var', 'VarName']);
+    }
     if (hasPlaceholder('AlertActionMessage')) {
       ensure('AlertActionMessage', ['Message', 'Text']);
     }
@@ -2438,13 +2427,41 @@ const userConversions = (() => {
     if (hasPlaceholder('ShowCancelButton')) {
       ensure('ShowCancelButton', ['Cancel', 'ShowCancelButton', 'ShowCancel']);
     }
+    if (hasPlaceholder('AllowDecimalNumbers')) {
+      ensure('AllowDecimalNumbers', [
+        'WFAskActionAllowsDecimalNumbers',
+        'AllowDecimals',
+        'AllowsDecimalNumbers',
+        'AllowDecimal'
+      ]);
+    }
+    if (hasPlaceholder('AllowNegativeNumbers')) {
+      ensure('AllowNegativeNumbers', [
+        'WFAskActionAllowsNegativeNumbers',
+        'AllowNegatives',
+        'AllowsNegativeNumbers',
+        'AllowNegative'
+      ]);
+    }
+    if (hasPlaceholder('InputType')) {
+      ensure('InputType', ['WFInputType', 'Type', 'InputMode']);
+      if (getValue('InputType') === undefined) {
+        setValue('InputType', 'Text');
+      }
+    }
+    if (hasPlaceholder('WFInputType')) {
+      ensure('WFInputType', ['InputType', 'Type', 'InputMode']);
+      if (getValue('WFInputType') === undefined) {
+        setValue('WFInputType', 'Text');
+      }
+    }
 
     if (hasPlaceholder('OutputName')) {
       const currentUUID = getValue('UUID') || getValue('OutputUUID');
       let friendly = null;
       if (typeof currentUUID === 'string') {
         const trimmed = currentUUID.trim();
-        if (/^!link:/i.test(trimmed)) {
+        if (isPureLinkTokenString(trimmed)) {
           const label = trimmed.slice(6).trim();
           const meta = lookupLinkMetadata(label);
           friendly = meta?.friendly || humanizeActionName(meta?.action || label);
@@ -2492,7 +2509,7 @@ const userConversions = (() => {
     let spec;
     if (typeof raw === 'string') {
       spec = { __raw: raw };
-      const quick = interpretQuickReference(raw);
+      const quick = extractPureQuickReference(raw);
       if (quick?.type === 'link') {
         const label = quick.value;
         const resolved = resolveLinkUUID(label);
@@ -2548,7 +2565,7 @@ const userConversions = (() => {
 
       if (typeof outputUUID === 'string') {
         const trimmed = outputUUID.trim();
-        if (/^!link:/i.test(trimmed)) {
+        if (isPureLinkTokenString(trimmed)) {
           const label = trimmed.slice(6).trim();
           const resolved = resolveLinkUUID(label);
           outputUUID = resolved || label;
@@ -3010,12 +3027,7 @@ ${indentXMLBlock(baseNode, 2)}
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) {
         return trimmed;
       }
-      if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
-      if (/^!AskEachTime:/i.test(trimmed)) {
-        const prompt = trimmed.replace(/^!AskEachTime:/i, '').trim();
-        return askEachTimeNode(prompt);
-      }
-      const quick = interpretQuickReference(trimmed);
+      const quick = extractPureQuickReference(trimmed);
       const variableNode = buildVariableNodeFromQuick(quick);
       if (variableNode) return variableNode;
       const { text, attachments } = parseTokenizedText(value);
@@ -3034,13 +3046,8 @@ ${indentXMLBlock(baseNode, 2)}
       const trimmed = v.trim();
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
-      if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
-      if (/^!AskEachTime:/i.test(trimmed)) {
-        const prompt = trimmed.replace(/^!AskEachTime:/i, '').trim();
-        return askEachTimeNode(prompt);
-      }
       const lowerName = String(placeholderName || '').toLowerCase();
-    if (/^!link:/i.test(trimmed)) {
+      if (isPureLinkTokenString(trimmed)) {
         const quick = interpretQuickReference(trimmed);
         if (quick?.type === 'link') {
           const bareValue = shouldReturnBareActionOutputNode(lowerName);
@@ -3056,7 +3063,7 @@ ${indentXMLBlock(baseNode, 2)}
         const variableNode = buildVariableNodeFromQuick(quick);
         if (variableNode) return variableNode;
       } else if (shouldPreferVariableNode(placeholderName)) {
-        const quick = interpretQuickReference(trimmed);
+        const quick = extractPureQuickReference(trimmed);
         const variableNode = buildVariableNodeFromQuick(quick);
         if (variableNode) return variableNode;
       }
@@ -3283,7 +3290,7 @@ ${indentXMLBlock(baseNode, 2)}
       params.Input ??
       params.input ??
       null;
-    const inputQuick = interpretQuickReference(inputValue);
+    const inputQuick = extractPureQuickReference(inputValue);
     const inputNode = inputQuick?.type === 'link'
       ? buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true })
       : ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
@@ -3509,7 +3516,7 @@ ${indentXMLBlock(baseNode, 2)}
     for (const [key, value] of Object.entries(normalized)) {
       if (typeof value !== 'string') continue;
       const trimmed = value.trim();
-      if (!/^!link:/i.test(trimmed)) continue;
+      if (!isPureLinkTokenString(trimmed)) continue;
       const label = trimmed.slice(6).trim();
       if (label) registerLinkLabel(label, actionName);
       if (/^uuid$/i.test(key) && label) {
@@ -3557,7 +3564,7 @@ ${indentXMLBlock(baseNode, 2)}
       for (const [key, value] of Object.entries(normalizedParams)) {
         if (typeof value !== 'string') continue;
         const trimmed = value.trim();
-        if (!/^!link:/i.test(trimmed)) continue;
+        if (!isPureLinkTokenString(trimmed)) continue;
         if (!OUTPUT_FIELD_REGEX.test(key)) continue;
         const label = trimmed.slice(6).trim();
         registerLinkLabel(label, actionName, { friendly: friendlyValue });

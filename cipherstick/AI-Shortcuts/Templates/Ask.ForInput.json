@@ -3,6 +3,9 @@
   "params": {
     "Prompt": "{{STRING}}",
     "Multiline": "{{BOOLEAN}}",
+    "AllowDecimalNumbers": "{{BOOLEAN}}",
+    "AllowNegativeNumbers": "{{BOOLEAN}}",
+    "InputType": "Text/Number/URL/Date/Time/Date And Time",
     "DefaultAnswer": "{{STRING}}"
   }
 }
