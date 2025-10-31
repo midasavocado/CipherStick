@@ -1627,20 +1627,31 @@ const userConversions = (() => {
       .join('\n');
   }
 
-  function askEachTimeNode(promptText) {
-    const trimmedPrompt = typeof promptText === 'string' ? promptText.trim() : '';
-    if (!trimmedPrompt) {
-      return `<dict>
-  <key>Value</key>
-  <dict>
-    <key>Type</key>
-    <string>Ask</string>
-  </dict>
-  <key>WFSerializationType</key>
-  <string>WFTextTokenAttachment</string>
-</dict>`;
+  function expandAskPrompt(promptText) {
+    if (!promptText) return '';
+    const { text, attachments } = parseTokenizedText(String(promptText));
+    let expanded = text;
+    for (const attachment of attachments) {
+      let friendly = '';
+      if (attachment.type === 'Variable') {
+        friendly = attachment.VariableName || attachment.Variable || 'Variable';
+      } else if (attachment.type === 'ActionOutput') {
+        friendly =
+          attachment.OutputName ||
+          lookupLinkMetadata(attachment.OutputUUID)?.friendly ||
+          humanizeActionName(attachment.OutputUUID) ||
+          'Value';
+      } else if (attachment.type === 'Text') {
+        friendly = attachment.Text || '';
+      }
+      expanded = expanded.replace(ATTACHMENT_SENTINEL, friendly);
     }
-    const safePrompt = XML.str(trimmedPrompt);
+    return expanded;
+  }
+
+  function askEachTimeNode(promptText) {
+    const expandedPrompt = expandAskPrompt(promptText);
+    const finalPrompt = expandedPrompt.trim() || 'Provide input';
     return `<dict>
   <key>Value</key>
   <dict>
@@ -1649,7 +1660,7 @@ const userConversions = (() => {
       <key>{0, 1}</key>
       <dict>
         <key>Prompt</key>
-        ${safePrompt}
+        ${XML.str(finalPrompt)}
         <key>Type</key>
         <string>Ask</string>
       </dict>
@@ -2887,7 +2898,7 @@ const userConversions = (() => {
     return XML.str(v);
   }
 
-  const VARIABLE_NODE_KEYS = new Set(['variable', 'wfvariable', 'variablevalue', 'variableinput']);
+  const VARIABLE_NODE_KEYS = new Set(['variable', 'wfvariable', 'variablevalue', 'variableinput', 'input', 'wfinput']);
   const ACTION_OUTPUT_PLACEHOLDER_KEYS = new Set([
     'input',
     'wfinput',
