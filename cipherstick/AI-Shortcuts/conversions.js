@@ -1611,6 +1611,11 @@ const userConversions = (() => {
   const actionLookupCache = new Map(); // normalized action -> filename
   const linkRegistry = new Map(); // link label -> metadata about producing action
 
+  const DEFAULT_ICON = Object.freeze({
+    glyphNumber: 595,
+    startColor: 0
+  });
+
   // ---- XML helpers ----
   function indentXMLBlock(xml, indentSpaces = 2) {
     const prefix = typeof indentSpaces === 'number' ? ' '.repeat(indentSpaces) : String(indentSpaces || '');
@@ -1622,8 +1627,10 @@ const userConversions = (() => {
       .join('\n');
   }
 
-  function askEachTimeNode() {
-    return `<dict>
+  function askEachTimeNode(promptText) {
+    const trimmedPrompt = typeof promptText === 'string' ? promptText.trim() : '';
+    if (!trimmedPrompt) {
+      return `<dict>
   <key>Value</key>
   <dict>
     <key>Type</key>
@@ -1631,6 +1638,27 @@ const userConversions = (() => {
   </dict>
   <key>WFSerializationType</key>
   <string>WFTextTokenAttachment</string>
+</dict>`;
+    }
+    const safePrompt = XML.str(trimmedPrompt);
+    return `<dict>
+  <key>Value</key>
+  <dict>
+    <key>attachmentsByRange</key>
+    <dict>
+      <key>{0, 1}</key>
+      <dict>
+        <key>Prompt</key>
+        ${safePrompt}
+        <key>Type</key>
+        <string>Ask</string>
+      </dict>
+    </dict>
+    <key>string</key>
+    <string>${ATTACHMENT_SENTINEL}</string>
+  </dict>
+  <key>WFSerializationType</key>
+  <string>WFTextTokenString</string>
 </dict>`;
   }
 
@@ -2021,8 +2049,13 @@ const userConversions = (() => {
     }
     if (value == null) return XML.str('');
     if (typeof value === 'string') {
-      if (/^AskEachTime$/i.test(value.trim())) {
+      const trimmedValue = value.trim();
+      if (/^AskEachTime$/i.test(trimmedValue)) {
         return askEachTimeNode();
+      }
+      if (/^!AskEachTime:/i.test(trimmedValue)) {
+        const prompt = trimmedValue.replace(/^!AskEachTime:/i, '').trim();
+        return askEachTimeNode(prompt);
       }
       const quick = interpretQuickReference(value);
       if (quick) {
@@ -2112,6 +2145,11 @@ const userConversions = (() => {
       .replace(/\s+/g, '')
       .replace(/[^a-z0-9._-]/gi, '')
       .toLowerCase();
+
+  const toSafeInteger = (value, fallback) => {
+    const num = Number(value);
+    return Number.isInteger(num) && Number.isFinite(num) ? num : fallback;
+  };
 
   const looksLikeJSON = (s) => /^\s*[\[{]/.test(String(s || ''));
 
@@ -2779,9 +2817,22 @@ const userConversions = (() => {
     const wfName = String(prog.name || name || 'My Shortcut');
     const actions = prog.actions;
 
-    const plistActions = await buildActionsArrayFromJSON(actions);
+  const plistActions = await buildActionsArrayFromJSON(actions);
+    const iconSource = prog.icon && typeof prog.icon === 'object' ? prog.icon : {};
+    const glyphNumber = toSafeInteger(
+      iconSource.glyph ?? iconSource.glyphNumber ?? DEFAULT_ICON.glyphNumber,
+      DEFAULT_ICON.glyphNumber
+    );
+    const startColor = toSafeInteger(
+      iconSource.color ?? iconSource.startColor ?? DEFAULT_ICON.startColor,
+      DEFAULT_ICON.startColor
+    );
+    const iconDict = XML.dict({
+      WFWorkflowIconGlyphNumber: XML.int(glyphNumber),
+      WFWorkflowIconStartColor: XML.int(startColor)
+    });
 
-    const plist =
+  const plist =
 `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -2790,6 +2841,8 @@ const userConversions = (() => {
   ${XML.str(wfName)}
   <key>WFWorkflowActions</key>
   ${XML.array(plistActions)}
+  <key>WFWorkflowIcon</key>
+  ${iconDict}
 </dict>
 </plist>`;
     return formatPlist(plist);
@@ -2946,6 +2999,11 @@ ${indentXMLBlock(baseNode, 2)}
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) {
         return trimmed;
       }
+      if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
+      if (/^!AskEachTime:/i.test(trimmed)) {
+        const prompt = trimmed.replace(/^!AskEachTime:/i, '').trim();
+        return askEachTimeNode(prompt);
+      }
       const quick = interpretQuickReference(trimmed);
       const variableNode = buildVariableNodeFromQuick(quick);
       if (variableNode) return variableNode;
@@ -2966,8 +3024,12 @@ ${indentXMLBlock(baseNode, 2)}
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
       if (/^AskEachTime$/i.test(trimmed)) return askEachTimeNode();
+      if (/^!AskEachTime:/i.test(trimmed)) {
+        const prompt = trimmed.replace(/^!AskEachTime:/i, '').trim();
+        return askEachTimeNode(prompt);
+      }
       const lowerName = String(placeholderName || '').toLowerCase();
-      if (/^!link:/i.test(trimmed)) {
+    if (/^!link:/i.test(trimmed)) {
         const quick = interpretQuickReference(trimmed);
         if (quick?.type === 'link') {
           const bareValue = shouldReturnBareActionOutputNode(lowerName);
