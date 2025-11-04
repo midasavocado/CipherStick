@@ -943,8 +943,6 @@
       <string>is.workflow.actions.getvariable</string>
       <key>WFWorkflowActionParameters</key>
       <dict>
-        <key>UUID</key>
-        {{UUID}}
         <key>WFVariable</key>
         <dict>
           <key>Value</key>
@@ -1344,8 +1342,6 @@
       <string>is.workflow.actions.setvariable</string>
       <key>WFWorkflowActionParameters</key>
       <dict>
-        <key>UUID</key>
-        {{UUID}}
         <key>WFInput</key>
         {{WFInput}}
         <key>WFVariableName</key>
@@ -1618,6 +1614,7 @@ const userConversions = (() => {
   const CONVERSION_FILENAMES = Object.freeze(Object.keys(CONVERSIONS));
   const actionLookupCache = new Map(); // normalized action -> filename
   const linkRegistry = new Map(); // link label -> metadata about producing action
+  let autoTextLabelCounter = 0;
 
   const DEFAULT_ICON = Object.freeze({
     glyphNumber: 595,
@@ -1653,8 +1650,7 @@ const userConversions = (() => {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
+        .replace(/"/g, '&quot;');
     },
     bool(b) { return b ? '<true/>' : '<false/>'; },
     int(n)  { return `<integer>${(n|0)}</integer>`; },
@@ -1698,6 +1694,14 @@ const userConversions = (() => {
       .trim();
   }
 
+  function normalizeBuiltInVariableLabel(name) {
+    if (typeof name !== 'string') return name;
+    if (/^Repeat\./i.test(name)) {
+      return name.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    return name;
+  }
+
   function normalizeLinkLabel(label) {
     if (label == null) return null;
     const normalized = String(label).trim();
@@ -1724,7 +1728,7 @@ const userConversions = (() => {
     const entry = ensureLinkEntry(label);
     if (!entry) return null;
     if (action && !entry.action) entry.action = action;
-    if (friendly && friendly.trim()) entry.friendly = friendly.trim();
+    if (friendly && friendly.trim() && !entry.friendly) entry.friendly = friendly.trim();
     if (uuid && (!entry.uuid || entry.uuid === uuid)) entry.uuid = uuid;
     return entry;
   }
@@ -1771,7 +1775,7 @@ const userConversions = (() => {
     let cursor = 0;
     let text = '';
     const attachments = [];
-    const tokenRegex = /!(?:var|link):[^\s]+/gi;
+    const tokenRegex = /!(?:var:[A-Za-z0-9_.-]+|link:[A-Za-z0-9_.\-|#@]+)/gi;
     let match;
     while ((match = tokenRegex.exec(input))) {
       const [rawToken] = match;
@@ -1821,7 +1825,10 @@ const userConversions = (() => {
       cursor = match.index + rawToken.length;
     }
     if (cursor < input.length) {
-      text += input.slice(cursor);
+      const remainder = input.slice(cursor);
+      if (!/^\r?\n$/.test(remainder)) {
+        text += remainder;
+      }
     }
     return { text, attachments };
   }
@@ -2032,9 +2039,34 @@ const userConversions = (() => {
     if (trimmed.startsWith('!var:')) {
       const name = trimmed.slice(5).trim().replace(/[{}]/g, '');
       if (!name) return { type: 'string', value: '' };
-      return { type: 'variable', value: name };
+      const normalizedName = name.includes('.') ? name.split('.').map((part) => part.trim()).filter(Boolean).join(' ') : name;
+      return { type: 'variable', value: normalizedName };
     }
     return null;
+  }
+
+  function extractVariableNameFromObject(obj) {
+    if (!obj || typeof obj !== 'object') return null;
+    const type = obj.Type ?? obj.type ?? null;
+    const name = obj.VariableName ?? obj.variableName ?? obj.Name ?? obj.name ?? null;
+    if (type && String(type).toLowerCase() === 'variable' && typeof name === 'string') {
+      return normalizeBuiltInVariableLabel(name);
+    }
+    if (obj.Variable) {
+      const nested = extractVariableNameFromObject(obj.Variable);
+      if (nested) return nested;
+    }
+    if (obj.Value) {
+      const nested = extractVariableNameFromObject(obj.Value);
+      if (nested) return nested;
+    }
+    return null;
+  }
+
+  function legacyVariableObjectToQuick(obj) {
+    const variableName = extractVariableNameFromObject(obj);
+    if (!variableName) return null;
+    return `!var:${variableName}`;
   }
 
   function isPureLinkTokenString(raw) {
@@ -2323,7 +2355,7 @@ const userConversions = (() => {
         return XML.str(quick.value || '');
       }
       if (value === undefined || value === null || value === true) return XML.str(genUUID());
-      return XML.str(String(value));
+      return XML.str(normalizeBuiltInVariableLabel(String(value)));
     }
     if (value === undefined) {
       return XML.str('');
@@ -2896,7 +2928,7 @@ const userConversions = (() => {
     );
     const hasOutputFallback = typeof prog.workflowHasOutputFallback === 'boolean'
       ? prog.workflowHasOutputFallback
-      : true;
+      : Array.isArray(actions) && actions.some((act) => normalizeName(act?.action) === 'output');
     const hasShortcutInputVariables = typeof prog.workflowHasShortcutInputVariables === 'boolean'
       ? prog.workflowHasShortcutInputVariables
       : false;
@@ -2927,7 +2959,7 @@ const userConversions = (() => {
       ? `  <key>WFWorkflowName</key>\n  ${XML.str(String(prog.name || name || 'My Shortcut'))}\n`
       : '';
 
-    const plist =
+  const plist =
 `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -2971,7 +3003,7 @@ ${workflowNameBlock}  <key>WFQuickActionSurfaces</key>
     ['isgreaterthanorequalto', 3],
     ['islessthan', 0],
     ['islessthanorequalto', 1],
-    ['contains', 99],
+    ['contains', 4],
     ['doesnotcontain', 999],
     ['beginswith', 8],
     ['endswith', 9]
@@ -3132,25 +3164,33 @@ ${indentXMLBlock(baseNode, 2)}
       if (!trimmed) return placeholderToken(placeholderName);
       if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
       const lowerName = String(placeholderName || '').toLowerCase();
-      if (isPureLinkTokenString(trimmed)) {
-        const quick = interpretQuickReference(trimmed);
-        if (quick?.type === 'link') {
-          const bareValue = shouldReturnBareActionOutputNode(lowerName);
-          if (shouldWrapActionOutputNode(lowerName) || shouldPreferVariableNode(placeholderName)) {
-            const wrapped = buildActionOutputNodeFromQuick(quick, { wrapVariable: true });
-            if (wrapped) return wrapped;
-          }
-          if (shouldUseActionOutputNode(lowerName)) {
-            const node = buildActionOutputNodeFromQuick(quick, { bareValue });
-            if (node) return node;
-          }
+      const quick = interpretQuickReference(trimmed);
+      if (quick?.type === 'link') {
+        const bareValue = shouldReturnBareActionOutputNode(lowerName);
+        if (shouldWrapActionOutputNode(lowerName) || shouldPreferVariableNode(placeholderName)) {
+          const wrapped = buildActionOutputNodeFromQuick(quick, { wrapVariable: true });
+          if (wrapped) return wrapped;
+        }
+        if (shouldUseActionOutputNode(lowerName)) {
+          const node = buildActionOutputNodeFromQuick(quick, { bareValue });
+          if (node) return node;
         }
         const variableNode = buildVariableNodeFromQuick(quick);
         if (variableNode) return variableNode;
-      } else if (shouldPreferVariableNode(placeholderName)) {
-        const quick = extractPureQuickReference(trimmed);
+      } else if (quick?.type === 'variable') {
         const variableNode = buildVariableNodeFromQuick(quick);
         if (variableNode) return variableNode;
+      } else if (shouldPreferVariableNode(placeholderName)) {
+        const pureQuick = extractPureQuickReference(trimmed);
+        const variableNode = buildVariableNodeFromQuick(pureQuick);
+        if (variableNode) return variableNode;
+      }
+      return renderValue(v);
+    }
+    if (isPlainObject(v)) {
+      const quickToken = legacyVariableObjectToQuick(v);
+      if (quickToken) {
+        return ensureAnyNode(quickToken, placeholderName, fallback);
       }
       return renderValue(v);
     }
@@ -3380,22 +3420,7 @@ ${indentXMLBlock(baseNode, 2)}
       ? buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true })
       : ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
 
-    let numberValue =
-      params.WFNumberValue ??
-      params.NumberValue ??
-      params.numberValue ??
-      null;
-    if (numberValue == null) {
-      const candidate = compareValue;
-      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
-        numberValue = candidate;
-      } else if (typeof candidate === 'string' && candidate.trim()) {
-        const trimmedCandidate = candidate.trim();
-        if (!Number.isNaN(Number(trimmedCandidate))) {
-          numberValue = trimmedCandidate;
-        }
-      }
-    }
+    const numberValue = params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? null;
     const numberNode = ensureAnyNode(numberValue, 'WFNumberValue', '124');
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
@@ -3572,7 +3597,37 @@ ${indentXMLBlock(baseNode, 2)}
         continue;
       }
 
-      const specialBuilder = SPECIAL_ACTION_BUILDERS.get(normalizeName(kind));
+      const normalizedKind = normalizeName(kind);
+
+      if (normalizedKind === 'setvariable') {
+        const valueCandidates = [
+          mergedParams.WFInput,
+          mergedParams.Input,
+          mergedParams.Value,
+          mergedParams.value
+        ];
+        const originalValue = valueCandidates.find((candidate) => typeof candidate === 'string');
+        const shouldEmitTextAction = typeof originalValue === 'string' && originalValue.length > 0 && !isPureQuickTokenString(originalValue);
+        if (shouldEmitTextAction) {
+          const autoLabel = `autotext_${++autoTextLabelCounter}`;
+          const textUUID = resolveLinkUUID(autoLabel) || autoLabel;
+          updateLinkMetadata(autoLabel, { action: 'Text', friendly: 'Text', uuid: textUUID });
+          const textParameters = {
+            UUID: XML.str(textUUID),
+            WFTextActionText: renderValue(originalValue)
+          };
+          out.push(XML.dict({
+            WFWorkflowActionIdentifier: XML.str('is.workflow.actions.gettext'),
+            WFWorkflowActionParameters: XML.dict(textParameters)
+          }));
+          mergedParams.WFInput = undefined;
+          mergedParams.Input = undefined;
+          mergedParams.Value = `!link:${autoLabel}`;
+          mergedParams.value = undefined;
+        }
+      }
+
+      const specialBuilder = SPECIAL_ACTION_BUILDERS.get(normalizedKind);
       if (specialBuilder) {
         try {
           out.push(...await specialBuilder(item));
