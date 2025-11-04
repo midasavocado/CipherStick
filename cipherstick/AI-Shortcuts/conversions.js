@@ -944,6 +944,8 @@
       <string>is.workflow.actions.getvariable</string>
       <key>WFWorkflowActionParameters</key>
       <dict>
+        <key>UUID</key>
+        {{UUID}}
         <key>WFVariable</key>
         <dict>
           <key>Value</key>
@@ -1343,6 +1345,8 @@
       <string>is.workflow.actions.setvariable</string>
       <key>WFWorkflowActionParameters</key>
       <dict>
+        <key>UUID</key>
+        {{UUID}}
         <key>WFInput</key>
         {{WFInput}}
         <key>WFVariableName</key>
