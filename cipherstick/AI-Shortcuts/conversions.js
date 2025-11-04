@@ -280,8 +280,7 @@
         {{BOOLEAN:AllowDecimalNumbers}}
         <key>WFAskActionAllowsNegativeNumbers</key>
         {{BOOLEAN:AllowNegativeNumbers}}
-        <key>WFAskActionDefaultAnswer</key>
-        {{DefaultAnswer}}
+        {{DEFAULT_ANSWER_BLOCK}}
         <key>WFAskActionPrompt</key>
         {{Prompt}}
         <key>WFInputType</key>
@@ -1414,8 +1413,7 @@
       <string>is.workflow.actions.speaktext</string>
       <key>WFWorkflowActionParameters</key>
       <dict>
-        <key>WFSpeakTextLanguage</key>
-        {{Language}}
+        {{SPEAK_LANGUAGE_BLOCK}}
         <key>WFSpeakTextPitch</key>
 				<real>1.1231572690217393</real>
 				<key>WFSpeakTextRate</key>
@@ -1626,6 +1624,13 @@ const userConversions = (() => {
     startColor: 0
   });
 
+  const DEFAULT_WORKFLOW_TYPES = Object.freeze([
+    'Watch',
+    'WFWorkflowTypeShowInSearch'
+  ]);
+  const DEFAULT_WORKFLOW_CLIENT_VERSION = '4033.0.4.3';
+  const DEFAULT_MIN_CLIENT_VERSION = 900;
+
   // ---- XML helpers ----
   function indentXMLBlock(xml, indentSpaces = 2) {
     const prefix = typeof indentSpaces === 'number' ? ' '.repeat(indentSpaces) : String(indentSpaces || '');
@@ -1666,7 +1671,7 @@ const userConversions = (() => {
       return `<dict>\n${lines.join('\n')}\n</dict>`;
     },
     array(items) {
-      if (!items || !items.length) return '<array></array>';
+      if (!items || !items.length) return '<array/>';
       const formatted = items.map((item) => indentXMLBlock(item == null ? '' : item, 2));
       return `<array>\n${formatted.join('\n')}\n</array>`;
     }
@@ -1766,10 +1771,17 @@ const userConversions = (() => {
     let cursor = 0;
     let text = '';
     const attachments = [];
-    const tokenRegex = /!var:([A-Za-z0-9_.-]+)|!link:([A-Za-z0-9_.\-|#@]+)/gi;
+    const tokenRegex = /!(?:var|link):[^\s]+/gi;
     let match;
     while ((match = tokenRegex.exec(input))) {
-      const [all, varName, linkLabel] = match;
+      const [rawToken] = match;
+      let token = rawToken;
+      let trailing = '';
+      while (token.length > 0 && /[.,!?;:)"'’”]/.test(token[token.length - 1])) {
+        trailing = token[token.length - 1] + trailing;
+        token = token.slice(0, -1);
+      }
+      if (!token.toLowerCase().startsWith('!var:') && !token.toLowerCase().startsWith('!link:')) continue;
       const start = match.index;
       if (start > cursor) {
         text += input.slice(cursor, start);
@@ -1777,7 +1789,13 @@ const userConversions = (() => {
       const rangeStart = text.length;
       text += ATTACHMENT_SENTINEL;
       const range = `{${rangeStart}, 1}`;
-      const quick = interpretQuickReference(all);
+      const quick = interpretQuickReference(token);
+      if (!quick) {
+        text = text.slice(0, -1);
+        text += rawToken;
+        cursor = match.index + rawToken.length;
+        continue;
+      }
       if (quick?.type === 'variable') {
         attachments.push({ range, type: 'Variable', VariableName: quick.value });
       } else if (quick?.type === 'link') {
@@ -1799,7 +1817,8 @@ const userConversions = (() => {
         }
         attachments.push(attachment);
       }
-      cursor = match.index + all.length;
+      if (trailing) text += trailing;
+      cursor = match.index + rawToken.length;
     }
     if (cursor < input.length) {
       text += input.slice(cursor);
@@ -2846,10 +2865,9 @@ const userConversions = (() => {
   Conversion.toPlistFromJSON = async ({ name, program }) => {
     linkRegistry.clear();
     const prog = coerceProgram(program, name);
-    const wfName = String(prog.name || name || 'My Shortcut');
     const actions = prog.actions;
 
-  const plistActions = await buildActionsArrayFromJSON(actions);
+    const plistActions = await buildActionsArrayFromJSON(actions);
     const iconSource = prog.icon && typeof prog.icon === 'object' ? prog.icon : {};
     const glyphNumber = toSafeInteger(
       iconSource.glyph ?? iconSource.glyphNumber ?? DEFAULT_ICON.glyphNumber,
@@ -2863,18 +2881,81 @@ const userConversions = (() => {
       WFWorkflowIconGlyphNumber: XML.int(glyphNumber),
       WFWorkflowIconStartColor: XML.int(startColor)
     });
+    const quickActionSurfacesInput = Array.isArray(prog.quickActionSurfaces)
+      ? prog.quickActionSurfaces
+      : [];
+    const quickActionSurfaces = XML.array(
+      quickActionSurfacesInput.map((surface) => renderValue(surface))
+    );
+    const workflowTypesList = Array.isArray(prog.workflowTypes) && prog.workflowTypes.length
+      ? prog.workflowTypes
+      : DEFAULT_WORKFLOW_TYPES;
+    const workflowTypes = XML.array(workflowTypesList.map((type) => XML.str(String(type))));
+    const workflowClientVersion = String(
+      prog.workflowClientVersion ?? DEFAULT_WORKFLOW_CLIENT_VERSION
+    );
+    const hasOutputFallback = typeof prog.workflowHasOutputFallback === 'boolean'
+      ? prog.workflowHasOutputFallback
+      : true;
+    const hasShortcutInputVariables = typeof prog.workflowHasShortcutInputVariables === 'boolean'
+      ? prog.workflowHasShortcutInputVariables
+      : false;
+    const minClientVersion = toSafeInteger(
+      prog.workflowMinimumClientVersion ?? DEFAULT_MIN_CLIENT_VERSION,
+      DEFAULT_MIN_CLIENT_VERSION
+    );
+    const minClientVersionString = String(
+      prog.workflowMinimumClientVersionString ?? minClientVersion
+    );
+    const workflowImportQuestions = XML.array(
+      Array.isArray(prog.workflowImportQuestions)
+        ? prog.workflowImportQuestions.map((entry) => renderValue(entry))
+        : []
+    );
+    const workflowInputClasses = XML.array(
+      Array.isArray(prog.workflowInputContentItemClasses)
+        ? prog.workflowInputContentItemClasses.map((entry) => renderValue(entry))
+        : []
+    );
+    const workflowOutputClasses = XML.array(
+      Array.isArray(prog.workflowOutputContentItemClasses)
+        ? prog.workflowOutputContentItemClasses.map((entry) => renderValue(entry))
+        : []
+    );
+    const includeWorkflowName = prog.includeWorkflowName ?? false;
+    const workflowNameBlock = includeWorkflowName
+      ? `  <key>WFWorkflowName</key>\n  ${XML.str(String(prog.name || name || 'My Shortcut'))}\n`
+      : '';
 
-  const plist =
+    const plist =
 `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>WFWorkflowName</key>
-  ${XML.str(wfName)}
+${workflowNameBlock}  <key>WFQuickActionSurfaces</key>
+  ${quickActionSurfaces}
   <key>WFWorkflowActions</key>
   ${XML.array(plistActions)}
+  <key>WFWorkflowClientVersion</key>
+  ${XML.str(workflowClientVersion)}
+  <key>WFWorkflowHasOutputFallback</key>
+  ${XML.bool(hasOutputFallback)}
+  <key>WFWorkflowHasShortcutInputVariables</key>
+  ${XML.bool(hasShortcutInputVariables)}
   <key>WFWorkflowIcon</key>
   ${iconDict}
+  <key>WFWorkflowImportQuestions</key>
+  ${workflowImportQuestions}
+  <key>WFWorkflowInputContentItemClasses</key>
+  ${workflowInputClasses}
+  <key>WFWorkflowMinimumClientVersion</key>
+  ${XML.int(minClientVersion)}
+  <key>WFWorkflowMinimumClientVersionString</key>
+  ${XML.str(minClientVersionString)}
+  <key>WFWorkflowOutputContentItemClasses</key>
+  ${workflowOutputClasses}
+  <key>WFWorkflowTypes</key>
+  ${workflowTypes}
 </dict>
 </plist>`;
     return formatPlist(plist);
@@ -3299,7 +3380,22 @@ ${indentXMLBlock(baseNode, 2)}
       ? buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true })
       : ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
 
-    const numberValue = params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? '124';
+    let numberValue =
+      params.WFNumberValue ??
+      params.NumberValue ??
+      params.numberValue ??
+      null;
+    if (numberValue == null) {
+      const candidate = compareValue;
+      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+        numberValue = candidate;
+      } else if (typeof candidate === 'string' && candidate.trim()) {
+        const trimmedCandidate = candidate.trim();
+        if (!Number.isNaN(Number(trimmedCandidate))) {
+          numberValue = trimmedCandidate;
+        }
+      }
+    }
     const numberNode = ensureAnyNode(numberValue, 'WFNumberValue', '124');
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
@@ -3562,6 +3658,59 @@ ${indentXMLBlock(baseNode, 2)}
       const dictXML = await loadConvFile(filename);
 
       const normalizedParams = applyParamAliases(dictXML, params || {});
+      const normalizedActionName = normalizeName(actionName);
+      const guessedIdentifier = guessActionIdentifier(actionName);
+
+      if (normalizedActionName === 'ask.forinput' || guessedIdentifier === 'is.workflow.actions.ask') {
+        const inputTypeRaw =
+          normalizedParams.InputType ??
+          normalizedParams.WFInputType ??
+          normalizedParams.inputType;
+        const normalizedInputType = typeof inputTypeRaw === 'string'
+          ? inputTypeRaw.trim().toLowerCase()
+          : '';
+        const defaultText =
+          normalizedParams.DefaultAnswer ??
+          normalizedParams.WFAskActionDefaultAnswer ??
+          normalizedParams.defaultAnswer;
+        const defaultNumber =
+          normalizedParams.DefaultAnswerNumber ??
+          normalizedParams.WFAskActionDefaultAnswerNumber ??
+          normalizedParams.defaultAnswerNumber;
+        const isNumericInput =
+          normalizedInputType === 'number' ||
+          normalizedInputType === 'integer' ||
+          normalizedInputType === 'decimal';
+        const defaultValue = isNumericInput
+          ? (defaultNumber !== undefined ? defaultNumber : defaultText)
+          : (defaultText !== undefined ? defaultText : defaultNumber);
+        const finalDefault = defaultValue === undefined ? '' : defaultValue;
+        const defaultKey = isNumericInput
+          ? 'WFAskActionDefaultAnswerNumber'
+          : 'WFAskActionDefaultAnswer';
+        normalizedParams.DEFAULT_ANSWER_BLOCK = rawXML(
+          `<key>${defaultKey}</key>\n${indentXMLBlock(renderValue(finalDefault), 8)}`
+        );
+      }
+
+      if (normalizedActionName === 'speaktext' || guessedIdentifier === 'is.workflow.actions.speaktext') {
+        const languageValue =
+          normalizedParams.Language ??
+          normalizedParams.WFSpeakTextLanguage ??
+          normalizedParams.language ??
+          normalizedParams.wfSpeakTextLanguage;
+        let languageBlock = rawXML('');
+        if (languageValue !== undefined && languageValue !== null) {
+          const asString = typeof languageValue === 'string' ? languageValue.trim() : languageValue;
+          if (!(typeof asString === 'string' && !asString)) {
+            languageBlock = rawXML(
+              `<key>WFSpeakTextLanguage</key>\n${indentXMLBlock(renderValue(languageValue), 8)}`
+            );
+          }
+        }
+        normalizedParams.SPEAK_LANGUAGE_BLOCK = languageBlock;
+      }
+
       const friendlyFields = ['OutputName', 'WFOutputName', 'Name', 'Label'];
       const friendlyValue = friendlyFields.map((field) => normalizedParams[field]).find((val) => typeof val === 'string' && val.trim());
 
