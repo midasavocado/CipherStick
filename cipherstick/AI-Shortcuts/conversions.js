@@ -1702,6 +1702,26 @@ const userConversions = (() => {
     return name;
   }
 
+  function humanizeVariableName(name) {
+    if (!name) return '';
+    return String(name)
+      .replace(/_/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function friendlyNameForVariable(name) {
+    const normalized = normalizeBuiltInVariableLabel(name);
+    if (!normalized) return '';
+    const lower = normalized.toLowerCase();
+    if (lower === 'repeat item') return 'Rep Item';
+    if (lower === 'repeat index') return 'Rep Index';
+    if (lower === 'repeat count') return 'Rep Count';
+    if (normalized === name) return normalized;
+    return humanizeVariableName(normalized);
+  }
+
   function normalizeLinkLabel(label) {
     if (label == null) return null;
     const normalized = String(label).trim();
@@ -1724,12 +1744,13 @@ const userConversions = (() => {
     return entry;
   }
 
-  function updateLinkMetadata(label, { action, friendly, uuid } = {}) {
+  function updateLinkMetadata(label, { action, friendly, uuid, variableName } = {}) {
     const entry = ensureLinkEntry(label);
     if (!entry) return null;
     if (action && !entry.action) entry.action = action;
     if (friendly && friendly.trim() && !entry.friendly) entry.friendly = friendly.trim();
     if (uuid && (!entry.uuid || entry.uuid === uuid)) entry.uuid = uuid;
+    if (variableName && !entry.variableName) entry.variableName = normalizeBuiltInVariableLabel(variableName);
     return entry;
   }
 
@@ -3121,12 +3142,17 @@ ${indentXMLBlock(baseNode, 2)}
       return `<dict>
   <key>Type</key>
   <string>Variable</string>
-  <key>Value</key>
+  <key>Variable</key>
   <dict>
-    <key>Type</key>
-    <string>Variable</string>
-    <key>VariableName</key>
-    ${XML.str(name)}
+    <key>Value</key>
+    <dict>
+      <key>Type</key>
+      <string>Variable</string>
+      <key>VariableName</key>
+      ${XML.str(name)}
+    </dict>
+    <key>WFSerializationType</key>
+    <string>WFTextTokenAttachment</string>
   </dict>
 </dict>`;
     }
@@ -3166,6 +3192,11 @@ ${indentXMLBlock(baseNode, 2)}
       const lowerName = String(placeholderName || '').toLowerCase();
       const quick = interpretQuickReference(trimmed);
       if (quick?.type === 'link') {
+        const meta = lookupLinkMetadata(quick.value);
+        if (meta?.variableName) {
+          const variableNodeFromMeta = buildVariableNodeFromQuick({ type: 'variable', value: meta.variableName });
+          if (variableNodeFromMeta) return variableNodeFromMeta;
+        }
         const bareValue = shouldReturnBareActionOutputNode(lowerName);
         if (shouldWrapActionOutputNode(lowerName) || shouldPreferVariableNode(placeholderName)) {
           const wrapped = buildActionOutputNodeFromQuick(quick, { wrapVariable: true });
@@ -3416,11 +3447,35 @@ ${indentXMLBlock(baseNode, 2)}
       params.input ??
       null;
     const inputQuick = extractPureQuickReference(inputValue);
-    const inputNode = inputQuick?.type === 'link'
-      ? buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true })
-      : ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
+    let inputNode;
+    if (inputQuick?.type === 'link') {
+      const meta = lookupLinkMetadata(inputQuick.value);
+      if (meta?.variableName) {
+        inputNode = buildVariableNodeFromQuick({ type: 'variable', value: meta.variableName })
+          ?? buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true });
+      } else {
+        inputNode = buildActionOutputNodeFromQuick(inputQuick, { wrapVariable: true });
+      }
+    } else {
+      inputNode = ensureAnyNode(inputValue, 'Input', placeholderToken('Input'));
+    }
 
-    const numberValue = params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? null;
+    let numberValue = params.WFNumberValue ?? params.NumberValue ?? params.numberValue ?? null;
+    if (numberValue == null) {
+      const compareRaw =
+        params.WFConditionalActionString ??
+        params.CompareTo ??
+        params.compareTo ??
+        null;
+      if (typeof compareRaw === 'number' && Number.isFinite(compareRaw)) {
+        numberValue = compareRaw;
+      } else if (typeof compareRaw === 'string') {
+        const trimmedCompare = compareRaw.trim();
+        if (trimmedCompare && !Number.isNaN(Number(trimmedCompare))) {
+          numberValue = trimmedCompare;
+        }
+      }
+    }
     const numberNode = ensureAnyNode(numberValue, 'WFNumberValue', '124');
 
     const endUUID = params.EndUUID ?? params.UUIDEnd ?? params.endUUID ?? params.UUID ?? null;
@@ -3748,6 +3803,9 @@ ${indentXMLBlock(baseNode, 2)}
         );
       }
 
+      const friendlyFields = ['OutputName', 'WFOutputName', 'Name', 'Label'];
+      const friendlyValue = friendlyFields.map((field) => normalizedParams[field]).find((val) => typeof val === 'string' && val.trim());
+
       if (normalizedActionName === 'speaktext' || guessedIdentifier === 'is.workflow.actions.speaktext') {
         const languageValue =
           normalizedParams.Language ??
@@ -3765,9 +3823,56 @@ ${indentXMLBlock(baseNode, 2)}
         }
         normalizedParams.SPEAK_LANGUAGE_BLOCK = languageBlock;
       }
-
-      const friendlyFields = ['OutputName', 'WFOutputName', 'Name', 'Label'];
-      const friendlyValue = friendlyFields.map((field) => normalizedParams[field]).find((val) => typeof val === 'string' && val.trim());
+      if (normalizedActionName === 'setvariable') {
+        const variableNameCandidate =
+          normalizedParams.VariableName ??
+          normalizedParams.WFVariableName ??
+          params.VariableName ??
+          params.variableName ??
+          null;
+        const normalizedVariableName = variableNameCandidate ? normalizeBuiltInVariableLabel(variableNameCandidate) : null;
+        const friendlyVariable = normalizedVariableName ? friendlyNameForVariable(normalizedVariableName) : null;
+        const outputToken =
+          params.OutputUUID ??
+          normalizedParams.OutputUUID ??
+          params.UUID ??
+          normalizedParams.UUID ??
+          null;
+        if (typeof outputToken === 'string') {
+          const quick = extractPureQuickReference(outputToken);
+          if (quick?.type === 'link') {
+            updateLinkMetadata(quick.value, {
+              action: actionName,
+              friendly: friendlyVariable || friendlyValue || humanizeActionName(actionName),
+              variableName: normalizedVariableName
+            });
+          }
+        }
+      }
+      if (normalizedActionName === 'getvariable') {
+        const variableNameCandidate =
+          params.VariableName ??
+          params.variableName ??
+          (typeof normalizedParams.Variable === 'string' ? normalizedParams.Variable : null);
+        const normalizedVariableName = variableNameCandidate ? normalizeBuiltInVariableLabel(variableNameCandidate) : null;
+        const friendlyVariable = normalizedVariableName ? friendlyNameForVariable(normalizedVariableName) : null;
+        const outputToken =
+          params.OutputUUID ??
+          normalizedParams.OutputUUID ??
+          params.UUID ??
+          normalizedParams.UUID ??
+          null;
+        if (typeof outputToken === 'string') {
+          const quick = extractPureQuickReference(outputToken);
+          if (quick?.type === 'link') {
+            updateLinkMetadata(quick.value, {
+              action: actionName,
+              friendly: friendlyVariable ? `Get ${friendlyVariable}` : (friendlyValue || humanizeActionName(actionName)),
+              variableName: normalizedVariableName
+            });
+          }
+        }
+      }
 
       for (const [key, value] of Object.entries(normalizedParams)) {
         if (typeof value !== 'string') continue;
