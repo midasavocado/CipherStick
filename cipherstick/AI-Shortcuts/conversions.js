@@ -3142,7 +3142,6 @@ ${workflowNameBlock}  <key>WFQuickActionSurfaces</key>
     'wfcount'
   ]);
   const ACTION_OUTPUT_BARE_PLACEHOLDER_KEYS = new Set([
-    'input',
     'value'
   ]);
   const VARIABLE_WRAPPER_PLACEHOLDER_KEYS = new Set([
