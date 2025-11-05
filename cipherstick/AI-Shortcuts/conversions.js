@@ -289,7 +289,8 @@
     </dict>
   `,
   'Askllm': `
-  <key>WFWorkflowActionIdentifier</key>
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
       <string>is.workflow.actions.askllm</string>
       <key>WFWorkflowActionParameters</key>
       <dict>
@@ -298,23 +299,11 @@
         <key>WFLLMModel</key>
         {{Model}}
         <key>WFLLMPrompt</key>
-        <dict>
-          <key>Value</key>
-          <dict>
-            <key>attachmentsByRange</key>
-            <dict>
-              <key>{0, 1}</key>
-              {{attachments}}
-            </dict>
-            <key>string</key>
-            {{LLMPrompt}}
-          </dict>
-          <key>WFSerializationType</key>
-          <string>WFTextTokenString</string>
-        </dict>
+        {{LLMPrompt}}
         <key>WFFollowUp</key>
         {{FollowUp}}
       </dict>
+    </dict>
   `,
   'Calendar.CreateCalendar': `
   <dict>
