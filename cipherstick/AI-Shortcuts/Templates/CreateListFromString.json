@@ -1,6 +1,6 @@
 {
   "action": "CreateListFromString",
   "params": {
-    "text": "{{STRING}}"
+    "text": "{{STRING}}" #MUST NOT BE EMPTY
   }
 }

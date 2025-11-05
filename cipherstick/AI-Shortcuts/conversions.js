@@ -515,7 +515,7 @@
         <key>UUID</key>
         {{UUID}}
         <key>text</key>
-        {{STRING:text}}
+        {{text}}
       </dict>
     </dict>
   `,
@@ -1627,6 +1627,11 @@ const userConversions = (() => {
   const CONVERSION_FILENAMES = Object.freeze(Object.keys(CONVERSIONS));
   const actionLookupCache = new Map(); // normalized action -> filename
   const linkRegistry = new Map(); // link label -> metadata about producing action
+  const BUILTIN_LINK_OVERRIDES = new Map([
+    ['repeatitem', { variableName: 'Repeat Item', friendly: 'Repeat Item' }],
+    ['repeatindex', { variableName: 'Repeat Index', friendly: 'Repeat Index' }],
+    ['repeatcount', { variableName: 'Repeat Count', friendly: 'Repeat Count' }],
+  ]);
   let autoTextLabelCounter = 0;
 
   const DEFAULT_ICON = Object.freeze({
@@ -1709,10 +1714,15 @@ const userConversions = (() => {
 
   function normalizeBuiltInVariableLabel(name) {
     if (typeof name !== 'string') return name;
-    if (/^Repeat\./i.test(name)) {
-      return name.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+    const trimmed = name.trim();
+    if (/^Repeat\./i.test(trimmed)) {
+      return trimmed.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
     }
-    return name;
+    const lower = trimmed.toLowerCase();
+    if (lower === 'repeatitem' || lower === 'repeat item') return 'Repeat Item';
+    if (lower === 'repeatindex' || lower === 'repeat index') return 'Repeat Index';
+    if (lower === 'repeatcount' || lower === 'repeat count') return 'Repeat Count';
+    return trimmed;
   }
 
   function humanizeVariableName(name) {
@@ -1746,11 +1756,15 @@ const userConversions = (() => {
     if (!normalized) return null;
     let entry = linkRegistry.get(normalized);
     if (!entry) {
+      const keyLower = normalized.toLowerCase();
+      const override = BUILTIN_LINK_OVERRIDES.get(keyLower) || BUILTIN_LINK_OVERRIDES.get(keyLower.replace(/\s+/g, ''));
       entry = {
         label: normalized,
         action: null,
-        friendly: null,
-        uuid: null
+        friendly: override?.friendly ?? null,
+        uuid: null,
+        variableName: override?.variableName ?? null,
+        builtin: Boolean(override)
       };
       linkRegistry.set(normalized, entry);
     }
@@ -1762,7 +1776,7 @@ const userConversions = (() => {
     if (!entry) return null;
     if (action && !entry.action) entry.action = action;
     if (friendly && friendly.trim() && !entry.friendly) entry.friendly = friendly.trim();
-    if (uuid && (!entry.uuid || entry.uuid === uuid)) entry.uuid = uuid;
+    if (uuid && !entry.builtin && (!entry.uuid || entry.uuid === uuid)) entry.uuid = uuid;
     if (variableName && !entry.variableName) entry.variableName = normalizeBuiltInVariableLabel(variableName);
     return entry;
   }
@@ -1800,6 +1814,7 @@ const userConversions = (() => {
   function resolveLinkUUID(label) {
     const entry = ensureLinkEntry(label);
     if (!entry) return null;
+    if (entry.builtin) return null;
     if (!entry.uuid) entry.uuid = genUUID();
     return entry.uuid;
   }
@@ -2147,12 +2162,24 @@ const userConversions = (() => {
         const quick = pureQuick;
         if (quick.type === 'link') {
           const label = quick.value;
+          const entry = ensureLinkEntry(label);
           const uuid = resolveLinkUUID(label);
-          const meta = lookupLinkMetadata(label) || {};
+          const meta = entry || {};
           const friendly =
             (meta && meta.friendly) ||
             humanizeActionName((meta && meta.action) || label) ||
             label;
+          const isBuiltin = Boolean(entry?.builtin);
+          if (isBuiltin) {
+            const variableName = meta.variableName || friendlyNameForVariable(label) || label;
+            updateLinkMetadata(label, { friendly: variableName });
+            const attachment = {
+              type: 'Variable',
+              VariableName: normalizeBuiltInVariableLabel(variableName)
+            };
+            return buildWFTextTokenString('', [attachment]);
+          }
+          updateLinkMetadata(label, { friendly, uuid });
           const attachment = {
             type: 'ActionOutput',
             outputUUID: uuid || label,
@@ -2601,17 +2628,29 @@ const userConversions = (() => {
       const quick = extractPureQuickReference(raw);
       if (quick?.type === 'link') {
         const label = quick.value;
+        const entry = ensureLinkEntry(label);
         const resolved = resolveLinkUUID(label);
-        const meta = lookupLinkMetadata(label) || {};
-        spec.outputUUID = resolved || label;
-        spec.outputName =
+        const meta = entry || {};
+        const friendly =
           meta?.friendly ??
           humanizeActionName(meta?.action || label) ??
           label;
-        spec.type = 'ActionOutput';
+        const isBuiltin = Boolean(entry?.builtin);
+        if (!isBuiltin) {
+          spec.outputUUID = resolved || label;
+          spec.type = 'ActionOutput';
+        } else {
+          spec.variableName = meta.variableName || friendlyNameForVariable(label) || label;
+          spec.type = 'Variable';
+        }
+        spec.outputName = friendly;
         if (quick.aggrandizements?.length) {
           spec.aggrandizements = quick.aggrandizements.map((agg) => ({ ...agg }));
         }
+        updateLinkMetadata(label, {
+          friendly,
+          uuid: resolved || undefined
+        });
       } else if (quick?.type === 'variable') {
         spec.variableName = quick.value;
         spec.type = 'Variable';
@@ -2656,8 +2695,15 @@ const userConversions = (() => {
         const trimmed = outputUUID.trim();
         if (isPureLinkTokenString(trimmed)) {
           const label = trimmed.slice(6).trim();
+          const aliasEntry = ensureLinkEntry(label);
           const resolved = resolveLinkUUID(label);
-          outputUUID = resolved || label;
+          if (resolved) {
+            outputUUID = resolved;
+          } else if (aliasEntry?.builtin) {
+            outputUUID = null;
+          } else {
+            outputUUID = label;
+          }
           if (!outputName) {
             const meta = lookupLinkMetadata(label) || {};
             outputName =
@@ -2665,7 +2711,10 @@ const userConversions = (() => {
               humanizeActionName(meta?.action || label) ??
               label;
           }
-          updateLinkMetadata(label, { friendly: outputName, uuid: outputUUID });
+          updateLinkMetadata(label, {
+            friendly: outputName,
+            uuid: resolved || undefined
+          });
         }
       }
 
@@ -2673,7 +2722,7 @@ const userConversions = (() => {
     if (outputName != null) spec.outputName = outputName;
 
     const variableName = spec.variableName ?? spec.VariableName ?? null;
-    if (variableName != null) spec.variableName = String(variableName);
+    if (variableName != null) spec.variableName = normalizeBuiltInVariableLabel(String(variableName));
 
     if (!spec.type) {
       if (spec.Type) spec.type = spec.Type;
@@ -3104,20 +3153,35 @@ ${workflowNameBlock}  <key>WFQuickActionSurfaces</key>
     if (!quick || quick.type !== 'link') return null;
     const label = quick.value;
     if (!label) return null;
-    const uuid = resolveLinkUUID(label) || label;
-    const meta = lookupLinkMetadata(label) || {};
+    const entry = ensureLinkEntry(label);
+    if (!entry) return null;
+    const meta = entry || {};
+    const isBuiltin = Boolean(entry.builtin);
     const friendly =
       preferredFriendly ??
       meta?.friendly ??
       humanizeActionName(meta?.action || label) ??
       label;
+    updateLinkMetadata(label, { friendly });
+    if (isBuiltin) {
+      const variableName = meta.variableName || friendlyNameForVariable(label) || label;
+      const variableQuick = { type: 'variable', value: variableName };
+      if (bareValue && !wrapVariable) {
+        return buildVariableNodeFromQuick(variableQuick, { bare: true });
+      }
+      if (wrapVariable) {
+        return buildVariableNodeFromQuick(variableQuick, { wrapVariable: true });
+      }
+      return buildVariableNodeFromQuick(variableQuick);
+    }
+    const uuid = resolveLinkUUID(label);
     updateLinkMetadata(label, { friendly, uuid });
     const aggs = Array.isArray(quick.aggrandizements) ? quick.aggrandizements.filter(Boolean) : [];
     const valueEntries = {
       Type: XML.str('ActionOutput'),
-      OutputName: XML.str(friendly || 'Value'),
-      OutputUUID: XML.str(uuid || label)
+      OutputName: XML.str(friendly || 'Value')
     };
+    if (uuid) valueEntries.OutputUUID = XML.str(uuid);
     if (aggs.length) valueEntries.Aggrandizements = renderValue(aggs);
     const valueXML = XML.dict(valueEntries);
     if (bareValue && !wrapVariable) {
@@ -3145,7 +3209,7 @@ ${indentXMLBlock(baseNode, 2)}
     return VARIABLE_NODE_KEYS.has(String(name).toLowerCase());
   }
 
-  function buildVariableNodeFromQuick(quick) {
+  function buildVariableNodeFromQuick(quick, options = {}) {
     if (!quick || !quick.type) return null;
     if (quick.type === 'link') {
       return buildActionOutputNodeFromQuick(quick, { wrapVariable: true });
@@ -3153,21 +3217,35 @@ ${indentXMLBlock(baseNode, 2)}
     if (quick.type === 'variable') {
       const name = quick.value;
       if (!name) return null;
-      return `<dict>
+      const normalizedName = normalizeBuiltInVariableLabel(name) || name;
+      const baseNode = `<dict>
+  <key>Type</key>
+  <string>Variable</string>
+  <key>VariableName</key>
+  ${XML.str(normalizedName)}
+</dict>`;
+      if (options.bare) {
+        return baseNode;
+      }
+      const valueNode = `<dict>
+  <key>Type</key>
+  <string>Variable</string>
+  <key>VariableName</key>
+  ${XML.str(normalizedName)}
+</dict>`;
+      if (options.wrapVariable) {
+        return `<dict>
   <key>Type</key>
   <string>Variable</string>
   <key>Variable</key>
-  <dict>
-    <key>Value</key>
-    <dict>
-      <key>Type</key>
-      <string>Variable</string>
-      <key>VariableName</key>
-      ${XML.str(name)}
-    </dict>
-    <key>WFSerializationType</key>
-    <string>WFTextTokenAttachment</string>
-  </dict>
+${indentXMLBlock(valueNode, 2)}
+</dict>`;
+      }
+      return `<dict>
+  <key>Value</key>
+${indentXMLBlock(valueNode, 2)}
+  <key>WFSerializationType</key>
+  <string>WFTextTokenAttachment</string>
 </dict>`;
     }
     return null;
