@@ -102,6 +102,7 @@
   "Variable.Append.json",
   "Vibrate.json",
   "Waittoreturn.json",
+  "WritingTools.FormatListIntent.json",
   "Weather.Currentconditions.json",
   "Weather.Forecast.json"
 ]

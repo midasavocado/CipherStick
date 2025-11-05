@@ -506,6 +506,19 @@
       </dict>
     </dict>
   `,
+  'com.apple.WritingTools.WritingToolsAppIntentsExtension.FormatListIntent': `
+  <dict>
+      <key>WFWorkflowActionIdentifier</key>
+      <string>com.apple.WritingTools.WritingToolsAppIntentsExtension.FormatListIntent</string>
+      <key>WFWorkflowActionParameters</key>
+      <dict>
+        <key>UUID</key>
+        {{UUID}}
+        <key>text</key>
+        {{STRING:text}}
+      </dict>
+    </dict>
+  `,
   'Control.Comment': `
   <dict>
       <key>WFWorkflowActionIdentifier</key>

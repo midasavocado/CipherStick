@@ -1,0 +1,6 @@
+{
+  "action": "CreateListFromString",
+  "params": {
+    "text": "{{STRING}}"
+  }
+}
