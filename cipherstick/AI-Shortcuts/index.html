@@ -648,6 +648,8 @@
     codeModalTab: 'json'
   };
 
+  const STORAGE_KEY = 'shortcutStudio.session.v1';
+
   const PIPELINE_LIBRARY = {
     assess: { key: 'assess', title: 'Assessing request', hint: 'Parsing your prompt' },
     search: { key: 'search', title: 'Selecting actions', hint: 'Browsing the catalog' },
@@ -700,6 +702,7 @@
       at: new Date()
     });
     renderConversation();
+    persistSession();
   }
 
   function renderConversation() {
@@ -728,6 +731,55 @@
       return `<article class="bubble ${roleClass}"><div class="bubble__inner">${label}<p>${escaped || '<em>(empty)</em>'}</p>${time}</div></article>`;
     }).join('');
     conversationList.scrollTop = conversationList.scrollHeight;
+  }
+
+  function persistSession() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const payload = {
+        basePrompt: state.basePrompt || '',
+        lastPrompt: state.lastPrompt || '',
+        lastName: state.lastName || DEFAULT_SHORTCUT_NAME,
+        conversation: state.conversation.map((entry) => ({
+          ...entry,
+          at: entry.at instanceof Date ? entry.at.toISOString() : entry.at || null
+        })),
+        program: state.program || null,
+        plistText: state.plistText || ''
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (err) {
+      console.warn('persistSession failed', err);
+    }
+  }
+
+  function restoreSession() {
+    if (typeof localStorage === 'undefined') return;
+    let saved = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      saved = JSON.parse(raw);
+    } catch (err) {
+      console.warn('restoreSession failed to parse', err);
+      return;
+    }
+    if (!saved || typeof saved !== 'object') return;
+    state.basePrompt = typeof saved.basePrompt === 'string' ? saved.basePrompt : '';
+    state.lastPrompt = typeof saved.lastPrompt === 'string' ? saved.lastPrompt : '';
+    state.lastName = typeof saved.lastName === 'string' && saved.lastName.trim() ? saved.lastName.trim() : DEFAULT_SHORTCUT_NAME;
+    if (Array.isArray(saved.conversation)) {
+      state.conversation = saved.conversation.map((entry) => {
+        const at = entry?.at ? new Date(entry.at) : null;
+        return { role: entry?.role || 'system', content: entry?.content || '', meta: entry?.meta || {}, at };
+      });
+      renderConversation();
+    }
+    const savedProgram = saved.program && typeof saved.program === 'object' ? saved.program : null;
+    const savedPlist = typeof saved.plistText === 'string' ? saved.plistText : '';
+    if (savedProgram || savedPlist) {
+      updateFlow(savedProgram, savedPlist);
+    }
   }
 
   function sanitizeName(name) {
@@ -882,6 +934,7 @@
     flowContainer.innerHTML = buildFlowHtml(state.program);
     btnViewRaw.disabled = !state.program;
     if (state.isCodeModalOpen) updateCodeModal(state.codeModalTab);
+    persistSession();
   }
 
   function pipelineReset() {
@@ -891,6 +944,7 @@
     const before = state.conversation.length;
     state.conversation = state.conversation.filter((entry) => entry.role !== 'pipeline');
     if (state.conversation.length !== before) renderConversation();
+    persistSession();
   }
 
   function pipelineStart(stepDescriptors = []) {
@@ -914,6 +968,7 @@
     state.pipelineContext = { currentStepKey: state.pipelineOrder[0] };
     state.conversation.push({ role: 'pipeline', id: 'pipeline-track' });
     renderConversation();
+    persistSession();
   }
 
   function pipelineSetStatus(stepKey, status, hint) {
@@ -979,6 +1034,7 @@
     }
     state.pipelineContext = null;
     renderConversation();
+    persistSession();
   }
 
   function updateCodeModal(tab = state.codeModalTab) {
@@ -1406,10 +1462,11 @@
     btnSign.disabled = true;
   });
 
-  renderConversation();
-  updateFlow(null, '');
+  restoreSession();
+  if (!state.conversation.length) renderConversation();
+  if (!state.program) updateFlow(null, state.plistText || '');
   pipelineReset();
-  btnSign.disabled = true;
+  btnSign.disabled = !state.program;
   </script>
 </body>
 </html>
