@@ -1791,11 +1791,22 @@ const BUILTIN_LINK_OVERRIDES = new Map([
     if (!extra.friendly && (!friendlyCandidate || /ask\.forinput/i.test(actionName || '')) && normalizedActionName === 'ask.forinput') {
       friendlyCandidate = 'Ask for Input';
     }
-    updateLinkMetadata(label, {
+    const normalizedVariableName =
+      extra.variableName != null ? normalizeBuiltInVariableLabel(extra.variableName) : null;
+    const metadata = updateLinkMetadata(label, {
       action: actionName,
       friendly: friendlyCandidate,
-      uuid: extra.uuid
+      uuid: extra.uuid,
+      variableName: normalizedVariableName
     });
+    const shouldMarkBuiltin =
+      extra.builtin === true || (normalizedVariableName && extra.builtin !== false);
+    if (metadata && shouldMarkBuiltin) {
+      metadata.builtin = true;
+      if (normalizedVariableName && !metadata.variableName) {
+        metadata.variableName = normalizedVariableName;
+      }
+    }
   }
 
   function lookupLinkMetadata(label) {
@@ -3920,6 +3931,23 @@ ${indentXMLBlock(valueNode, 2)}
           null;
         const normalizedVariableName = variableNameCandidate ? normalizeBuiltInVariableLabel(variableNameCandidate) : null;
         const friendlyVariable = normalizedVariableName ? friendlyNameForVariable(normalizedVariableName) : null;
+        const labelVariants = new Set();
+        if (typeof variableNameCandidate === 'string' && variableNameCandidate.trim()) {
+          labelVariants.add(variableNameCandidate.trim());
+        }
+        if (normalizedVariableName) {
+          labelVariants.add(normalizedVariableName);
+        }
+        if (labelVariants.size) {
+          const friendlyLabel = friendlyVariable || normalizedVariableName || [...labelVariants][0];
+          for (const variableLabel of labelVariants) {
+            registerLinkLabel(variableLabel, actionName, {
+              friendly: friendlyLabel,
+              variableName: normalizedVariableName || variableLabel,
+              builtin: true
+            });
+          }
+        }
         const outputToken =
           params.OutputUUID ??
           normalizedParams.OutputUUID ??
