@@ -506,7 +506,7 @@
       </dict>
     </dict>
   `,
-  'com.apple.WritingTools.WritingToolsAppIntentsExtension.FormatListIntent': `
+  'CreateListFromString': `
   <dict>
       <key>WFWorkflowActionIdentifier</key>
       <string>com.apple.WritingTools.WritingToolsAppIntentsExtension.FormatListIntent</string>
