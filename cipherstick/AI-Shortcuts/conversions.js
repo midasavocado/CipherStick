@@ -1853,18 +1853,22 @@ const userConversions = (() => {
         attachments.push({ range, type: 'Variable', VariableName: quick.value });
       } else if (quick?.type === 'link') {
         const label = quick.value;
+        const entry = ensureLinkEntry(label);
         const uuid = resolveLinkUUID(label);
-        const meta = lookupLinkMetadata(label) || {};
-        const attachment = {
-          range,
-          type: 'ActionOutput',
-          OutputUUID: uuid || label
-        };
+        const meta = entry || {};
+        const isBuiltin = Boolean(entry?.builtin);
         const friendly =
           (meta && meta.friendly) ||
           humanizeActionName((meta && meta.action) || label) ||
           label;
-        if (friendly) attachment.OutputName = friendly;
+        let attachment;
+        if (isBuiltin) {
+          const variableName = normalizeBuiltInVariableLabel(meta.variableName || friendly || label);
+          attachment = { range, type: 'Variable', VariableName: variableName };
+        } else {
+          attachment = { range, type: 'ActionOutput', OutputUUID: uuid || label };
+          if (friendly) attachment.OutputName = friendly;
+        }
         if (quick.aggrandizements?.length) {
           attachment.Aggrandizements = quick.aggrandizements.map((agg) => ({ ...agg }));
         }
