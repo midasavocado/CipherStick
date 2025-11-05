@@ -3047,7 +3047,8 @@ ${workflowNameBlock}  <key>WFQuickActionSurfaces</key>
     if (typeof v === 'string') {
       const trimmed = v.trim();
       if (!trimmed) return placeholderToken(placeholderName);
-      if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
+      if (trimmed.startsWith('<')) return trimmed;
+      if (valueIsPlaceholder(trimmed)) return XML.str(trimmed);
       return XML.str(v);
     }
     return XML.str(v);
@@ -3167,9 +3168,8 @@ ${indentXMLBlock(baseNode, 2)}
     if (typeof value === 'string') {
       const trimmed = value.trim();
       if (!trimmed) return renderValue(textTokenValue('', []));
-      if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) {
-        return trimmed;
-      }
+      if (trimmed.startsWith('<')) return trimmed;
+      if (valueIsPlaceholder(trimmed)) return XML.str(trimmed);
       const quick = extractPureQuickReference(trimmed);
       const variableNode = buildVariableNodeFromQuick(quick);
       if (variableNode) return variableNode;
@@ -3188,7 +3188,8 @@ ${indentXMLBlock(baseNode, 2)}
     if (typeof v === 'string') {
       const trimmed = v.trim();
       if (!trimmed) return placeholderToken(placeholderName);
-      if (valueIsPlaceholder(trimmed) || trimmed.startsWith('<')) return trimmed;
+      if (trimmed.startsWith('<')) return trimmed;
+      if (valueIsPlaceholder(trimmed)) return XML.str(trimmed);
       const lowerName = String(placeholderName || '').toLowerCase();
       const quick = interpretQuickReference(trimmed);
       if (quick?.type === 'link') {
@@ -3439,7 +3440,7 @@ ${indentXMLBlock(baseNode, 2)}
       params.CompareTo ??
       params.compareTo ??
       null;
-    const compareNode = ensureAnyNode(compareValue, 'CompareTo', placeholderToken('CompareTo'));
+    const compareNode = ensureAnyNode(compareValue, 'CompareTo', XML.str(''));
 
     const inputValue =
       params.WFInput ??
