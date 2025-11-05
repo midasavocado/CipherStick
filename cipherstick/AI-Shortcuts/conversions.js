@@ -1798,6 +1798,10 @@ const userConversions = (() => {
         friendlyCandidate = labelFriendlyFallback || actionFriendly || null;
       }
     }
+    const normalizedActionName = normalizeName(actionName);
+    if (!extra.friendly && (!friendlyCandidate || /ask\.forinput/i.test(actionName || '')) && normalizedActionName === 'ask.forinput') {
+      friendlyCandidate = 'Ask for Input';
+    }
     updateLinkMetadata(label, {
       action: actionName,
       friendly: friendlyCandidate,
