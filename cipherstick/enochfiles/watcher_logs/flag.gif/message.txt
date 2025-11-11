@@ -1,5 +1,0 @@
-TVGhlIG1wMyBzcGVha3Mgdm9sdW1lcywgYnV0IG5vdCB0aHJvdWdoIHlvdXIgZWFycy4gWW914oCZbGwgbmVlZCB0byBjaGFuZ2UgaG93IHlvdSBzZWUgaXQuIA==
-
-If you see a ⌖, &target is your replacement
-
-If you see "&mode;", "&mode" is your replacement

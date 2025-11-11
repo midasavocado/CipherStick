@@ -2401,14 +2401,15 @@ const BUILTIN_LINK_OVERRIDES = new Map([
       }
     }
 
+    if (shouldUseTextTokenPlaceholder(lowerKey)) {
+      return renderTextTokenPlaceholderValue(value);
+    }
+
     if (shouldPreferVariableNode(keyString)) {
       return renderVariablePlaceholderValue(value);
     }
 
     const upperKey = keyString.toUpperCase();
-    if (upperKey === 'ALERTACTIONMESSAGE') {
-      return renderAlertMessage(value);
-    }
     if (upperKey === 'SHOWCANCELBUTTON') {
       if (value === undefined) return XML.bool(false);
       return renderValue(value);
@@ -2433,17 +2434,28 @@ const BUILTIN_LINK_OVERRIDES = new Map([
   }
 
   function renderAlertMessage(value) {
+    return renderTextTokenPlaceholderValue(value);
+  }
+
+  function renderTextTokenPlaceholderValue(value) {
     if (value && value[SPECIAL_VALUE]) return renderValue(value);
     if (value == null) return XML.str('');
     if (typeof value !== 'string') return renderValue(value);
     const { text, attachments } = parseTokenizedText(value);
     if (!attachments.length) return XML.str(text);
     const attachmentSpecs = attachments.map((entry) => {
+      const spec = { range: entry.range };
       if (entry.type === 'Variable') {
-        return { range: entry.range, type: 'Variable', VariableName: entry.VariableName };
+        spec.type = 'Variable';
+        spec.VariableName = entry.VariableName;
+      } else {
+        spec.type = 'ActionOutput';
+        spec.OutputUUID = entry.OutputUUID;
+        if (entry.OutputName) spec.OutputName = entry.OutputName;
       }
-      const spec = { range: entry.range, type: 'ActionOutput', OutputUUID: entry.OutputUUID };
-      if (entry.OutputName) spec.OutputName = entry.OutputName;
+      if (entry.Aggrandizements && entry.Aggrandizements.length) {
+        spec.Aggrandizements = entry.Aggrandizements.map((agg) => ({ ...agg }));
+      }
       return spec;
     });
     return renderValue(textTokenValue(text, attachmentSpecs));
@@ -3148,10 +3160,16 @@ ${workflowNameBlock}  <key>WFQuickActionSurfaces</key>
     'variablevalue',
     'variableinput'
   ]);
+  const TEXT_TOKEN_PLACEHOLDER_KEYS = new Set([
+    'alertactionmessage',
+    'notificationactionbody',
+    'notificationactiontitle'
+  ]);
 
   const shouldUseActionOutputNode = (name) => ACTION_OUTPUT_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
   const shouldWrapActionOutputNode = (name) => VARIABLE_WRAPPER_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
   const shouldReturnBareActionOutputNode = (name) => ACTION_OUTPUT_BARE_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
+  const shouldUseTextTokenPlaceholder = (name) => TEXT_TOKEN_PLACEHOLDER_KEYS.has(String(name || '').toLowerCase());
 
   function buildActionOutputNodeFromQuick(
     quick,
