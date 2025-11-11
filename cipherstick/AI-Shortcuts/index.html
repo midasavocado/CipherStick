@@ -1372,7 +1372,8 @@
     const templates = (info?.usedFiles || []).slice(0, 2).map((file) => file.replace(/\.json$/i, '')).join(', ');
 
     const summary = [];
-    if (info?.name) summary.push(`Shortcut: ${info.name}.`);
+    const hasCustomName = info?.name && info.name !== DEFAULT_SHORTCUT_NAME;
+    if (hasCustomName) summary.push(`Named “${info.name}.”`);
     if (info?.answer) {
       const concise = String(info.answer).split(/(?<=[.!?])\s+/).slice(0, 2).join(' ').trim();
       if (concise) summary.push(concise);
