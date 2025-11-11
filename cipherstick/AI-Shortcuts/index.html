@@ -302,6 +302,104 @@
       gap: 22px;
       padding: 30px;
     }
+    .session-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      width: 100%;
+    }
+    .session-card {
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(9, 12, 26, 0.86);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 14px 32px rgba(5, 7, 20, 0.4);
+    }
+    .session-card__label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .session-card input[type="text"] {
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 14px;
+      padding: 10px 14px;
+      background: rgba(6, 9, 22, 0.8);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+    .session-card input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+    .session-card__stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .stat-chip {
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 10px 12px;
+      background: rgba(14, 18, 35, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stat-chip span {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .stat-chip strong {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .session-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .session-card__header h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .session-card__copy {
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      padding: 6px 14px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: background 0.15s ease;
+    }
+    .session-card__copy:hover { background: rgba(148, 163, 184, 0.15); }
+    .session-card__body {
+      min-height: 120px;
+      max-height: 220px;
+      margin: 0;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(6, 9, 22, 0.8);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text);
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
     .blueprint-header {
       display: flex;
       align-items: center;
@@ -585,6 +683,33 @@
           <button id="btnSign" disabled>Download .shortcut</button>
         </div>
       </div>
+      <div class="session-cards">
+        <div class="session-card">
+          <label for="shortcutNameInput" class="session-card__label">Shortcut name</label>
+          <input type="text" id="shortcutNameInput" value="My Shortcut" autocomplete="off" spellcheck="false" />
+          <div class="session-card__stats">
+            <div class="stat-chip">
+              <span>Steps</span>
+              <strong id="statActionCount">0</strong>
+            </div>
+            <div class="stat-chip">
+              <span>Status</span>
+              <strong id="statMode">Plan</strong>
+            </div>
+            <div class="stat-chip">
+              <span>Updated</span>
+              <strong id="statLastUpdated">—</strong>
+            </div>
+          </div>
+        </div>
+        <div class="session-card session-card--memory">
+          <div class="session-card__header">
+            <h3>Session memory</h3>
+            <button type="button" id="btnCopyMemory" class="session-card__copy">Copy</button>
+          </div>
+          <pre class="session-card__body" id="memorySynopsis">No notes yet.</pre>
+        </div>
+      </div>
       <div class="visualizer">
         <div class="flow-scroll" id="flowContainer">
           <div class="empty-visual">Blueprint will appear as soon as we plan your shortcut.</div>
@@ -631,6 +756,14 @@
   const codeModalBackdrop = $('codeModalBackdrop');
   const codeModalContent = $('codeModalContent');
   const codeModalTabs = document.querySelectorAll('[data-code-tab]');
+  const shortcutNameInput = $('shortcutNameInput');
+  const statActionCount = $('statActionCount');
+  const statMode = $('statMode');
+  const statLastUpdated = $('statLastUpdated');
+  const memorySynopsisEl = $('memorySynopsis');
+  const btnCopyMemory = $('btnCopyMemory');
+
+  const HISTORY_LIMIT = 5;
 
   const state = {
     basePrompt: '',
@@ -645,7 +778,11 @@
     pipelineContext: null,
     pipelineOrder: [],
     isCodeModalOpen: false,
-    codeModalTab: 'json'
+    codeModalTab: 'json',
+    memoryPairs: [],
+    memorySynopsis: '',
+    lastMode: 'plan',
+    lastUpdatedAt: null
   };
 
   const STORAGE_KEY = 'shortcutStudio.session.v1';
@@ -694,6 +831,65 @@
       .replace(/'/g, '&#39;');
   }
 
+  function trimForHistory(text, limit = 420) {
+    return String(text || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, limit);
+  }
+
+  function buildHistoryContext(limit = HISTORY_LIMIT) {
+    const relevant = state.conversation
+      .filter((entry) => entry.role === 'user' || entry.role === 'assistant')
+      .slice(-limit * 2);
+    return relevant
+      .map((entry) => ({
+        role: entry.role === 'assistant' ? 'assistant' : 'user',
+        content: trimForHistory(entry.content)
+      }))
+      .filter((entry) => entry.content);
+  }
+
+  function updateMemorySynopsis(userText, assistantText) {
+    const user = trimForHistory(userText, 320);
+    const assistant = trimForHistory(assistantText, 360);
+    if (!user || !assistant) return;
+    const nextPairs = [...state.memoryPairs, { user, assistant, at: new Date().toISOString() }];
+    state.memoryPairs = nextPairs.slice(-HISTORY_LIMIT);
+    state.memorySynopsis = state.memoryPairs
+      .map((entry, index) => `${index + 1}. ${entry.user} ➜ ${entry.assistant}`)
+      .join('\n');
+    persistSession();
+    renderMemorySynopsis();
+  }
+
+  function renderMemorySynopsis() {
+    if (!memorySynopsisEl) return;
+    memorySynopsisEl.textContent = state.memorySynopsis?.trim() || 'No notes yet.';
+  }
+
+  function renderSessionStats() {
+    if (shortcutNameInput) {
+      const desired = state.lastName || DEFAULT_SHORTCUT_NAME;
+      if (shortcutNameInput.value !== desired) shortcutNameInput.value = desired;
+    }
+    const count = Array.isArray(state.program?.actions) ? state.program.actions.length : 0;
+    if (statActionCount) statActionCount.textContent = String(count);
+    if (statMode) {
+      const modeLabel = (state.lastMode || 'plan').replace(/^\w/, (c) => c.toUpperCase());
+      statMode.textContent = modeLabel;
+    }
+    if (statLastUpdated) {
+      if (!state.lastUpdatedAt) statLastUpdated.textContent = '—';
+      else {
+        const date = new Date(state.lastUpdatedAt);
+        statLastUpdated.textContent = isNaN(date.getTime())
+          ? '—'
+          : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+  }
+
   function pushMessage(role, content, meta = {}) {
     state.conversation.push({
       role,
@@ -738,16 +934,20 @@
     try {
       const payload = {
         basePrompt: state.basePrompt || '',
-        lastPrompt: state.lastPrompt || '',
-        lastName: state.lastName || DEFAULT_SHORTCUT_NAME,
-        conversation: state.conversation.map((entry) => ({
-          ...entry,
-          at: entry.at instanceof Date ? entry.at.toISOString() : entry.at || null
-        })),
-        program: state.program || null,
-        plistText: state.plistText || ''
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      lastPrompt: state.lastPrompt || '',
+      lastName: state.lastName || DEFAULT_SHORTCUT_NAME,
+      conversation: state.conversation.map((entry) => ({
+        ...entry,
+        at: entry.at instanceof Date ? entry.at.toISOString() : entry.at || null
+      })),
+      program: state.program || null,
+      plistText: state.plistText || '',
+      memoryPairs: state.memoryPairs || [],
+      memorySynopsis: state.memorySynopsis || '',
+      lastMode: state.lastMode || 'plan',
+      lastUpdatedAt: state.lastUpdatedAt || null
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (err) {
       console.warn('persistSession failed', err);
     }
@@ -780,6 +980,12 @@
     if (savedProgram || savedPlist) {
       updateFlow(savedProgram, savedPlist);
     }
+    state.memoryPairs = Array.isArray(saved.memoryPairs) ? saved.memoryPairs.slice(-HISTORY_LIMIT) : [];
+    state.memorySynopsis = typeof saved.memorySynopsis === 'string' ? saved.memorySynopsis : '';
+    state.lastMode = typeof saved.lastMode === 'string' ? saved.lastMode : 'plan';
+    state.lastUpdatedAt = saved.lastUpdatedAt || null;
+    renderMemorySynopsis();
+    renderSessionStats();
   }
 
   function sanitizeName(name) {
@@ -935,6 +1141,7 @@
     btnViewRaw.disabled = !state.program;
     if (state.isCodeModalOpen) updateCodeModal(state.codeModalTab);
     persistSession();
+    renderSessionStats();
   }
 
   function pipelineReset() {
@@ -1082,6 +1289,33 @@
 
     const primaryInput = programObj ?? dslText ?? inputRaw;
 
+    if (programObj || dslText || inputRaw) {
+      try {
+        const payload = {
+          name,
+          program: programObj || null,
+          text: typeof inputRaw === 'string' ? inputRaw : null,
+          dsl: dslText || null
+        };
+        const remoteResp = await fetch(`${WORKER_ORIGIN}/convert`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const remoteJson = await remoteResp.json().catch(() => null);
+        if (remoteResp.ok && remoteJson?.plist) {
+          return remoteJson.plist;
+        }
+        const msg =
+          remoteJson?.message ||
+          remoteJson?.error ||
+          `status ${remoteResp.status}`;
+        recordFailure('Worker.convert', new Error(msg));
+      } catch (err) {
+        recordFailure('Worker.convert', err);
+      }
+    }
+
     if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
       try { return await window.ConversionUniversal.toPlist(primaryInput, name); }
       catch (err) { recordFailure('ConversionUniversal.toPlist', err); }
@@ -1199,6 +1433,7 @@
     let cta = 'Say the word if you want tweaks.';
     if (info?.mode === 'clarify') cta = 'Need more detail? Ask away.';
     else if (info?.mode === 'explore') cta = 'Want to branch out? Tell me which idea to expand.';
+    else if (info?.mode === 'impossible') cta = 'Let me know if you want to try a different angle.';
 
     summary.push(cta);
     return summary.join(' ');
@@ -1314,15 +1549,17 @@
     try {
       const payload = {
         prompt: text,
-        name,
-        followUp: !isInitial,
-        mode: pipelineMode,
-        context: {
-          basePrompt: state.basePrompt || state.lastPrompt,
-          programText: state.program ? prettyStringify(state.program) : '',
-          plistText: state.plistText || ''
-        }
-      };
+      name,
+      followUp: !isInitial,
+      mode: pipelineMode,
+      context: {
+        basePrompt: state.basePrompt || state.lastPrompt,
+        programText: state.program ? prettyStringify(state.program) : '',
+        plistText: state.plistText || '',
+        memory: state.memorySynopsis || '',
+        history: buildHistoryContext()
+      }
+    };
 
       const data = await streamWorkerGenerate(payload);
       if (!data?.ok) {
@@ -1341,8 +1578,13 @@
       pipelineSetStatus('summarize', 'done');
 
       const effectiveMode = data.mode || pipelineMode;
+      state.lastMode = effectiveMode;
+      state.lastUpdatedAt = new Date().toISOString();
+      renderSessionStats();
+      persistSession();
       const summary = explainResult({ mode: effectiveMode, usedFiles: data.usedFiles, answer: data.answer, name: finalName });
       pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
+      updateMemorySynopsis(text, summary || 'Shortcut updated.');
 
       pipelineComplete('success');
       showToast('Shortcut updated. Download whenever you\'re ready.');
@@ -1435,6 +1677,39 @@
   btnViewRaw.addEventListener('click', () => openCodeModal('json'));
   codeModalClose.addEventListener('click', closeCodeModal);
   codeModalBackdrop.addEventListener('click', closeCodeModal);
+  if (shortcutNameInput) {
+    shortcutNameInput.addEventListener('input', (event) => {
+      const next = sanitizeName(event.target.value);
+      state.lastName = next;
+      if (shortcutNameInput.value !== next) shortcutNameInput.value = next;
+      persistSession();
+    });
+  }
+  if (btnCopyMemory) {
+    btnCopyMemory.addEventListener('click', async () => {
+      const text = state.memorySynopsis?.trim();
+      if (!text) {
+        showToast('Nothing to copy yet.', true);
+        return;
+      }
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const temp = document.createElement('textarea');
+          temp.value = text;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand('copy');
+          temp.remove();
+        }
+        showToast('Session memory copied.');
+      } catch (err) {
+        console.warn('Copy failed', err);
+        showToast('Could not copy to clipboard.', true);
+      }
+    });
+  }
   codeModalTabs.forEach((btn) => {
     btn.addEventListener('click', (event) => {
       event.preventDefault();
@@ -1452,6 +1727,10 @@
     state.lastName = DEFAULT_SHORTCUT_NAME;
     state.program = null;
     state.plistText = '';
+    state.memoryPairs = [];
+    state.memorySynopsis = '';
+    state.lastMode = 'plan';
+    state.lastUpdatedAt = null;
     chatInput.value = '';
     pipelineReset();
     state.conversation = [];
@@ -1460,6 +1739,9 @@
     if (state.isCodeModalOpen) closeCodeModal();
     showToast('Workspace cleared.');
     btnSign.disabled = true;
+    renderMemorySynopsis();
+    renderSessionStats();
+    persistSession();
   });
 
   restoreSession();
@@ -1467,6 +1749,8 @@
   if (!state.program) updateFlow(null, state.plistText || '');
   pipelineReset();
   btnSign.disabled = !state.program;
+  renderSessionStats();
+  renderMemorySynopsis();
   </script>
 </body>
 </html>

@@ -1,15 +1,25 @@
-(() => {
+const __CONVERSION_ROOT__ =
+  typeof globalThis !== 'undefined'
+    ? globalThis
+    : typeof self !== 'undefined'
+      ? self
+      : typeof window !== 'undefined'
+        ? window
+        : {};
+
+const __CONVERSION_API__ = ((root) => {
+  const globalWindow = root || {};
+  const global = globalWindow;
   // -------------------------------------------
   // Conversion.js — JSON/DSL → Shortcuts PLIST
   // Embedded conversions library for action dict templates
   // -------------------------------------------
 
   const Conversion = {};
-  window.Conversion = Conversion;
 
   // ---- Embedded conversion templates ----
   // Generated from Conversions/*.txt so everything works offline.
-  // To override or extend at runtime, set window.CONVERSIONS_LIBRARY before this script loads.
+  // To override or extend at runtime, set globalWindow.CONVERSIONS_LIBRARY before this script loads.
   // The original repository contained a Finder metadata file for 'Showinstore'; add your own template if you need that action.
   const BUILTIN_CONVERSIONS = Object.freeze({
   'Addframetogif': `
@@ -1594,7 +1604,7 @@
 });
 const userConversions = (() => {
     try {
-      const override = window?.CONVERSIONS_LIBRARY ?? window?.CONVERSIONS_OVERRIDE;
+      const override = globalWindow?.CONVERSIONS_LIBRARY ?? globalWindow?.CONVERSIONS_OVERRIDE;
       if (override && typeof override === 'object') return override;
     } catch {
       // Access can fail in certain sandboxed contexts; ignore.
@@ -4281,10 +4291,7 @@ ${indentXMLBlock(valueNode, 2)}
     catch (e){ fail('Invalid JSON program', { error: String(e), preview: t.slice(0,400) }); }
   }
 
-})();
-
 /* --- Universal tolerant wrapper: accepts JSON/DSL/XML/plain text --- */
-(function (global){
   function tryParseJSON(text){
     try {
       const t = String(text || '').trim();
@@ -4391,7 +4398,21 @@ ${indentXMLBlock(valueNode, 2)}
     throw err;
   }
 
-  global.ConversionUniversal = {
+  const exposedUniversal = {
     toPlist: toPlistUniversal
   };
-})(window);
+  global.ConversionUniversal = exposedUniversal;
+
+  return { Conversion, ConversionUniversal: exposedUniversal };
+})(__CONVERSION_ROOT__);
+
+const { Conversion, ConversionUniversal } = __CONVERSION_API__ || {};
+
+if (__CONVERSION_ROOT__ && typeof __CONVERSION_ROOT__ === 'object') {
+  __CONVERSION_ROOT__.Conversion = Conversion;
+  __CONVERSION_ROOT__.ConversionUniversal = ConversionUniversal;
+}
+
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+  module.exports = { Conversion, ConversionUniversal };
+}
