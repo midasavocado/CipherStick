@@ -104,5 +104,6 @@
   "Waittoreturn.json",
   "CreateListFromString.json",
   "Weather.Currentconditions.json",
-  "Weather.Forecast.json"
+  "Weather.Forecast.json",
+  "Savetocameraroll.json"
 ]
