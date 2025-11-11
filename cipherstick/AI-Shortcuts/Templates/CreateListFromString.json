@@ -1,6 +1,6 @@
 {
   "action": "CreateListFromString",
   "params": {
-    "text": "{{STRING}}" #MUST NOT BE EMPTY
+    "text": "{{STRING}}" #MUST NOT BE EMPTY, MUST BE MORE THAN ONE LINE/WORD
   }
 }
