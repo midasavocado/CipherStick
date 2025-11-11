@@ -363,51 +363,6 @@ const __CONVERSION_API__ = ((root) => {
       </dict>
     </dict>
   `,
-  'Clock.StartTimer': `
-  <dict>
-      <key>WFWorkflowActionIdentifier</key>
-      <string>is.workflow.actions.timer.start</string>
-      <key>WFWorkflowActionParameters</key>
-      <dict>
-        <key>AppIntentDescriptor</key>
-        <dict>
-          <key>AppIntentIdentifier</key>
-          <string>INCreateTimerIntent</string>
-          <key>BundleIdentifier</key>
-          <string>com.apple.mobiletimer</string>
-          <key>Name</key>
-          <string>Clock</string>
-          <key>TeamIdentifier</key>
-          <string>0000000000</string>
-        </dict>
-        <key>IntentAppDefinition</key>
-        <dict>
-          <key>BundleIdentifier</key>
-          <string>com.apple.clock</string>
-          <key>ExtensionBundleIdentifier</key>
-          <string>com.apple.mobiletimer-framework.MobileTimerIntents</string>
-          <key>Name</key>
-          <string>Clock</string>
-          <key>TeamIdentifier</key>
-          <string>0000000000</string>
-        </dict>
-        <key>UUID</key>
-        {{UUID}}
-        <key>WFDuration</key>
-        <dict>
-          <key>Value</key>
-          <dict>
-            <key>Magnitude</key>
-            {{Duration}}
-            <key>Unit</key>
-            {{Unit}}
-          </dict>
-          <key>WFSerializationType</key>
-          <string>WFQuantityFieldValue</string>
-        </dict>
-      </dict>
-    </dict>
-  `,
   'Clock.CreateAlarm': `
   <dict>
       <key>WFWorkflowActionIdentifier</key>
