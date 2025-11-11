@@ -737,7 +737,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="conversions.js"></script>
   <script>
   const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
   const DEFAULT_SHORTCUT_NAME = 'My Shortcut';
@@ -1313,49 +1312,6 @@
         recordFailure('Worker.convert', new Error(msg));
       } catch (err) {
         recordFailure('Worker.convert', err);
-      }
-    }
-
-    if (window.ConversionUniversal && typeof window.ConversionUniversal.toPlist === 'function') {
-      try { return await window.ConversionUniversal.toPlist(primaryInput, name); }
-      catch (err) { recordFailure('ConversionUniversal.toPlist', err); }
-    }
-
-    if (programObj) {
-      const cj = window.ConversionJSON;
-      if (cj && typeof cj.toPlist === 'function') {
-        try { return await cj.toPlist({ name, program: programObj }); }
-        catch (e1) { recordFailure('ConversionJSON.toPlist({ name, program })', e1); }
-        try { return await cj.toPlist(programObj, name); }
-        catch (e2) { recordFailure('ConversionJSON.toPlist(programObj, name)', e2); }
-        try { return await cj.toPlist(programObj); }
-        catch (e3) { recordFailure('ConversionJSON.toPlist(programObj)', e3); }
-      }
-
-      const c = window.Conversion;
-      if (c) {
-        if (typeof c.toPlistFromJSON === 'function') {
-          try { return await c.toPlistFromJSON(programObj, name); }
-          catch (e4) { recordFailure('Conversion.toPlistFromJSON', e4); }
-        }
-        if (typeof c.toPlist === 'function') {
-          try { return await c.toPlist(programObj, name); }
-          catch (e5) { recordFailure('Conversion.toPlist', e5); }
-        }
-      }
-
-      const cdsl = window.ConversionDSL;
-      if (cdsl && typeof cdsl.toPlistFromJSON === 'function') {
-        try { return await cdsl.toPlistFromJSON(programObj, name); }
-        catch (e6) { recordFailure('ConversionDSL.toPlistFromJSON', e6); }
-      }
-    }
-
-    if (dslText) {
-      const cdsl = window.ConversionDSL;
-      if (cdsl && typeof cdsl.toPlist === 'function') {
-        try { return await cdsl.toPlist({ name, dsl: dslText }); }
-        catch (e7) { recordFailure('ConversionDSL.toPlist', e7); }
       }
     }
 
