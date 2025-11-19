@@ -1,1912 +1,210 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <title>Shortcut Studio 2.0</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #03040d;
-      --bg-surface: rgba(11, 14, 30, 0.78);
-      --bg-panel: rgba(15, 19, 40, 0.9);
-      --stroke: rgba(120, 132, 180, 0.22);
-      --accent: #8a63ff;
-      --accent-strong: #a78bfa;
-      --accent-soft: rgba(138, 99, 255, 0.18);
-      --text: #eef1ff;
-      --text-muted: #9aa5c6;
-      --success: #34d399;
-      --error: #fb7185;
-      --shadow: 0 42px 90px rgba(5, 8, 24, 0.6);
-      --radius-lg: 28px;
-      --radius-md: 18px;
-      --mono: 'JetBrains Mono', 'Fira Code', monospace;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      height: 100vh;
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      background:
-        radial-gradient(circle at 0% -10%, rgba(138, 99, 255, 0.28), transparent 55%),
-        radial-gradient(circle at 100% -30%, rgba(14, 165, 233, 0.22), transparent 55%),
-        linear-gradient(180deg, #02030a, #040618 60%, #03040d);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    header {
-      width: 100%;
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 32px 42px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-shrink: 0;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 1.3rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-    .brand__logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(138, 99, 255, 0.95));
-      display: grid;
-      place-items: center;
-      color: #050318;
-      font-weight: 700;
-      box-shadow: 0 20px 34px rgba(120, 99, 255, 0.32);
-    }
-    .btn-secondary {
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      border-radius: 999px;
-      padding: 10px 20px;
-      background: rgba(148, 163, 184, 0.1);
-      color: var(--text);
-      cursor: pointer;
-      transition: background 0.18s ease, transform 0.18s ease;
-    }
-    .btn-secondary:hover { background: rgba(148, 163, 184, 0.18); transform: translateY(-1px); }
-
-    .workspace {
-      width: 100%;
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 0 42px 42px;
-      display: grid;
-      grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
-      gap: 28px;
-      flex: 1;
-      min-height: 0;
-    }
-    .panel {
-      background: var(--bg-surface);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(24px);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
-    .panel::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      border-radius: inherit;
-      border: 1px solid rgba(138, 99, 255, 0.05);
-    }
-
-    .chat-panel,
-    .blueprint-panel {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      min-height: 0;
-      gap: 0;
-    }
-
-    .chat-scroll {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 24px 28px 42px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-    .chat-scroll::-webkit-scrollbar { width: 9px; }
-    .chat-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.24);
-      border-radius: 999px;
-    }
-
-    .bubble { max-width: 92%; display: flex; }
-    .bubble--user { justify-content: flex-end; align-self: flex-end; }
-    .bubble__inner {
-      padding: 16px 18px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      background: rgba(15, 18, 36, 0.85);
-      box-shadow: 0 24px 40px rgba(6, 8, 24, 0.52);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 0.96rem;
-      line-height: 1.58;
-    }
-    .bubble--user .bubble__inner {
-      background: rgba(132, 99, 255, 0.2);
-      border-color: rgba(132, 99, 255, 0.4);
-    }
-    .bubble--assistant .bubble__inner {
-      background: rgba(45, 85, 241, 0.18);
-      border-color: rgba(45, 85, 241, 0.32);
-    }
-    .bubble__content {
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-      width: 100%;
-    }
-    .bubble__content > * { margin: 0; }
-    .bubble__content ul {
-      margin: 0;
-      padding-left: 1.1em;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .bubble__content code {
-      font-family: var(--mono);
-      font-size: 0.88em;
-      background: rgba(8, 10, 24, 0.8);
-      border-radius: 6px;
-      padding: 2px 6px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-    }
-    .bubble__content pre {
-      margin: 0;
-      border-radius: 14px;
-      padding: 12px 14px;
-      background: rgba(4, 5, 12, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      font-size: 0.82rem;
-      overflow-x: auto;
-    }
-    .bubble__content a {
-      color: var(--accent-strong);
-      text-decoration: none;
-    }
-    .bubble__content a:hover { text-decoration: underline; }
-    .bubble__content .md-heading {
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    .bubble__content blockquote {
-      margin: 0;
-      padding: 8px 14px;
-      border-left: 3px solid rgba(138, 99, 255, 0.35);
-      background: rgba(138, 99, 255, 0.08);
-      border-radius: 10px;
-      color: var(--text-muted);
-      font-style: italic;
-    }
-    .pipeline-track {
-      padding: 18px 22px;
-      background: rgba(11, 15, 34, 0.82);
-      border-radius: 24px;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      width: 100%;
-    }
-    .pipeline-track__step {
-      position: relative;
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding-left: 4px;
-    }
-    .pipeline-track__step::after {
-      content: "";
-      position: absolute;
-      left: 11px;
-      top: 24px;
-      width: 2px;
-      height: calc(100% + 8px);
-      background: rgba(148, 163, 184, 0.18);
-    }
-    .pipeline-track__step:last-child::after { display: none; }
-    .pipeline-track__node {
-      height: 18px;
-      width: 18px;
-      border-radius: 50%;
-      border: 2px solid rgba(148, 163, 184, 0.3);
-      background: rgba(148, 163, 184, 0.14);
-      position: relative;
-      margin-top: 2px;
-      flex: 0 0 auto;
-    }
-    .pipeline-track__details {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .pipeline-track__details strong { font-size: 0.9rem; }
-    .pipeline-track__details span { font-size: 0.78rem; color: var(--text-muted); }
-    .pipeline-track__step--pending { opacity: 0.7; }
-    .pipeline-track__step--active .pipeline-track__node {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-    .pipeline-track__step--active .pipeline-track__node::after {
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    .pipeline-track__step--done .pipeline-track__node {
-      border-color: var(--success);
-      background: rgba(52, 211, 153, 0.26);
-    }
-    .pipeline-track__step--done .pipeline-track__node::after {
-      content: "";
-      position: absolute;
-      inset: 5px;
-      border-right: 2px solid var(--success);
-      border-bottom: 2px solid var(--success);
-      transform: rotate(45deg);
-    }
-    .pipeline-track__step--done::after { background: rgba(52, 211, 153, 0.28); }
-    .pipeline-track__step--error .pipeline-track__node {
-      border-color: var(--error);
-      background: rgba(251, 113, 133, 0.3);
-    }
-    .pipeline-track__step--error .pipeline-track__details span { color: var(--error); }
-    .pipeline-track__step--error::after { background: rgba(251, 113, 133, 0.32); }
-    .bubble__label {
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      color: rgba(148, 163, 184, 0.72);
-    }
-    .bubble__time { font-size: 0.7rem; color: rgba(148, 163, 184, 0.5); }
-
-    .composer-shell {
-      position: sticky;
-      bottom: 0;
-      padding: 18px 26px 24px;
-      background: linear-gradient(180deg, rgba(3, 4, 13, 0.18), rgba(3, 4, 13, 0.82));
-      border-top: 1px solid rgba(148, 163, 184, 0.18);
-      backdrop-filter: blur(12px);
-    }
-    .composer {
-      border-radius: var(--radius-md);
-      background: var(--bg-panel);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      display: flex;
-      align-items: flex-start;
-      padding: 18px;
-      gap: 18px;
-      box-shadow: 0 18px 40px rgba(4, 7, 22, 0.45);
-    }
-    .composer textarea {
-      flex: 1;
-      min-height: 90px;
-      max-height: 220px;
-      resize: none;
-      border: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 1rem;
-      line-height: 1.55;
-      outline: none;
-    }
-    .composer button {
-      border: none;
-      border-radius: 16px;
-      padding: 12px 24px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #040117;
-      font-weight: 600;
-      cursor: pointer;
-      min-width: 110px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 18px 32px rgba(138, 99, 255, 0.3);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-    .composer button .btn-spinner {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 3px solid rgba(4, 1, 23, 0.35);
-      border-top-color: rgba(4, 1, 23, 0.95);
-      animation: spin 0.8s linear infinite;
-      display: none;
-    }
-    .composer button.is-loading .btn-label { display: none; }
-    .composer button.is-loading .btn-spinner { display: block; }
-    .composer button:disabled { opacity: 0.6; cursor: progress; box-shadow: none; }
-    .composer button:hover:not(:disabled) { transform: translateY(-1px); }
-
-    .blueprint-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      padding: 30px;
-    }
-    .session-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 18px;
-      width: 100%;
-    }
-    .session-card {
-      border-radius: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(9, 12, 26, 0.86);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 14px 32px rgba(5, 7, 20, 0.4);
-    }
-    .session-card__label {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-    }
-    .session-card input[type="text"] {
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 14px;
-      padding: 10px 14px;
-      background: rgba(6, 9, 22, 0.8);
-      color: var(--text);
-      font-size: 0.95rem;
-      outline: none;
-      transition: border 0.2s ease;
-    }
-    .session-card input[type="text"]:focus {
-      border-color: var(--accent);
-    }
-    .session-card__stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 10px;
-    }
-    .stat-chip {
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      padding: 10px 12px;
-      background: rgba(14, 18, 35, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .stat-chip span {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-    }
-    .stat-chip strong {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-    .session-card__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .session-card__header h3 {
-      margin: 0;
-      font-size: 0.95rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-    .session-card__copy {
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 999px;
-      padding: 6px 14px;
-      background: transparent;
-      color: var(--text);
-      cursor: pointer;
-      font-size: 0.78rem;
-      transition: background 0.15s ease;
-    }
-    .session-card__copy:hover { background: rgba(148, 163, 184, 0.15); }
-    .session-card__body {
-      min-height: 120px;
-      max-height: 220px;
-      margin: 0;
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(6, 9, 22, 0.8);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      line-height: 1.45;
-      color: var(--text);
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    .blueprint-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .blueprint-header h2 { margin: 0; font-size: 1.08rem; }
-    .blueprint-header button {
-      border: none;
-      border-radius: 999px;
-      padding: 10px 22px;
-      background: linear-gradient(135deg, rgba(94, 234, 212, 0.92), rgba(59, 130, 246, 1));
-      color: #040d13;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 20px 34px rgba(59, 130, 246, 0.3);
-      transition: transform 0.18s ease;
-    }
-    .blueprint-header button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
-    .blueprint-header button:hover:not(:disabled) { transform: translateY(-1px); }
-
-    .visualizer {
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: radial-gradient(circle at 20% 10%, rgba(138, 99, 255, 0.1), transparent 55%), rgba(9, 12, 26, 0.92);
-      padding: 26px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      min-height: 360px;
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-    .visualizer::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      border: 1px solid rgba(138, 99, 255, 0.08);
-      pointer-events: none;
-    }
-
-    .flow-scroll {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      padding-right: 12px;
-      padding-bottom: 18px;
-    }
-    .flow-scroll::-webkit-scrollbar { width: 9px; }
-    .flow-scroll::-webkit-scrollbar-thumb { background: rgba(138, 99, 255, 0.28); border-radius: 999px; }
-
-    .flow-step {
-      position: relative;
-      padding: 20px 24px 20px 34px;
-      border-radius: 20px;
-      background: rgba(18, 22, 45, 0.9);
-      border: 1px solid rgba(138, 99, 255, 0.18);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 22px 42px rgba(5, 7, 20, 0.45);
-    }
-    .flow-step::before {
-      content: "";
-      position: absolute;
-      left: 16px;
-      top: 22px;
-      bottom: 22px;
-      width: 2px;
-      border-radius: 2px;
-      background: rgba(138, 99, 255, 0.25);
-    }
-    .flow-step.is-producer::before { background: rgba(138, 99, 255, 0.6); }
-    .flow-step.is-consumer::before { background: rgba(56, 189, 248, 0.5); }
-    .flow-step__header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .flow-step__title { font-size: 0.96rem; font-weight: 600; }
-    .flow-step__meta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-    .flow-params { display: flex; flex-direction: column; gap: 8px; }
-    .flow-param { display: flex; align-items: flex-start; gap: 10px; }
-    .flow-param__key {
-      min-width: 110px;
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .flow-param__value {
-      flex: 1;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      color: var(--text);
-    }
-    .flow-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-      background: rgba(148, 163, 184, 0.12);
-      color: rgba(226, 232, 240, 0.8);
-    }
-    .flow-chip--link { background: rgba(56, 189, 248, 0.18); color: #bae6fd; }
-    .flow-chip--var { background: rgba(167, 139, 250, 0.2); color: #ede9fe; }
-    .flow-chip--empty { background: rgba(148, 163, 184, 0.14); color: rgba(226, 232, 240, 0.8); }
-    .flow-code {
-      margin: 0;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(9, 12, 28, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .flow-text { display: inline-block; }
-    .flow-subflow {
-      margin-top: 6px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(14, 18, 40, 0.88);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-    }
-    .flow-subflow__title {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--accent-strong);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .flow-subflow__content {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .flow-subflow .flow-step {
-      margin: 0;
-    }
-    .flow-step--nested {
-      background: rgba(14, 18, 40, 0.95);
-      border-color: rgba(129, 140, 248, 0.25);
-    }
-
-    .empty-visual { margin: auto; text-align: center; color: var(--text-muted); font-size: 0.92rem; }
-
-    .toast {
-      position: fixed;
-      right: 42px;
-      bottom: 38px;
-      padding: 16px 20px;
-      border-radius: 20px;
-      background: rgba(5, 7, 20, 0.92);
-      border: 1px solid rgba(148, 163, 184, 0.24);
-      color: var(--text);
-      box-shadow: 0 32px 60px rgba(5, 7, 20, 0.55);
-      opacity: 0;
-      transform: translateY(16px);
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      max-width: min(360px, calc(100% - 32px));
-      z-index: 999;
-    }
-    .toast.is-visible { opacity: 1; transform: translateY(0); }
-    .toast.toast--error { border-color: rgba(251, 113, 133, 0.4); background: rgba(70, 8, 25, 0.92); }
-
-    .code-toggle { border: 1px solid rgba(148, 163, 184, 0.24); border-radius: 999px; padding: 8px 18px; background: rgba(148, 163, 184, 0.12); color: var(--text); cursor: pointer; transition: background 0.18s ease, transform 0.18s ease; }
-    .code-toggle:hover { background: rgba(148, 163, 184, 0.2); transform: translateY(-1px); }
-
-    .code-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .code-modal.is-open { display: flex; }
-    .code-modal__backdrop { position: absolute; inset: 0; background: rgba(2, 3, 10, 0.75); backdrop-filter: blur(8px); }
-    .code-modal__panel {
-      position: relative;
-      width: min(820px, calc(100% - 40px));
-      max-height: min(80vh, 640px);
-      background: rgba(8, 11, 26, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      border-radius: 22px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 40px 90px rgba(5, 7, 20, 0.6);
-      overflow: hidden;
-    }
-    .code-modal__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-      gap: 16px;
-    }
-    .code-modal__header h3 { margin: 0; font-size: 1rem; }
-    .code-modal__tabs { display: flex; gap: 10px; }
-    .code-modal__tab {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 16px;
-      background: rgba(148, 163, 184, 0.14);
-      color: var(--text);
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: background 0.18s ease;
-    }
-    .code-modal__tab.is-active { background: var(--accent-soft); color: var(--accent-strong); }
-    .code-modal__close {
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      background: rgba(148, 163, 184, 0.16);
-      color: var(--text);
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-    .code-modal__close:hover { background: rgba(148, 163, 184, 0.24); }
-    .code-modal__body { flex: 1; overflow: auto; padding: 20px 24px; }
-    .code-modal__body pre { margin: 0; font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; color: var(--text); }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.25); opacity: 0.55; }
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 1120px) {
-      .workspace {
-        grid-template-columns: minmax(0, 1fr);
-        padding: 0 28px 48px;
-      }
-      .chat-panel { min-height: auto; }
-    }
-    @media (max-width: 680px) {
-      header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 26px 20px 10px; }
-      .workspace { padding: 0 20px 48px; }
-      .composer { flex-direction: column; align-items: stretch; }
-      .composer button { width: 100%; border-radius: 14px; }
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux - Automation, Reimagined</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="icon.png">
 </head>
+
 <body>
-  <header>
-    <div class="brand">
-      <span class="brand__logo">SS</span>
-      <span>Shortcut Studio</span>
+
+  <nav>
+    <a href="index.html" class="logo-container">
+      <div class="logo-icon">F</div>
+      <div class="logo-text">Flux</div>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Product</a>
+      <a href="marketplace.html">Explore</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="docs.html">Docs</a>
+      <button class="mode-toggle-btn" title="Toggle Theme"></button>
     </div>
-    <button id="btnReset" class="btn-secondary">Reset workspace</button>
-  </header>
+    <a href="app.html" class="cta-button">Get Started</a>
+  </nav>
 
-  <main class="workspace">
-    <section class="panel chat-panel">
-      <div class="chat-scroll" id="conversationList">
-        <p class="bubble__label" style="color: var(--text-muted);">Describe a shortcut to begin.</p>
-      </div>
-      <div class="composer-shell">
-        <div class="composer">
-          <textarea id="chatInput" placeholder="Describe what should happen, e.g. &quot;Ask for text, generate a QR, show it instantly.&quot;"></textarea>
-          <button id="btnSend" title="Send">
-            <span class="btn-label">Go</span>
-            <span class="btn-spinner"></span>
-          </button>
-        </div>
-      </div>
-    </section>
+  <div class="hero">
+    <canvas id="hero-canvas"></canvas>
+    <h1>Automation, <br><span>Reimagined.</span></h1>
+    <p>Turn natural language into powerful iOS Shortcuts. No coding required. Just describe your workflow, and Flux
+      handles the rest.</p>
+    <div class="hero-buttons">
+      <a href="app.html" class="btn btn-primary">Start Building</a>
+      <a href="#how-it-works" class="btn btn-secondary">How it Works</a>
+    </div>
+  </div>
 
-    <aside class="panel blueprint-panel">
-      <div class="blueprint-header">
-        <h2>Shortcut blueprint</h2>
-        <div style="display:flex; gap:10px;">
-          <button id="btnViewRaw" class="code-toggle" disabled>View raw output</button>
-          <button id="btnSign" disabled>Download .shortcut</button>
-        </div>
+  <div id="how-it-works" class="section">
+    <div class="section-header">
+      <h2>From Idea to Action</h2>
+      <p>Flux bridges the gap between your thoughts and your device's capabilities.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3>1. Describe</h3>
+        <p>Simply type what you want to achieve. "Save my latest photo to a specific album and text it to Mom."</p>
       </div>
-      <div class="session-cards">
-        <div class="session-card">
-          <label for="shortcutNameInput" class="session-card__label">Shortcut name</label>
-          <input type="text" id="shortcutNameInput" value="My Shortcut" autocomplete="off" spellcheck="false" />
-          <div class="session-card__stats">
-            <div class="stat-chip">
-              <span>Steps</span>
-              <strong id="statActionCount">0</strong>
-            </div>
-            <div class="stat-chip">
-              <span>Status</span>
-              <strong id="statMode">Plan</strong>
-            </div>
-            <div class="stat-chip">
-              <span>Updated</span>
-              <strong id="statLastUpdated">—</strong>
-            </div>
-          </div>
-        </div>
-        <div class="session-card session-card--memory">
-          <div class="session-card__header">
-            <h3>Session memory</h3>
-            <button type="button" id="btnCopyMemory" class="session-card__copy">Copy</button>
-          </div>
-          <pre class="session-card__body" id="memorySynopsis">No notes yet.</pre>
-        </div>
+      <div class="feature-card">
+        <h3>2. Generate</h3>
+        <p>Our advanced AI analyzes your request and constructs a valid Apple Shortcut (`.shortcut`) in seconds.</p>
       </div>
-      <div class="visualizer">
-        <div class="flow-scroll" id="flowContainer">
-          <div class="empty-visual">Blueprint will appear as soon as we plan your shortcut.</div>
-        </div>
-      </div>
-    </aside>
-  </main>
-
-  <div id="codeModal" class="code-modal" aria-hidden="true">
-    <div class="code-modal__backdrop" id="codeModalBackdrop"></div>
-    <div class="code-modal__panel" role="dialog" aria-modal="true" aria-labelledby="codeModalTitle">
-      <div class="code-modal__header">
-        <h3 id="codeModalTitle">Raw shortcut output</h3>
-        <div class="code-modal__tabs">
-          <button class="code-modal__tab is-active" data-code-tab="json">Program JSON</button>
-          <button class="code-modal__tab" data-code-tab="plist">Plist XML</button>
-        </div>
-        <button id="codeModalClose" class="code-modal__close" title="Close">×</button>
-      </div>
-      <div class="code-modal__body">
-        <pre id="codeModalContent"></pre>
+      <div class="feature-card">
+        <h3>3. Deploy</h3>
+        <p>Download the file, add it to your library, and run it on your iPhone, iPad, or Mac instantly.</p>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <script>
-  const WORKER_ORIGIN = 'https://secrets.mwsaulsbury.workers.dev';
-  const DEFAULT_SHORTCUT_NAME = 'My Shortcut';
-
-  const $ = (id) => document.getElementById(id);
-  const conversationList = $('conversationList');
-  const chatInput = $('chatInput');
-  const btnSend = $('btnSend');
-  const btnReset = $('btnReset');
-  const btnSign = $('btnSign');
-  const btnViewRaw = $('btnViewRaw');
-  const flowContainer = $('flowContainer');
-  const toast = $('toast');
-  const codeModal = $('codeModal');
-  const codeModalClose = $('codeModalClose');
-  const codeModalBackdrop = $('codeModalBackdrop');
-  const codeModalContent = $('codeModalContent');
-  const codeModalTabs = document.querySelectorAll('[data-code-tab]');
-  const shortcutNameInput = $('shortcutNameInput');
-  const statActionCount = $('statActionCount');
-  const statMode = $('statMode');
-  const statLastUpdated = $('statLastUpdated');
-  const memorySynopsisEl = $('memorySynopsis');
-  const btnCopyMemory = $('btnCopyMemory');
-
-  const HISTORY_LIMIT = 5;
-
-  const state = {
-    basePrompt: '',
-    lastPrompt: '',
-    lastName: DEFAULT_SHORTCUT_NAME,
-    conversation: [],
-    program: null,
-    plistText: '',
-    isBusy: false,
-    toastTimer: null,
-    pipelineEntries: new Map(),
-    pipelineContext: null,
-    pipelineOrder: [],
-    isCodeModalOpen: false,
-    codeModalTab: 'json',
-    memoryPairs: [],
-    memorySynopsis: '',
-    lastMode: 'plan',
-    lastUpdatedAt: null
-  };
-
-  const STORAGE_KEY = 'shortcutStudio.session.v1';
-
-  const PIPELINE_LIBRARY = {
-    assess: { key: 'assess', title: 'Assessing request', hint: 'Parsing your prompt' },
-    search: { key: 'search', title: 'Selecting actions', hint: 'Browsing the catalog' },
-    build: { key: 'build', title: 'Building flow', hint: 'Linking inputs and outputs' },
-    summarize: { key: 'summarize', title: 'Explaining result', hint: 'Preparing the response' }
-  };
-
-  function resolvePipelineSteps({ isInitial, mode }) {
-    const base = (key, overrides = {}) => {
-      const template = PIPELINE_LIBRARY[key] || { key, title: key, hint: '' };
-      return { ...template, ...overrides };
-    };
-    if (!isInitial && mode === 'clarify') {
-      return [
-        base('assess', { hint: 'Reviewing your question' }),
-        base('summarize', { title: 'Answering', hint: 'Crafting a response' })
-      ];
-    }
-    return [
-      base('assess'),
-      base('search'),
-      base('build'),
-      base('summarize')
-    ];
-  }
-
-  function showToast(message, isError = false) {
-    if (!toast) return;
-    toast.textContent = message;
-    toast.classList.toggle('toast--error', Boolean(isError));
-    toast.classList.add('is-visible');
-    clearTimeout(state.toastTimer);
-    state.toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 4200);
-  }
-
-  function escapeHtml(input) {
-    return String(input ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  function escapeAttribute(input) {
-    return escapeHtml(String(input ?? ''));
-  }
-
-  function decodeEntities(input) {
-    return String(input ?? '')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&');
-  }
-
-  function renderMarkdown(content) {
-    try {
-      const raw = typeof content === 'string' ? content : String(content ?? '');
-      const trimmed = raw.trim();
-      if (!trimmed) return '<p><em>(empty)</em></p>';
-
-      const placeholders = [];
-      const blockTokens = new Set();
-      const makeToken = (html, options = {}) => {
-        const token = `@@mdtoken_${placeholders.length}@@`;
-        placeholders.push({ token, html });
-        if (options.block) blockTokens.add(token);
-        return token;
-      };
-
-      let working = raw.replace(/\r\n/g, '\n');
-
-      const fencePattern = /```([\w.+-]*)\n?([\s\S]*?)```/g;
-      working = working.replace(fencePattern, (_, lang = '', body = '') => {
-        const cleaned = body.replace(/^\n+|\n+$/g, '');
-        const codeText = cleaned || body || '';
-        const safeCode = escapeHtml(codeText);
-        const safeLang = lang ? lang.trim().slice(0, 32) : '';
-        const langAttr = safeLang ? ` data-lang="${escapeAttribute(safeLang)}"` : '';
-        return makeToken(`<pre class="md-snippet"><code${langAttr}>${safeCode}</code></pre>`, { block: true });
-      });
-
-      working = working.replace(/`([^`]+)`/g, (_, code) => makeToken(`<code>${escapeHtml(code)}</code>`));
-
-      let escaped = escapeHtml(working);
-
-      escaped = escaped.replace(/(\*\*|__)(.+?)\1/g, '<strong>$2</strong>');
-      escaped = escaped.replace(/(\*|_)([^*_]+?)\1/g, '<em>$2</em>');
-
-      const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi;
-      escaped = escaped.replace(linkPattern, (match, label, url) => {
-        const decodedUrl = decodeEntities(url);
-        if (!/^https?:\/\//i.test(decodedUrl)) return match;
-        const safeUrl = escapeAttribute(decodedUrl);
-        return `<a href="${safeUrl}" target="_blank" rel="noreferrer noopener">${label}</a>`;
-      });
-
-      const lines = escaped.split('\n');
-      const blocks = [];
-      let paragraph = [];
-      let listItems = [];
-      let quoteItems = [];
-
-      const flushParagraph = () => {
-        if (!paragraph.length) return;
-        blocks.push(`<p>${paragraph.join('<br>')}</p>`);
-        paragraph = [];
-      };
-
-      const flushList = () => {
-        if (!listItems.length) return;
-        blocks.push(`<ul>${listItems.map((item) => `<li>${item}</li>`).join('')}</ul>`);
-        listItems = [];
-      };
-
-      const flushQuote = () => {
-        if (!quoteItems.length) return;
-        const body = quoteItems.map((line) => line || '&nbsp;').join('<br>');
-        blocks.push(`<blockquote>${body}</blockquote>`);
-        quoteItems = [];
-      };
-
-      for (const rawLine of lines) {
-        const line = rawLine.replace(/\s+$/g, '');
-        const trimmedLine = line.trim();
-        if (!trimmedLine) {
-          flushParagraph();
-          flushList();
-          flushQuote();
-          continue;
-        }
-        if (blockTokens.has(trimmedLine)) {
-          flushParagraph();
-          flushList();
-          flushQuote();
-          blocks.push(trimmedLine);
-          continue;
-        }
-        const headingMatch = trimmedLine.match(/^(#{1,3})\s+(.*)$/);
-        if (headingMatch) {
-          flushParagraph();
-          flushList();
-          flushQuote();
-          blocks.push(`<p class="md-heading">${headingMatch[2]}</p>`);
-          continue;
-        }
-        const quoteMatch = trimmedLine.match(/^>\s?(.*)$/);
-        if (quoteMatch) {
-          flushParagraph();
-          flushList();
-          quoteItems.push(quoteMatch[1]);
-          continue;
-        }
-        if (/^[-*+]\s+/.test(trimmedLine)) {
-          flushParagraph();
-          flushQuote();
-          const content = trimmedLine.replace(/^[-*+]\s+/, '');
-          listItems.push(content);
-          continue;
-        }
-        flushQuote();
-        paragraph.push(line);
-      }
-      flushParagraph();
-      flushList();
-      flushQuote();
-
-      let html = blocks.join('');
-      if (!html) html = '<p><em>(empty)</em></p>';
-      placeholders.forEach(({ token, html: replacement }) => {
-        html = html.split(token).join(replacement);
-      });
-      return html;
-    } catch (err) {
-      console.warn('renderMarkdown failed', err);
-      return `<p>${escapeHtml(String(content ?? ''))}</p>`;
-    }
-  }
-
-  function trimForHistory(text, limit = 420) {
-    return String(text || '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, limit);
-  }
-
-  function buildHistoryContext(limit = HISTORY_LIMIT) {
-    const relevant = state.conversation
-      .filter((entry) => entry.role === 'user' || entry.role === 'assistant')
-      .slice(-limit * 2);
-    return relevant
-      .map((entry) => ({
-        role: entry.role === 'assistant' ? 'assistant' : 'user',
-        content: trimForHistory(entry.content)
-      }))
-      .filter((entry) => entry.content);
-  }
-
-  function updateMemorySynopsis(userText, assistantText) {
-    const user = trimForHistory(userText, 320);
-    const assistant = trimForHistory(assistantText, 360);
-    if (!user || !assistant) return;
-    const nextPairs = [...state.memoryPairs, { user, assistant, at: new Date().toISOString() }];
-    state.memoryPairs = nextPairs.slice(-HISTORY_LIMIT);
-    state.memorySynopsis = state.memoryPairs
-      .map((entry, index) => `${index + 1}. ${entry.user} ➜ ${entry.assistant}`)
-      .join('\n');
-    persistSession();
-    renderMemorySynopsis();
-  }
-
-  function renderMemorySynopsis() {
-    if (!memorySynopsisEl) return;
-    memorySynopsisEl.textContent = state.memorySynopsis?.trim() || 'No notes yet.';
-  }
-
-  function renderSessionStats() {
-    if (shortcutNameInput) {
-      const desired = state.lastName || DEFAULT_SHORTCUT_NAME;
-      if (shortcutNameInput.value !== desired) shortcutNameInput.value = desired;
-    }
-    const count = Array.isArray(state.program?.actions) ? state.program.actions.length : 0;
-    if (statActionCount) statActionCount.textContent = String(count);
-    if (statMode) {
-      const modeLabel = (state.lastMode || 'plan').replace(/^\w/, (c) => c.toUpperCase());
-      statMode.textContent = modeLabel;
-    }
-    if (statLastUpdated) {
-      if (!state.lastUpdatedAt) statLastUpdated.textContent = '—';
-      else {
-        const date = new Date(state.lastUpdatedAt);
-        statLastUpdated.textContent = isNaN(date.getTime())
-          ? '—'
-          : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-    }
-  }
-
-  function pushMessage(role, content, meta = {}) {
-    state.conversation.push({
-      role,
-      content: String(content || '').trim(),
-      meta,
-      at: new Date()
-    });
-    renderConversation();
-    persistSession();
-  }
-
-  function renderConversation() {
-    if (!conversationList) return;
-    if (!state.conversation.length) {
-      conversationList.innerHTML = '<p class="bubble__label" style="color: var(--text-muted);">Share what the shortcut should do to get started.</p>';
-      return;
-    }
-    conversationList.innerHTML = state.conversation.map((entry) => {
-      if (entry.role === 'pipeline') {
-        if (!state.pipelineOrder.length) return '';
-        const stepsHtml = state.pipelineOrder.map((stepKey) => {
-          const step = state.pipelineEntries.get(stepKey);
-          if (!step) return '';
-          const status = ['active', 'done', 'error'].includes(step.status) ? step.status : 'pending';
-          const title = escapeHtml(step.title || stepKey);
-          const hint = step.hint ? `<span>${escapeHtml(step.hint)}</span>` : '';
-          return `<div class="pipeline-track__step pipeline-track__step--${status}" data-pipeline-step="${stepKey}"><span class="pipeline-track__node"></span><div class="pipeline-track__details"><strong>${title}</strong>${hint}</div></div>`;
-        }).join('');
-        return `<article class="pipeline-track">${stepsHtml}</article>`;
-      }
-      const roleClass = entry.role === 'user' ? 'bubble--user' : entry.role === 'assistant' ? 'bubble--assistant' : 'bubble--system';
-      const label = entry.meta?.label ? `<span class="bubble__label">${escapeHtml(entry.meta.label)}</span>` : '';
-      const time = entry.at ? `<span class="bubble__time">${escapeHtml(entry.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span>` : '';
-      const body = renderMarkdown(entry.content);
-      return `<article class="bubble ${roleClass}"><div class="bubble__inner">${label}<div class="bubble__content">${body}</div>${time}</div></article>`;
-    }).join('');
-    conversationList.scrollTop = conversationList.scrollHeight;
-  }
-
-  function persistSession() {
-    if (typeof localStorage === 'undefined') return;
-    try {
-      const payload = {
-        basePrompt: state.basePrompt || '',
-      lastPrompt: state.lastPrompt || '',
-      lastName: state.lastName || DEFAULT_SHORTCUT_NAME,
-      conversation: state.conversation.map((entry) => ({
-        ...entry,
-        at: entry.at instanceof Date ? entry.at.toISOString() : entry.at || null
-      })),
-      program: state.program || null,
-      plistText: state.plistText || '',
-      memoryPairs: state.memoryPairs || [],
-      memorySynopsis: state.memorySynopsis || '',
-      lastMode: state.lastMode || 'plan',
-      lastUpdatedAt: state.lastUpdatedAt || null
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch (err) {
-      console.warn('persistSession failed', err);
-    }
-  }
-
-  function restoreSession() {
-    if (typeof localStorage === 'undefined') return;
-    let saved = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      saved = JSON.parse(raw);
-    } catch (err) {
-      console.warn('restoreSession failed to parse', err);
-      return;
-    }
-    if (!saved || typeof saved !== 'object') return;
-    state.basePrompt = typeof saved.basePrompt === 'string' ? saved.basePrompt : '';
-    state.lastPrompt = typeof saved.lastPrompt === 'string' ? saved.lastPrompt : '';
-    state.lastName = typeof saved.lastName === 'string' && saved.lastName.trim() ? saved.lastName.trim() : DEFAULT_SHORTCUT_NAME;
-    if (Array.isArray(saved.conversation)) {
-      state.conversation = saved.conversation.map((entry) => {
-        const at = entry?.at ? new Date(entry.at) : null;
-        return { role: entry?.role || 'system', content: entry?.content || '', meta: entry?.meta || {}, at };
-      });
-      renderConversation();
-    }
-    const savedProgram = saved.program && typeof saved.program === 'object' ? saved.program : null;
-    const savedPlist = typeof saved.plistText === 'string' ? saved.plistText : '';
-    if (savedProgram || savedPlist) {
-      updateFlow(savedProgram, savedPlist);
-    }
-    state.memoryPairs = Array.isArray(saved.memoryPairs) ? saved.memoryPairs.slice(-HISTORY_LIMIT) : [];
-    state.memorySynopsis = typeof saved.memorySynopsis === 'string' ? saved.memorySynopsis : '';
-    state.lastMode = typeof saved.lastMode === 'string' ? saved.lastMode : 'plan';
-    state.lastUpdatedAt = saved.lastUpdatedAt || null;
-    renderMemorySynopsis();
-    renderSessionStats();
-  }
-
-  function sanitizeName(name) {
-    return (name || DEFAULT_SHORTCUT_NAME).replace(/[^\w\s\-]/g, '').slice(0, 60) || DEFAULT_SHORTCUT_NAME;
-  }
-
-  function sanitizeJSON(raw) {
-    let s = String(raw ?? '');
-    s = s.replace(/^\uFEFF/, '').trim();
-    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fence) s = fence[1];
-    s = s.replace(/,\s*([}\]])/g, '$1');
-    s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
-    return s.trim();
-  }
-
-  function parseMaybeJSON(raw) {
-    try {
-      const s = sanitizeJSON(raw);
-      if (!s) return null;
-      if (!(s.startsWith('{') || s.startsWith('['))) return null;
-      return JSON.parse(s);
-    } catch {
-      return null;
-    }
-  }
-
-  function prettyStringify(v) {
-    try { return JSON.stringify(v, null, 2); } catch { return String(v); }
-  }
-
-  function guessMode(text) {
-    const lower = text.toLowerCase();
-    if (lower.includes('find ') || lower.includes('search') || lower.includes('what action')) return 'explore';
-    if (lower.includes('add ') || lower.includes('update') || lower.includes('change')) return 'update';
-    if (/\?/.test(text) || lower.startsWith('how') || lower.startsWith('why') || lower.includes('clarify')) return 'clarify';
-    return 'update';
-  }
-
-  const INLINE_PARAM_LIMIT = 140;
-
-  function formatParamValue(value) {
-    if (value == null) return '<span class="flow-chip flow-chip--empty">None</span>';
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (!trimmed) return '<span class="flow-chip flow-chip--empty">Empty</span>';
-      if (/^!link:/i.test(trimmed)) {
-        const label = trimmed.slice(6).trim() || 'Link';
-        return `<span class="flow-chip flow-chip--link">↗ ${escapeHtml(label)}</span>`;
-      }
-      if (/^!var:/i.test(trimmed)) {
-        const label = trimmed.slice(5).trim() || 'Variable';
-        return `<span class="flow-chip flow-chip--var">Variable ${escapeHtml(label)}</span>`;
-      }
-      if (/^\{\{.+\}\}$/.test(trimmed)) {
-        return `<span class="flow-chip flow-chip--empty">${escapeHtml(trimmed)}</span>`;
-      }
-      if (trimmed.length > INLINE_PARAM_LIMIT || /[\n\r]/.test(trimmed)) {
-        return `<pre class="flow-code">${escapeHtml(trimmed)}</pre>`;
-      }
-      return `<span class="flow-text">${escapeHtml(trimmed)}</span>`;
-    }
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      return `<span class="flow-text">${escapeHtml(String(value))}</span>`;
-    }
-    try {
-      const pretty = JSON.stringify(value, null, 2);
-      return `<pre class="flow-code">${escapeHtml(pretty)}</pre>`;
-    } catch {
-      return `<span class="flow-text">${escapeHtml(String(value))}</span>`;
-    }
-  }
-
-  function computeFlowMeta(params, action) {
-    const classes = new Set();
-    const chips = [];
-    const entries = Object.entries(params || {});
-    let isProducer = false;
-    let isConsumer = false;
-
-    entries.forEach(([key, val]) => {
-      if (typeof val !== 'string') return;
-      const trimmed = val.trim();
-      if (!trimmed.includes('!link:')) return;
-      const lowerKey = key.toLowerCase();
-      if ((lowerKey.includes('output') || lowerKey.endsWith('uuid') || lowerKey.includes('uuid')) && /^!link:/i.test(trimmed)) {
-        isProducer = true;
-      } else {
-        isConsumer = true;
-      }
-    });
-
-    if (isProducer) {
-      classes.add('is-producer');
-      chips.push('<span class="flow-chip flow-chip--link">Outputs link</span>');
-    }
-    if (isConsumer) {
-      classes.add('is-consumer');
-      chips.push('<span class="flow-chip flow-chip--var">Uses link</span>');
-    }
-    const hasBranches =
-      (Array.isArray(action?.then) && action.then.length) ||
-      (Array.isArray(action?.else) && action.else.length) ||
-      (Array.isArray(action?.do) && action.do.length);
-    if (hasBranches) chips.push('<span class="flow-chip">Control flow</span>');
-
-    return {
-      className: classes.size ? [...classes].join(' ') : '',
-      chipsHtml: chips.length ? `<div class="flow-step__meta">${chips.join('')}</div>` : ''
-    };
-  }
-
-  function renderFlowSteps(actions, parentPath = []) {
-    if (!Array.isArray(actions) || !actions.length) return '';
-    return actions.map((action, idx) => {
-      const actionName = action?.action || `Action ${idx + 1}`;
-      const paramsObj =
-        action && typeof action === 'object' && action.params && typeof action.params === 'object' && !Array.isArray(action.params)
-          ? action.params
-          : {};
-      const paramEntries = Object.entries(paramsObj);
-      const paramHtml = paramEntries.length
-        ? `<div class="flow-params">${paramEntries.map(([key, value]) => `<div class="flow-param"><span class="flow-param__key">${escapeHtml(key)}</span><span class="flow-param__value">${formatParamValue(value)}</span></div>`).join('')}</div>`
-        : '<div class="flow-params"><span class="flow-chip flow-chip--empty">No parameters</span></div>';
-      const meta = computeFlowMeta(paramsObj, action || {});
-      const stepPath = [...parentPath, idx + 1];
-      const depth = stepPath.length - 1;
-      const numbering = depth === 0 ? `${stepPath[depth]}.` : stepPath.join('.');
-      const branches = [
-        renderSubflow('Then', action?.then, stepPath),
-        renderSubflow('Otherwise', action?.else, stepPath),
-        renderSubflow('Repeat', action?.do, stepPath)
-      ].filter(Boolean).join('');
-      const metaClass = meta.className ? ` ${meta.className}` : '';
-      const depthClass = depth > 0 ? ' flow-step--nested' : '';
-      return `<article class="flow-step${metaClass}${depthClass}"><div class="flow-step__header"><div class="flow-step__title">${numbering} ${escapeHtml(actionName)}</div>${meta.chipsHtml || ''}</div>${paramHtml}${branches}</article>`;
-    }).join('');
-  }
-
-  function renderSubflow(label, actions, parentPath) {
-    if (!Array.isArray(actions) || !actions.length) return '';
-    return `<div class="flow-subflow"><div class="flow-subflow__title">${escapeHtml(label)}</div><div class="flow-subflow__content">${renderFlowSteps(actions, parentPath)}</div></div>`;
-  }
-
-  function buildFlowHtml(program) {
-    if (!program || !Array.isArray(program.actions) || !program.actions.length) {
-      return '<div class="empty-visual">Blueprint will appear as soon as we plan your shortcut.</div>';
-    }
-    return renderFlowSteps(program.actions);
-  }
-
-  function updateFlow(program, plist) {
-    state.program = program || null;
-    if (plist !== undefined) state.plistText = plist || '';
-    flowContainer.innerHTML = buildFlowHtml(state.program);
-    btnViewRaw.disabled = !state.program;
-    if (state.isCodeModalOpen) updateCodeModal(state.codeModalTab);
-    persistSession();
-    renderSessionStats();
-  }
-
-  function pipelineReset() {
-    state.pipelineEntries = new Map();
-    state.pipelineOrder = [];
-    state.pipelineContext = null;
-    const before = state.conversation.length;
-    state.conversation = state.conversation.filter((entry) => entry.role !== 'pipeline');
-    if (state.conversation.length !== before) renderConversation();
-    persistSession();
-  }
-
-  function pipelineStart(stepDescriptors = []) {
-    pipelineReset();
-    if (!Array.isArray(stepDescriptors) || !stepDescriptors.length) return;
-    state.pipelineEntries = new Map();
-    state.pipelineOrder = [];
-    stepDescriptors.forEach((descriptor, index) => {
-      const key = descriptor?.key;
-      if (!key) return;
-      const entry = {
-        key,
-        title: descriptor.title || key,
-        hint: descriptor.hint || '',
-        status: index === 0 ? 'active' : 'pending'
-      };
-      state.pipelineEntries.set(key, entry);
-      state.pipelineOrder.push(key);
-    });
-    if (!state.pipelineOrder.length) return;
-    state.pipelineContext = { currentStepKey: state.pipelineOrder[0] };
-    state.conversation.push({ role: 'pipeline', id: 'pipeline-track' });
-    renderConversation();
-    persistSession();
-  }
-
-  function pipelineSetStatus(stepKey, status, hint) {
-    if (!state.pipelineEntries.has(stepKey)) return;
-    const entry = state.pipelineEntries.get(stepKey);
-    let changed = false;
-    if (typeof hint === 'string' && hint && hint !== entry.hint) {
-      entry.hint = hint;
-      changed = true;
-    }
-    if (typeof status === 'string' && status) {
-      const index = state.pipelineOrder.indexOf(stepKey);
-      if (index === -1) {
-        if (changed) renderConversation();
-        return;
-      }
-      if (status === 'active') {
-        state.pipelineOrder.forEach((key, idx) => {
-          const step = state.pipelineEntries.get(key);
-          if (!step) return;
-          if (idx < index && step.status !== 'done' && step.status !== 'error') {
-            step.status = 'done';
-            changed = true;
-          } else if (idx === index) {
-            if (step.status !== 'active') {
-              step.status = 'active';
-              changed = true;
-            }
-          } else if (idx > index && step.status === 'active') {
-            step.status = 'pending';
-            changed = true;
-          }
-        });
-        state.pipelineContext = { currentStepKey: stepKey };
-      } else if (['done', 'pending', 'error'].includes(status)) {
-        if (entry.status !== status) {
-          entry.status = status;
-          changed = true;
-        }
-      }
-    }
-    if (changed) renderConversation();
-  }
-
-  function pipelineComplete(status) {
-    if (!state.pipelineEntries.size) return;
-    if (status === 'success') {
-      state.pipelineOrder.forEach((key) => {
-        const step = state.pipelineEntries.get(key);
-        if (!step) return;
-        if (step.status !== 'error') step.status = 'done';
-      });
-    } else if (status === 'error') {
-      const currentKey = state.pipelineContext?.currentStepKey;
-      if (currentKey && state.pipelineEntries.has(currentKey)) {
-        state.pipelineEntries.get(currentKey).status = 'error';
-      } else {
-        const lastKey = state.pipelineOrder[state.pipelineOrder.length - 1];
-        if (lastKey && state.pipelineEntries.has(lastKey)) {
-          state.pipelineEntries.get(lastKey).status = 'error';
-        }
-      }
-    }
-    state.pipelineContext = null;
-    renderConversation();
-    persistSession();
-  }
-
-  function updateCodeModal(tab = state.codeModalTab) {
-    if (!codeModal) return;
-    state.codeModalTab = tab;
-    codeModalTabs.forEach((btn) => {
-      const isActive = btn.dataset.codeTab === tab;
-      btn.classList.toggle('is-active', isActive);
-    });
-    let text = '';
-    if (tab === 'plist') {
-      text = state.plistText || 'No plist output yet.';
-    } else {
-      text = state.program ? prettyStringify(state.program) : 'No program output yet.';
-    }
-    codeModalContent.textContent = text;
-  }
-
-  function openCodeModal(tab = 'json') {
-    if (!state.program && !state.plistText) return;
-    state.isCodeModalOpen = true;
-    codeModal.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-    updateCodeModal(tab);
-  }
-
-  function closeCodeModal() {
-    state.isCodeModalOpen = false;
-    codeModal.classList.remove('is-open');
-    document.body.style.overflow = '';
-  }
-
-  function setSendLoading(isLoading) {
-    if (isLoading) btnSend.classList.add('is-loading'); else btnSend.classList.remove('is-loading');
-    btnSend.disabled = isLoading;
-  }
-
-  async function ensurePlist({ name, inputRaw, programObj, dslText }) {
-    const attempts = [];
-    const recordFailure = (source, error) => {
-      if (!error) return;
-      const message = error?.message || String(error);
-      attempts.push(`${source}: ${message}`);
-    };
-
-    const primaryInput = programObj ?? dslText ?? inputRaw;
-
-    if (programObj || dslText || inputRaw) {
-      try {
-        const payload = {
-          name,
-          program: programObj || null,
-          text: typeof inputRaw === 'string' ? inputRaw : null,
-          dsl: dslText || null
-        };
-        const remoteResp = await fetch(`${WORKER_ORIGIN}/convert`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const remoteJson = await remoteResp.json().catch(() => null);
-        if (remoteResp.ok && remoteJson?.plist) {
-          return remoteJson.plist;
-        }
-        const msg =
-          remoteJson?.message ||
-          remoteJson?.error ||
-          `status ${remoteResp.status}`;
-        recordFailure('Worker.convert', new Error(msg));
-      } catch (err) {
-        recordFailure('Worker.convert', err);
-      }
-    }
-
-    const detail = {
-      name: name || DEFAULT_SHORTCUT_NAME,
-      attempts,
-      inputPreview: String(inputRaw ?? '').slice(0, 500)
-    };
-    const error = new Error(
-      attempts.length
-        ? `Could not convert shortcut. Attempts: ${attempts.join(' | ')}`
-        : 'Could not convert shortcut: no conversion path succeeded.'
-    );
-    error.detail = detail;
-    throw error;
-  }
-
-  function downloadBadShortcutSnapshot(error) {
-    if (!state.program) return;
-    try {
-      const payload = {
-        timestamp: new Date().toISOString(),
-        name: state.lastName || DEFAULT_SHORTCUT_NAME,
-        message: error?.message || 'Conversion failed',
-        detail: error?.detail || null,
-        program: state.program
-      };
-      let text;
-      try {
-        text = JSON.stringify(payload, null, 2);
-      } catch {
-        text = [
-          `message: ${payload.message}`,
-          `name: ${payload.name}`,
-          `detail: ${JSON.stringify(payload.detail)}`,
-          'program:',
-          prettyStringify(state.program)
-        ].join('\n');
-      }
-      const blob = new Blob([text], { type: 'application/json' });
-      const safeName = sanitizeName(payload.name || 'Shortcut');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${safeName || 'Shortcut'}-bad.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
-    } catch (downloadErr) {
-      console.error('Failed to download bad shortcut snapshot', downloadErr);
-    }
-  }
-
-  function explainResult(info) {
-    const actions = Array.isArray(state.program?.actions) ? state.program.actions : [];
-    const count = actions.length;
-    const templates = (info?.usedFiles || []).slice(0, 2).map((file) => file.replace(/\.json$/i, '')).join(', ');
-
-    const summary = ['Here’s what I’m lining up:'];
-    const hasCustomName = info?.name && info.name !== DEFAULT_SHORTCUT_NAME;
-    if (hasCustomName) summary.push(`- **Name:** “${info.name}”`);
-
-    if (info?.answer) {
-      summary.push(`- ${info.answer.trim()}`);
-    } else if (count) {
-      summary.push(`- **Steps:** ${count} linked action${count === 1 ? '' : 's'} ready to run.`);
-    } else {
-      summary.push('- **Status:** Blueprint drafted and waiting for details.');
-    }
-
-    if (templates) {
-      summary.push(`- **Key actions:** ${templates}${(info?.usedFiles?.length || 0) > 2 ? '…' : ''}`);
-    }
-
-    const modeLabel = (info?.mode || 'plan').toLowerCase();
-    if (modeLabel === 'clarify') summary.push('- **Focus:** Answering your question while keeping the shortcut steady.');
-    else if (modeLabel === 'explore') summary.push('- **Focus:** Exploring adjacent ideas so you can pick the best combo.');
-    else summary.push('- **Focus:** Building the most useful version, even if it means tasteful deviations.');
-
-    let cta = 'Tell me if you want me to push harder in a particular direction.';
-    if (modeLabel === 'clarify') cta = 'If the answer sparks new ideas, toss them over and I’ll fold them in.';
-    else if (modeLabel === 'explore') cta = 'Want me to riff on a variant or take more creative liberties? Just say it.';
-    else if (modeLabel === 'impossible') cta = 'I can try another angle or improvise a workaround if you’re game.';
-
-    summary.push('', cta);
-    return summary.join('\n').trim();
-  }
-
-  async function streamWorkerGenerate(payload) {
-    const res = await fetch(`${WORKER_ORIGIN}/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(text || `Worker error ${res.status}`);
-    }
-    if (!res.body) {
-      const text = await res.text().catch(() => '');
-      throw new Error(text || 'Worker returned no data.');
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let finalPacket = null;
-    let streamError = null;
-
-    const processPacket = (packet) => {
-      if (!packet || typeof packet !== 'object') return;
-      if (packet.type === 'progress') {
-        const stepKey = packet.step;
-        if (!stepKey) return;
-        const statusRaw = typeof packet.status === 'string' ? packet.status.toLowerCase() : '';
-        let mappedStatus = null;
-        if (['start', 'started', 'active', 'progress', 'working'].includes(statusRaw)) mappedStatus = 'active';
-        else if (['pending', 'queued', 'waiting'].includes(statusRaw)) mappedStatus = 'pending';
-        else if (['complete', 'completed', 'done', 'finished', 'success'].includes(statusRaw)) mappedStatus = 'done';
-        else if (['error', 'failed', 'fail'].includes(statusRaw)) mappedStatus = 'error';
-        const hint = packet.hint || packet.message || packet.detail;
-        pipelineSetStatus(stepKey, mappedStatus, hint);
-        return;
-      }
-      if (packet.type === 'message') {
-        const stepKey = packet.step;
-        const hint = packet.hint || packet.message || packet.detail;
-        if (stepKey && hint) pipelineSetStatus(stepKey, null, hint);
-        return;
-      }
-      if (packet.type === 'error') {
-        const stepKey = packet.step || packet.stage;
-        const hint = packet.hint || packet.message || packet.error;
-        if (stepKey) pipelineSetStatus(stepKey, 'error', hint);
-        const err = new Error(packet.message || packet.error || 'Worker error');
-        err.detail = packet;
-        streamError = err;
-        return;
-      }
-      if (packet.type === 'final') {
-        finalPacket = packet;
-      }
-    };
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let newlineIndex;
-      while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-        const chunk = buffer.slice(0, newlineIndex).trim();
-        buffer = buffer.slice(newlineIndex + 1);
-        if (!chunk) continue;
-        try {
-          const packet = JSON.parse(chunk);
-          processPacket(packet);
-        } catch (err) {
-          console.warn('Worker chunk parse failed', chunk, err);
-        }
-      }
-    }
-
-    if (buffer.trim()) {
-      try {
-        const packet = JSON.parse(buffer.trim());
-        processPacket(packet);
-      } catch (err) {
-        console.warn('Worker trailing chunk parse failed', buffer.trim(), err);
-      }
-    }
-
-    if (streamError) throw streamError;
-    if (!finalPacket) throw new Error('Worker finished without final payload.');
-    return finalPacket;
-  }
-
-  async function handleSend() {
-    if (state.isBusy) return;
-    const text = (chatInput.value || '').trim();
-    if (!text) return;
-
-    const isInitial = state.conversation.length === 0;
-    const name = sanitizeName(state.lastName || DEFAULT_SHORTCUT_NAME);
-    const mode = isInitial ? 'plan' : guessMode(text);
-
-    pushMessage('user', text, { label: isInitial ? 'Prompt' : 'Follow-up' });
-    chatInput.value = '';
-
-    setSendLoading(true);
-    btnReset.disabled = true;
-    btnSign.disabled = true;
-    state.isBusy = true;
-    const pipelineMode = isInitial ? 'plan' : mode;
-    pipelineStart(resolvePipelineSteps({ isInitial, mode: pipelineMode }));
-
-    try {
-      const payload = {
-        prompt: text,
-      name,
-      followUp: !isInitial,
-      mode: pipelineMode,
-      context: {
-        basePrompt: state.basePrompt || state.lastPrompt,
-        programText: state.program ? prettyStringify(state.program) : '',
-        plistText: state.plistText || '',
-        memory: state.memorySynopsis || '',
-        history: buildHistoryContext()
-      }
-    };
-
-      const data = await streamWorkerGenerate(payload);
-      if (!data?.ok) {
-        const message = data?.error || data?.message || 'Worker reported an error.';
-        throw Object.assign(new Error(message), { detail: data });
-      }
-
-      const finalName = sanitizeName(data.finalName || name);
-      state.lastName = finalName;
-      if (isInitial && !state.basePrompt) state.basePrompt = text;
-      state.lastPrompt = text;
-
-      let programObj = data?.program;
-      if (!programObj && data?.programRaw) programObj = parseMaybeJSON(data.programRaw);
-      updateFlow(programObj, '');
-      pipelineSetStatus('summarize', 'done');
-
-      const effectiveMode = data.mode || pipelineMode;
-      state.lastMode = effectiveMode;
-      state.lastUpdatedAt = new Date().toISOString();
-      renderSessionStats();
-      persistSession();
-      const summary = explainResult({ mode: effectiveMode, usedFiles: data.usedFiles, answer: data.answer, name: finalName });
-      pushMessage('assistant', summary || 'Shortcut updated.', { label: 'Shortcut Studio' });
-      updateMemorySynopsis(text, summary || 'Shortcut updated.');
-
-      pipelineComplete('success');
-      showToast('Shortcut updated. Download whenever you\'re ready.');
-      btnSign.disabled = false;
-    } catch (err) {
-      console.error(err);
-      pushMessage('system', err.message || 'Generation failed.', { label: 'Error' });
-      showToast(err.message || 'Something went wrong.', true);
-      pipelineComplete('error');
-    } finally {
-      state.isBusy = false;
-      setSendLoading(false);
-      btnReset.disabled = false;
-      btnSign.disabled = !state.program;
-    }
-  }
-
-  async function handleDownload() {
-    if (state.isBusy) return;
-    if (!state.program) {
-      showToast('Nothing to download yet. Describe a shortcut first.', true);
-      return;
-    }
-    const label = btnSign.textContent;
-    btnSign.textContent = 'Signing…';
-    btnSign.disabled = true;
-    btnSend.disabled = true;
-    state.isBusy = true;
-    try {
-      const plist = await ensurePlist({
-        name: state.lastName || DEFAULT_SHORTCUT_NAME,
-        inputRaw: prettyStringify(state.program),
-        programObj: state.program,
-        dslText: null
-      });
-      state.plistText = plist;
-      updateFlow(state.program, plist);
-
-      const file = new File([plist], `${state.lastName || DEFAULT_SHORTCUT_NAME}.plist`, { type: 'application/xml' });
-      const form = new FormData();
-      form.append('file', file);
-      const res = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
-      if (!res.ok) {
-        let msg = '';
-        try { msg = await res.text(); } catch {}
-        throw new Error(`Signer error ${res.status}: ${msg.slice(0, 120)}`);
-      }
-      const blob = await res.blob();
-      const cd = res.headers.get('Content-Disposition') || '';
-      let filename = `${state.lastName || DEFAULT_SHORTCUT_NAME}.shortcut`;
-      const m = /filename\*?=(?:UTF-8''|")?([^";\r\n]+)/i.exec(cd);
-      if (m && m[1]) {
-        try { filename = decodeURIComponent(m[1].replace(/^"|"$|;/g, '')); } catch {}
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      showToast('Signed shortcut downloaded.');
-    } catch (err) {
-      console.error(err);
-      const message = err?.message || 'Download failed';
-      showToast(message, true);
-      const isConversionFailure =
-        Boolean(err?.detail?.attempts?.length) || /could not convert shortcut/i.test(message);
-      if (isConversionFailure && typeof window !== 'undefined' && typeof window.alert === 'function') {
-        try { window.alert(message); } catch (alertErr) { console.warn('Alert failed', alertErr); }
-      }
-      if (isConversionFailure) downloadBadShortcutSnapshot(err);
-    } finally {
-      btnSign.textContent = label;
-      btnSign.disabled = false;
-      btnSend.disabled = false;
-      state.isBusy = false;
-    }
-  }
-
-  btnSend.addEventListener('click', handleSend);
-  chatInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
-    }
-  });
-  btnSign.addEventListener('click', handleDownload);
-  btnViewRaw.addEventListener('click', () => openCodeModal('json'));
-  codeModalClose.addEventListener('click', closeCodeModal);
-  codeModalBackdrop.addEventListener('click', closeCodeModal);
-  if (shortcutNameInput) {
-    shortcutNameInput.addEventListener('input', (event) => {
-      const next = sanitizeName(event.target.value);
-      state.lastName = next;
-      if (shortcutNameInput.value !== next) shortcutNameInput.value = next;
-      persistSession();
-    });
-  }
-  if (btnCopyMemory) {
-    btnCopyMemory.addEventListener('click', async () => {
-      const text = state.memorySynopsis?.trim();
-      if (!text) {
-        showToast('Nothing to copy yet.', true);
-        return;
-      }
-      try {
-        if (navigator?.clipboard?.writeText) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          const temp = document.createElement('textarea');
-          temp.value = text;
-          document.body.appendChild(temp);
-          temp.select();
-          document.execCommand('copy');
-          temp.remove();
-        }
-        showToast('Session memory copied.');
-      } catch (err) {
-        console.warn('Copy failed', err);
-        showToast('Could not copy to clipboard.', true);
-      }
-    });
-  }
-  codeModalTabs.forEach((btn) => {
-    btn.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (!state.isCodeModalOpen) return;
-      updateCodeModal(btn.dataset.codeTab || 'json');
-    });
-  });
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && state.isCodeModalOpen) closeCodeModal();
-  });
-  btnReset.addEventListener('click', () => {
-    if (state.isBusy) return;
-    state.basePrompt = '';
-    state.lastPrompt = '';
-    state.lastName = DEFAULT_SHORTCUT_NAME;
-    state.program = null;
-    state.plistText = '';
-    state.memoryPairs = [];
-    state.memorySynopsis = '';
-    state.lastMode = 'plan';
-    state.lastUpdatedAt = null;
-    chatInput.value = '';
-    pipelineReset();
-    state.conversation = [];
-    renderConversation();
-    updateFlow(null, '');
-    if (state.isCodeModalOpen) closeCodeModal();
-    showToast('Workspace cleared.');
-    btnSign.disabled = true;
-    renderMemorySynopsis();
-    renderSessionStats();
-    persistSession();
-  });
-
-  restoreSession();
-  if (!state.conversation.length) renderConversation();
-  if (!state.program) updateFlow(null, state.plistText || '');
-  pipelineReset();
-  btnSign.disabled = !state.program;
-  renderSessionStats();
-  renderMemorySynopsis();
-  </script>
+  <div class="section" style="background: var(--surface-hover);">
+    <div class="section-header">
+      <h2>Endless Possibilities</h2>
+      <p>Whether for productivity, health, or just fun, Flux empowers you to automate everything.</p>
+    </div>
+    <div class="use-cases-grid">
+      <div class="use-case-card">
+        <div class="use-case-icon">📸</div>
+        <div>
+          <h3>Photography</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Auto-crop, filter, and organize photos based on
+            location or time.</p>
+        </div>
+      </div>
+      <div class="use-case-card">
+        <div class="use-case-icon">💼</div>
+        <div>
+          <h3>Productivity</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Summarize meetings, log expenses, and manage your
+            calendar.</p>
+        </div>
+      </div>
+      <div class="use-case-card">
+        <div class="use-case-icon">🏠</div>
+        <div>
+          <h3>Smart Home</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Control lights, set scenes, and manage security with
+            one tap.</p>
+        </div>
+      </div>
+      <div class="use-case-card">
+        <div class="use-case-icon">💪</div>
+        <div>
+          <h3>Health</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Log workouts, track water intake, and monitor sleep
+            patterns.</p>
+        </div>
+      </div>
+      <div class="use-case-card">
+        <div class="use-case-icon">🚗</div>
+        <div>
+          <h3>Travel</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Calculate ETAs, find gas stations, and share your
+            location.</p>
+        </div>
+      </div>
+      <div class="use-case-card">
+        <div class="use-case-icon">🎵</div>
+        <div>
+          <h3>Media</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Create playlists, identify songs, and control
+            playback.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Loved by Creators</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <p class="quote">"Flux completely changed how I use my phone. I've automated my entire morning routine."</p>
+        <div class="author">
+          <div class="author-avatar">S</div>
+          <div>
+            <div style="font-weight: 600;">Sarah J.</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Designer</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <p class="quote">"The AI is surprisingly accurate. It handles complex logic like 'If' statements perfectly."</p>
+        <div class="author">
+          <div class="author-avatar">M</div>
+          <div>
+            <div style="font-weight: 600;">Mike T.</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Developer</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <p class="quote">"I built a shortcut to log my expenses in Notion in under 30 seconds. Incredible."</p>
+        <div class="author">
+          <div class="author-avatar">A</div>
+          <div>
+            <div style="font-weight: 600;">Alex R.</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Freelancer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="max-width: 800px;">
+    <div class="section-header">
+      <h2>FAQ</h2>
+    </div>
+    <div class="faq-container">
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          Is Flux free to use?
+          <span>+</span>
+        </div>
+        <div class="faq-answer">
+          Yes, Flux offers a free tier that allows for 5 shortcut generations per day. For unlimited access, check out
+          our Pro plan.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          Do I need to know how to code?
+          <span>+</span>
+        </div>
+        <div class="faq-answer">
+          Not at all! Flux is designed for natural language. Just describe what you want in plain English.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          Is my data private?
+          <span>+</span>
+        </div>
+        <div class="faq-answer">
+          Absolutely. We do not store the content of your shortcuts after they are generated. Your privacy is our
+          priority.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="text-align: center; padding-bottom: 8rem;">
+    <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Ready to build?</h2>
+    <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2.5rem;">Join thousands of users automating
+      their lives with Flux.</p>
+    <a href="app.html" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Get Started for Free</a>
+  </div>
+
+  <footer
+    style="border-top: 1px solid var(--border-color); padding: 4rem 2rem; text-align: center; color: var(--text-muted);">
+    <div style="margin-bottom: 1rem; font-weight: 600; color: var(--heading-color);">Flux</div>
+    <p>&copy; 2023 Flux Inc. All rights reserved.</p>
+  </footer>
+
+  <script src="landing.js"></script>
+  <script src="theme.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux - Create</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="icon.png">
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo-container">
+            <div class="logo-icon">F</div>
+            <div class="logo-text">Flux</div>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Product</a>
+            <a href="marketplace.html">Explore</a>
+            <a href="pricing.html">Pricing</a>
+            <a href="docs.html">Docs</a>
+            <button class="mode-toggle-btn" title="Toggle Theme"></button>
+        </div>
+        <button id="btn-download" class="cta-button" disabled>Download</button>
+    </nav>
+
+    <div class="app-container">
+
+        <aside class="sidebar-chat">
+            <div class="chat-header">
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--heading-color);">Assistant</h3>
+                <div style="font-size: 0.8rem; color: var(--primary-color);">Online</div>
+            </div>
+
+            <div class="chat-messages" id="messages">
+                <!-- Messages injected here -->
+            </div>
+
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chat-input" placeholder="Describe your workflow..." autocomplete="off">
+                    <button id="btn-send" class="send-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-visualizer">
+            <div class="visualizer-header">
+                <h2 style="font-size: 1rem; color: var(--heading-color);">Visualizer</h2>
+                <div style="color: var(--text-muted); font-size: 0.8rem;">Live Preview</div>
+            </div>
+
+            <div class="visualizer-content" id="visualizer-content">
+                <div style="text-align: center; margin-top: 4rem; color: var(--text-muted);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;">⚡️</div>
+                    <p>Generated actions will appear here.</p>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script src="theme.js"></script>
+</body>
+
+</html>

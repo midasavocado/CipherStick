@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux - Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="icon.png">
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo-container">
+            <div class="logo-icon">F</div>
+            <div class="logo-text">Flux</div>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Product</a>
+            <a href="marketplace.html">Explore</a>
+            <a href="pricing.html">Pricing</a>
+            <a href="docs.html" class="active">Docs</a>
+            <button class="mode-toggle-btn" title="Toggle Theme"></button>
+        </div>
+        <a href="app.html" class="cta-button">Get Started</a>
+    </nav>
+
+    <div class="docs-container">
+        <h1>Documentation</h1>
+        <p style="font-size: 1.1rem;">Learn how to leverage Flux to automate your iOS workflows.</p>
+
+        <div style="height: 1px; background: var(--border-color); margin: 2rem 0;"></div>
+
+        <h2>Getting Started</h2>
+        <p>Flux uses advanced natural language processing to convert your descriptions into executable iOS Shortcuts. To
+            begin, navigate to the <a href="app.html">Create</a> interface.</p>
+
+        <div
+            style="background: var(--surface-color); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color); margin: 1.5rem 0;">
+            <strong style="color: var(--heading-color);">Example Prompt:</strong>
+            <p style="margin-bottom: 0; font-family: monospace; color: var(--text-muted);">"Create a shortcut that takes
+                a screenshot, crops it to the center, and saves it to my 'Work' album."</p>
+        </div>
+
+        <h2>FAQ</h2>
+
+        <div style="margin-bottom: 2rem;">
+            <h3 style="color: var(--heading-color); font-size: 1.1rem; margin-bottom: 0.5rem;">Is Flux free?</h3>
+            <p>Yes, the Starter plan allows for up to 5 generations per day at no cost.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <h3 style="color: var(--heading-color); font-size: 1.1rem; margin-bottom: 0.5rem;">How do I install the
+                shortcut?</h3>
+            <p>After generation, click the "Download" button. This will provide a signed <code>.shortcut</code> file.
+                Open this file on your iOS device or Mac to add it to your library.</p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <h3 style="color: var(--heading-color); font-size: 1.1rem; margin-bottom: 0.5rem;">Privacy & Security</h3>
+            <p>Flux generates shortcuts on-the-fly. We do not store the content of your shortcuts after generation is
+                complete.</p>
+        </div>
+
+    </div>
+
+    <script src="theme.js"></script>
+</body>
+
+</html>
