@@ -4,68 +4,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flux - Documentation</title>
+    <title>{{NAME}} - Documentation</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .docs-layout {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            gap: 4rem;
+        }
+
+        .docs-sidebar {
+            width: 250px;
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .docs-nav a {
+            display: block;
+            padding: 0.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .docs-nav a:hover,
+        .docs-nav a.active {
+            color: var(--primary-color);
+        }
+
+        .docs-content {
+            flex: 1;
+        }
+
+        .docs-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .docs-content h2 {
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .docs-content p {
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        code {
+            background: var(--surface-hover);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--primary-color);
+        }
+
+        pre {
+            background: var(--surface-hover);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text-color);
+        }
+    </style>
 </head>
 
-<body>
+<body class="base44-theme">
 
-    <nav>
+    <!-- Navigation -->
+    <nav class="navbar">
         <a href="index.html" class="logo-container">
             <div class="logo-icon">F</div>
-            <div class="logo-text">Flux</div>
+            <span class="logo-text">{{NAME}}</span>
         </a>
         <div class="nav-links">
-            <a href="index.html">Product</a>
-            <a href="marketplace.html">Explore</a>
+            <a href="index.html#features">Features</a>
+            <a href="marketplace.html">Marketplace</a>
             <a href="pricing.html">Pricing</a>
             <a href="docs.html" class="active">Docs</a>
-            <button class="mode-toggle-btn" title="Toggle Theme"></button>
         </div>
-        <a href="app.html" class="cta-button">Get Started</a>
+        <div class="nav-actions">
+            <a href="app.html" class="btn-primary-sm">Dashboard</a>
+        </div>
     </nav>
 
-    <div class="docs-container">
-        <h1>Documentation</h1>
-        <p style="font-size: 1.1rem;">Learn how to leverage Flux to automate your iOS workflows.</p>
+    <div class="docs-layout">
+        <aside class="docs-sidebar">
+            <h3>Documentation</h3>
+            <div class="docs-nav">
+                <a href="#introduction" class="active">Introduction</a>
+                <a href="#getting-started">Getting Started</a>
+                <a href="#shortcuts">Apple Shortcuts</a>
+                <a href="#api">API Reference</a>
+            </div>
+        </aside>
 
-        <div style="height: 1px; background: var(--border-color); margin: 2rem 0;"></div>
+        <main class="docs-content">
+            <section id="introduction">
+                <h1>Introduction</h1>
+                <p>Welcome to {{NAME}}, the AI-powered builder for Apple Shortcuts. Our platform allows you to generate
+                    complex automation workflows using natural language.</p>
+            </section>
 
-        <h2>Getting Started</h2>
-        <p>Flux uses advanced natural language processing to convert your descriptions into executable iOS Shortcuts. To
-            begin, navigate to the <a href="app.html">Create</a> interface.</p>
+            <section id="getting-started">
+                <h2>Getting Started</h2>
+                <p>To create your first shortcut, simply navigate to the Editor and type what you want to achieve.</p>
+                <pre><code>Example: "Create a shortcut that logs my water intake to Health and sends me a notification."</code></pre>
+            </section>
 
-        <div
-            style="background: var(--surface-color); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color); margin: 1.5rem 0;">
-            <strong style="color: var(--heading-color);">Example Prompt:</strong>
-            <p style="margin-bottom: 0; font-family: monospace; color: var(--text-muted);">"Create a shortcut that takes
-                a screenshot, crops it to the center, and saves it to my 'Work' album."</p>
-        </div>
-
-        <h2>FAQ</h2>
-
-        <div style="margin-bottom: 2rem;">
-            <h3 style="color: var(--heading-color); font-size: 1.1rem; margin-bottom: 0.5rem;">Is Flux free?</h3>
-            <p>Yes, the Starter plan allows for up to 5 generations per day at no cost.</p>
-        </div>
-
-        <div style="margin-bottom: 2rem;">
-            <h3 style="color: var(--heading-color); font-size: 1.1rem; margin-bottom: 0.5rem;">How do I install the
-                shortcut?</h3>
-            <p>After generation, click the "Download" button. This will provide a signed <code>.shortcut</code> file.
-                Open this file on your iOS device or Mac to add it to your library.</p>
-        </div>
-
-        <div style="margin-bottom: 2rem;">
-            <h3 style="color: var(--heading-color); font-size: 1.1rem; margin-bottom: 0.5rem;">Privacy & Security</h3>
-            <p>Flux generates shortcuts on-the-fly. We do not store the content of your shortcuts after generation is
-                complete.</p>
-        </div>
-
+            <section id="shortcuts">
+                <h2>Apple Shortcuts</h2>
+                <p>{{NAME}} generates <code>.shortcut</code> files compatible with iOS and macOS. You can download these
+                    files and import them directly into the Shortcuts app.</p>
+            </section>
+        </main>
     </div>
 
     <script src="theme.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

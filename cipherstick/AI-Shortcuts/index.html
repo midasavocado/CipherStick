@@ -4,237 +4,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flux - Automation, Reimagined</title>
+  <title>{{NAME}} - Build Apple Shortcuts with AI</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/png" href="icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 </head>
 
-<body>
+<body class="base44-theme">
 
-  <nav>
+  <!-- Navigation -->
+  <nav class="navbar">
     <a href="index.html" class="logo-container">
       <div class="logo-icon">F</div>
-      <div class="logo-text">Flux</div>
+      <span class="logo-text">{{NAME}}</span>
     </a>
+
     <div class="nav-links">
-      <a href="index.html" class="active">Product</a>
-      <a href="marketplace.html">Explore</a>
+      <a href="#features">Features</a>
+      <a href="#examples">Examples</a>
+      <a href="marketplace.html">Marketplace</a>
       <a href="pricing.html">Pricing</a>
-      <a href="docs.html">Docs</a>
-      <button class="mode-toggle-btn" title="Toggle Theme"></button>
     </div>
-    <a href="app.html" class="cta-button">Get Started</a>
+
+    <div class="nav-actions">
+      <a href="javascript:login()" id="nav-cta" class="btn-primary-sm">Get Started</a>
+    </div>
   </nav>
 
-  <div class="hero">
-    <canvas id="hero-canvas"></canvas>
-    <h1>Automation, <br><span>Reimagined.</span></h1>
-    <p>Turn natural language into powerful iOS Shortcuts. No coding required. Just describe your workflow, and Flux
-      handles the rest.</p>
-    <div class="hero-input-container">
-      <form id="hero-form"
-        onsubmit="event.preventDefault(); window.location.href='app.html?prompt=' + encodeURIComponent(document.getElementById('hero-input').value);">
-        <input type="text" id="hero-input" placeholder="Describe your workflow (e.g., 'Log water intake to Health')..."
-          autocomplete="off" autofocus>
-        <button type="submit" class="hero-submit-btn">→</button>
-      </form>
+  <!-- Dashboard View (Hidden by default) -->
+  <div id="dashboard-view" class="dashboard-container hidden">
+    <div class="section-header text-left" style="text-align: left; margin-bottom: 2rem;">
+      <h2>Your Projects</h2>
+      <p>Manage your Apple Shortcuts.</p>
+    </div>
+    <div id="project-grid" class="b44-grid">
+      <!-- Injected by JS -->
     </div>
   </div>
 
-  <div id="how-it-works" class="section">
-    <div class="section-header">
-      <h2>From Idea to Action</h2>
-      <p>Flux bridges the gap between your thoughts and your device's capabilities.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card">
-        <h3>1. Describe</h3>
-        <p>Simply type what you want to achieve. "Save my latest photo to a specific album and text it to Mom."</p>
-      </div>
-      <div class="feature-card">
-        <h3>2. Generate</h3>
-        <p>Our advanced AI analyzes your request and constructs a valid Apple Shortcut (`.shortcut`) in seconds.</p>
-      </div>
-      <div class="feature-card">
-        <h3>3. Deploy</h3>
-        <p>Download the file, add it to your library, and run it on your iPhone, iPad, or Mac instantly.</p>
-      </div>
-    </div>
-  </div>
+  <!-- Landing View -->
+  <div id="landing-view">
+    <!-- Hero Section -->
+    <section class="hero-base44">
+      <canvas id="hero-canvas"></canvas>
+      <div class="hero-content">
+        <div class="hero-badge">New: GPT-5.1 Support ⚡️</div>
+        <h1>Build Apple Shortcuts <br> <span class="gradient-text">in minutes.</span></h1>
+        <p class="hero-sub">Turn natural language into powerful automation workflows. No coding required.</p>
 
-  <div class="section" style="background: var(--surface-hover);">
-    <div class="section-header">
-      <h2>Endless Possibilities</h2>
-      <p>Whether for productivity, health, or just fun, Flux empowers you to automate everything.</p>
-    </div>
-    <div class="use-cases-grid">
-      <div class="use-case-card">
-        <div class="use-case-icon">📸</div>
-        <div>
-          <h3>Photography</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted);">Auto-crop, filter, and organize photos based on
-            location or time.</p>
-        </div>
-      </div>
-      <div class="use-case-card">
-        <div class="use-case-icon">💼</div>
-        <div>
-          <h3>Productivity</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted);">Summarize meetings, log expenses, and manage your
-            calendar.</p>
-        </div>
-      </div>
-      <div class="use-case-card">
-        <div class="use-case-icon">🏠</div>
-        <div>
-          <h3>Smart Home</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted);">Control lights, set scenes, and manage security with
-            one tap.</p>
-        </div>
-      </div>
-      <div class="use-case-card">
-        <div class="use-case-icon">💪</div>
-        <div>
-          <h3>Health</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted);">Log workouts, track water intake, and monitor sleep
-            patterns.</p>
-        </div>
-      </div>
-      <div class="use-case-card">
-        <div class="use-case-icon">🚗</div>
-        <div>
-          <h3>Travel</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted);">Calculate ETAs, find gas stations, and share your
-            location.</p>
-        </div>
-      </div>
-      <div class="use-case-card">
-        <div class="use-case-icon">🎵</div>
-        <div>
-          <h3>Media</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted);">Create playlists, identify songs, and control
-            playback.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Contact Section -->
-  <section class="section contact-section" id="contact">
-    <div class="section-header">
-      <h2>Get in Touch</h2>
-      <p>Have a question or need a custom enterprise solution? We'd love to hear from you.</p>
-    </div>
-    <div class="contact-container">
-      <form class="contact-form"
-        onsubmit="event.preventDefault(); alert('Thanks for reaching out! We will get back to you shortly.');">
-        <div class="form-group">
-          <label>Name</label>
-          <input type="text" placeholder="Jane Doe" required>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" placeholder="jane@example.com" required>
-        </div>
-        <div class="form-group">
-          <label>Message</label>
-          <textarea placeholder="Tell us about your project..." rows="5" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
-      </form>
-    </div>
-  </section>
-
-  <div class="section">
-    <div class="section-header">
-      <h2>Loved by Creators</h2>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card">
-        <p class="quote">"Flux completely changed how I use my phone. I've automated my entire morning routine."</p>
-        <div class="author">
-          <div class="author-avatar">S</div>
-          <div>
-            <div style="font-weight: 600;">Sarah J.</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Designer</div>
+        <div class="hero-input-wrapper">
+          <div class="input-glass">
+            <input type="text" id="hero-input" placeholder="Describe a shortcut to build..." autocomplete="off">
+            <button class="input-arrow" onclick="handleHeroSubmit()">→</button>
+          </div>
+          <div class="hero-suggestions">
+            <span class="pill" onclick="fillHero('Track my water intake')">💧 Track water</span>
+            <span class="pill" onclick="fillHero('Summarize tech news')">📰 Summarize news</span>
+            <span class="pill" onclick="fillHero('Generate a QR code')">📱 QR Code</span>
           </div>
         </div>
       </div>
-      <div class="testimonial-card">
-        <p class="quote">"The AI is surprisingly accurate. It handles complex logic like 'If' statements perfectly."</p>
-        <div class="author">
-          <div class="author-avatar">M</div>
-          <div>
-            <div style="font-weight: 600;">Mike T.</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Developer</div>
+      <div class="bg-glow glow-1"></div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="section features-base44" id="features">
+      <div class="section-header">
+        <h2>Everything you need to build.</h2>
+        <p>Powerful primitives for the next generation of automation.</p>
+      </div>
+
+      <div class="b44-grid">
+        <div class="b44-card">
+          <div class="card-icon">⚡️</div>
+          <h3>Instant Generation</h3>
+          <p>Go from prompt to functional shortcut in seconds using our advanced AI models.</p>
+        </div>
+        <div class="b44-card">
+          <div class="card-icon">🎨</div>
+          <h3>Visual Editor</h3>
+          <p>Tweaking your shortcut is as easy as dragging blocks. See changes in real-time.</p>
+        </div>
+        <div class="b44-card">
+          <div class="card-icon">🔌</div>
+          <h3>Integrations</h3>
+          <p>Connect to Notion, Slack, Calendar, and 100+ other tools out of the box.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Examples Section (New) -->
+    <section class="section" id="examples">
+      <div class="section-header">
+        <h2>Built with {{NAME}}.</h2>
+        <p>See what's possible with AI-generated shortcuts.</p>
+      </div>
+      <div class="b44-grid">
+        <div class="b44-card example-card">
+          <div class="example-img" style="background: linear-gradient(45deg, #FF6B6B, #FF8E53);"></div>
+          <h3>Morning Briefing</h3>
+          <p>Reads calendar, weather, and top news headlines aloud.</p>
+        </div>
+        <div class="b44-card example-card">
+          <div class="example-img" style="background: linear-gradient(45deg, #4FACFE, #00F2FE);"></div>
+          <h3>Quick Expense</h3>
+          <p>Logs expense to Notion database with category selection.</p>
+        </div>
+        <div class="b44-card example-card">
+          <div class="example-img" style="background: linear-gradient(45deg, #43E97B, #38F9D7);"></div>
+          <h3>Photo Watermark</h3>
+          <p>Overlays logo on selected photos and saves to album.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section (New) -->
+    <section class="section cta-base44" id="contact">
+      <div class="cta-content" style="max-width: 600px; margin: 0 auto;">
+        <h2>Get in Touch</h2>
+        <p style="margin-bottom: 2rem;">Have questions or need enterprise support?</p>
+        <form class="contact-form" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="input-glass full-width" placeholder="you@company.com">
           </div>
-        </div>
-      </div>
-      <div class="testimonial-card">
-        <p class="quote">"I built a shortcut to log my expenses in Notion in under 30 seconds. Incredible."</p>
-        <div class="author">
-          <div class="author-avatar">A</div>
-          <div>
-            <div style="font-weight: 600;">Alex R.</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Freelancer</div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea class="input-glass full-width" rows="4" placeholder="How can we help?"></textarea>
           </div>
+          <button type="button" class="btn-primary-lg" style="width: 100%;">Send Message</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-base44">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo-container">
+            <div class="logo-icon">F</div>
+            <span class="logo-text">{{NAME}}</span>
+          </div>
+          <p>Automation, Reimagined.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#">Editor</a>
+          <a href="#">Marketplace</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="#">Documentation</a>
+          <a href="#">Community</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Contact</a>
         </div>
       </div>
-    </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 {{NAME}} Inc. All rights reserved.</p>
+      </div>
+    </footer>
   </div>
 
-  <div class="section" style="max-width: 800px;">
-    <div class="section-header">
-      <h2>FAQ</h2>
-    </div>
-    <div class="faq-container">
-      <div class="faq-item">
-        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
-          Is Flux free to use?
-          <span>+</span>
-        </div>
-        <div class="faq-answer">
-          Yes, Flux offers a free tier that allows for 5 shortcut generations per day. For unlimited access, check out
-          our Pro plan.
-        </div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
-          Do I need to know how to code?
-          <span>+</span>
-        </div>
-        <div class="faq-answer">
-          Not at all! Flux is designed for natural language. Just describe what you want in plain English.
-        </div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
-          Is my data private?
-          <span>+</span>
-        </div>
-        <div class="faq-answer">
-          Absolutely. We do not store the content of your shortcuts after they are generated. Your privacy is our
-          priority.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section" style="text-align: center; padding-bottom: 8rem;">
-    <h2 style="font-size: 3rem; margin-bottom: 1.5rem;">Ready to build?</h2>
-    <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2.5rem;">Join thousands of users automating
-      their lives with Flux.</p>
-    <a href="app.html" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Get Started for Free</a>
-  </div>
-
-  <footer
-    style="border-top: 1px solid var(--border-color); padding: 4rem 2rem; text-align: center; color: var(--text-muted);">
-    <div style="margin-bottom: 1rem; font-weight: 600; color: var(--heading-color);">Flux</div>
-    <p>&copy; 2023 Flux Inc. All rights reserved.</p>
-  </footer>
-
-  <script src="landing.js"></script>
   <script src="theme.js"></script>
+  <script src="script.js"></script>
+  <script>
+    function fillHero(text) {
+      const input = document.getElementById('hero-input');
+      input.value = text;
+      input.focus();
+    }
+    function handleHeroSubmit() {
+      const input = document.getElementById('hero-input');
+      if (input.value.trim()) {
+        window.location.href = `app.html?prompt=${encodeURIComponent(input.value)}`;
+      }
+    }
+  </script>
 </body>
 
 </html>

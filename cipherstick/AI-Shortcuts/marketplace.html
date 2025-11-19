@@ -6,124 +6,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flux - Marketplace</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body class="base44-theme">
 
-    <nav>
+    <!-- Navigation -->
+    <nav class="navbar">
         <a href="index.html" class="logo-container">
             <div class="logo-icon">F</div>
-            <div class="logo-text">Flux</div>
+            <span class="logo-text">Flux</span>
         </a>
         <div class="nav-links">
-            <a href="index.html">Product</a>
-            <a href="marketplace.html" class="active">Explore</a>
+            <a href="index.html#features">Features</a>
+            <a href="marketplace.html" class="active">Marketplace</a>
             <a href="pricing.html">Pricing</a>
             <a href="docs.html">Docs</a>
-            <button class="mode-toggle-btn" title="Toggle Theme"></button>
         </div>
-        <a href="app.html" class="cta-button">Get Started</a>
+        <div class="nav-actions">
+            <a href="app.html" id="nav-cta" class="btn-primary-sm">Dashboard</a>
+        </div>
     </nav>
 
-    <div class="hero" style="padding-bottom: 2rem; padding-top: 6rem;">
-        <h1>Explore Community Flows</h1>
-        <p>Discover verified shortcuts created by the Flux community.</p>
-
-        <div class="chat-input-wrapper" style="max-width: 500px; margin: 0 auto; background: var(--surface-color);">
-            <input type="text" placeholder="Search shortcuts...">
-            <button class="send-btn" style="width: auto; padding: 0 1rem; border-radius: 6px;">Search</button>
+    <!-- Header -->
+    <section class="section text-center">
+        <div class="section-header">
+            <h2>Community Marketplace</h2>
+            <p>Discover workflows created by the Flux community.</p>
         </div>
-    </div>
 
-    <div class="marketplace-grid">
-        <!-- Mock Item 1 -->
-        <div class="market-card">
-            <div class="market-image">📷</div>
-            <div class="market-content">
-                <div class="market-title">Insta-Crop</div>
-                <div class="market-author">by @photo_wizard</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Auto-crop and post to Instagram.</p>
+        <div class="hero-input-wrapper" style="max-width: 500px;">
+            <div class="input-glass">
+                <input type="text" id="hero-input" placeholder="Search templates..." autocomplete="off">
+            </div>
+        </div>
+    </section>
+
+    <!-- Grid -->
+    <section class="section">
+        <div class="b44-grid">
+            <!-- Item 1 -->
+            <div class="b44-card market-card">
+                <div class="card-icon">🎵</div>
+                <h3>Spotify to Apple Music</h3>
+                <p>Convert playlists instantly between services.</p>
                 <div class="market-stats">
-                    <div>1.2k downloads</div>
-                    <a href="#" style="color: var(--primary-color); font-weight: 500;">Get &rarr;</a>
+                    <span>@alex</span>
+                    <span>1.2k uses</span>
+                </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="b44-card market-card">
+                <div class="card-icon">📸</div>
+                <h3>Photo Resizer Pro</h3>
+                <p>Batch resize and watermark images for social media.</p>
+                <div class="market-stats">
+                    <span>@sarah_design</span>
+                    <span>850 uses</span>
+                </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="b44-card market-card">
+                <div class="card-icon">📝</div>
+                <h3>Meeting Summarizer</h3>
+                <p>Record audio and get a bulleted summary via GPT-4.</p>
+                <div class="market-stats">
+                    <span>@tech_guru</span>
+                    <span>2.5k uses</span>
+                </div>
+            </div>
+
+            <!-- Item 4 -->
+            <div class="b44-card market-card">
+                <div class="card-icon">💧</div>
+                <h3>Hydration Tracker</h3>
+                <p>Log water intake and get reminders.</p>
+                <div class="market-stats">
+                    <span>@health_bot</span>
+                    <span>500 uses</span>
                 </div>
             </div>
         </div>
-
-        <!-- Mock Item 2 -->
-        <div class="market-card">
-            <div class="market-image">🎵</div>
-            <div class="market-content">
-                <div class="market-title">Morning Vibe</div>
-                <div class="market-author">by @dj_khaled</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Playlist + Weather report.</p>
-                <div class="market-stats">
-                    <div>854 downloads</div>
-                    <a href="#" style="color: var(--primary-color); font-weight: 500;">Get &rarr;</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mock Item 3 -->
-        <div class="market-card">
-            <div class="market-image">🏋️</div>
-            <div class="market-content">
-                <div class="market-title">Gym Logger</div>
-                <div class="market-author">by @fit_life</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Log workout to Health & Notes.</p>
-                <div class="market-stats">
-                    <div>2.3k downloads</div>
-                    <a href="#" style="color: var(--primary-color); font-weight: 500;">Get &rarr;</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mock Item 4 -->
-        <div class="market-card">
-            <div class="market-image">🚗</div>
-            <div class="market-content">
-                <div class="market-title">ETA Texter</div>
-                <div class="market-author">by @commuter</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Calculate drive time & text contact.</p>
-                <div class="market-stats">
-                    <div>540 downloads</div>
-                    <a href="#" style="color: var(--primary-color); font-weight: 500;">Get &rarr;</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mock Item 5 -->
-        <div class="market-card">
-            <div class="market-image">🍕</div>
-            <div class="market-content">
-                <div class="market-title">Quick Order</div>
-                <div class="market-author">by @hungry_dev</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Order favorite meal with one tap.</p>
-                <div class="market-stats">
-                    <div>9.1k downloads</div>
-                    <a href="#" style="color: var(--primary-color); font-weight: 500;">Get &rarr;</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mock Item 6 -->
-        <div class="market-card">
-            <div class="market-image">🤖</div>
-            <div class="market-content">
-                <div class="market-title">Page Summarizer</div>
-                <div class="market-author">by @tech_guru</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Summarize webpage with AI.</p>
-                <div class="market-stats">
-                    <div>3.4k downloads</div>
-                    <a href="#" style="color: var(--primary-color); font-weight: 500;">Get &rarr;</a>
-                </div>
-            </div>
-        </div>
-
-    </div>
+    </section>
 
     <script src="theme.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

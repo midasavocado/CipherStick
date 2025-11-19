@@ -6,72 +6,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flux - Pricing</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body class="base44-theme">
 
-    <nav>
+    <!-- Navigation -->
+    <nav class="navbar">
         <a href="index.html" class="logo-container">
             <div class="logo-icon">F</div>
-            <div class="logo-text">Flux</div>
+            <span class="logo-text">Flux</span>
         </a>
         <div class="nav-links">
-            <a href="index.html">Product</a>
-            <a href="marketplace.html">Explore</a>
+            <a href="index.html#features">Features</a>
+            <a href="marketplace.html">Marketplace</a>
             <a href="pricing.html" class="active">Pricing</a>
             <a href="docs.html">Docs</a>
-            <button class="mode-toggle-btn" title="Toggle Theme"></button>
         </div>
-        <a href="app.html" class="cta-button">Get Started</a>
+        <div class="nav-actions">
+            <a href="app.html" id="nav-cta" class="btn-primary-sm">Dashboard</a>
+        </div>
     </nav>
 
-    <div class="hero" style="padding-bottom: 2rem; padding-top: 6rem;">
-        <h1>Simple, transparent pricing.</h1>
-        <p>Choose the plan that fits your workflow.</p>
-    </div>
-
-    <div class="pricing-grid">
-        <div class="pricing-card">
-            <h3>Starter</h3>
-            <div class="price">$0<span>/mo</span></div>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">For hobbyists and explorers.</p>
-            <ul style="list-style: none; margin-top: 2rem; text-align: left; color: var(--text-muted); line-height: 2;">
-                <li>✓ 5 Generations / day</li>
-                <li>✓ Standard Actions</li>
-                <li>✓ Community Support</li>
-            </ul>
-            <a href="app.html" class="btn btn-secondary" style="margin-top: 2rem; width: 100%;">Start Free</a>
+    <!-- Pricing Section -->
+    <section class="section">
+        <div class="section-header">
+            <h2>Simple, transparent pricing.</h2>
+            <p>Start for free, scale as you grow.</p>
         </div>
 
-        <div class="pricing-card featured">
-            <h3>Pro</h3>
-            <div class="price">$12<span>/mo</span></div>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">For power users and creators.</p>
-            <ul style="list-style: none; margin-top: 2rem; text-align: left; color: var(--text-muted); line-height: 2;">
-                <li>✓ Unlimited Generations</li>
-                <li>✓ Advanced Logic (If/Repeat)</li>
-                <li>✓ Priority Processing</li>
-                <li>✓ Private Shortcuts</li>
-            </ul>
-            <a href="#" class="btn btn-primary" style="margin-top: 2rem; width: 100%;">Upgrade</a>
-        </div>
+        <div class="b44-grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: 1000px; margin: 0 auto;">
 
-        <div class="pricing-card">
-            <h3>Enterprise</h3>
-            <div class="price">Custom</div>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">For teams and organizations.</p>
-            <ul style="list-style: none; margin-top: 2rem; text-align: left; color: var(--text-muted); line-height: 2;">
-                <li>✓ API Access</li>
-                <li>✓ Custom Action Integration</li>
-                <li>✓ Dedicated Support</li>
-                <li>✓ SSO & Audit Logs</li>
-            </ul>
-            <a href="#" class="btn btn-secondary" style="margin-top: 2rem; width: 100%;">Contact Sales</a>
+            <!-- Free Tier -->
+            <div class="b44-card">
+                <h3>Starter</h3>
+                <div class="price">$0 <span>/mo</span></div>
+                <p>Perfect for hobbyists and testing.</p>
+                <ul style="list-style: none; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                    <li>✓ 10 Daily Generations</li>
+                    <li>✓ Access to Llama 3 8B</li>
+                    <li>✓ Community Support</li>
+                </ul>
+                <a href="app.html" class="btn-primary-sm"
+                    style="width: 100%; text-align: center; background: var(--surface-hover);">Get Started</a>
+            </div>
+
+            <!-- Pro Tier -->
+            <div class="b44-card" style="border-color: var(--primary-color); position: relative;">
+                <div class="hero-badge"
+                    style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--bg-color);">
+                    Most Popular</div>
+                <h3>Pro</h3>
+                <div class="price">$12 <span>/mo</span></div>
+                <p>For power users and creators.</p>
+                <ul style="list-style: none; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                    <li>✓ 50 Daily Generations</li>
+                    <li>✓ Access to GPT-4 & Claude 3</li>
+                    <li>✓ Priority Support</li>
+                    <li>✓ Private Workflows</li>
+                </ul>
+                <a href="app.html" class="btn-primary-sm" style="width: 100%; text-align: center;">Upgrade to Pro</a>
+            </div>
+
+            <!-- Enterprise Tier -->
+            <div class="b44-card">
+                <h3>Enterprise</h3>
+                <div class="price">Custom</div>
+                <p>For teams and organizations.</p>
+                <ul style="list-style: none; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                    <li>✓ Unlimited Generations</li>
+                    <li>✓ Custom Models</li>
+                    <li>✓ SSO & SLA</li>
+                    <li>✓ Dedicated Account Manager</li>
+                </ul>
+                <a href="#contact" class="btn-primary-sm"
+                    style="width: 100%; text-align: center; background: var(--surface-hover);">Contact Sales</a>
+            </div>
+
         </div>
-    </div>
+    </section>
 
     <script src="theme.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
