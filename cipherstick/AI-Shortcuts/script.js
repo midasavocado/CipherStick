@@ -1,278 +1,325 @@
-// Configuration
-const WORKER_ORIGIN = 'https://ai-shortcuts.midasavocado.workers.dev'; // Update if needed
-const DEFAULT_SHORTCUT_NAME = 'My Shortcut';
+const API_ENDPOINT = 'https://ai-shortcuts.midasavocado.workers.dev';
 
-// State
-let state = {
-    conversation: [],
-    program: null,
-    plistText: '',
-    isBusy: false,
-    lastName: DEFAULT_SHORTCUT_NAME
-};
+// --- Configuration ---
+const MODELS = [
+    {
+        id: 'auto',
+        name: 'Auto (Default)',
+        desc: 'Smart selection based on complexity',
+        tier: 'auto',
+        cost: 0, // Calculated at runtime
+        speed: 'Variable'
+    },
+    {
+        id: 'meta-llama/llama-3-8b-instruct:free',
+        name: 'Llama 3 8B',
+        desc: 'Fast, efficient, and free.',
+        tier: 'low',
+        cost: 0,
+        speed: 'Fast'
+    },
+    {
+        id: 'google/gemini-flash-1.5',
+        name: 'Gemini Flash 1.5',
+        desc: 'High speed, large context.',
+        tier: 'low',
+        cost: 1,
+        speed: 'Super Fast'
+    },
+    {
+        id: 'openai/gpt-3.5-turbo',
+        name: 'GPT-3.5 Turbo',
+        desc: 'Reliable standard model.',
+        tier: 'medium',
+        cost: 2,
+        speed: 'Fast'
+    },
+    {
+        id: 'meta-llama/llama-3-70b-instruct',
+        name: 'Llama 3 70B',
+        desc: 'High intelligence open model.',
+        tier: 'medium',
+        cost: 3,
+        speed: 'Medium'
+    },
+    {
+        id: 'openai/gpt-4o',
+        name: 'GPT-5.1 (Preview)', // User requested name
+        desc: 'Next-gen reasoning and creativity.',
+        tier: 'pro',
+        cost: 10,
+        speed: 'Slow'
+    },
+    {
+        id: 'anthropic/claude-3-opus',
+        name: 'Claude 3.5 Opus',
+        desc: 'Maximum nuance and coding capability.',
+        tier: 'pro',
+        cost: 15,
+        speed: 'Slow'
+    },
+    {
+        id: 'x-ai/grok-1', // Placeholder ID, mapped to something real if needed or just passed
+        name: 'Grok 4.1',
+        desc: 'Unfiltered, witty, and powerful.',
+        tier: 'pro',
+        cost: 12,
+        speed: 'Medium'
+    },
+    {
+        id: 'x-ai/grok-code',
+        name: 'Grok Code',
+        desc: 'Specialized for complex logic.',
+        tier: 'pro',
+        cost: 12,
+        speed: 'Medium'
+    }
+];
 
-// DOM Elements
-const chatInput = document.getElementById('chat-input');
-const btnSend = document.getElementById('btn-send');
+// --- State ---
+let chatHistory = JSON.parse(localStorage.getItem('flux_chat_history')) || [];
+let tokenBalance = parseInt(localStorage.getItem('flux_tokens')) || 500;
+let selectedModelId = 'auto';
+
+// --- DOM Elements ---
 const messagesContainer = document.getElementById('messages');
-const visualizerContainer = document.getElementById('visualizer-content');
-const btnDownload = document.getElementById('btn-download');
+const chatInput = document.getElementById('chat-input');
+const forceInput = document.getElementById('force-actions-input');
+const sendBtn = document.getElementById('btn-send');
+const downloadBtn = document.getElementById('btn-download');
+const visualizerContent = document.getElementById('visualizer-content');
+const tokenDisplay = document.getElementById('token-balance');
+const modelTrigger = document.getElementById('model-trigger');
+const modelOptions = document.getElementById('model-options');
+const modelDropdown = document.getElementById('model-dropdown');
 
-// --- Local Storage ---
-function loadHistory() {
-    const saved = localStorage.getItem('ai_shortcuts_history');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            state.conversation = parsed;
-            renderHistory();
-        } catch (e) {
-            console.error('Failed to load history', e);
+// --- Init ---
+document.addEventListener('DOMContentLoaded', () => {
+    loadHistory();
+    updateTokenUI();
+    renderModelOptions();
+    checkUrlParams();
+
+    // Event Listeners
+    sendBtn.addEventListener('click', handleSend);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSend();
+    });
+
+    // Custom Dropdown Logic
+    modelTrigger.addEventListener('click', () => {
+        modelDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!modelDropdown.contains(e.target)) {
+            modelDropdown.classList.remove('open');
         }
-    }
-}
-
-function saveHistory() {
-    localStorage.setItem('ai_shortcuts_history', JSON.stringify(state.conversation));
-}
-
-function renderHistory() {
-    messagesContainer.innerHTML = '';
-    state.conversation.forEach(msg => {
-        appendMessageToDOM(msg.role, msg.content);
     });
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
+});
 
-// --- UI Helpers ---
+function renderModelOptions() {
+    modelOptions.innerHTML = '';
 
-function appendMessageToDOM(role, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${role}`;
-    msgDiv.textContent = text;
-    messagesContainer.appendChild(msgDiv);
-}
+    const tiers = ['auto', 'low', 'medium', 'pro'];
+    const tierLabels = { auto: 'Smart Select', low: 'Starter (Low Cost)', medium: 'Standard', pro: 'Pro (High Performance)' };
 
-function pushMessage(role, text) {
-    appendMessageToDOM(role, text);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    tiers.forEach(tier => {
+        const tierModels = MODELS.filter(m => m.tier === tier);
+        if (tierModels.length === 0) return;
 
-    state.conversation.push({ role, content: text });
-    saveHistory();
-}
+        const groupLabel = document.createElement('div');
+        groupLabel.className = 'select-group-label';
+        groupLabel.textContent = tierLabels[tier];
+        modelOptions.appendChild(groupLabel);
 
-function showToast(msg, isError = false) {
-    console.log(`[${isError ? 'ERROR' : 'INFO'}] ${msg}`);
-    if (isError) alert(msg);
-}
+        tierModels.forEach(model => {
+            const option = document.createElement('div');
+            option.className = 'select-option';
+            if (model.id === selectedModelId) option.classList.add('selected');
 
-function updateVisualizer(program) {
-    if (!visualizerContainer) return;
-    visualizerContainer.innerHTML = '';
+            option.innerHTML = `
+        <div class="option-main">
+          <span class="option-name">${model.name}</span>
+          <span class="option-cost">${model.cost > 0 ? model.cost + ' credits' : 'Free'}</span>
+        </div>
+        <div class="option-desc">${model.desc}</div>
+      `;
 
-    if (!program || !program.actions) {
-        visualizerContainer.innerHTML = `
-      <div style="text-align: center; margin-top: 4rem; color: #666;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🪄</div>
-        <p>Tell the AI what to build,<br>and watch the magic happen here.</p>
-      </div>`;
-        return;
-    }
-
-    // Simulate "streaming" effect for visualizer
-    program.actions.forEach((action, index) => {
-        setTimeout(() => {
-            const card = document.createElement('div');
-            card.className = 'action-card';
-
-            const iconBox = document.createElement('div');
-            iconBox.className = 'action-icon-box';
-            // Simple icon logic based on action type
-            let icon = '⚡️';
-            if (action.id.includes('conditional')) icon = '🔀';
-            else if (action.id.includes('text')) icon = '📝';
-            else if (action.id.includes('repeat')) icon = '🔁';
-            else if (action.id.includes('comment')) icon = '💬';
-            else if (action.id.includes('variable')) icon = '📦';
-
-            iconBox.textContent = icon;
-
-            const details = document.createElement('div');
-            details.className = 'action-details';
-
-            const name = document.createElement('div');
-            name.className = 'action-name';
-            name.textContent = action.name || action.id.split('.').pop();
-
-            const desc = document.createElement('div');
-            desc.className = 'action-desc';
-            desc.textContent = action.id; // Or a better description if available
-
-            details.appendChild(name);
-            details.appendChild(desc);
-
-            card.appendChild(iconBox);
-            card.appendChild(details);
-
-            visualizerContainer.appendChild(card);
-
-            // Auto scroll to bottom of visualizer
-            visualizerContainer.scrollTop = visualizerContainer.scrollHeight;
-        }, index * 150); // Stagger animations
+            option.onclick = () => selectModel(model);
+            modelOptions.appendChild(option);
+        });
     });
 }
 
-// --- API Interactions ---
+function selectModel(model) {
+    selectedModelId = model.id;
+
+    // Update Trigger UI
+    const triggerName = modelTrigger.querySelector('.model-name');
+    const triggerDesc = modelTrigger.querySelector('.model-desc');
+    triggerName.textContent = model.name;
+    triggerDesc.textContent = model.desc;
+
+    modelDropdown.classList.remove('open');
+    renderModelOptions(); // Re-render to update selected state
+}
+
+function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const prompt = params.get('prompt');
+    if (prompt) {
+        chatInput.value = prompt;
+        window.history.replaceState({}, document.title, window.location.pathname);
+        handleSend();
+    }
+}
+
+function updateTokenUI() {
+    tokenDisplay.textContent = tokenBalance;
+    if (tokenBalance <= 0) {
+        tokenDisplay.parentElement.style.borderColor = '#EF4444';
+        tokenDisplay.parentElement.style.color = '#EF4444';
+        sendBtn.disabled = true;
+    } else {
+        tokenDisplay.parentElement.style.borderColor = 'var(--border-color)';
+        tokenDisplay.parentElement.style.color = 'var(--text-muted)';
+        sendBtn.disabled = false;
+    }
+}
+
+function loadHistory() {
+    chatHistory.forEach(msg => addMessageToUI(msg.role, msg.content));
+}
+
+function addMessageToUI(role, content) {
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    div.textContent = content;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function determineAutoModel(prompt) {
+    // Simple heuristic: Long prompts or "code" keywords -> Pro
+    if (prompt.length > 200 || /script|code|complex|logic/.test(prompt.toLowerCase())) {
+        return 'openai/gpt-4o'; // Map to "GPT-5.1"
+    }
+    return 'meta-llama/llama-3-70b-instruct'; // Default to Medium
+}
 
 async function handleSend() {
     const text = chatInput.value.trim();
-    if (!text || state.isBusy) return;
+    const constraints = forceInput ? forceInput.value.trim() : '';
 
-    pushMessage('user', text);
-    chatInput.value = '';
-    state.isBusy = true;
-    btnSend.disabled = true;
-    btnSend.innerHTML = '<div style="width: 20px; height: 20px; border: 2px solid #0b0c10; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
+    if (!text) return;
 
-    // Add spin animation style if not present
-    if (!document.getElementById('spin-style')) {
-        const style = document.createElement('style');
-        style.id = 'spin-style';
-        style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-        document.head.appendChild(style);
+    // Determine actual model
+    let actualModelId = selectedModelId;
+    if (selectedModelId === 'auto') {
+        actualModelId = determineAutoModel(text);
     }
 
+    // Check Cost
+    const modelConfig = MODELS.find(m => m.id === selectedModelId) || MODELS.find(m => m.id === actualModelId);
+    const cost = modelConfig ? modelConfig.cost : 1;
+
+    if (tokenBalance < cost) {
+        alert(`Not enough credits! This model requires ${cost} credits.`);
+        return;
+    }
+
+    // UI Updates
+    addMessageToUI('user', text);
+    chatInput.value = '';
+
+    // Save to History
+    chatHistory.push({ role: 'user', content: text });
+    localStorage.setItem('flux_chat_history', JSON.stringify(chatHistory));
+
+    // Decrement Token
+    tokenBalance -= cost;
+    localStorage.setItem('flux_tokens', tokenBalance);
+    updateTokenUI();
+
+    // Loading State
+    const loadingId = 'loading-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message assistant';
+    loadingDiv.id = loadingId;
+    loadingDiv.textContent = `Thinking with ${modelConfig.name}...`;
+    messagesContainer.appendChild(loadingDiv);
+
     try {
-        const response = await fetch(`${WORKER_ORIGIN}/generate`, {
+        const response = await fetch(`${API_ENDPOINT}/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 prompt: text,
-                history: state.conversation.slice(0, -1)
+                model: actualModelId,
+                constraints: constraints,
+                context: chatHistory.slice(-5)
             })
         });
 
-        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        const loadingMsg = document.getElementById(loadingId);
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let finalData = null;
+        if (data.plist) {
+            loadingMsg.textContent = `Generated "${data.name}"! Check the visualizer.`;
+            chatHistory.push({ role: 'assistant', content: `Generated "${data.name}"!` });
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+            updateVisualizer(data.json);
 
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                try {
-                    const packet = JSON.parse(line);
-                    if (packet.type === 'final') {
-                        finalData = packet;
-                    } else if (packet.type === 'error') {
-                        throw new Error(packet.message);
-                    }
-                } catch (e) {
-                    console.warn('Error parsing stream packet', e);
-                }
-            }
-        }
-
-        if (finalData) {
-            state.program = finalData.program;
-            state.lastName = finalData.finalName || state.lastName;
-            pushMessage('assistant', finalData.answer || 'Shortcut generated!');
-            updateVisualizer(state.program);
-            if (btnDownload) btnDownload.disabled = false;
+            downloadBtn.disabled = false;
+            downloadBtn.onclick = () => downloadPlist(data.plist, data.name);
         } else {
-            pushMessage('assistant', 'Something went wrong. No final data received.');
+            loadingMsg.textContent = 'Error: ' + (data.error || 'Unknown error');
         }
 
-    } catch (err) {
-        console.error(err);
-        pushMessage('assistant', `Error: ${err.message}`);
-    } finally {
-        state.isBusy = false;
-        btnSend.disabled = false;
-        btnSend.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="22" y1="2" x2="11" y2="13"></line>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-      </svg>`;
+        localStorage.setItem('flux_chat_history', JSON.stringify(chatHistory));
+
+    } catch (e) {
+        document.getElementById(loadingId).textContent = 'Network Error: ' + e.message;
     }
 }
 
-async function handleDownload() {
-    if (!state.program) return;
+function updateVisualizer(program) {
+    visualizerContent.innerHTML = '';
 
-    const btnText = btnDownload.textContent;
-    btnDownload.textContent = 'Signing...';
-    btnDownload.disabled = true;
+    if (!program || !program.actions) return;
 
-    try {
-        const convertResp = await fetch(`${WORKER_ORIGIN}/convert`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ program: state.program, name: state.lastName })
-        });
+    program.actions.forEach((action, index) => {
+        const card = document.createElement('div');
+        card.className = 'action-card';
+        card.style.animationDelay = `${index * 0.05}s`;
 
-        if (!convertResp.ok) throw new Error('Conversion failed');
-        const convertData = await convertResp.json();
-        const plist = convertData.plist;
+        const type = action.type.split('.').pop();
+        const name = type.charAt(0).toUpperCase() + type.slice(1);
 
-        const file = new File([plist], `${state.lastName}.plist`, { type: 'application/xml' });
-        const form = new FormData();
-        form.append('file', file);
+        card.innerHTML = `
+      <div class="action-icon-box">⚡️</div>
+      <div class="action-details">
+        <div class="action-name">${name}</div>
+        <div class="action-desc">${JSON.stringify(action.parameters).slice(0, 60)}...</div>
+      </div>
+    `;
 
-        const signResp = await fetch(`${WORKER_ORIGIN}/sign`, { method: 'POST', body: form });
-        if (!signResp.ok) throw new Error('Signing failed');
+        card.onclick = () => {
+            alert(`Action Details:\n${JSON.stringify(action, null, 2)}`);
+        };
 
-        const blob = await signResp.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${state.lastName}.shortcut`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-
-        showToast('Download started!');
-
-    } catch (err) {
-        console.error(err);
-        showToast('Download failed: ' + err.message, true);
-    } finally {
-        btnDownload.textContent = btnText;
-        btnDownload.disabled = false;
-    }
-}
-
-// --- Event Listeners ---
-
-if (btnSend) {
-    btnSend.addEventListener('click', handleSend);
-}
-
-if (chatInput) {
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
+        visualizerContent.appendChild(card);
     });
 }
 
-if (btnDownload) {
-    btnDownload.addEventListener('click', handleDownload);
-}
-
-// Initialize
-loadHistory();
-if (messagesContainer && state.conversation.length === 0) {
-    pushMessage('assistant', 'Hello! Describe the shortcut you want to create.');
+function downloadPlist(plistContent, name) {
+    const blob = new Blob([plistContent], { type: 'application/x-apple-aspen-xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.shortcut`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }

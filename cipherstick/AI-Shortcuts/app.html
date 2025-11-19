@@ -34,11 +34,49 @@
                 <div style="font-size: 0.8rem; color: var(--primary-color);">Online</div>
             </div>
 
+            <div class="settings-panel">
+                <!-- Token Balance -->
+                <div class="token-pill" title="Your remaining generation credits">
+                    <span class="token-icon">⚡️</span>
+                    <span id="token-balance">500</span>
+                    <span class="token-label">credits</span>
+                </div>
+
+                <!-- Model Selector -->
+                <div class="setting-group">
+                    <label>Model</label>
+                    <div class="custom-select" id="model-dropdown">
+                        <div class="select-trigger" id="model-trigger">
+                            <div class="selected-model-info">
+                                <span class="model-name">Auto (Default)</span>
+                                <span class="model-desc">Smart selection based on complexity</span>
+                            </div>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="select-options" id="model-options">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription (Hidden for now, implied by model choice) -->
+                <div class="setting-group" style="display:none;">
+                    <label>Subscription</label>
+                    <select id="sub-tier-select">
+                        <option value="pro">Pro</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="chat-messages" id="messages">
                 <!-- Messages injected here -->
             </div>
 
             <div class="chat-input-area">
+                <div class="force-actions-wrapper">
+                    <input type="text" id="force-actions-input"
+                        placeholder="Force actions (e.g., 'Use Get Contents of URL')...">
+                </div>
                 <div class="chat-input-wrapper">
                     <input type="text" id="chat-input" placeholder="Describe your workflow..." autocomplete="off">
                     <button id="btn-send" class="send-btn">
