@@ -4,198 +4,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{NAME}} - Editor</title>
+    <title>Flux - Workspace</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="flux-ui-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="base44-theme app-body">
+<body class="base44-theme">
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit; cursor: pointer;">
+            <div class="logo-icon">F</div>
+            <span>Flux</span>
+        </a>
+
+        <!-- Workspace Controls (shown when in workspace) -->
+        <div id="workspace-topbar-controls" class="flex items-center gap-3" style="display: none;">
+            <button class="btn btn-secondary btn-sm" onclick="showProjectsView()" title="Back to Projects">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back
+            </button>
+            <input type="text" id="topbar-project-name" class="project-name-input-topbar" placeholder="Project Name">
+            <button class="btn btn-primary btn-sm" onclick="handleDownload()" title="Download Shortcut">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download
+            </button>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme" aria-label="Toggle dark/light theme">
+                <!-- Icon injected by theme.js -->
+            </button>
+            <div class="user-profile">
+                <div class="user-avatar">U</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+
+        <!-- View 1: Projects Grid -->
+        <div id="projects-view" class="view-container">
+            <div class="section-header" style="margin-bottom: 2rem">
+                <h2>Your Projects</h2>
+                <p style="color: var(--text-muted)">Build powerful Apple Shortcuts with AI</p>
+            </div>
+
+            <div class="projects-grid" id="projects-grid">
+                <!-- Injected by JS -->
+                <div class="new-project-card" onclick="createNewProject()">
+                    <span style="font-size: 2rem;">+</span>
+                    <span>Create New</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Workspace -->
+        <div id="workspace-view" class="view-container hidden">
+            <div class="workspace-container">
+                <!-- Workspace Header -->
+                <div class="workspace-header">
+                    <button class="icon-btn" onclick="showProjectsView()" title="Back to Projects">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h2 id="workspace-project-name" style="margin: 0;">Untitled Project</h2>
+                    <div class="flex items-center gap-2">
+                        <button class="icon-btn" onclick="toggleSettings()" title="Settings">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3" />
+                            </svg>
+                        </button>
+                        <button class="btn btn-primary" onclick="toggleExport()">Download</button>
+                    </div>
+                </div>
+
+                <!-- Split: Chat and Visualizer -->
+                <div class="workspace-split">
+                    <!-- Chat Pane -->
+                    <div class="chat-pane">
+                        <div class="messages-container" id="messages"></div>
+
+                        <!-- Chat Input (Bottom Fixed) -->
+                        <div class="chat-input-container">
+                            <div class="chat-input-wrapper">
+                                <button class="action-btn" id="thinking-toggle" onclick="toggleReasoning()"
+                                    title="Toggle Reasoning">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="toggleDiscuss()" title="Discuss Shortcut">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M8 9h8M8 13h6" />
+                                        <path
+                                            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                    </svg>
+                                </button>
+                                <input type="text" id="chat-input" class="chat-input"
+                                    placeholder="Describe what you want to build...">
+                                <button class="send-btn" id="btn-send">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13" />
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualizer Pane -->
+                    <div class="visualizer-pane">
+                        <div class="visualizer-header">
+                            <h3>Blueprint</h3>
+                            <div class="flex gap-2">
+                                <!-- Force Action Menu Button -->
+                                <div class="dropdown-container">
+                                    <button class="icon-btn" onclick="toggleForceMenu()" id="force-menu-btn"
+                                        title="Advanced Features">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="5" x2="12" y2="19" />
+                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu" id="force-menu" style="display: none;">
+                                        <div class="dropdown-item pro-feature" onclick="showProUpgrade('Force Action')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                                <line x1="12" y1="8" x2="12" y2="16" />
+                                                <line x1="8" y1="12" x2="16" y2="12" />
+                                            </svg>
+                                            <span>Force Action</span>
+                                            <span class="pro-badge-mini">PRO</span>
+                                        </div>
+                                        <div class="dropdown-item pro-feature"
+                                            onclick="showProUpgrade('Advanced Reasoning')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path
+                                                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                <circle cx="9" cy="10" r="1" />
+                                                <circle cx="15" cy="10" r="1" />
+                                                <path d="M9 15c.5.667 1.5 1 3 1s2.5-.333 3-1" />
+                                            </svg>
+                                            <span>Advanced Reasoning</span>
+                                            <span class="pro-badge-mini">PRO</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="icon-btn" onclick="toggleDiscuss()" title="Discuss">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="visualizer-container" id="visualizer-content">
+                            <!-- Dynamic action nodes rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="modal-overlay hidden">
+    <div id="settings-modal" class="modal-overlay">
         <div class="modal-card">
-            <div class="modal-header">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
                 <h3>Project Settings</h3>
-                <button class="close-btn" onclick="toggleSettings()">×</button>
+                <button class="icon-btn" onclick="toggleSettings()">×</button>
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Project Name</label>
-                    <input type="text" id="setting-name" class="input-glass full-width">
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Project Name</label>
+                    <input type="text" id="setting-name" class="input-glass">
                 </div>
-                <div class="form-group">
-                    <label>Custom Instructions</label>
-                    <textarea id="setting-instructions" class="input-glass full-width" rows="3"
-                        placeholder="E.g., Always add comments to every action..."></textarea>
+                <div class="flex justify-between items-center" style="margin-top: 1rem;">
+                    <button class="btn btn-danger" onclick="deleteCurrentProject()">Delete Project</button>
+                    <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
                 </div>
-                <div class="form-group">
-                    <label>Visibility</label>
-                    <div class="visibility-options">
-                        <div class="vis-option selected" onclick="setProjectVisibility('public')">
-                            <span class="vis-icon">🌍</span>
-                            <div class="vis-text">
-                                <strong>Public</strong>
-                                <p>Anyone can view this shortcut.</p>
-                            </div>
-                        </div>
-                        <div class="vis-option disabled" id="vis-private" onclick="setProjectVisibility('private')">
-                            <span class="vis-icon">🔒</span>
-                            <div class="vis-text">
-                                <strong>Private</strong>
-                                <p>Only you can view this.</p>
-                            </div>
-                            <div class="pro-badge">PRO</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="toggleSettings()">Cancel</button>
-                <button class="btn-primary-sm" onclick="saveSettings()">Save Changes</button>
             </div>
         </div>
     </div>
 
-    <!-- Export Modal -->
-    <div id="export-modal" class="modal-overlay hidden">
+    <!-- Download Menu Modal -->
+    <div id="download-modal" class="modal-overlay">
         <div class="modal-card">
-            <div class="modal-header">
-                <h3>Export Shortcut</h3>
-                <button class="close-btn" onclick="toggleExport()">×</button>
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+                <h3>Download Shortcut</h3>
+                <button class="icon-btn" onclick="toggleDownload()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
             </div>
-            <div class="modal-body">
-                <p style="color: var(--text-muted); margin-bottom: 1rem;">Choose how you want to save your shortcut.</p>
-                <div class="export-options">
-                    <div class="export-option" onclick="handleExport('download')">
-                        <span class="export-icon">💾</span>
-                        <span class="export-title">Download Only</span>
-                        <span class="export-desc">Save .shortcut file privately.</span>
+
+            <div class="download-options">
+                <button class="download-option-card" onclick="handleDownloadPrivate()">
+                    <div class="download-option-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
                     </div>
-                    <div class="export-option" onclick="handleExport('publish')">
-                        <span class="export-icon">🌍</span>
-                        <span class="export-title">Publish & Download</span>
-                        <span class="export-desc">Share with community.</span>
+                    <div>
+                        <h4>Download Private</h4>
+                        <p>Download for personal use only. Your chat history stays private.</p>
                     </div>
-                </div>
+                </button>
+
+                <button class="download-option-card" onclick="handleDownloadPublish()">
+                    <div class="download-option-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="2" y1="12" x2="22" y2="12" />
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>Publish to Market</h4>
+                        <p>Share with the community. Chat history not saved, shortcut only.</p>
+                    </div>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Main Layout -->
-    <div class="app-layout">
-
-        <!-- Collapsible Sidebar -->
-        <aside class="app-sidebar" id="app-sidebar">
-            <div class="sidebar-top">
-                <div class="logo-container sm">
-                    <div class="logo-icon sm">F</div>
-                    <span class="logo-text">{{NAME}}</span>
-                </div>
-                <button class="collapse-btn" onclick="toggleSidebar()">«</button>
+    <!-- Publish Metadata Modal -->
+    <div id="publish-modal" class="modal-overlay">
+        <div class="modal-card modal-large">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+                <h3>Publish to Marketplace</h3>
+                <button class="icon-btn" onclick="closePublishModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
             </div>
 
-            <div class="sidebar-projects">
-                <div class="projects-header">
-                    <span>PROJECTS</span>
-                    <button class="add-project-btn" onclick="createNewProject()">+</button>
-                </div>
-                <div id="sidebar-project-list" class="project-list">
-                    <!-- Injected by JS -->
+            <div id="publish-status"
+                style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: var(--radius-md); background: var(--surface-color);">
+                <div class="flex items-center gap-2">
+                    <div class="spinner"></div>
+                    <span id="publish-status-text">Generating shortcut...</span>
                 </div>
             </div>
 
-            <div class="sidebar-bottom">
-                <div class="user-profile">
-                    <div class="avatar sm">👤</div>
-                    <div class="user-info">
-                        <span class="user-name">User</span>
-                        <span class="user-plan">Free Plan</span>
-                    </div>
-                    <button class="settings-btn" onclick="window.location.href='pricing.html'">⚙️</button>
-                </div>
+            <div class="form-group">
+                <label for="publish-title">Shortcut Title</label>
+                <input type="text" id="publish-title" class="input-glass" placeholder="My Awesome Shortcut">
             </div>
-        </aside>
 
-        <!-- Main Content -->
-        <div class="app-main">
+            <div class="form-group">
+                <label for="publish-description">Description</label>
+                <textarea id="publish-description" class="input-glass" rows="4"
+                    placeholder="Describe what your shortcut does..."></textarea>
+            </div>
 
-            <!-- Top Bar -->
-            <header class="app-header">
-                <div class="header-left">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-                    <div class="project-title-wrapper">
-                        <input type="text" id="project-name-input" class="project-name-input" value="Untitled Project">
-                    </div>
+            <div class="flex justify-end gap-2" style="margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="closePublishModal()">Cancel</button>
+                <button class="btn btn-primary" id="publish-submit-btn" onclick="submitPublish()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Publish & Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="modal-overlay hidden">
+        <div class="modal glass-panel" style="max-width: 500px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <h2>Welcome to Flux</h2>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">
+                    Flux helps you build powerful Apple Shortcuts using AI. <br>
+                    Let's create your first shortcut together.
+                </p>
+                <div class="flex flex-col gap-4">
+                    <button class="btn btn-primary" onclick="startOnboarding()">Create First Shortcut</button>
+                    <button class="btn btn-secondary" onclick="skipOnboarding()">Skip Tutorial</button>
                 </div>
-                <div class="header-right">
-                    <button class="icon-btn" onclick="toggleSettings()" title="Settings">⚙️</button>
-                    <button class="btn-primary-sm" id="btn-export" onclick="toggleExport()">Export</button>
-                </div>
-            </header>
-
-            <!-- Workspace -->
-            <div class="workspace-container">
-
-                <!-- Chat Panel -->
-                <div class="panel chat-panel">
-                    <div class="panel-header">
-                        <h3>Assistant</h3>
-                        <div class="model-selector-wrapper">
-                            <select id="model-select" class="simple-select"
-                                style="background: transparent; border: none; color: var(--text-muted); font-size: 0.85rem; outline: none;">
-                                <!-- Injected by JS -->
-                            </select>
-                        </div>
-                    </div>
-                    <div class="chat-messages" id="messages">
-                        <div class="message-row assistant">
-                            <div class="avatar">⚡️</div>
-                            <div class="message-content">Hi! Describe the shortcut you want to build.</div>
-                        </div>
-                    </div>
-                    <div class="chat-input-area">
-                        <div id="active-constraints" class="constraints-container"></div>
-                        <div class="chat-input-wrapper">
-                            <button id="btn-add-action" class="add-action-btn" title="Add Context">+</button>
-                            <textarea id="chat-input" placeholder="Type instructions..." rows="1"></textarea>
-                            <button id="btn-send" class="send-btn">↑</button>
-                        </div>
-                        <!-- Popovers -->
-                        <div id="force-menu" class="force-menu hidden">
-                            <div class="menu-item" onclick="showActionPicker()">⚡️ Force Action</div>
-                        </div>
-                        <div id="action-picker" class="picker-modal hidden">
-                            <input type="text" id="action-search" placeholder="Search...">
-                            <div class="action-list" id="action-list"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Visualizer Panel -->
-                <div class="panel visualizer-panel">
-                    <div class="panel-header">
-                        <h3>Preview</h3>
-                        <div class="window-controls">
-                            <span class="dot red"></span>
-                            <span class="dot yellow"></span>
-                            <span class="dot green"></span>
-                        </div>
-                    </div>
-                    <div class="visualizer-content" id="visualizer-content">
-                        <div class="empty-state">
-                            <p>Actions will appear here.</p>
-                        </div>
-                    </div>
-                    <div class="panel-footer">
-                        <!-- Download button moved to Export Modal -->
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
 
     <script src="theme.js"></script>
+    <script src="flux-ui.js"></script>
     <script src="script.js"></script>
 </body>
 

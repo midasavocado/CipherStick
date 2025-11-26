@@ -12,19 +12,21 @@
 <body class="base44-theme">
 
     <!-- Navigation -->
-    <nav class="navbar">
-        <a href="index.html" class="logo-container">
+    <nav class="top-bar">
+        <div class="logo-area">
             <div class="logo-icon">F</div>
-            <span class="logo-text">Flux</span>
-        </a>
-        <div class="nav-links">
-            <a href="index.html#features">Features</a>
-            <a href="marketplace.html">Marketplace</a>
-            <a href="pricing.html" class="active">Pricing</a>
-            <a href="docs.html">Docs</a>
+            <span>Flux</span>
         </div>
-        <div class="nav-actions">
-            <a href="app.html" id="nav-cta" class="btn-primary-sm">Dashboard</a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="pricing.html" class="active" style="color: var(--primary-color);">Pricing</a>
+        </div>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme">
+                <!-- Icon injected by theme.js -->
+            </button>
+            <a href="app.html" id="nav-cta" class="btn btn-primary">Dashboard</a>
         </div>
     </nav>
 
@@ -40,33 +42,37 @@
 
             <!-- Free Tier -->
             <div class="b44-card">
-                <h3>Starter</h3>
+                <h3>Free</h3>
                 <div class="price">$0 <span>/mo</span></div>
-                <p>Perfect for hobbyists and testing.</p>
+                <p>Perfect for getting started.</p>
                 <ul style="list-style: none; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
-                    <li>✓ 10 Daily Generations</li>
-                    <li>✓ Access to Llama 3 8B</li>
+                    <li>✓ 5 Generations Per Day</li>
+                    <li>✓ Basic Shortcuts</li>
                     <li>✓ Community Support</li>
                 </ul>
-                <a href="app.html" class="btn-primary-sm"
-                    style="width: 100%; text-align: center; background: var(--surface-hover);">Get Started</a>
+                <a href="login.html" class="btn-outlined"
+                    style="width: 100%; text-align: center; background: transparent; border: 2px solid var(--border-color); color: var(--text-color);">Get
+                    Started</a>
             </div>
 
             <!-- Pro Tier -->
-            <div class="b44-card" style="border-color: var(--primary-color); position: relative;">
-                <div class="hero-badge"
+            <div class="b44-card" style="position: relative; border: 2px solid var(--primary-color);">
+                <div class="pro-badge"
                     style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--bg-color);">
                     Most Popular</div>
                 <h3>Pro</h3>
                 <div class="price">$12 <span>/mo</span></div>
                 <p>For power users and creators.</p>
                 <ul style="list-style: none; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
-                    <li>✓ 50 Daily Generations</li>
-                    <li>✓ Access to GPT-4 & Claude 3</li>
+                    <li>✓ Unlimited Generations</li>
+                    <li>✓ <span style="color: var(--primary-color); font-weight: 600;">Force Action</span> (Manual
+                        control)</li>
+                    <li>✓ <span style="color: var(--primary-color); font-weight: 600;">Advanced Reasoning</span></li>
                     <li>✓ Priority Support</li>
                     <li>✓ Private Workflows</li>
                 </ul>
-                <a href="app.html" class="btn-primary-sm" style="width: 100%; text-align: center;">Upgrade to Pro</a>
+                <a href="app.html" class="btn btn-primary"
+                    style="width: 100%; text-align: center; padding: 0.75rem;">Upgrade to Pro</a>
             </div>
 
             <!-- Enterprise Tier -->
@@ -77,11 +83,12 @@
                 <ul style="list-style: none; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
                     <li>✓ Unlimited Generations</li>
                     <li>✓ Custom Models</li>
-                    <li>✓ SSO & SLA</li>
+                    <li>✓ Multiple Users & API Support</li>
                     <li>✓ Dedicated Account Manager</li>
                 </ul>
-                <a href="#contact" class="btn-primary-sm"
-                    style="width: 100%; text-align: center; background: var(--surface-hover);">Contact Sales</a>
+                <a href="#contact" class="btn-outlined"
+                    style="width: 100%; text-align: center; background: transparent; border: 2px solid var(--border-color); color: var(--text-color);">Contact
+                    Sales</a>
             </div>
 
         </div>

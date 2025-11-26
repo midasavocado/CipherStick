@@ -12,33 +12,37 @@
 <body class="base44-theme">
 
     <!-- Navigation -->
-    <nav class="navbar">
-        <a href="index.html" class="logo-container">
+    <nav class="top-bar">
+        <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
             <div class="logo-icon">F</div>
-            <span class="logo-text">Flux</span>
+            <span>Flux</span>
         </a>
-        <div class="nav-links">
-            <a href="index.html#features">Features</a>
-            <a href="marketplace.html" class="active">Marketplace</a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
+            <a href="marketplace.html" class="active" style="color: var(--primary-color);">Marketplace</a>
             <a href="pricing.html">Pricing</a>
-            <a href="docs.html">Docs</a>
         </div>
-        <div class="nav-actions">
-            <a href="app.html" id="nav-cta" class="btn-primary-sm">Dashboard</a>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme">
+                <!-- Icon injected by theme.js -->
+            </button>
+            <a href="app.html" id="nav-cta" class="btn btn-primary">Dashboard</a>
         </div>
     </nav>
 
     <!-- Header -->
-    <section class="section text-center">
+    <section class="section text-center" style="padding-top: 100px;">
         <div class="section-header">
-            <h2>Community Marketplace</h2>
-            <p>Discover workflows created by the Flux community.</p>
+            <h1>Shortcut Marketplace</h1>
+            <p style="color: var(--text-muted);">Discover community-created shortcuts</p>
         </div>
-
-        <div class="hero-input-wrapper" style="max-width: 500px;">
-            <div class="input-glass">
-                <input type="text" id="hero-input" placeholder="Search templates..." autocomplete="off">
-            </div>
+        <div class="hero-input-wrapper" style="max-width: 600px; margin: 2rem auto;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text" id="marketplace-search" placeholder="Search shortcuts..."
+                oninput="searchMarketplace(this.value)">
         </div>
     </section>
 
@@ -54,6 +58,10 @@
                     <span>@alex</span>
                     <span>1.2k uses</span>
                 </div>
+                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
+                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
+                </div>
             </div>
 
             <!-- Item 2 -->
@@ -64,6 +72,10 @@
                 <div class="market-stats">
                     <span>@sarah_design</span>
                     <span>850 uses</span>
+                </div>
+                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
+                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
                 </div>
             </div>
 
@@ -76,6 +88,10 @@
                     <span>@tech_guru</span>
                     <span>2.5k uses</span>
                 </div>
+                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
+                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
+                </div>
             </div>
 
             <!-- Item 4 -->
@@ -87,12 +103,16 @@
                     <span>@health_bot</span>
                     <span>500 uses</span>
                 </div>
+                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
+                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
+                </div>
             </div>
         </div>
     </section>
 
     <script src="theme.js"></script>
-    <script src="script.js"></script>
+    <script src="marketplace-search.js"></script>
 </body>
 
 </html>

@@ -10,24 +10,26 @@
     rel="stylesheet">
 </head>
 
-<body class="base44-theme">
+<body class="app-theme">
 
   <!-- Navigation -->
-  <nav class="navbar">
-    <a href="index.html" class="logo-container">
+  <nav class="top-bar">
+    <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
       <div class="logo-icon">F</div>
-      <span class="logo-text">{{NAME}}</span>
+      <span>Flux</span>
     </a>
 
-    <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#examples">Examples</a>
+    <div class="nav-links flex items-center gap-4">
+      <a href="index.html#how-it-works">How it Works</a>
       <a href="marketplace.html">Marketplace</a>
       <a href="pricing.html">Pricing</a>
     </div>
 
-    <div class="nav-actions">
-      <a href="javascript:login()" id="nav-cta" class="btn-primary-sm">Get Started</a>
+    <div class="nav-actions flex items-center gap-4">
+      <button class="icon-btn mode-toggle-btn" title="Toggle Theme" aria-label="Toggle dark/light theme">
+        <!-- Icon injected by theme.js -->
+      </button>
+      <a href="login.html" id="nav-cta" class="btn btn-primary">Get Started</a>
     </div>
   </nav>
 
@@ -45,30 +47,67 @@
   <!-- Landing View -->
   <div id="landing-view">
     <!-- Hero Section -->
-    <section class="hero-base44">
+    <section class="hero">
       <canvas id="hero-canvas"></canvas>
       <div class="hero-content">
-        <div class="hero-badge">New: GPT-5.1 Support ⚡️</div>
-        <h1>Build Apple Shortcuts <br> <span class="gradient-text">in minutes.</span></h1>
+        <div class="hero-badge">Powered by Grok AI ⚡️</div>
+        <h1>Build Apple Shortcuts <br> <span class="gradient-text"
+            style="background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);">in
+            minutes.</span></h1>
         <p class="hero-sub">Turn natural language into powerful automation workflows. No coding required.</p>
 
         <div class="hero-input-wrapper">
-          <div class="input-glass">
-            <input type="text" id="hero-input" placeholder="Describe a shortcut to build..." autocomplete="off">
-            <button class="input-arrow" onclick="handleHeroSubmit()">→</button>
-          </div>
-          <div class="hero-suggestions">
-            <span class="pill" onclick="fillHero('Track my water intake')">💧 Track water</span>
-            <span class="pill" onclick="fillHero('Summarize tech news')">📰 Summarize news</span>
-            <span class="pill" onclick="fillHero('Generate a QR code')">📱 QR Code</span>
-          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input type="text" id="hero-input" placeholder="Describe which shortcut to build...">
+          <button class="hero-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+        <div class="hero-suggestions">
+          <span class="pill" onclick="fillHero('Track my water intake')">💧 Track water</span>
+          <span class="pill" onclick="fillHero('Summarize tech news')">📰 Summarize news</span>
+          <span class="pill" onclick="fillHero('Generate a QR code')">📱 QR Code</span>
         </div>
       </div>
-      <div class="bg-glow glow-1"></div>
+      <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+      </div>
+    </section>
+
+    <!-- How it Works Section -->
+    <section class="section" id="how-it-works">
+      <div class="section-header">
+        <h2>From Idea to Automation.</h2>
+        <p>Three simple steps to build powerful workflows.</p>
+      </div>
+      <div class="b44-grid">
+        <div class="b44-card">
+          <div class="card-icon">1</div>
+          <h3>Describe</h3>
+          <p>Tell Flux what you want to do in plain English.</p>
+        </div>
+        <div class="b44-card">
+          <div class="card-icon">2</div>
+          <h3>Refine</h3>
+          <p>Use the visual editor to tweak actions and logic.</p>
+        </div>
+        <div class="b44-card">
+          <div class="card-icon">3</div>
+          <h3>Export</h3>
+          <p>Download the .shortcut file and run it on your device.</p>
+        </div>
+      </div>
     </section>
 
     <!-- Features Grid -->
-    <section class="section features-base44" id="features">
+    <section class="section features" id="features">
       <div class="section-header">
         <h2>Everything you need to build.</h2>
         <p>Powerful primitives for the next generation of automation.</p>
@@ -85,11 +124,6 @@
           <h3>Visual Editor</h3>
           <p>Tweaking your shortcut is as easy as dragging blocks. See changes in real-time.</p>
         </div>
-        <div class="b44-card">
-          <div class="card-icon">🔌</div>
-          <h3>Integrations</h3>
-          <p>Connect to Notion, Slack, Calendar, and 100+ other tools out of the box.</p>
-        </div>
       </div>
     </section>
 
@@ -101,19 +135,65 @@
       </div>
       <div class="b44-grid">
         <div class="b44-card example-card">
-          <div class="example-img" style="background: linear-gradient(45deg, #FF6B6B, #FF8E53);"></div>
-          <h3>Morning Briefing</h3>
-          <p>Reads calendar, weather, and top news headlines aloud.</p>
+          <div class="card-icon">🎵</div>
+          <h3>Spotify to Apple Music</h3>
+          <p>Convert playlists instantly between services.</p>
         </div>
         <div class="b44-card example-card">
-          <div class="example-img" style="background: linear-gradient(45deg, #4FACFE, #00F2FE);"></div>
-          <h3>Quick Expense</h3>
-          <p>Logs expense to Notion database with category selection.</p>
+          <div class="card-icon">📸</div>
+          <h3>Photo Resizer Pro</h3>
+          <p>Batch resize and watermark images for social media.</p>
         </div>
         <div class="b44-card example-card">
-          <div class="example-img" style="background: linear-gradient(45deg, #43E97B, #38F9D7);"></div>
-          <h3>Photo Watermark</h3>
-          <p>Overlays logo on selected photos and saves to album.</p>
+          <div class="card-icon">📝</div>
+          <h3>Meeting Summarizer</h3>
+          <p>Record audio and get a bulleted summary via AI.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section (New) -->
+    <section class="section cta" id="contact">
+      <div class="cta-content" style="max-width: 600px; margin: 0 auto;">
+        <h2>Get in Touch</h2>
+        <p style="margin-bottom: 2rem;">Have questions or need enterprise support?</p>
+        <form class="contact-form" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="input-glass full-width" placeholder="you@company.com">
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea class="input-glass full-width" rows="4" placeholder="How can we help?"></textarea>
+          </div>
+          <button type="button" class="btn-primary-lg" style="width: 100%;">Send Message</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section" id="faq">
+      <div class="section-header">
+        <h2>Frequently Asked Questions</h2>
+        <p>Common questions about building with {{NAME}}.</p>
+      </div>
+      <div class="faq-grid" style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
+        <div class="b44-card faq-item">
+          <h3>Is {{NAME}} free to use?</h3>
+          <p>Yes, we offer a generous free tier for hobbyists. Pro plans are available for power users.</p>
+        </div>
+        <div class="b44-card faq-item">
+          <h3>Do I need to know how to code?</h3>
+          <p>Not at all. {{NAME}} uses advanced AI to turn your natural language descriptions into functional shortcuts.
+          </p>
+        </div>
+        <div class="b44-card faq-item">
+          <h3>Can I export to my iPhone?</h3>
+          <p>Absolutely. You can download the .shortcut file and install it directly on your iOS device.</p>
+        </div>
+        <div class="b44-card faq-item">
+          <h3>What models do you use?</h3>
+          <p>We use state-of-the-art language models optimized for logic and automation tasks.</p>
         </div>
       </div>
     </section>
@@ -138,7 +218,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer-base44">
+    <footer class="footer">
       <div class="footer-grid">
         <div class="footer-brand">
           <div class="logo-container">
@@ -154,8 +234,7 @@
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
-          <a href="#">Documentation</a>
-          <a href="#">Community</a>
+          <a href="marketplace.html">Marketplace</a>
         </div>
         <div class="footer-col">
           <h4>Company</h4>
