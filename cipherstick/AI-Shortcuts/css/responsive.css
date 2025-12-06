@@ -1,0 +1,70 @@
+/* --- Mobile Responsiveness --- */
+
+@media (max-width: 768px) {
+
+    /* Layout */
+    .app-body {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .app-sidebar.collapsed {
+        width: 100%;
+        height: 60px;
+        overflow: hidden;
+    }
+
+    .workspace-container {
+        flex-direction: column;
+        padding: 0.5rem;
+        margin-top: 64px;
+    }
+
+    .chat-panel {
+        width: 100%;
+        height: 40vh;
+    }
+
+    .visualizer-panel {
+        height: 50vh;
+    }
+
+    /* Navigation */
+    .nav-links {
+        display: none;
+        /* Hide links on mobile for now */
+    }
+
+    .top-bar {
+        padding: 0 1rem;
+    }
+
+    /* Landing Page */
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero-input-wrapper {
+        flex-direction: column;
+    }
+
+    .hero-btn {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .b44-grid,
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-grid {
+        gap: 2rem;
+    }
+}

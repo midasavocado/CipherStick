@@ -5,7 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flux - Marketplace</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="description"
+        content="Discover community-created Apple Shortcuts. Flux Marketplace features the best AI-generated automation workflows.">
+    <meta property="og:title" content="Flux - Marketplace">
+    <meta property="og:description" content="Discover community-created Apple Shortcuts.">
+    <meta property="og:type" content="website">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/marketplace.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
@@ -33,16 +47,53 @@
     <!-- Header -->
     <section class="section text-center" style="padding-top: 100px;">
         <div class="section-header">
-            <h1>Shortcut Marketplace</h1>
+            <h1 class="flashy-text">Shortcut Marketplace</h1>
             <p style="color: var(--text-muted);">Discover community-created shortcuts</p>
         </div>
-        <div class="hero-input-wrapper" style="max-width: 600px; margin: 2rem auto;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="hero-input-wrapper"
+            style="max-width: 600px; margin: 2rem auto; position: relative; display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.8rem 1rem; backdrop-filter: blur(12px);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="color: var(--text-muted); margin-right: 0.8rem;">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
             </svg>
             <input type="text" id="marketplace-search" placeholder="Search shortcuts..."
-                oninput="searchMarketplace(this.value)">
+                oninput="searchMarketplace(this.value)"
+                style="background: transparent; border: none; color: var(--text-color); outline: none; flex: 1; font-size: 1rem; width: 100%;">
+        </div>
+
+        <div class="flex justify-end"
+            style="margin-bottom: 2rem; max-width: 1100px; margin-left: auto; margin-right: auto; padding: 0 1rem;">
+            <div class="custom-select-wrapper" style="position: relative; display: inline-block;">
+                <select id="sort-select" onchange="filterMarketplace(this.value)" style="
+                    appearance: none;
+                    background: var(--surface-color);
+                    border: 1px solid var(--border-color);
+                    color: var(--text-color);
+                    padding: 0.6rem 2.5rem 0.6rem 1rem;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    outline: none;
+                    box-shadow: var(--shadow-sm);
+                ">
+                    <option value="all">All Shortcuts</option>
+                    <option value="popular">Most Popular</option>
+                    <option value="recent">Recently Added</option>
+                    <option value="trending">Trending Now</option>
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="
+                    position: absolute;
+                    right: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    pointer-events: none;
+                    color: var(--text-muted);
+                ">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
         </div>
     </section>
 
@@ -111,8 +162,42 @@
         </div>
     </section>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container">
+                    <span class="logo-text">Flux</span>
+                </div>
+                <p>Automation, Reimagined.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a href="#">Editor</a>
+                <a href="#">Marketplace</a>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <a href="marketplace.html">Marketplace</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Flux Inc. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
     <script src="theme.js"></script>
-    <script src="marketplace-search.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

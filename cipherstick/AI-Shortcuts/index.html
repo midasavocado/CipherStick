@@ -4,8 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{NAME}} - Build Apple Shortcuts with AI</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Flux - Build Apple Shortcuts with AI</title>
+  <meta name="description"
+    content="Build Apple Shortcuts with AI. Flux turns natural language into powerful automation workflows.">
+  <meta property="og:title" content="Flux - Build Apple Shortcuts with AI">
+  <meta property="og:description"
+    content="Turn natural language into powerful automation workflows. No coding required.">
+  <meta property="og:type" content="website">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/pages/landing.css">
+  <link rel="stylesheet" href="css/pages/app.css">
+  <link rel="stylesheet" href="css/pages/marketplace.css">
+  <link rel="stylesheet" href="css/responsive.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
 </head>
@@ -34,12 +51,13 @@
   </nav>
 
   <!-- Dashboard View (Hidden by default) -->
-  <div id="dashboard-view" class="dashboard-container hidden">
-    <div class="section-header text-left" style="text-align: left; margin-bottom: 2rem;">
-      <h2>Your Projects</h2>
-      <p>Manage your Apple Shortcuts.</p>
+  <div id="dashboard-view" class="dashboard-container hidden"
+    style="height: 100vh; display: flex; flex-direction: column;">
+    <div class="section-header text-left" style="text-align: left; margin-bottom: 2rem; padding-top: 2rem;">
+      <h2 style="color: var(--heading-color);">Your Projects</h2>
+      <p style="color: var(--text-muted);">Manage your Apple Shortcuts.</p>
     </div>
-    <div id="project-grid" class="b44-grid">
+    <div id="project-grid" class="b44-grid" style="flex: 1; overflow-y: auto; padding-bottom: 2rem;">
       <!-- Injected by JS -->
     </div>
   </div>
@@ -49,29 +67,31 @@
     <!-- Hero Section -->
     <section class="hero">
       <canvas id="hero-canvas"></canvas>
-      <div class="hero-content">
-        <div class="hero-badge">Powered by Grok AI ⚡️</div>
-        <h1>Build Apple Shortcuts <br> <span class="gradient-text"
-            style="background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);">in
-            minutes.</span></h1>
-        <p class="hero-sub">Turn natural language into powerful automation workflows. No coding required.</p>
+      <div class="hero-content" style="padding-top: 0;">
+        <!-- Badge Removed -->
+        <h1>Build Apple Shortcuts <br> <span class="flashy-text">in minutes.</span></h1>
+        <p class="hero-sub fade-in">Turn natural language into powerful automation workflows. No coding required.</p>
 
         <div class="hero-input-wrapper">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input type="text" id="hero-input" placeholder="Describe which shortcut to build...">
-          <button class="hero-btn">
+          <input type="text" id="hero-input" placeholder="Describe the shortcut you want to generate...">
+          <button class="hero-btn" onclick="generateShortcut()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
           </button>
         </div>
-        <div class="hero-suggestions">
-          <span class="pill" onclick="fillHero('Track my water intake')">💧 Track water</span>
-          <span class="pill" onclick="fillHero('Summarize tech news')">📰 Summarize news</span>
-          <span class="pill" onclick="fillHero('Generate a QR code')">📱 QR Code</span>
+
+        <div class="hero-suggestions fade-in delay-1">
+          <button class="pill" style="color: var(--text-color);"
+            onclick="fillInput('Make a shortcut that downloads a YouTube video as MP4')">Download
+            YouTube Video</button>
+          <button class="pill" style="color: var(--text-color);"
+            onclick="fillInput('Make a shortcut that logs water intake to Apple Health')">Log
+            Water</button>
+          <button class="pill" style="color: var(--text-color);"
+            onclick="fillInput('Make a shortcut that splits the bill between friends')">Split
+            Bill</button>
         </div>
       </div>
       <div class="bg-animation">
@@ -130,61 +150,61 @@
     <!-- Examples Section (New) -->
     <section class="section" id="examples">
       <div class="section-header">
-        <h2>Built with {{NAME}}.</h2>
+        <h2>Built with Flux.</h2>
         <p>See what's possible with AI-generated shortcuts.</p>
       </div>
       <div class="b44-grid">
+        <!-- Item 1 -->
         <div class="b44-card example-card">
           <div class="card-icon">🎵</div>
           <h3>Spotify to Apple Music</h3>
           <p>Convert playlists instantly between services.</p>
+          <a href="marketplace-item.html?id=spotify-to-apple-music" class="btn btn-primary-sm"
+            style="margin-top: 1rem; width: 100%; text-align: center;">Get this shortcut</a>
         </div>
+        <!-- Item 2 -->
         <div class="b44-card example-card">
           <div class="card-icon">📸</div>
           <h3>Photo Resizer Pro</h3>
           <p>Batch resize and watermark images for social media.</p>
+          <a href="marketplace-item.html?id=photo-resizer-pro" class="btn btn-primary-sm"
+            style="margin-top: 1rem; width: 100%; text-align: center;">Get this shortcut</a>
         </div>
+        <!-- Item 3 -->
         <div class="b44-card example-card">
           <div class="card-icon">📝</div>
           <h3>Meeting Summarizer</h3>
-          <p>Record audio and get a bulleted summary via AI.</p>
+          <p>Record audio and get a bulleted summary via GPT-4.</p>
+          <a href="marketplace-item.html?id=meeting-summarizer" class="btn btn-primary-sm"
+            style="margin-top: 1rem; width: 100%; text-align: center;">Get this shortcut</a>
+        </div>
+        <!-- Item 4 -->
+        <div class="b44-card example-card">
+          <div class="card-icon">💧</div>
+          <h3>Hydration Tracker</h3>
+          <p>Log water intake and get reminders.</p>
+          <a href="marketplace-item.html?id=hydration-tracker" class="btn btn-primary-sm"
+            style="margin-top: 1rem; width: 100%; text-align: center;">Get this shortcut</a>
         </div>
       </div>
     </section>
 
-    <!-- Contact Section (New) -->
-    <section class="section cta" id="contact">
-      <div class="cta-content" style="max-width: 600px; margin: 0 auto;">
-        <h2>Get in Touch</h2>
-        <p style="margin-bottom: 2rem;">Have questions or need enterprise support?</p>
-        <form class="contact-form" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" class="input-glass full-width" placeholder="you@company.com">
-          </div>
-          <div class="form-group">
-            <label>Message</label>
-            <textarea class="input-glass full-width" rows="4" placeholder="How can we help?"></textarea>
-          </div>
-          <button type="button" class="btn-primary-lg" style="width: 100%;">Send Message</button>
-        </form>
-      </div>
-    </section>
+    <!-- Contact Section Removed (Duplicate) -->
 
     <!-- FAQ Section -->
     <section class="section" id="faq">
       <div class="section-header">
         <h2>Frequently Asked Questions</h2>
-        <p>Common questions about building with {{NAME}}.</p>
+        <p>Common questions about building with Flux.</p>
       </div>
       <div class="faq-grid" style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
         <div class="b44-card faq-item">
-          <h3>Is {{NAME}} free to use?</h3>
+          <h3>Is Flux free to use?</h3>
           <p>Yes, we offer a generous free tier for hobbyists. Pro plans are available for power users.</p>
         </div>
         <div class="b44-card faq-item">
           <h3>Do I need to know how to code?</h3>
-          <p>Not at all. {{NAME}} uses advanced AI to turn your natural language descriptions into functional shortcuts.
+          <p>Not at all. Flux uses advanced AI to turn your natural language descriptions into functional shortcuts.
           </p>
         </div>
         <div class="b44-card faq-item">
@@ -222,8 +242,10 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <div class="logo-container">
-            <div class="logo-icon">F</div>
-            <span class="logo-text">{{NAME}}</span>
+            <div class="user-profile">
+              <!-- Avatar removed as requested -->
+            </div>
+            <span class="logo-text">Flux</span>
           </div>
           <p>Automation, Reimagined.</p>
         </div>
@@ -243,12 +265,13 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2025 {{NAME}} Inc. All rights reserved.</p>
+        <p>&copy; 2025 Flux Inc. All rights reserved.</p>
       </div>
     </footer>
   </div>
 
   <script src="theme.js"></script>
+  <script src="js/typewriter.js"></script>
   <script src="script.js"></script>
   <script>
     function fillHero(text) {

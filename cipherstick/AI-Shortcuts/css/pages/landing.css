@@ -1,0 +1,169 @@
+/* --- Landing Page Styles --- */
+
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    padding: 2rem;
+    padding-bottom: 15vh;
+    /* Shift content up */
+}
+
+#hero-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.6;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    width: 100%;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.hero-sub {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+}
+
+/* Hero Input - Fixed */
+.hero-input-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    /* Glass effect */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.2s ease;
+    gap: 0.5rem;
+}
+
+.hero-input-wrapper:hover,
+.hero-input-wrapper:focus-within {
+    transform: scale(1.02);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), var(--shadow-lg);
+    background: var(--surface-color);
+}
+
+#hero-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    padding: 0.8rem;
+    font-size: 1rem;
+    outline: none;
+    min-width: 0;
+    /* Prevent overflow */
+}
+
+.hero-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.hero-btn:hover {
+    transform: translateX(2px);
+    background: var(--primary-hover);
+}
+
+.hero-suggestions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Features */
+.features {
+    background: transparent;
+    /* Changed from var(--bg-color) to show blobs */
+    backdrop-filter: blur(20px);
+    /* Optional: adds glass effect if desired, or remove for full transparency */
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* Examples */
+.example-card {
+    text-align: center;
+}
+
+/* FAQ */
+.faq-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.faq-item {
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: var(--glass-bg);
+    /* Ensure cards have glass background */
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+}
+
+.faq-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow);
+}
+
+.faq-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--heading-color);
+}
+
+.faq-item p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Contact */
+.cta-base44 {
+    background: transparent;
+    /* Changed from var(--bg-color) */
+    border-top: 1px solid var(--border-color);
+    backdrop-filter: blur(20px);
+}

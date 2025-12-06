@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux - Shortcut Details</title>
+    <meta name="description" content="Download this Apple Shortcut for free on Flux.">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/marketplace.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .detail-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-meta {
+            color: var(--text-muted);
+            display: flex;
+            gap: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .preview-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body class="base44-theme">
+
+    <!-- Navigation -->
+    <nav class="top-bar">
+        <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
+            <div class="logo-icon">F</div>
+            <span>Flux</span>
+        </a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="pricing.html">Pricing</a>
+        </div>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme">
+                <!-- Icon injected by theme.js -->
+            </button>
+            <a href="login.html" id="nav-cta" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <main class="detail-container" style="padding-top: 100px;">
+        <a href="marketplace.html" class="btn-text"
+            style="margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Marketplace
+        </a>
+
+        <div class="detail-header">
+            <div class="detail-icon" id="item-icon">⚡️</div>
+            <div class="detail-info">
+                <h1 id="item-title">Loading...</h1>
+                <div class="detail-meta">
+                    <span id="item-author">@flux</span>
+                    <span>•</span>
+                    <span id="item-uses">0 uses</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-actions">
+            <button class="btn btn-primary-lg" onclick="handleGet()" style="flex: 1;">
+                Get Shortcut
+            </button>
+            <button class="btn btn-secondary" onclick="handleRemix()" style="flex: 1;">
+                Remix in Editor
+            </button>
+        </div>
+
+        <div class="preview-box">
+            <h3 style="margin-bottom: 1rem;">Description</h3>
+            <p id="item-desc" style="line-height: 1.6; color: var(--text-color);">Loading description...</p>
+        </div>
+
+        <div class="preview-box">
+            <h3 style="margin-bottom: 1rem;">Preview</h3>
+            <div
+                style="background: var(--bg-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; color: var(--text-muted);">
+                <!-- Mock Preview -->
+                <div style="margin-bottom: 0.5rem;">1. Receive Input (Text)</div>
+                <div style="margin-bottom: 0.5rem;">2. Run Script (AI Model)</div>
+                <div style="margin-bottom: 0.5rem;">3. Show Result</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="flux-ui.js"></script>
+    <script>
+        // Mock Data
+        const items = {
+            'spotify-to-apple-music': {
+                title: 'Spotify to Apple Music',
+                icon: '🎵',
+                author: '@alex',
+                uses: '1.2k uses',
+                desc: 'Instantly convert your Spotify playlists to Apple Music. Supports public and private playlists. Requires Apple Music subscription.'
+            },
+            'photo-resizer-pro': {
+                title: 'Photo Resizer Pro',
+                icon: '📸',
+                author: '@sarah_design',
+                uses: '850 uses',
+                desc: 'Batch resize images for social media. Includes presets for Instagram, Twitter, and LinkedIn. Can also add custom watermarks.'
+            },
+            'meeting-summarizer': {
+                title: 'Meeting Summarizer',
+                icon: '📝',
+                author: '@tech_guru',
+                uses: '2.5k uses',
+                desc: 'Record audio during your meeting and get a concise bulleted summary using GPT-4. Automatically saves to Notes.'
+            },
+            'hydration-tracker': {
+                title: 'Hydration Tracker',
+                icon: '💧',
+                author: '@health_bot',
+                uses: '500 uses',
+                desc: 'Log your daily water intake with a single tap. Sends reminders every 2 hours. Syncs with Apple Health.'
+            }
+        };
+
+        // Load Data
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const item = items[id];
+
+        if (item) {
+            document.getElementById('item-title').textContent = item.title;
+            document.getElementById('item-icon').textContent = item.icon;
+            document.getElementById('item-author').textContent = item.author;
+            document.getElementById('item-uses').textContent = item.uses;
+            document.getElementById('item-desc').textContent = item.desc;
+            document.title = `Flux - ${item.title}`;
+        } else {
+            document.getElementById('item-title').textContent = 'Shortcut Not Found';
+            document.getElementById('item-desc').textContent = 'The requested shortcut could not be found.';
+        }
+
+        // Actions
+        function handleGet() {
+            const isLoggedIn = localStorage.getItem('flux_logged_in');
+            if (!isLoggedIn) {
+                // Use FluxUI if available, else alert
+                if (typeof FluxUI !== 'undefined') {
+                    FluxUI.confirm('You need to be signed in to download shortcuts.', 'Sign In Required', () => {
+                        window.location.href = 'login.html';
+                    });
+                } else {
+                    if (confirm('You need to be signed in to download shortcuts. Go to login?')) {
+                        window.location.href = 'login.html';
+                    }
+                }
+            } else {
+                // Mock Download
+                const btn = document.querySelector('.btn-primary-lg');
+                const originalText = btn.textContent;
+                btn.textContent = 'Downloading...';
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    btn.textContent = 'Downloaded!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+
+                    if (typeof FluxUI !== 'undefined') {
+                        FluxUI.alert('Shortcut downloaded to your device.', 'Success');
+                    } else {
+                        alert('Shortcut downloaded!');
+                    }
+                }, 1500);
+            }
+        }
+
+        function handleRemix() {
+            window.location.href = `workspace.html?prompt=Remix of ${encodeURIComponent(item ? item.title : 'Shortcut')}`;
+        }
+    </script>
+</body>
+
+</html>

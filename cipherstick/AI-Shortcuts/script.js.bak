@@ -14,12 +14,12 @@ const sendBtn = document.getElementById('btn-send');
 const visualizerContent = document.getElementById('visualizer-content');
 const settingsModal = document.getElementById('settings-modal');
 const exportModal = document.getElementById('export-modal');
-const workspaceProjectName = document.getElementById('topbar-project-name');
+const workspaceProjectName = document.getElementById('workspace-project-name');
 
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
     // Global Init
-    if (window.location.pathname.includes('app.html') || window.location.pathname.includes('workspace.html')) {
+    if (window.location.pathname.includes('app.html')) {
         initApp();
     } else if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         initLanding();
@@ -41,36 +41,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- App Logic ---
 function initApp() {
-    // Check if on workspace or dashboard
-    const isWorkspace = window.location.pathname.includes('workspace.html');
+    // Check for initial prompt from landing page
     const urlParams = new URLSearchParams(window.location.search);
     const initialPrompt = urlParams.get('prompt');
-    const id = urlParams.get('id');
+    const id = urlParams.get('id'); // Keep id for loading specific projects
+    const isNew = urlParams.get('new'); // Keep isNew for potential welcome messages
 
-    if (isWorkspace) {
-        if (id) {
-            loadProject(id);
-        } else if (initialPrompt) {
-            createNewProject(initialPrompt);
-        } else {
-            // No ID or prompt, maybe redirect to app or create new empty
-            createNewProject();
-        }
+    // Check if first login for tutorial
+    const isFirstLogin = localStorage.getItem('flux_first_login') === 'true';
+    const tutorialComplete = localStorage.getItem('flux_tutorial_complete') === 'true';
+
+    if (id) {
+        loadProject(id);
+    } else if (initialPrompt) {
+        createNewProject(initialPrompt);
+    } else if (projects.length > 0) {
+        showProjectsView();
     } else {
-        // Dashboard (app.html)
-        renderProjectsGrid();
-        renderProjectsGrid();
         checkOnboarding();
     }
-    checkAuth();
-    initResizeHandle();
+
+    // Show tutorial if first login and not complete
+    if (isFirstLogin && !tutorialComplete) {
+        localStorage.removeItem('flux_first_login');
+        setTimeout(() => {
+            startTutorial();
+        }, 1000);
+    }
+
+    // Load available templates (assuming this function exists elsewhere)
+    loadTemplates();
+
+    if (isNew === 'true') {
+        // Maybe show a welcome message or focus input
+    }
 
     // Motivational Easter Egg
+    console.log('%c YOU GOT THIS! 🚀', 'font-size: 20px; font-weight: bold; color: #3B82F6;');
+}
 
+// --- Free Tier Logic ---
+function checkDownloadLimit() {
+    const today = new Date().toDateString();
+    let usage = JSON.parse(localStorage.getItem('flux_daily_usage')) || { date: today, count: 0 };
+
+    if (usage.date !== today) {
+        usage = { date: today, count: 0 };
+    }
+
+    if (usage.count >= 5) {
+        FluxUI.alert('You have reached your daily limit of 5 downloads. Please upgrade to Pro for unlimited access.', 'Limit Reached');
+        return false;
+    }
+
+    usage.count++;
+    localStorage.setItem('flux_daily_usage', JSON.stringify(usage));
+    return true;
 }
 
 // --- Navigation ---
-// Removed showProjectsView and showWorkspaceView as they are now separate pages
+function showProjectsView() {
+    workspaceView.classList.add('hidden');
+    projectsView.classList.remove('hidden');
+    renderProjectsGrid();
+
+    // Hide workspace topbar controls
+    const topbarControls = document.getElementById('workspace-topbar-controls');
+    if (topbarControls) topbarControls.style.display = 'none';
+
+    // Clear URL params
+    window.history.replaceState({}, '', 'app.html');
+    currentProject = null;
+}
+
+function showWorkspaceView() {
+    projectsView.classList.add('hidden');
+    workspaceView.classList.remove('hidden');
+
+    // Show workspace topbar controls
+    const topbarControls = document.getElementById('workspace-topbar-controls');
+    if (topbarControls) topbarControls.style.display = 'flex';
+
+    // Sync project name to topbar
+    syncProjectName();
+}
 
 function syncProjectName() {
     const topbarName = document.getElementById('topbar-project-name');
@@ -131,40 +185,25 @@ function createNewProject(initialPrompt = null) {
 
             projects.unshift(newProject);
             saveProjects();
-
-            // Redirect to workspace
-            window.location.href = `workspace.html?id=${id}`;
+            loadProject(id);
         }, 2500);
     } else {
         projects.unshift(newProject);
         saveProjects();
-
-        if (window.location.pathname.includes('workspace.html')) {
-            loadProject(id);
-        } else {
-            window.location.href = `workspace.html?id=${id}`;
-        }
+        loadProject(id);
     }
 }
 
 function loadProject(id) {
     currentProject = projects.find(p => p.id === id);
-
-    // If we are on app.html, redirect to workspace
-    if (window.location.pathname.includes('app.html')) {
-        window.location.href = `workspace.html?id=${id}`;
-        return;
-    }
-
     if (!currentProject) {
-        // Project not found, go back to app
-        window.location.href = 'app.html';
+        showProjectsView();
         return;
     }
 
     // Update UI
-    if (workspaceProjectName) workspaceProjectName.value = currentProject.name;
-    if (messagesContainer) messagesContainer.innerHTML = '';
+    workspaceProjectName.textContent = currentProject.name;
+    messagesContainer.innerHTML = '';
 
     // Load History
     if (currentProject.history) {
@@ -174,12 +213,10 @@ function loadProject(id) {
         addMessageToUI("Ready to build. What's on your mind?", 'assistant');
     }
 
-    // Update URL if not already set
-    if (!window.location.search.includes(id)) {
-        window.history.replaceState({}, '', `workspace.html?id=${id}`);
-    }
+    // Update URL
+    window.history.replaceState({}, '', `app.html?id=${id}`);
 
-    syncProjectName();
+    showWorkspaceView();
     renderVisualizer();
 }
 
@@ -195,7 +232,7 @@ function updateProject(id, updates) {
         currentProject = projects[idx];
 
         if (updates.name) {
-            workspaceProjectName.value = updates.name;
+            workspaceProjectName.textContent = updates.name;
         }
     }
 }
@@ -203,19 +240,16 @@ function updateProject(id, updates) {
 function deleteCurrentProject() {
     if (!currentProject) return;
     FluxUI.confirm('Are you sure you want to delete this project?', 'Delete Project', () => {
-        projects = projects.filter(p => p.id !== currentProject.id);
-        saveProjects();
-        window.location.href = 'app.html';
-    });
-}
-
-function deleteProjectFromGrid(event, id) {
-    event.stopPropagation(); // Prevent opening project
-    FluxUI.confirm('Are you sure you want to delete this project?', 'Delete Project', () => {
-        projects = projects.filter(p => p.id !== id);
-        saveProjects();
+        projects = projects.filter(p => p.id !== projectId);
+        localStorage.setItem('flux_projects', JSON.stringify(projects));
         renderProjectsGrid();
     });
+    return;
+
+    projects = projects.filter(p => p.id !== currentProject.id);
+    saveProjects();
+    toggleSettings(); // Close modal
+    showProjectsView();
 }
 
 function renderProjectsGrid() {
@@ -258,116 +292,19 @@ function renderProjectsGrid() {
     });
 }
 
-
-
-// --- Chat Modes ---
-let chatMode = 'standard'; // standard, thinking, discussion
-
-function setChatMode(mode) {
-    chatMode = mode;
-    toggleChatMenu(); // Close menu
-    // No notification as requested
-    console.log(`Chat mode set to: ${mode}`);
-
-    // Visual feedback on the input placeholder
-    const input = document.getElementById('chat-input');
-    if (input) {
-        if (mode === 'thinking') input.placeholder = "Reasoning mode active...";
-        else if (mode === 'discussion') input.placeholder = "Let's discuss...";
-        else input.placeholder = "What would you like to change?";
-    }
-}
-
-// --- Command Palette (Force Action) ---
-function openCommandPalette() {
-    toggleChatMenu(); // Close menu
-    const modal = document.getElementById('command-palette-modal');
-    if (!modal) return;
-
-    modal.classList.remove('hidden');
-    const searchInput = document.getElementById('command-search');
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-        searchInput.oninput = (e) => renderCommandList(e.target.value);
-    }
-
-    // Load templates if not loaded
-    if (!availableTemplates || availableTemplates.length === 0) {
-        loadTemplates().then(() => renderCommandList());
-    } else {
-        renderCommandList();
-    }
-}
-
-function closeCommandPalette() {
-    const modal = document.getElementById('command-palette-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-function renderCommandList(filter = '') {
-    const list = document.getElementById('command-list');
-    if (!list) return;
-
-    list.innerHTML = '';
-
-    const term = filter.toLowerCase();
-    // Use availableTemplates or fallback
-    const templates = availableTemplates.length > 0 ? availableTemplates : [
-        { action: 'If', params: {} },
-        { action: 'Repeat', params: {} },
-        { action: 'Ask.ForInput', params: {} },
-        { action: 'ShowResult', params: {} },
-        { action: 'OpenURL', params: {} }
-    ]; // Fallback if load fails
-
-    const filtered = templates.filter(t => {
-        const name = t.action || t.name || '';
-        return name.toLowerCase().includes(term);
+function deleteProjectFromGrid(e, id) {
+    e.stopPropagation();
+    FluxUI.confirm('Delete this project and all its data?', 'Delete Project', () => {
+        const projectId = currentProject.id;
+        projects = projects.filter(p => p.id !== projectId);
+        localStorage.setItem('flux_projects', JSON.stringify(projects));
+        showProjectsView();
     });
+    return;
 
-    filtered.forEach(t => {
-        const name = t.action || t.name;
-        const item = document.createElement('div');
-        item.className = 'dropdown-item';
-        item.style.justifyContent = 'space-between';
-        item.style.padding = '0.8rem';
-        item.style.border = '1px solid var(--border-color)';
-        item.style.borderRadius = '8px';
-
-        item.innerHTML = `
-            <div class="flex items-center gap-2">
-                <div class="step-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">
-                    ${getActionIcon(name)}
-                </div>
-                <span>${name}</span>
-            </div>
-            <button class="btn btn-sm btn-secondary">Add</button>
-        `;
-
-        item.onclick = () => forceAction(t);
-        list.appendChild(item);
-    });
-}
-
-function forceAction(template) {
-    // Add the action immediately
-    const newAction = {
-        id: Date.now(),
-        title: template.action || template.name,
-        icon: template.action || template.name,
-        meta: 'Added via Force Action',
-        params: template.params || {}
-    };
-
-    if (!currentProject.actions) currentProject.actions = [];
-    currentProject.actions.push(newAction);
+    projects = projects.filter(p => p.id !== id);
     saveProjects();
-    renderVisualizer();
-    closeCommandPalette();
-
-    // Optional: Add a system message saying it was added
-    addMessageToUI(`Forced action: ${newAction.title}`, 'assistant');
+    renderProjectsGrid();
 }
 
 // --- Chat Logic ---
@@ -385,45 +322,12 @@ function handleSend() {
         saveProjects();
     }
 
-    // Simulate AI based on Mode
+    // Simulate AI
     showTypingIndicator();
-
-    // Delay based on mode (Reasoning takes longer)
-    const delay = chatMode === 'thinking' ? 2500 : 1000;
-
     setTimeout(() => {
         removeTypingIndicator();
-
-        let response = "";
-
-        if (chatMode === 'thinking') {
-            // Simulate reasoning steps
-            const steps = ["Analyzing intent...", "Checking variable scope...", "Optimizing flow...", "Validating constraints..."];
-            let stepIdx = 0;
-            const stepInterval = setInterval(() => {
-                if (stepIdx < steps.length) {
-                    // We could show these as ephemeral status updates if we had a UI for it
-                    // For now, just wait
-                    stepIdx++;
-                } else {
-                    clearInterval(stepInterval);
-                }
-            }, 500);
-
-            response = "I've analyzed your request and optimized the logic. I've added the necessary actions to handle edge cases.";
-            // Actually add some dummy actions if empty
-            if (!currentProject.actions || currentProject.actions.length === 0) {
-                currentProject.actions = [
-                    { id: Date.now(), title: 'Comment', icon: 'Comment', meta: 'Generated by Reasoning', params: { Text: 'Logic optimized' } }
-                ];
-            }
-        } else if (chatMode === 'discussion') {
-            response = "That sounds like a good plan. Before I build it, should we handle errors gracefully, or just stop if something fails?";
-        } else {
-            // Standard
-            response = getAIResponse(text);
-        }
-
+        removeTypingIndicator();
+        const response = getAIResponse(text);
         addMessageToUI(response, 'assistant');
 
         if (currentProject) {
@@ -432,7 +336,18 @@ function handleSend() {
         }
 
         renderVisualizer();
-    }, delay);
+    }, 1000);
+}
+
+function getAIResponse(text) {
+    if (chatMode === 'discussion') {
+        return "That's an interesting idea. How should we handle the edge cases? We could add an If/Else block.";
+    } else if (chatMode === 'force') {
+        return "Executing command immediately. Workflow updated.";
+    } else if (reasoningEnabled || chatMode === 'thinking') {
+        return "Analyzing request... Logic structure optimized. I've added the necessary actions.";
+    }
+    return "I've updated the workflow based on your request.";
 }
 
 function addMessageToUI(text, role) {
@@ -463,151 +378,23 @@ let currentActions = []; // Start empty as requested
 // availableTemplates handled
 
 
-// --- Sidebar Resize ---
-function initResizeHandle() {
-    const sidebar = document.getElementById('sidebar-left');
-    const handle = document.getElementById('sidebar-resize-handle');
-
-    if (!sidebar || !handle) return;
-
-    let isResizing = false;
-
-    handle.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        handle.classList.add('active');
-        document.body.style.cursor = 'col-resize';
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isResizing) return;
-        let newWidth = e.clientX;
-        if (newWidth < 280) newWidth = 280;
-        if (newWidth > 600) newWidth = 600;
-        sidebar.style.width = `${newWidth}px`;
-    });
-
-    document.addEventListener('mouseup', () => {
-        isResizing = false;
-        handle.classList.remove('active');
-        document.body.style.cursor = 'default';
-    });
-}
-
-// --- Edit Action Logic ---
-async function editAction(id) {
-    const action = currentProject.actions ? currentProject.actions.find(a => a.id === id) : null;
-    if (!action) return;
-
-    // Try to find a matching template
-    // We assume action.title matches the template filename for simplicity, or we search
-    // In a real app, we'd store the template ID or type in the action
-    let template = null;
+async function loadTemplates() {
     try {
-        // Heuristic: Remove spaces, dots, etc to match filename
-        const cleanTitle = action.title.replace(/\s+/g, '');
-        // We need to find the file in the Templates dir. 
-        // Since we can't list dir in JS client, we rely on a mapping or try to fetch known patterns.
-        // For this demo, we will try to fetch `Templates/${cleanTitle}.json` or `Templates/${action.title}.json`
+        const response = await fetch('Templates/index.json');
+        const files = await response.json();
 
-        let response = await fetch(`Templates/${action.title}.json`);
-        if (!response.ok) response = await fetch(`Templates/${cleanTitle}.json`);
-        if (!response.ok) {
-            // Fallback: If.json for If action
-            if (action.title.includes('If')) response = await fetch('Templates/If.json');
-        }
-
-        if (response.ok) {
-            template = await response.json();
-        }
+        // Load a subset or all? Let's load all for now, or lazy load.
+        // For performance, maybe just load the ones we need or top 20.
+        // But user wants "edit every parameter", so we need the schemas.
+        // Let's load them all asynchronously.
+        const promises = files.map(file => fetch(`Templates/${file}`).then(r => r.json()).catch(e => null));
+        const results = await Promise.all(promises);
+        availableTemplates = results.filter(t => t);
+        console.log('Loaded templates:', availableTemplates.length);
     } catch (e) {
-        console.error('Error loading template:', e);
-    }
-
-    renderEditModal(action, template);
-}
-
-function renderEditModal(action, template) {
-    const modal = document.getElementById('edit-action-modal');
-    if (!modal) return;
-
-    let paramsHtml = '';
-    if (template && template.params) {
-        Object.keys(template.params).forEach(key => {
-            const value = action.params && action.params[key] ? action.params[key] : '';
-            const placeholder = template.params[key];
-            paramsHtml += `
-                <div class="form-group">
-                    <label>${key}</label>
-                    <input type="text" class="input-glass" id="param-${key}" value="${value}" placeholder="${placeholder}">
-                </div>
-            `;
-        });
-    } else {
-        paramsHtml = '<p class="text-muted">No configurable parameters found for this action.</p>';
-    }
-
-    modal.innerHTML = `
-        <div class="modal-card">
-            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
-                <h3>Edit Action: ${action.title}</h3>
-                <button class="icon-btn" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="flex flex-col gap-4">
-                ${paramsHtml}
-                <div class="flex justify-end gap-2" style="margin-top: 1rem;">
-                    <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveActionParams(${action.id})">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    modal.classList.remove('hidden');
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('edit-action-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-function saveActionParams(id) {
-    const action = currentProject.actions.find(a => a.id === id);
-    if (!action) return;
-
-    // We need to gather inputs. Since we don't know keys easily without template, 
-    // we iterate over inputs in the modal
-    const modal = document.getElementById('edit-action-modal');
-    const inputs = modal.querySelectorAll('input');
-
-    if (!action.params) action.params = {};
-
-    inputs.forEach(input => {
-        const key = input.id.replace('param-', '');
-        action.params[key] = input.value;
-    });
-
-    saveProjects();
-    renderVisualizer(); // Re-render to show updates if we display params
-    closeEditModal();
-}
-
-// --- Chat Menu ---
-function toggleChatMenu() {
-    const menu = document.getElementById('chat-menu');
-    if (menu) {
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        console.error('Failed to load templates:', e);
     }
 }
-
-// Close menu when clicking outside
-document.addEventListener('click', (e) => {
-    const menu = document.getElementById('chat-menu');
-    const btn = e.target.closest('.chat-input-actions button');
-    if (menu && menu.style.display === 'block' && !menu.contains(e.target) && !btn) {
-        menu.style.display = 'none';
-    }
-});
-
 
 function renderVisualizer() {
     const visualizerContent = document.getElementById('visualizer-content');
@@ -617,17 +404,6 @@ function renderVisualizer() {
     }
 
     visualizerContent.innerHTML = '';
-
-    if (currentActions.length === 0) {
-        visualizerContent.innerHTML = `
-            <div class="zero-state fade-in" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">✨</div>
-                <h3>Start Building</h3>
-                <p>Describe your shortcut in the chat to get started.</p>
-            </div>
-        `;
-        return;
-    }
 
     currentActions.forEach((action, index) => {
         const node = document.createElement('div');
@@ -1057,50 +833,12 @@ function setChatMode(mode) {
     FluxUI.alert(`Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`, 'Mode Changed');
 }
 
-// --- Auth & Profile ---
-function checkAuth() {
-    const isLoggedIn = localStorage.getItem('flux_logged_in');
-    const profileContainers = document.querySelectorAll('.user-profile');
-
-    profileContainers.forEach(container => {
-        if (isLoggedIn) {
-            container.innerHTML = `
-                <div class="profile-menu-wrapper" style="position: relative;">
-                    <button class="icon-btn" onclick="toggleProfileMenu(this)" style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color); color: white; font-weight: bold; display: flex; align-items: center; justify-content: center;">
-                        M
-                    </button>
-                    <div class="dropdown-menu" id="profile-menu" style="display: none; right: 0; left: auto; min-width: 150px; position: absolute; top: 100%; margin-top: 0.5rem; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-lg); z-index: 100;">
-                        <div class="dropdown-item" onclick="window.location.href='settings.html'" style="padding: 0.8rem 1rem; cursor: pointer; transition: background 0.2s;">Settings</div>
-                        <div class="dropdown-item" onclick="handleLogout()" style="padding: 0.8rem 1rem; cursor: pointer; transition: background 0.2s; border-top: 1px solid var(--border-color);">Sign Out</div>
-                    </div>
-                </div>
-            `;
-        } else {
-            container.innerHTML = `<a href="login.html" class="btn btn-primary-sm">Sign In</a>`;
-        }
-    });
-}
-
-function toggleProfileMenu(btn) {
-    const wrapper = btn.closest('.profile-menu-wrapper');
-    const menu = wrapper.querySelector('.dropdown-menu');
-    if (menu) {
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-
-        // Close when clicking outside
-        const closeMenu = (e) => {
-            if (!e.target.closest('.profile-menu-wrapper')) {
-                menu.style.display = 'none';
-                document.removeEventListener('click', closeMenu);
-            }
-        };
-        setTimeout(() => document.addEventListener('click', closeMenu), 0);
+function toggleReasoning() {
+    reasoningEnabled = !reasoningEnabled;
+    const btn = document.getElementById('thinking-toggle');
+    if (btn) {
+        btn.classList.toggle('active', reasoningEnabled);
     }
-}
-
-function handleLogout() {
-    localStorage.removeItem('flux_logged_in');
-    window.location.href = 'index.html';
 }
 
 function toggleActionMenu() {
@@ -1464,39 +1202,5 @@ function showProUpgrade(featureName) {
 
 // --- Landing Page ---
 function initLanding() {
-    // Scroll Animations
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target); // Only animate once
-            }
-        });
-    }, observerOptions);
-
-    // Observe elements with .fade-in class
-    document.querySelectorAll('.fade-in').forEach(el => {
-        observer.observe(el);
-    });
-
-    // Also observe cards for staggered animation
-    document.querySelectorAll('.b44-card').forEach((el, index) => {
-        el.classList.add('fade-in');
-        el.style.transitionDelay = `${index * 100}ms`; // Stagger effect
-        observer.observe(el);
-    });
-}
-
-function fillInput(text) {
-    const input = document.getElementById('hero-input');
-    if (input) {
-        input.value = text;
-        input.focus();
-    }
+    // Just simple redirects for now
 }

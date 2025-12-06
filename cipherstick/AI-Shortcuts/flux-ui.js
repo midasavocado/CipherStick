@@ -49,23 +49,36 @@ const FluxUI = {
 
     // Generic modal system
     showModal({ title, message, buttons = [] }) {
-        const buttonsHtml = buttons.map(btn =>
-            `<button class="btn ${btn.primary ? 'btn-primary' : 'btn-secondary'}" 
-                     onclick="${btn.onClick ? `(${btn.onClick.toString()})()` : 'FluxUI.closeModal()'}">${btn.label}</button>`
-        ).join('');
+        const overlay = document.createElement('div');
+        overlay.id = 'flux-modal';
+        overlay.className = 'flux-modal-overlay active';
 
-        const modalHtml = `
-            <div id="flux-modal" class="flux-modal-overlay active">
-                <div class="flux-modal-card">
-                    <h3>${title}</h3>
-                    <p>${message}</p>
-                    <div class="flex gap-2 justify-end" style="margin-top: 1.5rem;">
-                        ${buttonsHtml}
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const card = document.createElement('div');
+        card.className = 'flux-modal-card';
+
+        const h3 = document.createElement('h3');
+        h3.textContent = title;
+        card.appendChild(h3);
+
+        const p = document.createElement('p');
+        p.textContent = message;
+        card.appendChild(p);
+
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'flex gap-2 justify-end';
+        btnContainer.style.marginTop = '1.5rem';
+
+        buttons.forEach(btn => {
+            const button = document.createElement('button');
+            button.className = `btn ${btn.primary ? 'btn-primary' : 'btn-secondary'}`;
+            button.textContent = btn.label;
+            button.onclick = btn.onClick || (() => this.closeModal());
+            btnContainer.appendChild(button);
+        });
+
+        card.appendChild(btnContainer);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
     },
 
     closeModal() {
