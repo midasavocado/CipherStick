@@ -3,6 +3,9 @@ const isDev = window.location.hostname === 'localhost' || window.location.hostna
 let currentProject = null;
 let projects = JSON.parse(localStorage.getItem('flux_projects')) || [];
 let lastGeneratedPlist = null;
+let currentActions = [];
+let reasoningEnabled = false;
+let chatMode = 'normal'; // normal, thinking, discussion, force
 
 // --- DOM Elements ---
 const projectsView = document.getElementById('projects-view');
@@ -14,7 +17,7 @@ const sendBtn = document.getElementById('btn-send');
 const visualizerContent = document.getElementById('visualizer-content');
 const settingsModal = document.getElementById('settings-modal');
 const exportModal = document.getElementById('export-modal');
-const workspaceProjectName = document.getElementById('topbar-project-name');
+const workspaceProjectName = document.getElementById('topbar-project-name') || document.getElementById('project-name-input');
 
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,25 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- App Logic ---
 function initApp() {
-    // Check if on workspace or dashboard
-    const isWorkspace = window.location.pathname.includes('workspace.html');
     const urlParams = new URLSearchParams(window.location.search);
     const initialPrompt = urlParams.get('prompt');
     const id = urlParams.get('id');
+    const hasWorkspaceView = projectsView && workspaceView;
 
-    if (isWorkspace) {
-        if (id) {
-            loadProject(id);
-        } else if (initialPrompt) {
-            createNewProject(initialPrompt);
-        } else {
-            // No ID or prompt, maybe redirect to app or create new empty
-            createNewProject();
-        }
+    if (id) {
+        loadProject(id);
+    } else if (initialPrompt) {
+        createNewProject(initialPrompt);
     } else {
-        // Dashboard (app.html)
         renderProjectsGrid();
-        renderProjectsGrid();
+        if (hasWorkspaceView) {
+            showProjectsView();
+        }
         checkOnboarding();
     }
     checkAuth();
@@ -70,10 +68,20 @@ function initApp() {
 }
 
 // --- Navigation ---
-// Removed showProjectsView and showWorkspaceView as they are now separate pages
+function showProjectsView() {
+    if (!projectsView || !workspaceView) return;
+    workspaceView.classList.add('hidden');
+    projectsView.classList.remove('hidden');
+}
+
+function showWorkspaceView() {
+    if (!projectsView || !workspaceView) return;
+    projectsView.classList.add('hidden');
+    workspaceView.classList.remove('hidden');
+}
 
 function syncProjectName() {
-    const topbarName = document.getElementById('topbar-project-name');
+    const topbarName = workspaceProjectName;
     if (topbarName && currentProject) {
         topbarName.value = currentProject.name || 'Untitled Project';
         topbarName.addEventListener('blur', () => {
@@ -102,6 +110,7 @@ function createNewProject(initialPrompt = null) {
         created: Date.now(),
         updated: Date.now(),
         history: [],
+        actions: [],
         code: null
     };
 
@@ -132,51 +141,51 @@ function createNewProject(initialPrompt = null) {
             projects.unshift(newProject);
             saveProjects();
 
-            // Redirect to workspace
-            window.location.href = `workspace.html?id=${id}`;
+            // Load the new project or navigate to the workspace view
+            loadProject(id);
         }, 2500);
     } else {
         projects.unshift(newProject);
         saveProjects();
 
-        if (window.location.pathname.includes('workspace.html')) {
-            loadProject(id);
-        } else {
-            window.location.href = `workspace.html?id=${id}`;
-        }
+        loadProject(id);
     }
 }
 
 function loadProject(id) {
     currentProject = projects.find(p => p.id === id);
 
-    // If we are on app.html, redirect to workspace
-    if (window.location.pathname.includes('app.html')) {
-        window.location.href = `workspace.html?id=${id}`;
+    if (!currentProject) {
+        // Project not found, go back to projects grid if available
+        renderProjectsGrid();
+        currentActions = [];
+        renderVisualizer();
+        if (projectsView && workspaceView) showProjectsView();
         return;
     }
 
-    if (!currentProject) {
-        // Project not found, go back to app
-        window.location.href = 'app.html';
-        return;
-    }
+    if (!currentProject.actions) currentProject.actions = [];
+    currentActions = [...currentProject.actions];
 
     // Update UI
     if (workspaceProjectName) workspaceProjectName.value = currentProject.name;
     if (messagesContainer) messagesContainer.innerHTML = '';
 
     // Load History
-    if (currentProject.history) {
+    if (currentProject.history && messagesContainer) {
         currentProject.history.forEach(msg => addMessageToUI(msg.content, msg.role));
     } else {
         // Welcome message
         addMessageToUI("Ready to build. What's on your mind?", 'assistant');
     }
 
+    if (projectsView && workspaceView) showWorkspaceView();
+
     // Update URL if not already set
+    const path = window.location.pathname.split('/').pop() || 'app.html';
+    const targetPath = path.includes('app.html') || path.includes('workspace.html') ? path : 'app.html';
     if (!window.location.search.includes(id)) {
-        window.history.replaceState({}, '', `workspace.html?id=${id}`);
+        window.history.replaceState({}, '', `${targetPath}?id=${id}`);
     }
 
     syncProjectName();
@@ -187,6 +196,12 @@ function saveProjects() {
     localStorage.setItem('flux_projects', JSON.stringify(projects));
 }
 
+function syncActionsToProject() {
+    if (!currentProject) return;
+    currentProject.actions = [...currentActions];
+    saveProjects();
+}
+
 function updateProject(id, updates) {
     const idx = projects.findIndex(p => p.id === id);
     if (idx !== -1) {
@@ -194,7 +209,7 @@ function updateProject(id, updates) {
         saveProjects();
         currentProject = projects[idx];
 
-        if (updates.name) {
+        if (updates.name && workspaceProjectName) {
             workspaceProjectName.value = updates.name;
         }
     }
@@ -236,12 +251,13 @@ function renderProjectsGrid() {
         };
 
         const date = new Date(p.updated).toLocaleDateString();
+        const actionCount = p.actions ? p.actions.length : 0;
 
         card.innerHTML = `
             <h3>${p.name}</h3>
             <div class="project-meta">
                 <span>${date}</span>
-                <span>${p.history ? p.history.length : 0} messages</span>
+                <span>${actionCount} actions</span>
             </div>
             <div class="project-actions">
                 <button class="icon-btn" onclick="deleteProjectFromGrid(event, '${p.id}')" title="Delete" style="color: #EF4444;">
@@ -261,20 +277,25 @@ function renderProjectsGrid() {
 
 
 // --- Chat Modes ---
-let chatMode = 'standard'; // standard, thinking, discussion
-
 function setChatMode(mode) {
     chatMode = mode;
     toggleChatMenu(); // Close menu
-    // No notification as requested
-    console.log(`Chat mode set to: ${mode}`);
 
     // Visual feedback on the input placeholder
     const input = document.getElementById('chat-input');
     if (input) {
-        if (mode === 'thinking') input.placeholder = "Reasoning mode active...";
-        else if (mode === 'discussion') input.placeholder = "Let's discuss...";
-        else input.placeholder = "What would you like to change?";
+        const placeholders = {
+            normal: 'Describe your shortcut...',
+            thinking: 'Reasoning mode active...',
+            discussion: "Let's discuss...",
+            force: 'Force Action: tell me exactly what to add...'
+        };
+        input.placeholder = placeholders[mode] || placeholders.normal;
+        input.style.borderColor = mode === 'discussion'
+            ? 'var(--secondary-color)'
+            : mode === 'force'
+                ? '#EF4444'
+                : 'var(--border-color)';
     }
 }
 
@@ -360,9 +381,8 @@ function forceAction(template) {
         params: template.params || {}
     };
 
-    if (!currentProject.actions) currentProject.actions = [];
-    currentProject.actions.push(newAction);
-    saveProjects();
+    currentActions.push(newAction);
+    syncActionsToProject();
     renderVisualizer();
     closeCommandPalette();
 
@@ -372,6 +392,7 @@ function forceAction(template) {
 
 // --- Chat Logic ---
 function handleSend() {
+    if (!chatInput) return;
     const text = chatInput.value.trim();
     if (!text) return;
 
@@ -395,27 +416,16 @@ function handleSend() {
         removeTypingIndicator();
 
         let response = "";
+        let actionsChanged = false;
 
         if (chatMode === 'thinking') {
-            // Simulate reasoning steps
-            const steps = ["Analyzing intent...", "Checking variable scope...", "Optimizing flow...", "Validating constraints..."];
-            let stepIdx = 0;
-            const stepInterval = setInterval(() => {
-                if (stepIdx < steps.length) {
-                    // We could show these as ephemeral status updates if we had a UI for it
-                    // For now, just wait
-                    stepIdx++;
-                } else {
-                    clearInterval(stepInterval);
-                }
-            }, 500);
-
             response = "I've analyzed your request and optimized the logic. I've added the necessary actions to handle edge cases.";
             // Actually add some dummy actions if empty
-            if (!currentProject.actions || currentProject.actions.length === 0) {
-                currentProject.actions = [
+            if (currentActions.length === 0) {
+                currentActions = [
                     { id: Date.now(), title: 'Comment', icon: 'Comment', meta: 'Generated by Reasoning', params: { Text: 'Logic optimized' } }
                 ];
+                actionsChanged = true;
             }
         } else if (chatMode === 'discussion') {
             response = "That sounds like a good plan. Before I build it, should we handle errors gracefully, or just stop if something fails?";
@@ -427,15 +437,31 @@ function handleSend() {
         addMessageToUI(response, 'assistant');
 
         if (currentProject) {
+            if (!currentProject.history) currentProject.history = [];
             currentProject.history.push({ role: 'assistant', content: response });
-            saveProjects();
+            if (actionsChanged) {
+                syncActionsToProject();
+            } else {
+                saveProjects();
+            }
         }
 
         renderVisualizer();
     }, delay);
 }
 
+function getAIResponse(text) {
+    if (chatMode === 'force') {
+        return 'Executing command immediately. Workflow updated.';
+    }
+    if (reasoningEnabled || chatMode === 'thinking') {
+        return 'Analyzing request... Logic structure optimized. I have added the necessary actions.';
+    }
+    return "I've updated the workflow based on your request.";
+}
+
 function addMessageToUI(text, role) {
+    if (!messagesContainer) return;
     const div = document.createElement('div');
     div.className = `message ${role}`;
     div.innerHTML = `<div class="message-bubble">${text}</div>`;
@@ -444,6 +470,7 @@ function addMessageToUI(text, role) {
 }
 
 function showTypingIndicator() {
+    if (!messagesContainer) return;
     const div = document.createElement('div');
     div.className = 'message assistant typing';
     div.id = 'typing-indicator';
@@ -458,7 +485,6 @@ function removeTypingIndicator() {
 }
 
 // --- Visualizer (Base44 Vibe) ---
-let currentActions = []; // Start empty as requested
 // currentActions handled
 // availableTemplates handled
 
@@ -491,104 +517,6 @@ function initResizeHandle() {
         handle.classList.remove('active');
         document.body.style.cursor = 'default';
     });
-}
-
-// --- Edit Action Logic ---
-async function editAction(id) {
-    const action = currentProject.actions ? currentProject.actions.find(a => a.id === id) : null;
-    if (!action) return;
-
-    // Try to find a matching template
-    // We assume action.title matches the template filename for simplicity, or we search
-    // In a real app, we'd store the template ID or type in the action
-    let template = null;
-    try {
-        // Heuristic: Remove spaces, dots, etc to match filename
-        const cleanTitle = action.title.replace(/\s+/g, '');
-        // We need to find the file in the Templates dir. 
-        // Since we can't list dir in JS client, we rely on a mapping or try to fetch known patterns.
-        // For this demo, we will try to fetch `Templates/${cleanTitle}.json` or `Templates/${action.title}.json`
-
-        let response = await fetch(`Templates/${action.title}.json`);
-        if (!response.ok) response = await fetch(`Templates/${cleanTitle}.json`);
-        if (!response.ok) {
-            // Fallback: If.json for If action
-            if (action.title.includes('If')) response = await fetch('Templates/If.json');
-        }
-
-        if (response.ok) {
-            template = await response.json();
-        }
-    } catch (e) {
-        console.error('Error loading template:', e);
-    }
-
-    renderEditModal(action, template);
-}
-
-function renderEditModal(action, template) {
-    const modal = document.getElementById('edit-action-modal');
-    if (!modal) return;
-
-    let paramsHtml = '';
-    if (template && template.params) {
-        Object.keys(template.params).forEach(key => {
-            const value = action.params && action.params[key] ? action.params[key] : '';
-            const placeholder = template.params[key];
-            paramsHtml += `
-                <div class="form-group">
-                    <label>${key}</label>
-                    <input type="text" class="input-glass" id="param-${key}" value="${value}" placeholder="${placeholder}">
-                </div>
-            `;
-        });
-    } else {
-        paramsHtml = '<p class="text-muted">No configurable parameters found for this action.</p>';
-    }
-
-    modal.innerHTML = `
-        <div class="modal-card">
-            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
-                <h3>Edit Action: ${action.title}</h3>
-                <button class="icon-btn" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="flex flex-col gap-4">
-                ${paramsHtml}
-                <div class="flex justify-end gap-2" style="margin-top: 1rem;">
-                    <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveActionParams(${action.id})">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    modal.classList.remove('hidden');
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('edit-action-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-function saveActionParams(id) {
-    const action = currentProject.actions.find(a => a.id === id);
-    if (!action) return;
-
-    // We need to gather inputs. Since we don't know keys easily without template, 
-    // we iterate over inputs in the modal
-    const modal = document.getElementById('edit-action-modal');
-    const inputs = modal.querySelectorAll('input');
-
-    if (!action.params) action.params = {};
-
-    inputs.forEach(input => {
-        const key = input.id.replace('param-', '');
-        action.params[key] = input.value;
-    });
-
-    saveProjects();
-    renderVisualizer(); // Re-render to show updates if we display params
-    closeEditModal();
 }
 
 // --- Chat Menu ---
@@ -739,6 +667,7 @@ function handleDrop(e) {
         const [removed] = currentActions.splice(draggedIndex, 1);
         currentActions.splice(targetIndex, 0, removed);
 
+        syncActionsToProject();
         renderVisualizer();
     }
 }
@@ -752,6 +681,7 @@ function handleDragEnd(e) {
 
 // --- Modals ---
 function toggleSettings() {
+    if (!settingsModal) return;
     settingsModal.classList.toggle('active');
     if (settingsModal.classList.contains('active') && currentProject) {
         document.getElementById('setting-name').value = currentProject.name;
@@ -775,6 +705,24 @@ function toggleDownload() {
     const modal = document.getElementById('download-modal');
     if (!modal) return;
     modal.classList.toggle('active');
+}
+
+function checkDownloadLimit() {
+    const today = new Date().toDateString();
+    let usage = JSON.parse(localStorage.getItem('flux_daily_usage')) || { date: today, count: 0 };
+
+    if (usage.date !== today) {
+        usage = { date: today, count: 0 };
+    }
+
+    if (usage.count >= 5) {
+        FluxUI.alert('You have reached your daily limit of 5 downloads. Please upgrade to Pro for unlimited access.', 'Limit Reached');
+        return false;
+    }
+
+    usage.count++;
+    localStorage.setItem('flux_daily_usage', JSON.stringify(usage));
+    return true;
 }
 
 function closePublishModal() {
@@ -1008,6 +956,7 @@ function showTutorial() {
 
     // Highlight chat input
     const input = document.getElementById('chat-input');
+    if (!input || !input.parentElement) return;
     input.focus();
     input.parentElement.style.boxShadow = '0 0 0 4px var(--primary-color)';
     setTimeout(() => {
@@ -1017,44 +966,12 @@ function showTutorial() {
 }
 
 // --- New UI Controls ---
-let reasoningEnabled = false;
-let chatMode = 'normal'; // normal, thinking, discussion, force
-
 function toggleReasoning() {
     reasoningEnabled = !reasoningEnabled;
     const btn = document.getElementById('thinking-toggle');
     if (btn) {
         btn.classList.toggle('active', reasoningEnabled);
     }
-}
-
-function toggleChatMenu() {
-    const menu = document.getElementById('chat-menu');
-    if (menu) {
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-}
-
-function setChatMode(mode) {
-    chatMode = mode;
-    toggleChatMenu();
-
-    const input = document.getElementById('chat-input');
-    const placeholder = {
-        'normal': 'Describe your shortcut...',
-        'thinking': 'Reasoning Mode: Describe complex logic...',
-        'discussion': 'Discussion Mode: Let\'s brainstorm...',
-        'force': 'Force Action: Command the AI...'
-    };
-
-    if (input) {
-        input.placeholder = placeholder[mode] || placeholder['normal'];
-        // Visual cue
-        input.style.borderColor = mode === 'discussion' ? 'var(--secondary-color)' :
-            mode === 'force' ? '#EF4444' : 'var(--border-color)';
-    }
-
-    FluxUI.alert(`Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`, 'Mode Changed');
 }
 
 // --- Auth & Profile ---
@@ -1113,19 +1030,6 @@ function toggleActionMenu() {
     }
 }
 
-function toggleChatMenu() {
-    const menu = document.getElementById('chat-menu');
-    if (menu) {
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-}
-
-function setChatMode(mode) {
-    toggleChatMenu();
-    FluxUI.alert(`Switched to ${mode} mode.`, 'Mode Changed');
-    // Implement actual mode logic here if needed
-}
-
 function createActionMenu() {
     const menu = document.createElement('div');
     menu.id = 'action-menu';
@@ -1153,17 +1057,6 @@ function createActionMenu() {
     document.body.appendChild(menu);
 }
 
-function getAvailableActions() {
-    return [
-        { type: 'clipboard', title: 'Get Clipboard', description: 'Retrieve clipboard content', icon: 'clipboard' },
-        { type: 'split', title: 'Split Text', description: 'Split text by delimiter', icon: 'split' },
-        { type: 'alert', title: 'Show Alert', description: 'Display an alert', icon: 'bell' },
-        { type: 'get_url', title: 'Get URL', description: 'Fetch content from URL', icon: 'link' },
-        { type: 'set_variable', title: 'Set Variable', description: 'Store a value', icon: 'database' },
-        { type: 'if_else', title: 'If/Else', description: 'Conditional logic', icon: 'branch' }
-    ];
-}
-
 function addActionToWorkflow(type) {
     const action = getAvailableActions().find(a => a.type === type);
     if (!action) return;
@@ -1177,6 +1070,7 @@ function addActionToWorkflow(type) {
     };
 
     currentActions.push(newAction);
+    syncActionsToProject();
     renderVisualizer();
     toggleActionMenu();
 }
@@ -1264,6 +1158,7 @@ function saveAction(id, keys = []) {
         if (input) action.meta = input.value;
     }
 
+    syncActionsToProject();
     renderVisualizer();
     FluxUI.closeModal();
     FluxUI.alert('Action updated successfully', 'Saved');
@@ -1272,6 +1167,7 @@ function saveAction(id, keys = []) {
 function deleteAction(id) {
     FluxUI.confirm('Remove this action from the blueprint?', 'Delete Action', () => {
         currentActions = currentActions.filter(a => a.id !== id);
+        syncActionsToProject();
         renderVisualizer();
     });
 }
@@ -1410,8 +1306,13 @@ function toggleDiscuss() {
     } else {
         setChatMode('discussion');
         FluxUI.toast('Entered Discussion Mode');
-        // Add a system message to welcome user to discussion
-        addMessage('system', "I'm here to discuss your shortcut. What questions do you have or what ideas would you like to brainstorm?");
+        const intro = "I'm here to discuss your shortcut. What questions do you have or what ideas would you like to brainstorm?";
+        addMessageToUI(intro, 'assistant');
+        if (currentProject) {
+            if (!currentProject.history) currentProject.history = [];
+            currentProject.history.push({ role: 'assistant', content: intro });
+            saveProjects();
+        }
     }
 }
 
