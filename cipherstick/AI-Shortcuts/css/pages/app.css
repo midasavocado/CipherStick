@@ -428,7 +428,8 @@
     padding: 0.5rem;
     resize: none;
     min-height: 24px;
-    max-height: 120px;
+    max-height: 160px;
+    overflow-y: auto;
     outline: none;
     font-family: inherit;
 }
@@ -491,6 +492,38 @@
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+}
+
+.chat-extras {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.markdown-preview {
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: var(--surface-color);
+    font-size: 0.9rem;
+}
+
+.instructions-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.instructions-input {
+    width: 100%;
+    min-height: 48px;
+    max-height: 120px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+    padding: 0.5rem 0.75rem;
+    resize: vertical;
 }
 
 /* Plus Menu Dropdown */

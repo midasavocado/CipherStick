@@ -179,10 +179,15 @@
                             <button class="send-btn" id="send-btn" onclick="handleSend()">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                 </svg>
                             </button>
+                        </div>
+                        <div class="chat-extras">
+                            <div class="markdown-preview" id="markdown-preview" style="display:none;"></div>
+                            <label class="instructions-label" for="custom-instructions-input">Custom instructions (included with every request)</label>
+                            <textarea id="custom-instructions-input" class="instructions-input" rows="2" placeholder="e.g., Keep responses concise and focus on step-by-step edits."></textarea>
                         </div>
                     </div>
                     <div class="resize-handle" id="resize-handle"></div>
@@ -364,6 +369,7 @@
         let contextMenuTarget = null;
         let tutorialStep = 0;
         let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
+        let customInstructions = localStorage.getItem('flux_custom_instructions') || '';
 
         // ============ Init ============
         document.addEventListener('DOMContentLoaded', () => {
@@ -372,6 +378,7 @@
             initResizeHandle();
             loadTemplates();
             initEventListeners();
+            hydrateCustomInstructions();
         });
 
         function initApp() {
@@ -413,6 +420,20 @@
                     document.getElementById('profile-menu')?.classList.remove('active');
                 }
             });
+            const instructionsInput = document.getElementById('custom-instructions-input');
+            instructionsInput?.addEventListener('input', (e) => {
+                customInstructions = e.target.value;
+                localStorage.setItem('flux_custom_instructions', customInstructions);
+                updateMarkdownPreview();
+            });
+            document.getElementById('chat-input')?.addEventListener('input', updateMarkdownPreview);
+        }
+
+        function hydrateCustomInstructions() {
+            const instructionsInput = document.getElementById('custom-instructions-input');
+            if (instructionsInput) {
+                instructionsInput.value = customInstructions;
+            }
         }
 
         function initTheme() {
@@ -587,6 +608,21 @@
             document.getElementById('typing-indicator')?.remove();
         }
 
+        function updateMarkdownPreview() {
+            const chatVal = document.getElementById('chat-input')?.value || '';
+            const instructionsVal = document.getElementById('custom-instructions-input')?.value || '';
+            const preview = document.getElementById('markdown-preview');
+            if (!preview) return;
+            const combined = [chatVal, instructionsVal ? `\n\nInstructions: ${instructionsVal}` : ''].join('').trim();
+            if (!combined) {
+                preview.style.display = 'none';
+                preview.innerHTML = '';
+                return;
+            }
+            preview.style.display = 'block';
+            preview.innerHTML = formatMessage(combined);
+        }
+
         // ============ AI API ============
         async function callGenerateAPI(userPrompt) {
             isGenerating = true;
@@ -607,7 +643,9 @@
                     history: currentProject.history.slice(-10),
                     mode: chatMode === 'thinking' ? 'think' : 'plan',
                     model,
-                    plan
+                    plan,
+                    instructions: customInstructions || '',
+                    style: 'concise'
                 };
                 if (currentProgramObj) {
                     body.programPreview = JSON.stringify(currentProgramObj);
@@ -682,7 +720,18 @@
             ['plan', 'catalog', 'build', 'summarize'].forEach(s => {
                 const el = document.getElementById(`step-${s}`);
                 if (el) el.classList.remove('active', 'completed');
+                const orb = document.getElementById(`orb-${s}`);
+                orb?.classList.remove('active', 'completed');
             });
+            const statusDiv = document.getElementById('pipeline-status');
+            if (statusDiv) statusDiv.textContent = formatPipelineStatus();
+        }
+
+        function formatPipelineStatus(step, status) {
+            const actionNames = currentActions.map(a => a.title || a.action).filter(Boolean);
+            const actionText = actionNames.length ? actionNames.join(', ') : 'None selected';
+            const stageText = step ? `${step} ${status || ''}`.trim() : 'idle';
+            return `Selected actions: ${actionText} | Stage: ${stageText}`;
         }
 
         function handleFinalResponse(data) {
@@ -690,6 +739,7 @@
                 addMessageToUI(`⚠️ ${data.message || 'An error occurred'}`, 'assistant');
                 return;
             }
+            ['plan', 'catalog', 'build', 'summarize'].forEach(s => updatePipelineOrb(s, 'completed'));
 
             // Update project name from AI
             if (data.finalName && currentProject) {
@@ -1144,7 +1194,9 @@
                     body: plistBlob
                 });
 
-                if (!signRes.ok) throw new Error('Signing failed');
+                if (!signRes.ok) {
+                    throw new Error('Signing failed');
+                }
 
                 // Download
                 statusText.textContent = 'Downloading...';
@@ -1162,8 +1214,37 @@
             } catch (err) {
                 console.error('Download error:', err);
                 statusText.textContent = '⚠️ ' + (err.message || 'Download failed');
+                if ((err.message || '').toLowerCase().includes('sign')) {
+                    showSigningFallbackModal();
+                }
                 setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
             }
+        }
+
+        function showSigningFallbackModal() {
+            const modalHtml = `
+                <div id="signing-fallback" class="flux-modal-overlay active">
+                    <div class="flux-modal-card">
+                        <h3>We can't sign that right now</h3>
+                        <p>Our signer is temporarily unavailable. You can still generate the shortcut later.</p>
+                        <label style="display:flex; align-items:center; gap:0.5rem; margin: 1rem 0;">
+                            <input type="checkbox" id="signing-email-optin">
+                            <span>Email me when signing is available again</span>
+                        </label>
+                        <div class="flex gap-2 justify-end">
+                            <button class="btn btn-secondary" onclick="document.getElementById('signing-fallback').remove()">Close</button>
+                            <button class="btn btn-primary" onclick="ackSigningFallback()">OK</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function ackSigningFallback() {
+            const optIn = document.getElementById('signing-email-optin')?.checked;
+            console.log(`[Flux] Signing unavailable. Notify opt-in: ${optIn ? 'yes' : 'no'}`);
+            document.getElementById('signing-fallback')?.remove();
         }
 
         // ============ Resize Handle ============
@@ -1222,7 +1303,14 @@
                 <div class="orb" id="orb-summarize"><span>Finalizing</span></div>
             `;
             container.appendChild(orbsDiv);
+            const status = document.createElement('div');
+            status.id = 'pipeline-status';
+            status.className = 'pipeline-status';
+            status.textContent = formatPipelineStatus();
+            container.appendChild(status);
             container.scrollTop = container.scrollHeight;
+            resetPipelineSteps();
+            updatePipelineOrb('plan', 'started');
         }
 
         function updatePipelineOrb(step, status) {
@@ -1231,6 +1319,8 @@
             orb.classList.remove('active', 'completed');
             if (status === 'started') orb.classList.add('active');
             else if (status === 'completed') orb.classList.add('completed');
+            const statusDiv = document.getElementById('pipeline-status');
+            if (statusDiv) statusDiv.textContent = formatPipelineStatus(step, status);
         }
 
         function removePipelineOrbs() {
