@@ -509,23 +509,6 @@
     font-size: 0.9rem;
 }
 
-.instructions-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.instructions-input {
-    width: 100%;
-    min-height: 48px;
-    max-height: 120px;
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
-    color: var(--text-color);
-    padding: 0.5rem 0.75rem;
-    resize: vertical;
-}
-
 /* Plus Menu Dropdown */
 .plus-menu {
     position: absolute;

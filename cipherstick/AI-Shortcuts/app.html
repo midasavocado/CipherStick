@@ -186,8 +186,6 @@
                         </div>
                         <div class="chat-extras">
                             <div class="markdown-preview" id="markdown-preview" style="display:none;"></div>
-                            <label class="instructions-label" for="custom-instructions-input">Custom instructions (included with every request)</label>
-                            <textarea id="custom-instructions-input" class="instructions-input" rows="2" placeholder="e.g., Keep responses concise and focus on step-by-step edits."></textarea>
                         </div>
                     </div>
                     <div class="resize-handle" id="resize-handle"></div>
@@ -369,7 +367,6 @@
         let contextMenuTarget = null;
         let tutorialStep = 0;
         let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
-        let customInstructions = localStorage.getItem('flux_custom_instructions') || '';
 
         // ============ Init ============
         document.addEventListener('DOMContentLoaded', () => {
@@ -378,7 +375,6 @@
             initResizeHandle();
             loadTemplates();
             initEventListeners();
-            hydrateCustomInstructions();
         });
 
         function initApp() {
@@ -420,20 +416,7 @@
                     document.getElementById('profile-menu')?.classList.remove('active');
                 }
             });
-            const instructionsInput = document.getElementById('custom-instructions-input');
-            instructionsInput?.addEventListener('input', (e) => {
-                customInstructions = e.target.value;
-                localStorage.setItem('flux_custom_instructions', customInstructions);
-                updateMarkdownPreview();
-            });
             document.getElementById('chat-input')?.addEventListener('input', updateMarkdownPreview);
-        }
-
-        function hydrateCustomInstructions() {
-            const instructionsInput = document.getElementById('custom-instructions-input');
-            if (instructionsInput) {
-                instructionsInput.value = customInstructions;
-            }
         }
 
         function initTheme() {
@@ -610,17 +593,15 @@
 
         function updateMarkdownPreview() {
             const chatVal = document.getElementById('chat-input')?.value || '';
-            const instructionsVal = document.getElementById('custom-instructions-input')?.value || '';
             const preview = document.getElementById('markdown-preview');
             if (!preview) return;
-            const combined = [chatVal, instructionsVal ? `\n\nInstructions: ${instructionsVal}` : ''].join('').trim();
-            if (!combined) {
+            if (!chatVal.trim()) {
                 preview.style.display = 'none';
                 preview.innerHTML = '';
                 return;
             }
             preview.style.display = 'block';
-            preview.innerHTML = formatMessage(combined);
+            preview.innerHTML = formatMessage(chatVal);
         }
 
         // ============ AI API ============
@@ -644,7 +625,6 @@
                     mode: chatMode === 'thinking' ? 'think' : 'plan',
                     model,
                     plan,
-                    instructions: customInstructions || '',
                     style: 'concise'
                 };
                 if (currentProgramObj) {
@@ -1214,37 +1194,8 @@
             } catch (err) {
                 console.error('Download error:', err);
                 statusText.textContent = '⚠️ ' + (err.message || 'Download failed');
-                if ((err.message || '').toLowerCase().includes('sign')) {
-                    showSigningFallbackModal();
-                }
                 setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
             }
-        }
-
-        function showSigningFallbackModal() {
-            const modalHtml = `
-                <div id="signing-fallback" class="flux-modal-overlay active">
-                    <div class="flux-modal-card">
-                        <h3>We can't sign that right now</h3>
-                        <p>Our signer is temporarily unavailable. You can still generate the shortcut later.</p>
-                        <label style="display:flex; align-items:center; gap:0.5rem; margin: 1rem 0;">
-                            <input type="checkbox" id="signing-email-optin">
-                            <span>Email me when signing is available again</span>
-                        </label>
-                        <div class="flex gap-2 justify-end">
-                            <button class="btn btn-secondary" onclick="document.getElementById('signing-fallback').remove()">Close</button>
-                            <button class="btn btn-primary" onclick="ackSigningFallback()">OK</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
-
-        function ackSigningFallback() {
-            const optIn = document.getElementById('signing-email-optin')?.checked;
-            console.log(`[Flux] Signing unavailable. Notify opt-in: ${optIn ? 'yes' : 'no'}`);
-            document.getElementById('signing-fallback')?.remove();
         }
 
         // ============ Resize Handle ============
