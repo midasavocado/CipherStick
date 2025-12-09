@@ -1,5 +1,31 @@
 /* --- Mobile Responsiveness --- */
 
+/* Tablet */
+@media (max-width: 1024px) {
+    .top-bar {
+        padding: 0 1.25rem;
+    }
+
+    .nav-links {
+        gap: 1rem;
+    }
+
+    .section {
+        padding: 4rem 1.5rem;
+    }
+
+    .b44-grid,
+    .footer-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .footer {
+        padding: 3rem 1.5rem;
+    }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
 
     /* Layout */
@@ -38,16 +64,27 @@
     /* Navigation */
     .nav-links {
         display: none;
-        /* Hide links on mobile for now */
     }
 
     .top-bar {
         padding: 0 1rem;
     }
 
+    .nav-actions {
+        gap: 0.5rem;
+    }
+
+    .logo-area {
+        gap: 0.5rem;
+    }
+
     /* Landing Page */
     .hero h1 {
         font-size: 2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
     }
 
     .hero-input-wrapper {
@@ -59,12 +96,34 @@
         margin-top: 0.5rem;
     }
 
+    .section {
+        padding: 3rem 1.25rem;
+    }
+
     .b44-grid,
     .footer-grid {
         grid-template-columns: 1fr;
+        gap: 1.75rem;
     }
 
-    .footer-grid {
-        gap: 2rem;
+    .footer {
+        padding: 3rem 1.25rem;
+    }
+}
+
+@media (max-width: 540px) {
+    .top-bar {
+        height: 56px;
+        padding: 0 0.75rem;
+    }
+
+    .nav-actions .btn,
+    .nav-actions .icon-btn {
+        padding: 0.35rem 0.6rem;
+    }
+
+    .logo-icon {
+        width: 28px;
+        height: 28px;
     }
 }

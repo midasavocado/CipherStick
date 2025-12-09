@@ -6,6 +6,10 @@ let lastGeneratedPlist = null;
 let currentActions = [];
 let reasoningEnabled = false;
 let chatMode = 'normal'; // normal, thinking, discussion, force
+const PLAN_KEY = 'flux_plan';
+const PLAN_FREE = 'free';
+const PLAN_PAID = 'paid';
+let currentPlan = localStorage.getItem(PLAN_KEY) || PLAN_FREE;
 
 // --- DOM Elements ---
 const projectsView = document.getElementById('projects-view');
@@ -41,6 +45,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- Plan Helpers ---
+function setPlan(plan) {
+    currentPlan = plan === PLAN_PAID ? PLAN_PAID : PLAN_FREE;
+    localStorage.setItem(PLAN_KEY, currentPlan);
+    if (typeof FluxUI !== 'undefined' && FluxUI.toast) {
+        FluxUI.toast(`Plan set to ${currentPlan === PLAN_PAID ? 'Paid' : 'Free'}`);
+    }
+}
+
+function getPlan() {
+    return currentPlan;
+}
+
+function isPaidPlan() {
+    return currentPlan === PLAN_PAID;
+}
 
 // --- App Logic ---
 function initApp() {
@@ -278,6 +299,13 @@ function renderProjectsGrid() {
 
 // --- Chat Modes ---
 function setChatMode(mode) {
+    if (mode === 'thinking' && !isPaidPlan()) {
+        toggleChatMenu();
+        if (typeof FluxUI !== 'undefined' && FluxUI.alert) {
+            FluxUI.alert('Thinking mode is a paid feature. Upgrade to access advanced reasoning.', 'Upgrade to Pro');
+        }
+        return;
+    }
     chatMode = mode;
     toggleChatMenu(); // Close menu
 
@@ -395,6 +423,10 @@ function handleSend() {
     if (!chatInput) return;
     const text = chatInput.value.trim();
     if (!text) return;
+    if (chatMode === 'thinking' && !isPaidPlan()) {
+        setChatMode('normal');
+        return;
+    }
 
     addMessageToUI(text, 'user');
     chatInput.value = '';
@@ -832,12 +864,15 @@ async function submitPublish() {
 
 async function generateShortcut(forPublish = false, metadata = {}) {
     const prompt = currentProject.history.map(h => h.role === 'user' ? h.content : '').filter(Boolean).join(' ');
+    const model = isPaidPlan() ? 'grok-4.1-fast' : 'openai/gpt-oss-120b:free';
 
     const payload = {
         prompt: prompt || 'Create a simple shortcut',
         name: metadata.title || currentProject.name || 'Untitled Shortcut',
         followUp: false,
-        mode: 'plan'
+        mode: 'plan',
+        model,
+        plan: getPlan()
     };
 
     const response = await fetch(WORKER_ENDPOINT, {
@@ -967,6 +1002,13 @@ function showTutorial() {
 
 // --- New UI Controls ---
 function toggleReasoning() {
+    if (!isPaidPlan()) {
+        if (typeof FluxUI !== 'undefined' && FluxUI.alert) {
+            FluxUI.alert('Thinking mode is a paid feature. Upgrade to Pro to enable it.', 'Upgrade Required');
+        }
+        reasoningEnabled = false;
+        return;
+    }
     reasoningEnabled = !reasoningEnabled;
     const btn = document.getElementById('thinking-toggle');
     if (btn) {

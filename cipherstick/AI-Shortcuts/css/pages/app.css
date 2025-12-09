@@ -2,11 +2,12 @@
 
 /* --- App Layout --- */
 .app-container {
-    height: 100vh;
+    min-height: 100vh;
+    height: auto;
     display: flex;
     flex-direction: column;
     background: var(--bg-color);
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .app-main {
@@ -148,6 +149,7 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    gap: 0;
 }
 
 /* --- Chat Pane --- */
@@ -597,6 +599,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    flex-wrap: wrap;
     box-sizing: border-box;
 }
 
@@ -610,7 +613,8 @@
     border-radius: 8px;
     transition: all 0.2s ease;
     flex: 1;
-    max-width: 300px;
+    max-width: 360px;
+    width: 100%;
 }
 
 .project-name-input:hover {
@@ -627,6 +631,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 /* Toolbar Buttons */
@@ -1251,25 +1257,146 @@ body.mode-dark .theme-toggle-thumb {
 }
 
 /* --- Responsive --- */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+    .app-main {
+        flex-direction: column;
+    }
+
     .workspace {
         flex-direction: column;
+        gap: 1rem;
     }
 
     .chat-pane {
         width: 100%;
         max-width: none;
-        height: 50%;
+        min-width: 0;
+        height: auto;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
     }
 
-    .preview-pane {
-        height: 50%;
+    .chat-header {
+        position: sticky;
+        top: 64px;
+        z-index: 5;
     }
 
+    .messages-container {
+        max-height: 55vh;
+    }
+
+    .chat-input-area {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
+    }
+
+    .preview-pane {
+        width: 100%;
+        min-height: 45vh;
+    }
+
+    .preview-canvas {
+        padding: 1.25rem;
+    }
+
+    .project-name-input {
+        max-width: none;
+    }
+
+    .toolbar-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .projects-dashboard {
+        padding: 1.5rem;
+    }
+
+    .resize-handle {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
     .projects-grid {
         grid-template-columns: 1fr;
+    }
+
+    .workspace {
+        gap: 0.75rem;
+    }
+
+    .messages-container {
+        padding: 1rem;
+        max-height: none;
+    }
+
+    .chat-pane {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .chat-input-wrapper {
+        align-items: center;
+    }
+
+    .plus-menu {
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        min-width: unset;
+    }
+
+    .preview-toolbar {
+        gap: 0.75rem;
+    }
+
+    .preview-canvas {
+        padding: 1rem;
+    }
+
+    .action-node {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .node-actions {
+        opacity: 1;
+    }
+
+    .connection-line {
+        margin-left: 2rem;
+    }
+
+    .project-card {
+        padding: 1.25rem;
+    }
+
+    .dashboard-header {
+        margin-bottom: 1.25rem;
+    }
+}
+
+@media (max-width: 540px) {
+    .chat-header {
+        top: 0;
+    }
+
+    .chat-input-area {
+        padding: 0.75rem 1rem;
+    }
+
+    .toolbar-btn,
+    .toolbar-btn.primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toolbar-actions {
+        gap: 0.35rem;
     }
 }
 
