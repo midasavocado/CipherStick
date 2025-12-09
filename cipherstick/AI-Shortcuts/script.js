@@ -855,6 +855,9 @@ async function submitPublish() {
 async function generateShortcut(forPublish = false, metadata = {}) {
     const prompt = currentProject.history.map(h => h.role === 'user' ? h.content : '').filter(Boolean).join(' ');
     const model = isPaidPlan() ? 'grok-4.1-fast' : 'openai/gpt-oss-120b:free';
+    if (isDev) {
+        console.log(`[Flux] Using model: ${model} (plan: ${getPlan()})`);
+    }
 
     const payload = {
         prompt: prompt || 'Create a simple shortcut',

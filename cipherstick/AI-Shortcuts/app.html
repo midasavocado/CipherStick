@@ -594,13 +594,20 @@
             showTypingIndicator();
 
             try {
+                const plan = (localStorage.getItem('flux_plan') || 'free') === 'paid' ? 'paid' : 'free';
+                const model = plan === 'paid' ? 'grok-4.1-fast' : 'openai/gpt-oss-120b:free';
+                console.log(`[Flux] Using model: ${model} (plan: ${plan})`);
+
                 const isFollowUp = currentProject.history.filter(m => m.role === 'user').length > 1;
                 const body = {
                     name: currentProject.name,
+                    prompt: userPrompt,
                     basePrompt: isFollowUp ? currentProject.history[0]?.content : userPrompt,
                     followPrompt: isFollowUp ? userPrompt : undefined,
                     history: currentProject.history.slice(-10),
-                    mode: chatMode === 'thinking' ? 'think' : 'plan'
+                    mode: chatMode === 'thinking' ? 'think' : 'plan',
+                    model,
+                    plan
                 };
                 if (currentProgramObj) {
                     body.programPreview = JSON.stringify(currentProgramObj);
