@@ -534,12 +534,13 @@
 }
 
 .plus-menu-item.active {
-    background: rgba(59, 130, 246, 0.15);
+    background: var(--primary-color);
     border: 1px solid var(--primary-color);
+    color: white;
 }
 
 .plus-menu-item.active .item-icon {
-    background: var(--primary-color);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
 }
 

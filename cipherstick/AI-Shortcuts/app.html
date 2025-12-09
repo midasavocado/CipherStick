@@ -347,7 +347,7 @@
     <script src="flux-ui.js"></script>
     <script>
         // ============ Configuration ============
-        const API_BASE = 'https://secrets.cipherstick.tech';
+        const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
         const IS_PRO_USER = false; // Set to true for pro users
 
         // ============ State ============
@@ -612,6 +612,11 @@
                     body: JSON.stringify(body)
                 });
 
+                if (!response.ok || !response.body) {
+                    const errText = await response.text().catch(() => '');
+                    throw new Error(`Generation failed (${response.status}) ${errText.slice(0, 120)}`);
+                }
+
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
@@ -625,7 +630,7 @@
                     buffer = lines.pop() || '';
 
                     for (const line of lines) {
-                        if (!line.trim()) continue;
+                        if (!line.trim() || !line.trim().startsWith('{')) continue;
                         try {
                             const packet = JSON.parse(line);
                             handleStreamPacket(packet);
@@ -1270,18 +1275,9 @@
         function updateModeIndicators() {
             const discussionToggle = document.getElementById('discussion-mode-toggle');
             const thinkingToggle = document.getElementById('thinking-mode-toggle');
-            const input = document.getElementById('chat-input');
 
             discussionToggle?.classList.toggle('active', chatMode === 'discussion');
             thinkingToggle?.classList.toggle('active', chatMode === 'thinking');
-
-            if (chatMode === 'discussion') {
-                input.placeholder = 'Chat without modifying shortcut...';
-            } else if (chatMode === 'thinking') {
-                input.placeholder = 'Extended reasoning for complex tasks...';
-            } else {
-                input.placeholder = 'Describe your shortcut...';
-            }
         }
 
         // ============ Animations Toggle ============

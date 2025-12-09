@@ -312,18 +312,8 @@ function setChatMode(mode) {
     // Visual feedback on the input placeholder
     const input = document.getElementById('chat-input');
     if (input) {
-        const placeholders = {
-            normal: 'Describe your shortcut...',
-            thinking: 'Reasoning mode active...',
-            discussion: "Let's discuss...",
-            force: 'Force Action: tell me exactly what to add...'
-        };
-        input.placeholder = placeholders[mode] || placeholders.normal;
-        input.style.borderColor = mode === 'discussion'
-            ? 'var(--secondary-color)'
-            : mode === 'force'
-                ? '#EF4444'
-                : 'var(--border-color)';
+        input.placeholder = 'Describe your shortcut...';
+        input.style.borderColor = mode === 'force' ? '#EF4444' : 'var(--border-color)';
     }
 }
 
@@ -727,7 +717,7 @@ function saveSettings() {
     }
 }
 // --- Download & Publishing ---
-const WORKER_ENDPOINT = 'https://secrets.cipherstick.tech/generate';
+const WORKER_ENDPOINT = 'https://secrets.mwsaulsbury.workers.dev/generate';
 
 function toggleExport() {
     toggleDownload();
