@@ -509,7 +509,7 @@
         function loadProject(id) {
             currentProject = projects.find(p => p.id === id);
             if (!currentProject) { showProjectsView(); return; }
-            currentActions = currentProject.actions || [];
+            currentActions = ensureActionUUIDs(currentProject.actions || []);
             currentProgramObj = currentProject.programObj || null;
             showWorkspaceView();
             document.getElementById('project-name-input').value = currentProject.name;
@@ -525,6 +525,26 @@
 
         function saveProjects() {
             localStorage.setItem('flux_projects', JSON.stringify(projects));
+        }
+
+        function genUUID() {
+            return (crypto?.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            ));
+        }
+
+        function ensureActionUUIDs(actions = []) {
+            return actions.map(a => {
+                if (!a.params) a.params = {};
+                if (!a.params.UUID) a.params.UUID = genUUID();
+                return a;
+            });
+        }
+
+        function getActionUUID(action) {
+            if (!action.params) action.params = {};
+            if (!action.params.UUID) action.params.UUID = genUUID();
+            return action.params.UUID;
         }
 
         function deleteProject(id) {
@@ -764,6 +784,7 @@
         function renderActions(animateIds = null) {
             const container = document.getElementById('actions-container');
             const emptyState = document.getElementById('empty-state');
+            currentActions = ensureActionUUIDs(currentActions);
 
             if (currentActions.length === 0) {
                 container.classList.add('hidden');
@@ -836,28 +857,6 @@
                 </div>
             ` : '';
 
-            let controlScaffold = '';
-            const lowerAction = (action.action || '').toLowerCase();
-            if (lowerAction.includes('if')) {
-                controlScaffold = `
-                    <div class="control-block">
-                        <div class="control-label">IF</div>
-                        <div class="control-body">Then actions follow below.</div>
-                        <div class="control-divider">ELSE</div>
-                        <div class="control-body">Else actions follow below.</div>
-                        <div class="control-end">END IF</div>
-                    </div>
-                `;
-            } else if (lowerAction.includes('repeat')) {
-                controlScaffold = `
-                    <div class="control-block">
-                        <div class="control-label">REPEAT</div>
-                        <div class="control-body">Loop actions follow below.</div>
-                        <div class="control-end">END REPEAT</div>
-                    </div>
-                `;
-            }
-
             const dragHandle = editMode ? '<div class="node-drag-handle"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
 
             node.innerHTML = `
@@ -869,7 +868,6 @@
                         ${actionsHtml}
                     </div>
                     ${paramsHtml}
-                    ${controlScaffold}
                 </div>
             `;
             return node;
@@ -1154,6 +1152,7 @@
                     data = { action: template.action, params: {} };
                 }
                 const newAction = { id: Date.now(), action: data.action || template.action, title: data.action || template.action, params: data.params || {} };
+                getActionUUID(newAction);
                 currentActions.push(newAction);
                 if (currentProject) { currentProject.actions = currentActions; saveProjects(); }
                 renderActions([newAction.id]);
@@ -1459,7 +1458,7 @@
             const source = currentActions.find(a => a.id === sourceId);
             if (!target || !source) return;
 
-            const outputUUID = (sourceUuid && String(sourceUuid)) || String(source.id);
+            const outputUUID = (sourceUuid && String(sourceUuid)) || getActionUUID(source);
             const outputName = sourceLabel || source.title || source.action || 'Previous Output';
             target.params[paramKey] = {
                 Value: {
