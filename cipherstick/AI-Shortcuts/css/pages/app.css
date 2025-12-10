@@ -520,6 +520,33 @@
     font-size: 0.9rem;
 }
 
+.control-block {
+    margin-top: 0.75rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: var(--surface-hover);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.control-label,
+.control-end,
+.control-divider {
+    font-weight: 700;
+    color: var(--heading-color);
+    margin: 0.2rem 0;
+}
+
+.control-divider {
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.3rem;
+}
+
+.control-body {
+    padding-left: 0.5rem;
+}
+
 /* Plus Menu Dropdown */
 .plus-menu {
     position: absolute;
