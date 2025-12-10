@@ -873,52 +873,76 @@
                     const block = document.createElement('div');
                     block.className = 'if-block';
                     block.dataset.actionId = node.action.id;
-                    const condText = escapeHtml(node.action.params?.WFConditionalActionString || 'If condition');
+                    
+                    // Get IF condition parameters
+                    const condition = node.action.params?.Condition || node.action.params?.WFCondition || 'Is';
+                    const input = node.action.params?.Input || node.action.params?.WFInput || '';
+                    const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '';
+                    
+                    // Build condition display
+                    const conditionInputHtml = editMode ? getInputForType(node.action.id, 'Condition', condition, false) : `<span class="condition-value">${escapeHtml(String(condition))}</span>`;
+                    const inputInputHtml = editMode ? getInputForType(node.action.id, 'Input', input, false) : `<span class="condition-value">${formatLinkedValue(input)}</span>`;
+                    const compareToInputHtml = editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`;
+                    
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
                             <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                             <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
                     ` : '';
+                    
                     block.innerHTML = `
                         <div class="if-header">
-                            <span>IF ${condText}</span>
+                            <div class="if-condition-block">
+                                <span class="if-label">IF</span>
+                                ${inputInputHtml}
+                                ${conditionInputHtml}
+                                ${compareToInputHtml}
+                            </div>
                             ${actionsHtml}
                         </div>
                         <div class="if-then">
                             <div class="control-section-label">THEN</div>
                             <div class="control-section-content"></div>
                         </div>
-                        ${node.elseChildren && node.elseChildren.length > 0 ? `
-                        <div class="if-else-divider">ELSE</div>
+                        <div class="if-else-divider">Otherwise</div>
                         <div class="if-else">
                             <div class="control-section-label">ELSE</div>
                             <div class="control-section-content"></div>
                         </div>
-                        ` : ''}
                         <div class="if-end">END IF</div>
                     `;
                     const thenContainer = block.querySelector('.if-then .control-section-content');
                     const elseContainer = block.querySelector('.if-else .control-section-content');
                     renderNodeList(node.children, thenContainer, animateIds, depth + 1);
-                    if (node.elseChildren && node.elseChildren.length > 0) {
-                        renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
-                    }
+                    renderNodeList(node.elseChildren || [], elseContainer, animateIds, depth + 1);
                     container.appendChild(block);
                 } else if (node.type === 'repeat') {
                     const block = document.createElement('div');
                     block.className = 'repeat-block';
                     block.dataset.actionId = node.action.id;
-                    const repeatText = escapeHtml(node.action.params?.WFRepeatCount || node.action.params?.WFRepeatItemVariableName || '');
+                    
+                    // Get REPEAT parameters
+                    const repeatCount = node.action.params?.Count || node.action.params?.WFRepeatCount || '';
+                    const repeatItems = node.action.params?.RepeatItemVariableName || node.action.params?.WFRepeatItemVariableName || '';
+                    
+                    const repeatCountHtml = editMode ? getInputForType(node.action.id, 'Count', repeatCount, false) : `<span class="repeat-value">${formatLinkedValue(repeatCount)}</span>`;
+                    const repeatItemsHtml = editMode && repeatItems ? getInputForType(node.action.id, 'RepeatItemVariableName', repeatItems, false) : (repeatItems ? `<span class="repeat-value">${formatLinkedValue(repeatItems)}</span>` : '');
+                    
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
                             <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                             <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
                     ` : '';
+                    
                     block.innerHTML = `
                         <div class="repeat-header">
-                            <span>REPEAT${repeatText ? ': ' + repeatText : ''}</span>
+                            <div class="repeat-condition-block">
+                                <span class="repeat-label">REPEAT</span>
+                                ${repeatCount ? `<span class="repeat-text">${repeatCountHtml} times</span>` : ''}
+                                ${repeatItems ? `<span class="repeat-text">for each item in ${repeatItemsHtml}</span>` : ''}
+                            </div>
                             ${actionsHtml}
                         </div>
                         <div class="repeat-body">
@@ -963,8 +987,9 @@
                 let hasVisibleParams = false;
                 let innerHtml = '<div class="node-params">';
                 for (const [key, value] of Object.entries(action.params)) {
-                    // Skip UUID/OutputUUID as they're shown separately
-                    if (String(key).toLowerCase() === 'uuid' || String(key).toLowerCase() === 'outputuuid') {
+                    // Skip UUID/OutputUUID/GroupingIdentifier as they're internal
+                    const lowerKey = String(key).toLowerCase();
+                    if (lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier') {
                         continue;
                     }
                     // In view mode, only show if value is present and not a placeholder
@@ -1062,6 +1087,19 @@
                 return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
             }
 
+            // Check if this is a text field that can contain mixed content with links
+            // (like LLMPrompt in Askllm which can have text mixed with !link: tokens)
+            const canHaveMixedLinks = strValue.includes('!link:') && strValue.length > strValue.indexOf('!link:') + 6;
+            
+            if (canHaveMixedLinks && !readonly) {
+                // Use textarea for mixed content fields
+                const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<textarea class="param-value param-textarea" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} rows="3">${escapeHtml(strValue)}</textarea>`;
+            } else if (canHaveMixedLinks && readonly) {
+                // Display mixed content with proper formatting
+                return `<div class="param-value param-mixed-content">${formatLinkedValue(strValue)}</div>`;
+            }
+            
             // Default text input
             const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
             return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
@@ -1075,6 +1113,28 @@
                 .replace(/([a-z])([A-Z])/g, '$1 $2')
                 .replace(/\b\w/g, l => l.toUpperCase())
                 .trim();
+        }
+
+        function formatLinkedValue(value) {
+            if (!value) return '';
+            const strVal = String(value);
+            if (strVal.trim().startsWith('!link:')) {
+                const linkLabel = strVal.replace(/^!link:/i, '').trim();
+                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+            }
+            // Check if value contains !link: tokens mixed with text
+            if (strVal.includes('!link:')) {
+                // Parse mixed content
+                const parts = strVal.split(/(!link:[^\s]+)/gi);
+                return parts.map(part => {
+                    if (part.toLowerCase().startsWith('!link:')) {
+                        const linkLabel = part.replace(/^!link:/i, '').trim();
+                        return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+                    }
+                    return escapeHtml(part);
+                }).join('');
+            }
+            return escapeHtml(strVal);
         }
 
         function formatParamValue(value) {
