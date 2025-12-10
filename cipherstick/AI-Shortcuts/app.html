@@ -610,6 +610,10 @@
                 const model = plan === 'paid' ? 'grok-4.1-fast' : 'openai/gpt-oss-120b:free';
                 console.log(`[Flux] Using model: ${model} (plan: ${plan})`);
 
+                const forceInstruction = forcedActions.length
+                    ? `You MUST include these actions in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}.`
+                    : '';
+
                 const isFollowUp = currentProject.history.filter(m => m.role === 'user').length > 1;
                 const body = {
                     name: currentProject.name,
@@ -620,6 +624,8 @@
                     mode: chatMode === 'thinking' ? 'think' : 'plan',
                     model,
                     plan,
+                    forcedActions,
+                    forceInstruction,
                     style: 'concise'
                 };
                 if (currentProgramObj) {
@@ -1302,29 +1308,9 @@
         async function addForcedAction(template) {
             closeForceActionModal();
             if (forcedActions.find(a => a.action === template.action)) return; // Already forced
-            // Immediately add the action to the workflow
-            try {
-                const response = await fetch(`Templates/${template.file}`);
-                const data = await response.json();
-                const newAction = {
-                    id: Date.now(),
-                    action: data.action || template.action,
-                    title: data.action || template.action,
-                    params: data.params || {}
-                };
-                currentActions.push(newAction);
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
-                }
-                renderActions([newAction.id]);
-                addMessageToUI(`🎯 Added action: ${newAction.title}`, 'assistant');
-                forcedActions = [];
-                renderForcedActions();
-            } catch (e) {
-                console.error('Force action failed:', e);
-                alert('Could not add that action. Please try again.');
-            }
+            forcedActions.push({ action: template.action, file: template.file });
+            renderForcedActions();
+            addMessageToUI(`🎯 Will use **${template.action}** in next response`, 'assistant');
         }
 
         function removeForcedAction(action) {
