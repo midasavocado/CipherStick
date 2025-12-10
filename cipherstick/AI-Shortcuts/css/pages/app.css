@@ -205,6 +205,13 @@
     animation: orbsSlideIn 0.5s ease;
 }
 
+.orb-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 @keyframes orbsSlideIn {
     from {
         opacity: 0;
@@ -269,6 +276,23 @@
 
 .orb.completed span {
     opacity: 0;
+}
+
+.orb-status {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 80px;
+    line-height: 1.2;
+    transition: color 0.3s ease;
+}
+
+.orb-wrapper .orb.active + .orb-status {
+    color: var(--primary-color);
+}
+
+.orb-wrapper .orb.completed + .orb-status {
+    color: #22c55e;
 }
 
 @keyframes orbPulse {
@@ -511,45 +535,142 @@
 .linked-output {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.6rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
     border-radius: 8px;
-    background: rgba(59, 130, 246, 0.12);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.1));
     color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    font-size: 0.9rem;
+    border: 1.5px solid var(--primary-color);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.linked-output:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(147, 51, 234, 0.15));
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.linked-output-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.linked-output-label::before {
+    content: '🔗';
+    font-size: 0.75rem;
+}
+
+.node-output {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
+    color: #22c55e;
+    border: 1.5px solid #22c55e;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.node-output .output-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.node-output .output-label::before {
+    content: '📤';
+    font-size: 0.75rem;
 }
 
 .if-block,
 .repeat-block {
-    border: 1px solid var(--border-color);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
-    padding: 0.75rem;
+    padding: 1rem;
     background: var(--surface-color);
     margin-bottom: 0.75rem;
+    position: relative;
 }
 
 .if-header,
+.repeat-header {
+    font-weight: 700;
+    color: var(--heading-color);
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.if-header span,
+.repeat-header span {
+    color: var(--primary-color);
+}
+
 .if-end,
-.repeat-header,
 .repeat-end {
     font-weight: 700;
     color: var(--heading-color);
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.control-section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.control-section-content {
+    padding-left: 1rem;
+    border-left: 3px solid var(--primary-color);
+    margin-bottom: 0.75rem;
 }
 
 .if-then,
 .if-else,
 .repeat-body {
     padding-left: 0.5rem;
-    border-left: 2px solid var(--border-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .if-else-divider {
-    margin: 0.35rem 0;
+    margin: 0.75rem 0;
+    padding: 0.5rem;
     color: var(--text-muted);
     font-weight: 600;
+    text-align: center;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 6px;
+}
+
+.control-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.if-block:hover .control-actions,
+.repeat-block:hover .control-actions {
+    opacity: 1;
 }
 
 /* Plus Menu Dropdown */
@@ -601,6 +722,25 @@
 .plus-menu-item.active .item-icon {
     background: rgba(255, 255, 255, 0.15);
     color: white;
+}
+
+.plus-menu-item.pro-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.plus-menu-item.pro-disabled:hover {
+    background: var(--surface-color);
+}
+
+.plus-menu-item.pro-disabled::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    pointer-events: none;
 }
 
 .plus-menu-item .item-icon {

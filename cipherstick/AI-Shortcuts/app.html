@@ -721,7 +721,7 @@
 
         function handleStreamPacket(packet) {
             if (packet.type === 'progress') {
-                updatePipelineProgress(packet.step, packet.status);
+                updatePipelineProgress(packet.step, packet.status, packet.hint);
             }
         }
 
@@ -742,15 +742,23 @@
             });
         }
 
-        function updatePipelineProgress(step, status) {
+        function updatePipelineProgress(step, status, hint = '') {
             const order = ['plan', 'catalog', 'build', 'summarize'];
-            const idx = order.indexOf(step);
+            // Map backend steps to frontend steps
+            const stepMap = {
+                'assess': 'plan',
+                'search': 'catalog',
+                'build': 'build',
+                'summarize': 'summarize'
+            };
+            const frontendStep = stepMap[step] || step;
+            const idx = order.indexOf(frontendStep);
             if (idx > 0 && status === 'started') {
                 for (let i = 0; i < idx; i++) {
                     updatePipelineOrb(order[i], 'completed');
                 }
             }
-            updatePipelineOrb(step, status);
+            updatePipelineOrb(frontendStep, status, hint);
         }
 
         function handleFinalResponse(data) {
@@ -864,28 +872,61 @@
                 if (node.type === 'if') {
                     const block = document.createElement('div');
                     block.className = 'if-block';
+                    block.dataset.actionId = node.action.id;
                     const condText = escapeHtml(node.action.params?.WFConditionalActionString || 'If condition');
+                    const actionsHtml = editMode ? `
+                        <div class="control-actions">
+                            <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                            <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        </div>
+                    ` : '';
                     block.innerHTML = `
-                        <div class="if-header">IF ${condText}</div>
-                        <div class="if-then"></div>
+                        <div class="if-header">
+                            <span>IF ${condText}</span>
+                            ${actionsHtml}
+                        </div>
+                        <div class="if-then">
+                            <div class="control-section-label">THEN</div>
+                            <div class="control-section-content"></div>
+                        </div>
+                        ${node.elseChildren && node.elseChildren.length > 0 ? `
                         <div class="if-else-divider">ELSE</div>
-                        <div class="if-else"></div>
+                        <div class="if-else">
+                            <div class="control-section-label">ELSE</div>
+                            <div class="control-section-content"></div>
+                        </div>
+                        ` : ''}
                         <div class="if-end">END IF</div>
                     `;
-                    const thenContainer = block.querySelector('.if-then');
-                    const elseContainer = block.querySelector('.if-else');
+                    const thenContainer = block.querySelector('.if-then .control-section-content');
+                    const elseContainer = block.querySelector('.if-else .control-section-content');
                     renderNodeList(node.children, thenContainer, animateIds, depth + 1);
-                    renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
+                    if (node.elseChildren && node.elseChildren.length > 0) {
+                        renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
+                    }
                     container.appendChild(block);
                 } else if (node.type === 'repeat') {
                     const block = document.createElement('div');
                     block.className = 'repeat-block';
+                    block.dataset.actionId = node.action.id;
+                    const repeatText = escapeHtml(node.action.params?.WFRepeatCount || node.action.params?.WFRepeatItemVariableName || '');
+                    const actionsHtml = editMode ? `
+                        <div class="control-actions">
+                            <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                            <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        </div>
+                    ` : '';
                     block.innerHTML = `
-                        <div class="repeat-header">REPEAT</div>
-                        <div class="repeat-body"></div>
+                        <div class="repeat-header">
+                            <span>REPEAT${repeatText ? ': ' + repeatText : ''}</span>
+                            ${actionsHtml}
+                        </div>
+                        <div class="repeat-body">
+                            <div class="control-section-content"></div>
+                        </div>
                         <div class="repeat-end">END REPEAT</div>
                     `;
-                    const body = block.querySelector('.repeat-body');
+                    const body = block.querySelector('.repeat-body .control-section-content');
                     renderNodeList(node.children, body, animateIds, depth + 1);
                     container.appendChild(block);
                 } else {
@@ -908,12 +949,24 @@
             node.dataset.index = index;
             node.dataset.type = action.action;
 
+            // Get output information
+            const outputUUID = action.params?.OutputUUID || action.params?.UUID || null;
+            const outputName = action.params?.OutputName || action.title || action.action || '';
+            const outputDisplay = humanizeOutputName(outputName);
+            const outputHtml = outputUUID ? `<div class="node-output" data-output-uuid="${escapeHtml(String(outputUUID))}" title="Output: ${escapeHtml(outputDisplay)}">
+                <span class="output-label">${escapeHtml(outputDisplay)}</span>
+            </div>` : '';
+
             let paramsHtml = '';
             // Show params if in edit mode OR if they have a value (not empty/default)
             if (action.params && Object.keys(action.params).length > 0 && !isControlAction(action)) {
                 let hasVisibleParams = false;
                 let innerHtml = '<div class="node-params">';
                 for (const [key, value] of Object.entries(action.params)) {
+                    // Skip UUID/OutputUUID as they're shown separately
+                    if (String(key).toLowerCase() === 'uuid' || String(key).toLowerCase() === 'outputuuid') {
+                        continue;
+                    }
                     // In view mode, only show if value is present and not a placeholder
                     const strVal = String(value);
                     const isPlaceholder = strVal.startsWith('{{') && strVal.endsWith('}}');
@@ -951,6 +1004,7 @@
                         <span class="node-title">${escapeHtml(action.title || action.action)}</span>
                         ${actionsHtml}
                     </div>
+                    ${outputHtml}
                     ${paramsHtml}
                 </div>
             `;
@@ -963,12 +1017,29 @@
             }
             const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
             if (isObjectVal) {
-                const label = value?.Value?.OutputName || 'Linked Output';
+                const outputName = value?.Value?.OutputName || value?.OutputName || 'Linked Output';
+                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
                 const safeParam = escapeHtml(key).replace(/'/g, "\\'");
-                return `<div class="linked-output">${escapeHtml(label)} <button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')">Unlink</button></div>`;
+                const displayName = humanizeOutputName(outputName);
+                return `<div class="linked-output" data-output-uuid="${escapeHtml(outputUUID)}" title="Linked from: ${escapeHtml(outputName)}">
+                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+                </div>`;
             }
 
             const strValue = String(value);
+            
+            // Check for !link: tokens
+            if (strValue.trim().startsWith('!link:')) {
+                const linkLabel = strValue.replace(/^!link:/i, '').trim();
+                const displayName = humanizeOutputName(linkLabel);
+                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
+                return `<div class="linked-output" data-link-label="${escapeHtml(linkLabel)}" title="Linked from: ${escapeHtml(linkLabel)}">
+                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+                </div>`;
+            }
+            
             const lowerVal = strValue.toLowerCase();
             const disabledAttr = readonly ? 'disabled' : '';
 
@@ -994,6 +1065,16 @@
             // Default text input
             const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
             return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+        }
+
+        function humanizeOutputName(name) {
+            if (!name) return 'Output';
+            return String(name)
+                .replace(/^!link:/i, '')
+                .replace(/_/g, ' ')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/\b\w/g, l => l.toUpperCase())
+                .trim();
         }
 
         function formatParamValue(value) {
@@ -1364,26 +1445,57 @@
             orbsDiv.id = 'pipeline-orbs';
             orbsDiv.className = 'pipeline-orbs';
             orbsDiv.innerHTML = `
-                <div class="orb" id="orb-plan"><span>Planning</span></div>
+                <div class="orb-wrapper">
+                    <div class="orb" id="orb-plan"><span>Planning</span></div>
+                    <div class="orb-status">Analyzing your request...</div>
+                </div>
                 <div class="orb-line"></div>
-                <div class="orb" id="orb-catalog"><span>Searching</span></div>
+                <div class="orb-wrapper">
+                    <div class="orb" id="orb-catalog"><span>Searching</span></div>
+                    <div class="orb-status">Waiting...</div>
+                </div>
                 <div class="orb-line"></div>
-                <div class="orb" id="orb-build"><span>Building</span></div>
+                <div class="orb-wrapper">
+                    <div class="orb" id="orb-build"><span>Building</span></div>
+                    <div class="orb-status">Waiting...</div>
+                </div>
                 <div class="orb-line"></div>
-                <div class="orb" id="orb-summarize"><span>Finalizing</span></div>
+                <div class="orb-wrapper">
+                    <div class="orb" id="orb-summarize"><span>Finalizing</span></div>
+                    <div class="orb-status">Waiting...</div>
+                </div>
             `;
             container.appendChild(orbsDiv);
             container.scrollTop = container.scrollHeight;
             resetPipelineSteps();
-            updatePipelineOrb('plan', 'started');
+            updatePipelineOrb('plan', 'started', 'Analyzing your request...');
         }
 
-        function updatePipelineOrb(step, status) {
+        function updatePipelineOrb(step, status, hint = '') {
             const orb = document.getElementById(`orb-${step}`);
             if (!orb) return;
             orb.classList.remove('active', 'completed');
             if (status === 'started') orb.classList.add('active');
             else if (status === 'completed') orb.classList.add('completed');
+            
+            // Update status text
+            let statusEl = orb.querySelector('.orb-status');
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.className = 'orb-status';
+                orb.appendChild(statusEl);
+            }
+            statusEl.textContent = hint || getDefaultHint(step);
+        }
+        
+        function getDefaultHint(step) {
+            const hints = {
+                'plan': 'Analyzing your request...',
+                'catalog': 'Searching for actions...',
+                'build': 'Building your shortcut...',
+                'summarize': 'Finalizing...'
+            };
+            return hints[step] || '';
         }
 
         function removePipelineOrbs() {
@@ -1424,7 +1536,8 @@
         // ============ Mode Toggle (in plus menu) ============
         function toggleMode(mode) {
             if (mode === 'thinking' && (localStorage.getItem('flux_plan') || 'free') !== 'paid') {
-                alert('Thinking mode is a Pro feature.');
+                alert('Thinking mode is a Pro feature. Please upgrade to Pro to use this feature.');
+                window.location.href = 'pricing.html';
                 return;
             }
             if (chatMode === mode) {
@@ -1433,6 +1546,7 @@
                 chatMode = mode;
             }
             updateModeIndicators();
+            setChatMode(chatMode);
             // Don't close menu - let user see the state change
         }
 
@@ -1545,12 +1659,22 @@
             const source = currentActions.find(a => a.id === sourceId);
             if (!target || !source) return;
 
-            const outputUUID = (sourceUuid && String(sourceUuid)) || getActionUUID(source);
+            // Ensure source has an output UUID
+            if (!source.params) source.params = {};
+            const sourceOutputUUID = sourceUuid || source.params.OutputUUID || source.params.UUID || getActionUUID(source);
+            
+            // Set the source's OutputUUID if not already set
+            if (!source.params.OutputUUID && !source.params.UUID) {
+                source.params.OutputUUID = sourceOutputUUID;
+            }
+            
+            // Ensure the output UUID matches between source and target
             const outputName = sourceLabel || source.title || source.action || 'Previous Output';
+            if (!target.params) target.params = {};
             target.params[paramKey] = {
                 Value: {
                     OutputName: outputName,
-                    OutputUUID: outputUUID,
+                    OutputUUID: sourceOutputUUID, // Use the same UUID as source
                     Type: 'ActionOutput'
                 },
                 WFSerializationType: 'WFTextTokenAttachment'
@@ -1559,7 +1683,7 @@
                 currentProject.actions = currentActions;
                 saveProjects();
             }
-            renderActions([targetId]);
+            renderActions([targetId, sourceId]);
         }
 
         function clearLinkedParam(actionId, paramKey) {
@@ -1723,6 +1847,15 @@
             initContextMenu();
             updateModeIndicators();
             renderForcedActions();
+            
+            // Update PRO status for thinking mode
+            const thinkingToggle = document.getElementById('thinking-mode-toggle');
+            if (thinkingToggle) {
+                const isPro = (localStorage.getItem('flux_plan') || 'free') === 'paid';
+                if (!isPro) {
+                    thinkingToggle.classList.add('pro-disabled');
+                }
+            }
         });
     </script>
 </body>

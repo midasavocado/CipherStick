@@ -2914,8 +2914,13 @@ const __CONVERSION_API__ = ((root) => {
         }
         updateLinkMetadata(label, {
           friendly: outputName,
-          uuid: resolved || undefined
+          uuid: resolved || outputUUID || undefined
         });
+        // Ensure the resolved UUID is stored in the spec
+        if (resolved) {
+          spec.outputUUID = resolved;
+          spec.OutputUUID = resolved;
+        }
       }
     }
 
@@ -4121,6 +4126,10 @@ ${indentXMLBlock(valueNode, 2)}
         const uuid = resolveLinkUUID(label) || label;
         updateLinkMetadata(label, { action: actionName, uuid });
         normalized[key] = uuid;
+        // Ensure OutputUUID also uses the same UUID if present
+        if (normalized.OutputUUID === undefined && normalized.UUID === undefined) {
+          normalized.OutputUUID = uuid;
+        }
       }
     }
     const rendered = renderValue(normalized);
@@ -4312,7 +4321,12 @@ ${indentXMLBlock(valueNode, 2)}
         if (!isPureLinkTokenString(trimmed)) continue;
         if (!OUTPUT_FIELD_REGEX.test(key)) continue;
         const label = trimmed.slice(6).trim();
-        registerLinkLabel(label, actionName, { friendly: friendlyValue });
+        const resolvedUUID = resolveLinkUUID(label);
+        registerLinkLabel(label, actionName, { friendly: friendlyValue, uuid: resolvedUUID });
+        // Ensure the UUID is set in the normalized params for consistency
+        if (resolvedUUID && (key === 'OutputUUID' || key === 'UUID')) {
+          normalizedParams[key] = resolvedUUID;
+        }
       }
       // Substitutions
       let substituted = substitutePlaceholders(dictXML, normalizedParams);
