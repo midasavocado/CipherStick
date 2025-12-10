@@ -536,15 +536,31 @@
         function ensureActionUUIDs(actions = []) {
             return actions.map(a => {
                 if (!a.params) a.params = {};
-                if (!a.params.UUID) a.params.UUID = genUUID();
+                if (!a.params.GroupingIdentifier && isControlAction(a)) {
+                    a.params.GroupingIdentifier = genUUID();
+                }
                 return a;
             });
         }
 
         function getActionUUID(action) {
             if (!action.params) action.params = {};
-            if (!action.params.UUID) action.params.UUID = genUUID();
-            return action.params.UUID;
+            if (!action.params.GroupingIdentifier) action.params.GroupingIdentifier = genUUID();
+            return action.params.GroupingIdentifier;
+        }
+
+        function isConditionalAction(action) {
+            const id = (action.action || action.title || '').toLowerCase();
+            return id.includes('conditional');
+        }
+
+        function isRepeatAction(action) {
+            const id = (action.action || action.title || '').toLowerCase();
+            return id.includes('repeat');
+        }
+
+        function isControlAction(action) {
+            return isConditionalAction(action) || isRepeatAction(action);
         }
 
         function deleteProject(id) {
@@ -796,20 +812,88 @@
             container.classList.remove('hidden');
             container.innerHTML = '';
 
-            currentActions.forEach((action, index) => {
-                let shouldAnimate = false;
-                if (animateIds === true) shouldAnimate = true;
-                else if (Array.isArray(animateIds) && animateIds.includes(action.id)) shouldAnimate = true;
+            const tree = buildActionTree(currentActions);
+            renderNodeList(tree, container, animateIds);
+            initDragAndDrop();
+        }
 
-                const node = createActionNode(action, index, shouldAnimate);
-                container.appendChild(node);
-                if (index < currentActions.length - 1) {
-                    const line = document.createElement('div');
-                    line.className = 'connection-line';
-                    container.appendChild(line);
+        function buildActionTree(actions) {
+            const root = [];
+            const stack = [{ id: null, target: root, node: null }];
+
+            actions.forEach(action => {
+                if (isConditionalAction(action)) {
+                    const mode = Number(action.params?.WFControlFlowMode ?? 0);
+                    const gid = action.params?.GroupingIdentifier || getActionUUID(action);
+                    if (mode === 0) {
+                        const node = { type: 'if', action, children: [], elseChildren: [] };
+                        stack[stack.length - 1].target.push(node);
+                        stack.push({ id: gid, target: node.children, node, inElse: false });
+                    } else if (mode === 1) {
+                        const idx = [...stack].reverse().findIndex(s => s.id === gid);
+                        if (idx !== -1) {
+                            const realIdx = stack.length - 1 - idx;
+                            const ref = stack[realIdx];
+                            ref.target = ref.node.elseChildren;
+                        }
+                    } else if (mode === 2) {
+                        if (stack.length > 1 && stack[stack.length - 1].id === gid) {
+                            stack.pop();
+                        } else {
+                            const pos = stack.findIndex(s => s.id === gid);
+                            if (pos > 0) stack.splice(pos, stack.length - pos);
+                        }
+                    }
+                    return;
+                }
+
+                if (isRepeatAction(action)) {
+                    const node = { type: 'repeat', action, children: [] };
+                    stack[stack.length - 1].target.push(node);
+                    return;
+                }
+
+                stack[stack.length - 1].target.push({ type: 'action', action });
+            });
+
+            return root;
+        }
+
+        function renderNodeList(nodes, container, animateIds, depth = 0) {
+            nodes.forEach((node, index) => {
+                if (node.type === 'if') {
+                    const block = document.createElement('div');
+                    block.className = 'if-block';
+                    const condText = escapeHtml(node.action.params?.WFConditionalActionString || 'If condition');
+                    block.innerHTML = `
+                        <div class="if-header">IF ${condText}</div>
+                        <div class="if-then"></div>
+                        <div class="if-else-divider">ELSE</div>
+                        <div class="if-else"></div>
+                        <div class="if-end">END IF</div>
+                    `;
+                    const thenContainer = block.querySelector('.if-then');
+                    const elseContainer = block.querySelector('.if-else');
+                    renderNodeList(node.children, thenContainer, animateIds, depth + 1);
+                    renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
+                    container.appendChild(block);
+                } else if (node.type === 'repeat') {
+                    const block = document.createElement('div');
+                    block.className = 'repeat-block';
+                    block.innerHTML = `
+                        <div class="repeat-header">REPEAT</div>
+                        <div class="repeat-body"></div>
+                        <div class="repeat-end">END REPEAT</div>
+                    `;
+                    const body = block.querySelector('.repeat-body');
+                    renderNodeList(node.children, body, animateIds, depth + 1);
+                    container.appendChild(block);
+                } else {
+                    const shouldAnimate = animateIds === true || (Array.isArray(animateIds) && animateIds.includes(node.action.id));
+                    const actionNode = createActionNode(node.action, index, shouldAnimate);
+                    container.appendChild(actionNode);
                 }
             });
-            initDragAndDrop();
         }
 
         function createActionNode(action, index, shouldAnimate = false) {
@@ -826,7 +910,7 @@
 
             let paramsHtml = '';
             // Show params if in edit mode OR if they have a value (not empty/default)
-            if (action.params && Object.keys(action.params).length > 0) {
+            if (action.params && Object.keys(action.params).length > 0 && !isControlAction(action)) {
                 let hasVisibleParams = false;
                 let innerHtml = '<div class="node-params">';
                 for (const [key, value] of Object.entries(action.params)) {
@@ -874,6 +958,9 @@
         }
 
         function getInputForType(actionId, key, value, readonly = false) {
+            if (String(key).toLowerCase() === 'uuid') {
+                return '';
+            }
             const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
             if (isObjectVal) {
                 const label = value?.Value?.OutputName || 'Linked Output';
