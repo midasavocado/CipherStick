@@ -27,7 +27,7 @@ const workspaceProjectName = document.getElementById('topbar-project-name') || d
 document.addEventListener('DOMContentLoaded', () => {
     // Global Init
     if (window.location.pathname.includes('app.html') || window.location.pathname.includes('workspace.html')) {
-        initApp();
+     initApp();
     } else if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
         initLanding();
     }

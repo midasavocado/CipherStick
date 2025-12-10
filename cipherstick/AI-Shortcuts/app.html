@@ -667,11 +667,11 @@
                 }
 
                 removeTypingIndicator();
-                removePipelineOrbs();
 
                 if (finalData) {
                     handleFinalResponse(finalData);
                 }
+                removePipelineOrbs();
             } catch (err) {
                 console.error('API Error:', err);
                 removeTypingIndicator();
@@ -684,7 +684,7 @@
 
         function handleStreamPacket(packet) {
             if (packet.type === 'progress') {
-                updatePipelineOrb(packet.step, packet.status);
+                updatePipelineProgress(packet.step, packet.status);
             }
         }
 
@@ -703,15 +703,15 @@
                 const orb = document.getElementById(`orb-${s}`);
                 orb?.classList.remove('active', 'completed');
             });
-            const statusDiv = document.getElementById('pipeline-status');
-            if (statusDiv) statusDiv.textContent = formatPipelineStatus();
         }
 
-        function formatPipelineStatus(step, status) {
-            const actionNames = currentActions.map(a => a.title || a.action).filter(Boolean);
-            const actionText = actionNames.length ? actionNames.join(', ') : 'None selected';
-            const stageText = step ? `${step} ${status || ''}`.trim() : 'idle';
-            return `Selected actions: ${actionText} | Stage: ${stageText}`;
+        function updatePipelineProgress(step, status) {
+            const order = ['plan', 'catalog', 'build', 'summarize'];
+            const idx = order.indexOf(step);
+            if (idx > 0 && status === 'started') {
+                updatePipelineOrb(order[idx - 1], 'completed');
+            }
+            updatePipelineOrb(step, status);
         }
 
         function handleFinalResponse(data) {
@@ -850,6 +850,13 @@
         }
 
         function getInputForType(actionId, key, value, readonly = false) {
+            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
+            if (isObjectVal) {
+                const label = value?.Value?.OutputName || 'Linked Output';
+                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
+                return `<div class="linked-output">${escapeHtml(label)} <button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')">Unlink</button></div>`;
+            }
+
             const strValue = String(value);
             const lowerVal = strValue.toLowerCase();
             const disabledAttr = readonly ? 'disabled' : '';
@@ -1254,11 +1261,6 @@
                 <div class="orb" id="orb-summarize"><span>Finalizing</span></div>
             `;
             container.appendChild(orbsDiv);
-            const status = document.createElement('div');
-            status.id = 'pipeline-status';
-            status.className = 'pipeline-status';
-            status.textContent = formatPipelineStatus();
-            container.appendChild(status);
             container.scrollTop = container.scrollHeight;
             resetPipelineSteps();
             updatePipelineOrb('plan', 'started');
@@ -1270,8 +1272,6 @@
             orb.classList.remove('active', 'completed');
             if (status === 'started') orb.classList.add('active');
             else if (status === 'completed') orb.classList.add('completed');
-            const statusDiv = document.getElementById('pipeline-status');
-            if (statusDiv) statusDiv.textContent = formatPipelineStatus(step, status);
         }
 
         function removePipelineOrbs() {
@@ -1360,14 +1360,18 @@
             menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Device Name\')">📱 Device Name</div>';
             menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Ask Each Time\')">❓ Ask Each Time</div>';
 
-            // Add linkable actions (outputs from previous actions)
+            // Add linkable actions (outputs from previous actions in order)
             const currentActionId = parseInt(inputEl.dataset.actionId);
-            const previousActions = currentActions.filter(a => a.id < currentActionId);
+            const currentIndex = currentActions.findIndex(a => a.id === currentActionId);
+            const previousActions = currentIndex > 0 ? currentActions.slice(0, currentIndex) : [];
             if (previousActions.length > 0) {
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-header">Link to Action</div>';
                 previousActions.forEach(a => {
-                    menuHtml += `<div class="context-menu-item" onclick="insertVariable('${escapeHtml(a.action)} Output')">🔗 ${escapeHtml(a.action)}</div>`;
+                    const uuid = a.params?.UUID || a.params?.Uuid || a.params?.uuid || a.params?.ProvidedOutputUUID;
+                    const label = a.title || a.action || 'Action';
+                    const safeLabel = escapeHtml(label).replace(/\"/g, '&quot;');
+                    menuHtml += `<div class="context-menu-item" data-source-id="${a.id}" data-source-uuid="${uuid || ''}" data-source-label="${safeLabel}">🔗 ${escapeHtml(label)}</div>`;
                 });
             }
 
@@ -1379,6 +1383,15 @@
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
             menu.classList.add('active');
+
+            // Wire link clicks
+            const linkItems = menu.querySelectorAll('[data-source-id]');
+            linkItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const sourceId = parseInt(item.getAttribute('data-source-id'));
+                    linkActionParam(currentActionId, inputEl.dataset.param, sourceId, item.getAttribute('data-source-uuid'), item.getAttribute('data-source-label'));
+                });
+            });
 
             // Adjust if going off bottom
             setTimeout(() => {
@@ -1409,6 +1422,39 @@
             contextMenuTarget.setSelectionRange(start + varText.length, start + varText.length);
             contextMenuTarget.dispatchEvent(new Event('change'));
             document.getElementById('variable-context-menu')?.classList.remove('active');
+        }
+
+        function linkActionParam(targetId, paramKey, sourceId, sourceUuid, sourceLabel) {
+            const target = currentActions.find(a => a.id === targetId);
+            const source = currentActions.find(a => a.id === sourceId);
+            if (!target || !source) return;
+
+            const outputUUID = (sourceUuid && String(sourceUuid)) || String(source.id);
+            const outputName = sourceLabel || source.title || source.action || 'Previous Output';
+            target.params[paramKey] = {
+                Value: {
+                    OutputName: outputName,
+                    OutputUUID: outputUUID,
+                    Type: 'ActionOutput'
+                },
+                WFSerializationType: 'WFTextTokenAttachment'
+            };
+            if (currentProject) {
+                currentProject.actions = currentActions;
+                saveProjects();
+            }
+            renderActions([targetId]);
+        }
+
+        function clearLinkedParam(actionId, paramKey) {
+            const action = currentActions.find(a => a.id === actionId);
+            if (!action) return;
+            delete action.params[paramKey];
+            if (currentProject) {
+                currentProject.actions = currentActions;
+                saveProjects();
+            }
+            renderActions([actionId]);
         }
 
         // Mobile: add button to insert variable
