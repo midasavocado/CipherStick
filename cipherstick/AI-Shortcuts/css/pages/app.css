@@ -655,6 +655,59 @@
 .repeat-header .param-value {
     min-width: 120px;
     max-width: 200px;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-color);
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.if-header .param-value:focus,
+.repeat-header .param-value:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.if-header .param-select,
+.repeat-header .param-select {
+    min-width: 150px;
+    max-width: 250px;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-color);
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.if-header .param-select:focus,
+.repeat-header .param-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.if-header .param-variable-input,
+.repeat-header .param-variable-input {
+    min-width: 140px;
+    max-width: 220px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.1)) !important;
+    border: 1.5px solid var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    font-weight: 500;
+}
+
+.if-header .param-variable-input::placeholder,
+.repeat-header .param-variable-input::placeholder {
+    color: var(--primary-color);
+    opacity: 0.6;
 }
 
 .repeat-condition-block {

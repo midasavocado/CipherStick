@@ -948,8 +948,18 @@
                     const input = node.action.params?.Input || node.action.params?.WFInput || '{{VARIABLE}}';
                     const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '{{STRING}}';
                     
-                    // Build condition display - check if condition has slashes for dropdown
-                    const conditionInputHtml = editMode ? getInputForType(node.action.id, 'Condition', condition, false) : `<span class="condition-value">${escapeHtml(String(condition).split('/')[0] || 'Is')}</span>`;
+                    // Build condition display - ensure condition is stored with full string including slashes for dropdown
+                    // If condition doesn't have slashes but should be a dropdown, use default
+                    const conditionStr = String(condition);
+                    const hasSlashes = conditionStr.includes('/');
+                    const fullCondition = hasSlashes ? conditionStr : 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
+                    // Update the action's condition to have full string if it doesn't
+                    if (!hasSlashes && editMode) {
+                        node.action.params = node.action.params || {};
+                        node.action.params.Condition = fullCondition;
+                        node.action.params.WFCondition = fullCondition;
+                    }
+                    const conditionInputHtml = editMode ? getInputForType(node.action.id, 'Condition', fullCondition, false) : `<span class="condition-value">${escapeHtml(conditionStr.split('/')[0] || 'Is')}</span>`;
                     const inputInputHtml = editMode ? getInputForType(node.action.id, 'Input', input, false) : `<span class="condition-value">${formatLinkedValue(input)}</span>`;
                     const compareToInputHtml = editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`;
                     
@@ -962,8 +972,8 @@
                     
                     const thenEmpty = (!node.children || node.children.length === 0);
                     const elseEmpty = (!node.elseChildren || node.elseChildren.length === 0);
-                    const thenEmptyHint = thenEmpty && editMode ? '<div class="empty-section-hint">Drop actions here or click to add</div>' : '';
-                    const elseEmptyHint = elseEmpty && editMode ? '<div class="empty-section-hint">Drop actions here or click to add</div>' : '';
+                    const thenEmptyHint = thenEmpty && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
+                    const elseEmptyHint = elseEmpty && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
                     const dropZoneClass = editMode ? 'drop-zone' : '';
                     
                     block.innerHTML = `
@@ -978,23 +988,27 @@
                             ${actionsHtml}
                         </div>
                         <div class="if-then ${thenEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="if-then" data-action-id="${node.action.id}">
-                            <div class="control-section-content"></div>
+                            ${thenEmpty ? '' : '<div class="control-section-content"></div>'}
                             ${thenEmptyHint}
                         </div>
-                        <div class="if-else-divider">Else</div>
+                        <div class="if-else-divider">Otherwise</div>
                         <div class="if-else ${elseEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="if-else" data-action-id="${node.action.id}">
-                            <div class="control-section-content"></div>
+                            ${elseEmpty ? '' : '<div class="control-section-content"></div>'}
                             ${elseEmptyHint}
                         </div>
                         <div class="if-end">End</div>
                     `;
-                    const thenContainer = block.querySelector('.if-then .control-section-content');
-                    const elseContainer = block.querySelector('.if-else .control-section-content');
                     if (node.children && node.children.length > 0) {
-                        renderNodeList(node.children, thenContainer, animateIds, depth + 1);
+                        const thenContainer = block.querySelector('.if-then .control-section-content');
+                        if (thenContainer) {
+                            renderNodeList(node.children, thenContainer, animateIds, depth + 1);
+                        }
                     }
                     if (node.elseChildren && node.elseChildren.length > 0) {
-                        renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
+                        const elseContainer = block.querySelector('.if-else .control-section-content');
+                        if (elseContainer) {
+                            renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
+                        }
                     }
                     container.appendChild(block);
                 } else if (node.type === 'repeat') {
@@ -1016,7 +1030,7 @@
                     ` : '';
                     
                     const emptyBodyClass = (!node.children || node.children.length === 0) ? 'empty-section' : '';
-                    const emptyHint = (!node.children || node.children.length === 0) && editMode ? '<div class="empty-section-hint">Drop actions here or click to add</div>' : '';
+                    const emptyHint = (!node.children || node.children.length === 0) && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
                     const dropZoneClass = editMode ? 'drop-zone' : '';
                     
                     let repeatHeaderHtml = '';
@@ -1054,7 +1068,7 @@
                             ${actionsHtml}
                         </div>
                         <div class="repeat-body ${emptyBodyClass} ${dropZoneClass}" data-drop-zone="repeat" data-action-id="${node.action.id}">
-                            <div class="control-section-content"></div>
+                            ${emptyBodyClass ? '' : '<div class="control-section-content"></div>'}
                             ${emptyHint}
                         </div>
                         <div class="repeat-end">End</div>
@@ -1062,9 +1076,11 @@
                     block.draggable = editMode;
                     block.dataset.id = node.action.id;
                     block.dataset.type = node.action.action;
-                    const body = block.querySelector('.repeat-body .control-section-content');
                     if (node.children && node.children.length > 0) {
-                        renderNodeList(node.children, body, animateIds, depth + 1);
+                        const body = block.querySelector('.repeat-body .control-section-content');
+                        if (body) {
+                            renderNodeList(node.children, body, animateIds, depth + 1);
+                        }
                     }
                     container.appendChild(block);
                 } else {
@@ -1168,6 +1184,36 @@
             }
 
             const strValue = String(value);
+            const disabledAttr = readonly ? 'disabled' : '';
+            
+            // Check for !link: tokens first
+            if (strValue.trim().startsWith('!link:')) {
+                const linkLabel = strValue.replace(/^!link:/i, '').trim();
+                const displayName = humanizeOutputName(linkLabel);
+                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
+                return `<div class="linked-output" data-link-label="${escapeHtml(linkLabel)}" title="Linked from: ${escapeHtml(linkLabel)}">
+                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+                </div>`;
+            }
+            
+            // Check for variables like {{Ask Each Time}} - show as blue box
+            const variableMatch = strValue.match(/^\{\{([^}]+)\}\}$/);
+            if (variableMatch) {
+                const varName = variableMatch[1].trim();
+                // Check if it's a standard placeholder (STRING, VARIABLE, NUMBER, etc.)
+                const isStandardPlaceholder = /^(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)$/i.test(varName);
+                if (!isStandardPlaceholder) {
+                    // It's a named variable like "Ask Each Time" - show as blue box
+                    if (readonly) {
+                        return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
+                    } else {
+                        // In edit mode, show as styled input that looks like blue box
+                        const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                        return `<input type="text" class="param-value param-variable-input" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} placeholder="Enter variable">`;
+                    }
+                }
+            }
             
             // Check for placeholders like {{STRING}}, {{VARIABLE}}, {{NUMBER}}, etc.
             const placeholderMatch = strValue.match(/^\{\{(\w+)\}\}$/);
@@ -1184,19 +1230,7 @@
                 }
             }
             
-            // Check for !link: tokens
-            if (strValue.trim().startsWith('!link:')) {
-                const linkLabel = strValue.replace(/^!link:/i, '').trim();
-                const displayName = humanizeOutputName(linkLabel);
-                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
-                return `<div class="linked-output" data-link-label="${escapeHtml(linkLabel)}" title="Linked from: ${escapeHtml(linkLabel)}">
-                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
-                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
-                </div>`;
-            }
-            
             const lowerVal = strValue.toLowerCase();
-            const disabledAttr = readonly ? 'disabled' : '';
 
             // Boolean detection
             if (lowerVal === 'true' || lowerVal === 'false' || strValue === '{{BOOLEAN}}') {
@@ -1212,9 +1246,16 @@
             // Auto-detect dropdown for values with slashes (like "Is/Is Not/etc")
             if (strValue.includes('/') && strValue.split('/').length >= 2) {
                 const options = strValue.split('/').map(o => o.trim()).filter(o => o);
-                const selectedValue = options[0]; // Default to first option
+                // For Condition param, use the first option as selected (or find if it matches)
+                let selectedValue = options[0];
+                // If the stored value is one of the options, use it
+                if (options.includes(strValue.trim())) {
+                    selectedValue = strValue.trim();
+                }
                 const optionsHtml = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
-                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
+                // Store the full options string so dropdown persists
+                const fullOptionsString = options.join('/');
+                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
             }
 
             // Dropdown for options like {{option1/option2/option3}}
@@ -1260,6 +1301,12 @@
                 const linkLabel = strVal.replace(/^!link:/i, '').trim();
                 return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
             }
+            // Check for variables like {{Ask Each Time}}, {{Clipboard}}, etc.
+            const variableMatch = strVal.match(/^\{\{([^}]+)\}\}$/);
+            if (variableMatch) {
+                const varName = variableMatch[1].trim();
+                return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
+            }
             // Check if value contains !link: tokens mixed with text
             if (strVal.includes('!link:')) {
                 // Parse mixed content
@@ -1269,8 +1316,24 @@
                         const linkLabel = part.replace(/^!link:/i, '').trim();
                         return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
                     }
+                    // Also check for {{variable}} patterns in mixed content
+                    const varMatch = part.match(/\{\{([^}]+)\}\}/g);
+                    if (varMatch) {
+                        let result = part;
+                        varMatch.forEach(match => {
+                            const varName = match.replace(/\{\{|\}\}/g, '').trim();
+                            result = result.replace(match, `<span class="linked-value-inline">${escapeHtml(varName)}</span>`);
+                        });
+                        return result;
+                    }
                     return escapeHtml(part);
                 }).join('');
+            }
+            // Check for {{variable}} patterns in the string
+            if (strVal.includes('{{') && strVal.includes('}}')) {
+                return strVal.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
+                    return `<span class="linked-value-inline">${escapeHtml(varName.trim())}</span>`;
+                });
             }
             return escapeHtml(strVal);
         }
@@ -1301,11 +1364,50 @@
         function updateActionParam(actionId, paramKey, value) {
             const action = currentActions.find(a => a.id === actionId);
             if (action) {
-                action.params[paramKey] = value;
+                // For dropdowns, if we have a full options string stored, preserve it
+                if (paramKey === 'Condition' || paramKey === 'WFCondition') {
+                    const selectEl = document.querySelector(`select[data-action-id="${actionId}"][data-param="${paramKey}"], select[data-action-id="${actionId}"][data-param="Condition"]`);
+                    if (selectEl && selectEl.dataset.fullOptions) {
+                        // Keep the full options string so dropdown persists
+                        const fullOptions = selectEl.dataset.fullOptions;
+                        action.params.Condition = fullOptions;
+                        action.params.WFCondition = fullOptions;
+                    } else {
+                        // If no full options, check if value has slashes (dropdown format)
+                        if (value && value.includes('/')) {
+                            action.params[paramKey] = value;
+                            if (paramKey === 'Condition') {
+                                action.params.WFCondition = value;
+                            } else if (paramKey === 'WFCondition') {
+                                action.params.Condition = value;
+                            }
+                        } else {
+                            // Single value selected, need to find the full options string
+                            // Try to get it from the select element's options
+                            const selectEl = document.querySelector(`select[data-action-id="${actionId}"][data-param="${paramKey}"], select[data-action-id="${actionId}"][data-param="Condition"]`);
+                            if (selectEl) {
+                                const options = Array.from(selectEl.options).map(opt => opt.value);
+                                if (options.length > 1) {
+                                    const fullOptions = options.join('/');
+                                    action.params.Condition = fullOptions;
+                                    action.params.WFCondition = fullOptions;
+                                } else {
+                                    action.params[paramKey] = value;
+                                }
+                            } else {
+                                action.params[paramKey] = value;
+                            }
+                        }
+                    }
+                } else {
+                    action.params[paramKey] = value;
+                }
                 if (currentProject) {
                     currentProject.actions = currentActions;
                     saveProjects();
                 }
+                // Re-render to update UI
+                renderActions();
             }
         }
 
@@ -1350,7 +1452,65 @@
                     renderProjectsGrid();
                 }
             } else if (deleteTargetType === 'action') {
-                currentActions = currentActions.filter(a => a.id !== deleteTargetId);
+                // Recursively collect all action IDs to delete (including nested ones)
+                const idsToDelete = new Set([deleteTargetId]);
+                
+                function collectNestedActionIds(action) {
+                    if (isConditionalAction(action)) {
+                        // Collect actions from then and else arrays
+                        if (Array.isArray(action.then)) {
+                            action.then.forEach(a => {
+                                if (a && a.id) {
+                                    idsToDelete.add(a.id);
+                                    collectNestedActionIds(a);
+                                }
+                            });
+                        }
+                        if (Array.isArray(action.else)) {
+                            action.else.forEach(a => {
+                                if (a && a.id) {
+                                    idsToDelete.add(a.id);
+                                    collectNestedActionIds(a);
+                                }
+                            });
+                        }
+                    } else if (isRepeatAction(action)) {
+                        // Collect actions from do array
+                        if (Array.isArray(action.do)) {
+                            action.do.forEach(a => {
+                                if (a && a.id) {
+                                    idsToDelete.add(a.id);
+                                    collectNestedActionIds(a);
+                                }
+                            });
+                        }
+                    }
+                }
+                
+                const actionToDelete = currentActions.find(a => a.id === deleteTargetId);
+                if (actionToDelete) {
+                    collectNestedActionIds(actionToDelete);
+                }
+                
+                // Remove all collected actions
+                currentActions = currentActions.filter(a => !idsToDelete.has(a.id));
+                
+                // Also clean up nested arrays in remaining actions
+                currentActions.forEach(action => {
+                    if (isConditionalAction(action)) {
+                        if (Array.isArray(action.then)) {
+                            action.then = action.then.filter(a => a && a.id && !idsToDelete.has(a.id));
+                        }
+                        if (Array.isArray(action.else)) {
+                            action.else = action.else.filter(a => a && a.id && !idsToDelete.has(a.id));
+                        }
+                    } else if (isRepeatAction(action)) {
+                        if (Array.isArray(action.do)) {
+                            action.do = action.do.filter(a => a && a.id && !idsToDelete.has(a.id));
+                        }
+                    }
+                });
+                
                 if (currentProject) {
                     currentProject.actions = currentActions;
                     saveProjects();
@@ -1605,8 +1765,18 @@
                 const newAction = { id: Date.now(), action: data.action || template.action, title: data.action || template.action, params: data.params || {} };
                 getActionUUID(newAction);
                 
-                // Enter placement mode
-                enterPlacementMode(newAction);
+                // If no actions exist, just add it directly. Otherwise enter placement mode
+                if (currentActions.length === 0) {
+                    currentActions.push(newAction);
+                    if (currentProject) {
+                        currentProject.actions = currentActions;
+                        saveProjects();
+                    }
+                    renderActions([newAction.id]);
+                } else {
+                    // Enter placement mode
+                    enterPlacementMode(newAction);
+                }
             } catch (e) { console.error('Failed to load action template:', e); }
         }
 
@@ -1633,18 +1803,30 @@
                 placementCursor.style.left = e.clientX + 'px';
                 placementCursor.style.top = e.clientY + 'px';
                 
-                // Highlight drop zones
+                // Highlight drop zones - prioritize drop zones over action nodes
                 const container = document.getElementById('actions-container');
-                const dropZones = container.querySelectorAll('.drop-zone, .action-node');
-                dropZones.forEach(zone => {
+                const allZones = container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block');
+                let hoveredZone = null;
+                
+                allZones.forEach(zone => {
                     const rect = zone.getBoundingClientRect();
                     if (e.clientX >= rect.left && e.clientX <= rect.right &&
                         e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                        zone.classList.add('placement-hover');
-                    } else {
-                        zone.classList.remove('placement-hover');
+                        // Prioritize drop zones
+                        if (zone.classList.contains('drop-zone')) {
+                            hoveredZone = zone;
+                        } else if (!hoveredZone) {
+                            hoveredZone = zone;
+                        }
                     }
                 });
+                
+                // Remove all hover classes first
+                allZones.forEach(zone => zone.classList.remove('placement-hover'));
+                // Add hover to the topmost/prioritized zone
+                if (hoveredZone) {
+                    hoveredZone.classList.add('placement-hover');
+                }
             };
             
             document.addEventListener('mousemove', updateCursor);
@@ -1656,45 +1838,55 @@
                 e.stopPropagation();
                 
                 const container = document.getElementById('actions-container');
-                const dropZones = container.querySelectorAll('.drop-zone, .action-node');
+                const allZones = container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block');
                 let placed = false;
+                let targetZone = null;
                 
-                dropZones.forEach(zone => {
+                // Find the zone under the cursor, prioritizing drop zones
+                allZones.forEach(zone => {
                     const rect = zone.getBoundingClientRect();
                     if (e.clientX >= rect.left && e.clientX <= rect.right &&
                         e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                        placed = true;
-                        
-                        // Check if it's a drop zone (IF/REPEAT section)
                         if (zone.classList.contains('drop-zone')) {
-                            const actionId = parseInt(zone.dataset.actionId);
-                            const dropZone = zone.dataset.dropZone;
-                            const controlAction = currentActions.find(a => a.id === actionId);
-                            
-                            if (controlAction) {
-                                if (dropZone === 'if-then') {
-                                    if (!controlAction.then) controlAction.then = [];
-                                    controlAction.then.push(pendingAction);
-                                } else if (dropZone === 'if-else') {
-                                    if (!controlAction.else) controlAction.else = [];
-                                    controlAction.else.push(pendingAction);
-                                } else if (dropZone === 'repeat') {
-                                    if (!controlAction.do) controlAction.do = [];
-                                    controlAction.do.push(pendingAction);
-                                }
-                            }
-                        } else {
-                            // Place after the action node
-                            const targetId = parseInt(zone.dataset.id);
-                            const index = currentActions.findIndex(a => a.id === targetId);
-                            if (index >= 0) {
-                                currentActions.splice(index + 1, 0, pendingAction);
-                            } else {
-                                currentActions.push(pendingAction);
-                            }
+                            targetZone = zone;
+                            placed = true;
+                        } else if (!targetZone) {
+                            targetZone = zone;
+                            placed = true;
                         }
                     }
                 });
+                
+                if (targetZone && placed) {
+                    // Check if it's a drop zone (IF/REPEAT section)
+                    if (targetZone.classList.contains('drop-zone')) {
+                        const actionId = parseInt(targetZone.dataset.actionId);
+                        const dropZone = targetZone.dataset.dropZone;
+                        const controlAction = currentActions.find(a => a.id === actionId);
+                        
+                        if (controlAction) {
+                            if (dropZone === 'if-then') {
+                                if (!controlAction.then) controlAction.then = [];
+                                controlAction.then.push(pendingAction);
+                            } else if (dropZone === 'if-else') {
+                                if (!controlAction.else) controlAction.else = [];
+                                controlAction.else.push(pendingAction);
+                            } else if (dropZone === 'repeat') {
+                                if (!controlAction.do) controlAction.do = [];
+                                controlAction.do.push(pendingAction);
+                            }
+                        }
+                    } else if (targetZone.classList.contains('action-node')) {
+                        // Place after the action node
+                        const targetId = parseInt(targetZone.dataset.id);
+                        const index = currentActions.findIndex(a => a.id === targetId);
+                        if (index >= 0) {
+                            currentActions.splice(index + 1, 0, pendingAction);
+                        } else {
+                            currentActions.push(pendingAction);
+                        }
+                    }
+                }
                 
                 if (!placed) {
                     // Place at end
