@@ -367,6 +367,7 @@
         let contextMenuTarget = null;
         let tutorialStep = 0;
         let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
+        const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
 
         // ============ Init ============
         document.addEventListener('DOMContentLoaded', () => {
@@ -535,12 +536,137 @@
 
         function ensureActionUUIDs(actions = []) {
             return actions.map(a => {
+                if (!a.id) a.id = Date.now() + Math.floor(Math.random() * 100000);
                 if (!a.params) a.params = {};
                 if (!a.params.GroupingIdentifier && isControlAction(a)) {
                     a.params.GroupingIdentifier = genUUID();
                 }
+                if (Array.isArray(a.then)) a.then = ensureActionUUIDs(a.then);
+                if (Array.isArray(a.else)) a.else = ensureActionUUIDs(a.else);
+                if (Array.isArray(a.do)) a.do = ensureActionUUIDs(a.do);
                 return a;
             });
+        }
+
+        function findActionLocation(actionId, actions = currentActions, parentAction = null, parentArray = currentActions, section = 'root') {
+            if (!Array.isArray(actions)) return null;
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                if (action.id === actionId) {
+                    return { action, parentAction, parentArray, section, index: i };
+                }
+                if (isConditionalAction(action)) {
+                    const inThen = findActionLocation(actionId, action.then || [], action, action.then || [], 'then');
+                    if (inThen) return inThen;
+                    const inElse = findActionLocation(actionId, action.else || [], action, action.else || [], 'else');
+                    if (inElse) return inElse;
+                }
+                if (isRepeatAction(action)) {
+                    const inDo = findActionLocation(actionId, action.do || [], action, action.do || [], 'do');
+                    if (inDo) return inDo;
+                }
+            }
+            return null;
+        }
+
+        function actionContainsId(action, targetId) {
+            if (!action) return false;
+            const checkArray = (arr) => Array.isArray(arr) && arr.some(a => a?.id === targetId || actionContainsId(a, targetId));
+            return checkArray(action.then) || checkArray(action.else) || checkArray(action.do);
+        }
+
+        function removeActionById(actionId) {
+            const loc = findActionLocation(actionId);
+            if (!loc) return null;
+            const [removed] = loc.parentArray.splice(loc.index, 1);
+            return removed || loc.action;
+        }
+
+        function ensureSectionArray(action, sectionKey) {
+            if (!action) return null;
+            if (sectionKey === 'then') {
+                if (!Array.isArray(action.then)) action.then = [];
+                return action.then;
+            }
+            if (sectionKey === 'else') {
+                if (!Array.isArray(action.else)) action.else = [];
+                return action.else;
+            }
+            if (sectionKey === 'do') {
+                if (!Array.isArray(action.do)) action.do = [];
+                return action.do;
+            }
+            return currentActions;
+        }
+
+        function cloneActionDeep(action) {
+            const cloned = JSON.parse(JSON.stringify(action));
+            const assignIds = (act) => {
+                act.id = Date.now() + Math.floor(Math.random() * 1000);
+                if (isControlAction(act)) {
+                    if (!act.params) act.params = {};
+                    act.params.GroupingIdentifier = genUUID();
+                }
+                if (isConditionalAction(act)) {
+                    (act.then || []).forEach(assignIds);
+                    (act.else || []).forEach(assignIds);
+                }
+                if (isRepeatAction(act)) {
+                    (act.do || []).forEach(assignIds);
+                }
+            };
+            assignIds(cloned);
+            return cloned;
+        }
+
+        function resolveConditionOptions(action, rawValue) {
+            const params = action?.params || {};
+            const optionsSource =
+                params.ConditionOptions ||
+                params.WFConditionOptions ||
+                (rawValue && String(rawValue).includes('/') ? rawValue : null) ||
+                (params.Condition && String(params.Condition).includes('/') ? params.Condition : null) ||
+                (params.WFCondition && String(params.WFCondition).includes('/') ? params.WFCondition : null) ||
+                DEFAULT_CONDITION_OPTIONS;
+
+            const optionsString = String(optionsSource || DEFAULT_CONDITION_OPTIONS);
+            const options = optionsString.split('/').map(o => o.trim()).filter(o => o);
+
+            let selected =
+                params.ConditionValue ||
+                params.WFConditionValue ||
+                (!rawValue || String(rawValue).includes('/') ? null : rawValue) ||
+                (params.Condition && !String(params.Condition).includes('/') ? params.Condition : null) ||
+                (params.WFCondition && !String(params.WFCondition).includes('/') ? params.WFCondition : null);
+
+            if (!selected) selected = options[0] || 'Is';
+            if (!options.includes(selected) && options.length > 0) selected = options[0];
+
+            return { optionsString, options, selected };
+        }
+
+        function getConditionOptionsById(actionId, rawValue) {
+            const loc = findActionLocation(actionId);
+            return resolveConditionOptions(loc?.action, rawValue);
+        }
+
+        function isUnaryCondition(label = '') {
+            const val = String(label).toLowerCase();
+            return val === 'has any value' || val === 'does not have any value';
+        }
+
+        function flattenActions(actions = currentActions, result = []) {
+            if (!Array.isArray(actions)) return result;
+            actions.forEach(action => {
+                result.push(action);
+                if (isConditionalAction(action)) {
+                    flattenActions(action.then || [], result);
+                    flattenActions(action.else || [], result);
+                } else if (isRepeatAction(action)) {
+                    flattenActions(action.do || [], result);
+                }
+            });
+            return result;
         }
 
         function getActionUUID(action) {
@@ -830,6 +956,7 @@
             const tree = buildActionTree(currentActions);
             renderNodeList(tree, container, animateIds);
             initDragAndDrop();
+
         }
 
         function buildActionTree(actions) {
@@ -837,39 +964,26 @@
             const stack = [{ id: null, target: root, node: null }];
 
             actions.forEach(action => {
-                    // Check if action has nested structure (then/else/do arrays from JSON format)
+                // Nested JSON format (already has then/else/do arrays)
+                if (isConditionalAction(action) && (Array.isArray(action.then) || Array.isArray(action.else))) {
+                    const node = {
+                        type: 'if',
+                        action,
+                        children: buildActionTree(action.then || []),
+                        elseChildren: buildActionTree(action.else || [])
+                    };
+                    stack[stack.length - 1].target.push(node);
+                    return;
+                }
+
+                if (isRepeatAction(action) && Array.isArray(action.do)) {
+                    const node = { type: 'repeat', action, children: buildActionTree(action.do || []) };
+                    stack[stack.length - 1].target.push(node);
+                    return;
+                }
+
+                // Flat list format using WFControlFlowMode
                 if (isConditionalAction(action)) {
-                    // Check if action has then/else arrays (JSON format)
-                    if (Array.isArray(action.then) || Array.isArray(action.else)) {
-                        const thenActions = Array.isArray(action.then) ? action.then : [];
-                        const elseActions = Array.isArray(action.else) ? action.else : [];
-                        
-                        // Build nested action trees for then/else
-                        const buildNestedActions = (actions) => {
-                            const nested = [];
-                            actions.forEach(a => {
-                                if (a && typeof a === 'object') {
-                                    if (a.action) {
-                                        nested.push({ type: 'action', action: a });
-                                    } else if (a.params) {
-                                        nested.push({ type: 'action', action: a });
-                                    }
-                                }
-                            });
-                            return nested;
-                        };
-                        
-                        const node = { 
-                            type: 'if', 
-                            action, 
-                            children: buildNestedActions(thenActions),
-                            elseChildren: buildNestedActions(elseActions)
-                        };
-                        stack[stack.length - 1].target.push(node);
-                        return;
-                    }
-                    
-                    // Otherwise use flat list format with WFControlFlowMode
                     const mode = Number(action.params?.WFControlFlowMode ?? 0);
                     const gid = action.params?.GroupingIdentifier || getActionUUID(action);
                     if (mode === 0) {
@@ -895,35 +1009,6 @@
                 }
 
                 if (isRepeatAction(action)) {
-                    // Check if action has do array (JSON format)
-                    if (Array.isArray(action.do)) {
-                        const doActions = action.do || [];
-                        
-                        // Build nested action trees for do array
-                        const buildNestedActions = (actions) => {
-                            const nested = [];
-                            actions.forEach(a => {
-                                if (a && typeof a === 'object') {
-                                    if (a.action) {
-                                        nested.push({ type: 'action', action: a });
-                                    } else if (a.params) {
-                                        nested.push({ type: 'action', action: a });
-                                    }
-                                }
-                            });
-                            return nested;
-                        };
-                        
-                        const node = { 
-                            type: 'repeat', 
-                            action, 
-                            children: buildNestedActions(doActions)
-                        };
-                        stack[stack.length - 1].target.push(node);
-                        return;
-                    }
-                    
-                    // Otherwise use flat list format
                     const node = { type: 'repeat', action, children: [] };
                     stack[stack.length - 1].target.push(node);
                     stack.push({ id: action.params?.GroupingIdentifier || getActionUUID(action), target: node.children, node });
@@ -936,32 +1021,27 @@
             return root;
         }
 
-        function renderNodeList(nodes, container, animateIds, depth = 0) {
+        function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { parentActionId: null, parentSection: 'root' }) {
             nodes.forEach((node, index) => {
                 if (node.type === 'if') {
                     const block = document.createElement('div');
                     block.className = 'if-block';
                     block.dataset.actionId = node.action.id;
+                    block.dataset.id = node.action.id;
+                    block.dataset.parentId = parentMeta?.parentActionId || '';
+                    block.dataset.parentSection = parentMeta?.parentSection || 'root';
+                    block.draggable = editMode;
                     
                     // Get IF condition parameters
-                    let condition = node.action.params?.Condition || node.action.params?.WFCondition || 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
                     const input = node.action.params?.Input || node.action.params?.WFInput || '{{VARIABLE}}';
                     const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '{{STRING}}';
-                    
-                    // Build condition display - ensure condition is stored with full string including slashes for dropdown
-                    // If condition doesn't have slashes but should be a dropdown, use default
-                    const conditionStr = String(condition);
-                    const hasSlashes = conditionStr.includes('/');
-                    const fullCondition = hasSlashes ? conditionStr : 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
-                    // Update the action's condition to have full string if it doesn't
-                    if (!hasSlashes && editMode) {
-                        node.action.params = node.action.params || {};
-                        node.action.params.Condition = fullCondition;
-                        node.action.params.WFCondition = fullCondition;
-                    }
-                    const conditionInputHtml = editMode ? getInputForType(node.action.id, 'Condition', fullCondition, false) : `<span class="condition-value">${escapeHtml(conditionStr.split('/')[0] || 'Is')}</span>`;
+                    const conditionMeta = resolveConditionOptions(node.action, node.action.params?.Condition || node.action.params?.WFCondition || DEFAULT_CONDITION_OPTIONS);
+                    const unaryCondition = isUnaryCondition(conditionMeta.selected);
+                    const conditionInputHtml = editMode
+                        ? getInputForType(node.action.id, 'Condition', conditionMeta.optionsString, false)
+                        : `<span class="condition-value">${escapeHtml(conditionMeta.selected)}</span>`;
                     const inputInputHtml = editMode ? getInputForType(node.action.id, 'Input', input, false) : `<span class="condition-value">${formatLinkedValue(input)}</span>`;
-                    const compareToInputHtml = editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`;
+                    const compareToInputHtml = unaryCondition ? '' : (editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`);
                     
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
@@ -1001,13 +1081,13 @@
                     if (node.children && node.children.length > 0) {
                         const thenContainer = block.querySelector('.if-then .control-section-content');
                         if (thenContainer) {
-                            renderNodeList(node.children, thenContainer, animateIds, depth + 1);
+                            renderNodeList(node.children, thenContainer, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'then' });
                         }
                     }
                     if (node.elseChildren && node.elseChildren.length > 0) {
                         const elseContainer = block.querySelector('.if-else .control-section-content');
                         if (elseContainer) {
-                            renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1);
+                            renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'else' });
                         }
                     }
                     container.appendChild(block);
@@ -1015,6 +1095,10 @@
                     const block = document.createElement('div');
                     block.className = 'repeat-block';
                     block.dataset.actionId = node.action.id;
+                    block.dataset.id = node.action.id;
+                    block.dataset.parentId = parentMeta?.parentActionId || '';
+                    block.dataset.parentSection = parentMeta?.parentSection || 'root';
+                    block.draggable = editMode;
                     
                     // Get REPEAT parameters - check if it's RepeatWithEach
                     const actionName = (node.action.action || '').toLowerCase();
@@ -1079,19 +1163,19 @@
                     if (node.children && node.children.length > 0) {
                         const body = block.querySelector('.repeat-body .control-section-content');
                         if (body) {
-                            renderNodeList(node.children, body, animateIds, depth + 1);
+                            renderNodeList(node.children, body, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'do' });
                         }
                     }
                     container.appendChild(block);
                 } else {
                     const shouldAnimate = animateIds === true || (Array.isArray(animateIds) && animateIds.includes(node.action.id));
-                    const actionNode = createActionNode(node.action, index, shouldAnimate);
+                    const actionNode = createActionNode(node.action, index, shouldAnimate, parentMeta);
                     container.appendChild(actionNode);
                 }
             });
         }
 
-        function createActionNode(action, index, shouldAnimate = false) {
+        function createActionNode(action, index, shouldAnimate = false, parentMeta = { parentActionId: null, parentSection: 'root' }) {
             const node = document.createElement('div');
             node.className = 'action-node';
             if (shouldAnimate && animationsEnabled) {
@@ -1102,6 +1186,8 @@
             node.dataset.id = action.id;
             node.dataset.index = index;
             node.dataset.type = action.action;
+            node.dataset.parentId = parentMeta?.parentActionId || '';
+            node.dataset.parentSection = parentMeta?.parentSection || 'root';
 
             // Get output information
             const outputUUID = action.params?.OutputUUID || action.params?.UUID || null;
@@ -1170,6 +1256,13 @@
         function getInputForType(actionId, key, value, readonly = false) {
             if (String(key).toLowerCase() === 'uuid') {
                 return '';
+            }
+            if (key === 'Condition' || key === 'WFCondition') {
+                const { optionsString, options, selected } = getConditionOptionsById(actionId, value);
+                const selectedValue = options.includes(selected) ? selected : (options[0] || selected);
+                const optionsHtml = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
+                const fullOptionsString = optionsString || DEFAULT_CONDITION_OPTIONS;
+                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
             }
             const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
             if (isObjectVal) {
@@ -1362,53 +1455,29 @@
         }
 
         function updateActionParam(actionId, paramKey, value) {
-            const action = currentActions.find(a => a.id === actionId);
-            if (action) {
-                // For dropdowns, if we have a full options string stored, preserve it
-                if (paramKey === 'Condition' || paramKey === 'WFCondition') {
-                    const selectEl = document.querySelector(`select[data-action-id="${actionId}"][data-param="${paramKey}"], select[data-action-id="${actionId}"][data-param="Condition"]`);
-                    if (selectEl && selectEl.dataset.fullOptions) {
-                        // Keep the full options string so dropdown persists
-                        const fullOptions = selectEl.dataset.fullOptions;
-                        action.params.Condition = fullOptions;
-                        action.params.WFCondition = fullOptions;
-                    } else {
-                        // If no full options, check if value has slashes (dropdown format)
-                        if (value && value.includes('/')) {
-                            action.params[paramKey] = value;
-                            if (paramKey === 'Condition') {
-                                action.params.WFCondition = value;
-                            } else if (paramKey === 'WFCondition') {
-                                action.params.Condition = value;
-                            }
-                        } else {
-                            // Single value selected, need to find the full options string
-                            // Try to get it from the select element's options
-                            const selectEl = document.querySelector(`select[data-action-id="${actionId}"][data-param="${paramKey}"], select[data-action-id="${actionId}"][data-param="Condition"]`);
-                            if (selectEl) {
-                                const options = Array.from(selectEl.options).map(opt => opt.value);
-                                if (options.length > 1) {
-                                    const fullOptions = options.join('/');
-                                    action.params.Condition = fullOptions;
-                                    action.params.WFCondition = fullOptions;
-                                } else {
-                                    action.params[paramKey] = value;
-                                }
-                            } else {
-                                action.params[paramKey] = value;
-                            }
-                        }
-                    }
-                } else {
-                    action.params[paramKey] = value;
-                }
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
-                }
-                // Re-render to update UI
-                renderActions();
+            const loc = findActionLocation(actionId);
+            const action = loc?.action;
+            if (!action) return;
+            if (!action.params) action.params = {};
+
+            if (paramKey === 'Condition' || paramKey === 'WFCondition') {
+                const selectEl = document.querySelector(`select[data-action-id="${actionId}"][data-param="${paramKey}"], select[data-action-id="${actionId}"][data-param="Condition"]`);
+                const fullOptions = selectEl?.dataset.fullOptions || action.params.ConditionOptions || action.params.WFConditionOptions || DEFAULT_CONDITION_OPTIONS;
+                action.params.ConditionOptions = fullOptions;
+                action.params.WFConditionOptions = fullOptions;
+                action.params.ConditionValue = value;
+                action.params.WFConditionValue = value;
+                action.params.Condition = value;
+                action.params.WFCondition = value;
+            } else {
+                action.params[paramKey] = value;
             }
+
+            if (currentProject) {
+                currentProject.actions = currentActions;
+                saveProjects();
+            }
+            renderActions();
         }
 
         let deleteTargetId = null;
@@ -1487,29 +1556,33 @@
                     }
                 }
                 
-                const actionToDelete = currentActions.find(a => a.id === deleteTargetId);
-                if (actionToDelete) {
-                    collectNestedActionIds(actionToDelete);
+                const actionInfo = findActionLocation(deleteTargetId);
+                if (actionInfo?.action) {
+                    collectNestedActionIds(actionInfo.action);
                 }
                 
-                // Remove all collected actions
-                currentActions = currentActions.filter(a => !idsToDelete.has(a.id));
+                // Remove the selected action (and its nested children) from wherever it lives
+                removeActionById(deleteTargetId);
                 
-                // Also clean up nested arrays in remaining actions
-                currentActions.forEach(action => {
-                    if (isConditionalAction(action)) {
-                        if (Array.isArray(action.then)) {
-                            action.then = action.then.filter(a => a && a.id && !idsToDelete.has(a.id));
+                // Clean up any stray nested references with matching IDs
+                const pruneNestedArrays = (arr) => {
+                    if (!Array.isArray(arr)) return;
+                    for (let i = arr.length - 1; i >= 0; i--) {
+                        const act = arr[i];
+                        if (!act) continue;
+                        if (idsToDelete.has(act.id)) {
+                            arr.splice(i, 1);
+                            continue;
                         }
-                        if (Array.isArray(action.else)) {
-                            action.else = action.else.filter(a => a && a.id && !idsToDelete.has(a.id));
-                        }
-                    } else if (isRepeatAction(action)) {
-                        if (Array.isArray(action.do)) {
-                            action.do = action.do.filter(a => a && a.id && !idsToDelete.has(a.id));
+                        if (isConditionalAction(act)) {
+                            pruneNestedArrays(act.then);
+                            pruneNestedArrays(act.else);
+                        } else if (isRepeatAction(act)) {
+                            pruneNestedArrays(act.do);
                         }
                     }
-                });
+                };
+                pruneNestedArrays(currentActions);
                 
                 if (currentProject) {
                     currentProject.actions = currentActions;
@@ -1525,139 +1598,253 @@
         }
 
         function duplicateAction(actionId) {
-            const action = currentActions.find(a => a.id === actionId);
-            if (action) {
-                const newAction = { ...action, id: Date.now(), params: { ...action.params } };
-                const index = currentActions.findIndex(a => a.id === actionId);
-                currentActions.splice(index + 1, 0, newAction);
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
-                }
-                renderActions([newAction.id]);
+            const loc = findActionLocation(actionId);
+            if (!loc) return;
+            const newAction = cloneActionDeep(loc.action);
+            loc.parentArray.splice(loc.index + 1, 0, newAction);
+            commitActionChanges([newAction.id]);
+        }
+
+        function commitActionChanges(animateIds = null) {
+            if (currentProject) {
+                currentProject.actions = currentActions;
+                saveProjects();
             }
+            renderActions(animateIds);
         }
 
         // ============ Drag and Drop ============
+        function insertActionIntoZone(controlAction, sectionKey, movedAction, zoneEl, clientY) {
+            if (!controlAction || !movedAction) return;
+            const targetArray = ensureSectionArray(controlAction, sectionKey);
+            if (!targetArray) return;
+
+            // Determine insertion index based on cursor position vs visible children
+            let insertIndex = targetArray.length;
+            const childNodes = Array.from(zoneEl.querySelectorAll('.action-node, .if-block, .repeat-block'))
+                .filter(n => n.dataset.id && !n.classList.contains('dragging'));
+            for (const child of childNodes) {
+                const childId = parseInt(child.dataset.id);
+                if (!Number.isFinite(childId)) continue;
+                const midY = child.getBoundingClientRect().top + child.getBoundingClientRect().height / 2;
+                if (clientY < midY) {
+                    const idx = targetArray.findIndex(a => a.id === childId);
+                    if (idx !== -1) {
+                        insertIndex = idx;
+                        break;
+                    }
+                }
+            }
+            targetArray.splice(insertIndex, 0, movedAction);
+        }
+
+        function insertIntoRootByPosition(moved, clientY) {
+            let targetIndex = currentActions.length;
+            const container = document.getElementById('actions-container');
+            if (container) {
+                const rootNodes = Array.from(container.querySelectorAll('.action-node, .if-block, .repeat-block')).filter(n => !n.dataset.parentId && n.dataset.id);
+                for (let i = 0; i < rootNodes.length; i++) {
+                    const rect = rootNodes[i].getBoundingClientRect();
+                    if (clientY < rect.top + rect.height / 2) {
+                        const targetId = parseInt(rootNodes[i].dataset.actionId || rootNodes[i].dataset.id);
+                        const loc = findActionLocation(targetId);
+                        if (loc && loc.parentArray === currentActions) {
+                            targetIndex = loc.index;
+                            break;
+                        }
+                    }
+                }
+            }
+            currentActions.splice(targetIndex, 0, moved);
+        }
+
+        function moveActionToTarget(sourceInfo, targetInfo, placeBefore = false) {
+            if (!sourceInfo || !targetInfo) return;
+            const moved = removeActionById(sourceInfo.action.id);
+            if (!moved) return;
+
+            let insertIndex = placeBefore ? targetInfo.index : targetInfo.index + 1;
+            if (sourceInfo.parentArray === targetInfo.parentArray && sourceInfo.index < targetInfo.index) {
+                insertIndex -= 1;
+            }
+
+            targetInfo.parentArray.splice(insertIndex, 0, moved);
+            commitActionChanges([moved.id]);
+        }
+
         function initDragAndDrop() {
             const container = document.getElementById('actions-container');
-            let draggedEl = null;
-            let draggedActionId = null;
+            if (!container) return;
+            let draggedInfo = null;
 
-            // Handle action nodes and repeat blocks
-            const nodes = container.querySelectorAll('.action-node, .repeat-block');
-            nodes.forEach(node => {
+            const draggableNodes = container.querySelectorAll('[draggable="true"]');
+
+            // Add global dragover handler for responsive visual feedback
+            let dragOverHandler = null;
+            draggableNodes.forEach(node => {
                 node.addEventListener('dragstart', (e) => {
-                    draggedEl = node;
-                    draggedActionId = parseInt(node.dataset.id);
+                    const actionId = parseInt(node.dataset.actionId || node.dataset.id);
+                    const info = findActionLocation(actionId);
+                    if (!info) {
+                        e.preventDefault();
+                        return;
+                    }
+                    draggedInfo = info;
                     node.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', ''); // Required for Firefox
                     
-                    // Also enable drop zones
                     container.querySelectorAll('.drop-zone').forEach(zone => {
                         zone.classList.add('drop-zone-active');
                     });
+
+                    // Set up global dragover handler for responsive visual feedback
+                    dragOverHandler = (e) => {
+                        if (!draggedInfo) return;
+                        // Clear all previous visual feedback
+                        container.querySelectorAll('.action-node, .if-block, .repeat-block').forEach(n => {
+                            n.classList.remove('drag-over-before', 'drag-over-after');
+                        });
+                        container.querySelectorAll('.drop-zone').forEach(z => {
+                            z.classList.remove('drop-zone-hover');
+                        });
+
+                        // Find the element under the cursor
+                        const elements = document.elementsFromPoint(e.clientX, e.clientY);
+                        for (const element of elements) {
+                            if (element.classList.contains('action-node') || element.classList.contains('if-block') || element.classList.contains('repeat-block')) {
+                                if (element.draggable) {
+                                    const rect = element.getBoundingClientRect();
+                                    const before = e.clientY < rect.top + rect.height / 2;
+                                    element.classList.toggle('drag-over-before', before);
+                                    element.classList.toggle('drag-over-after', !before);
+                                }
+                                break; // Only handle the topmost draggable element
+                            } else if (element.classList.contains('drop-zone')) {
+                                element.classList.add('drop-zone-hover');
+                                break; // Only handle the topmost drop zone
+                            }
+                        }
+                    };
+                    document.addEventListener('dragover', dragOverHandler);
                 });
                 
                 node.addEventListener('dragend', () => {
-                    if (draggedEl) {
-                        draggedEl.classList.remove('dragging');
-                        draggedEl = null;
-                        draggedActionId = null;
-                    }
+                    node.classList.remove('dragging');
+                    draggedInfo = null;
                     container.querySelectorAll('.drop-zone').forEach(zone => {
                         zone.classList.remove('drop-zone-active', 'drop-zone-hover');
                     });
+                    container.querySelectorAll('.action-node, .repeat-block, .if-block').forEach(n => n.classList.remove('drag-over-before', 'drag-over-after'));
+
+                    // Remove global dragover handler
+                    if (dragOverHandler) {
+                        document.removeEventListener('dragover', dragOverHandler);
+                        dragOverHandler = null;
+                    }
                 });
                 
+                // Visual feedback now handled globally
                 node.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    if (!draggedEl || draggedEl === node) return;
-                    const rect = node.getBoundingClientRect();
-                    const midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) container.insertBefore(draggedEl, node);
-                    else container.insertBefore(draggedEl, node.nextSibling);
+                });
+
+                node.addEventListener('dragleave', () => {
+                    // Cleanup handled globally
                 });
                 
                 node.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    updateActionsOrder();
+                    node.classList.remove('drag-over-before', 'drag-over-after');
+                    if (!draggedInfo) return;
+                    const targetId = parseInt(node.dataset.actionId || node.dataset.id);
+                    const targetInfo = findActionLocation(targetId);
+                    if (!targetInfo || draggedInfo.action.id === targetId) return;
+                    if (actionContainsId(draggedInfo.action, targetId)) return;
+                    const before = e.clientY < node.getBoundingClientRect().top + node.getBoundingClientRect().height / 2;
+                    moveActionToTarget(draggedInfo, targetInfo, before);
                 });
             });
 
-            // Handle drop zones (IF/REPEAT sections) - use setTimeout to ensure DOM is ready
-            setTimeout(() => {
-                container.querySelectorAll('.drop-zone').forEach(zone => {
-                    zone.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (draggedEl && draggedActionId) {
-                            zone.classList.add('drop-zone-hover');
-                        }
-                    });
-                    
-                    zone.addEventListener('dragleave', (e) => {
-                        e.preventDefault();
-                        zone.classList.remove('drop-zone-hover');
-                    });
-                    
-                    zone.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        zone.classList.remove('drop-zone-hover', 'drop-zone-active');
-                        
-                        if (draggedEl && draggedActionId) {
-                            const actionId = parseInt(zone.dataset.actionId);
-                            const dropZone = zone.dataset.dropZone; // 'if-then', 'if-else', 'repeat'
-                            
-                            // Find the action being dragged
-                            const draggedAction = currentActions.find(a => a.id === draggedActionId);
-                            if (!draggedAction) return;
-                            
-                            // Find the control action (IF/REPEAT)
-                            const controlAction = currentActions.find(a => a.id === actionId);
-                            if (!controlAction) return;
-                            
-                            // Remove from current position
-                            currentActions = currentActions.filter(a => a.id !== draggedActionId);
-                            
-                            // Add to appropriate section
-                            if (dropZone === 'if-then') {
-                                if (!controlAction.then) controlAction.then = [];
-                                controlAction.then.push(draggedAction);
-                            } else if (dropZone === 'if-else') {
-                                if (!controlAction.else) controlAction.else = [];
-                                controlAction.else.push(draggedAction);
-                            } else if (dropZone === 'repeat') {
-                                if (!controlAction.do) controlAction.do = [];
-                                controlAction.do.push(draggedAction);
-                            }
-                            
-                            if (currentProject) {
-                                currentProject.actions = currentActions;
-                                saveProjects();
-                            }
-                            
-                            renderActions();
-                        }
-                    });
+            container.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (draggedInfo) {
+                        zone.classList.add('drop-zone-hover');
+                    }
                 });
-            }, 100);
-        }
+                
+                zone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drop-zone-hover');
+                });
+                
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drop-zone-hover', 'drop-zone-active');
+                    
+                    if (!draggedInfo) return;
+                    const dropZone = zone.dataset.dropZone; // 'if-then', 'if-else', 'repeat', 'root'
+                    if (dropZone === 'root') {
+                        const moved = removeActionById(draggedInfo.action.id);
+                        if (!moved) return;
+                        insertIntoRootByPosition(moved, e.clientY);
+                        commitActionChanges([moved.id]);
+                        return;
+                    }
+                    const actionId = parseInt(zone.dataset.actionId);
+                    const controlInfo = findActionLocation(actionId);
+                    if (!controlInfo) return;
+                    if (draggedInfo.action.id === actionId || actionContainsId(draggedInfo.action, actionId)) return;
 
-        function updateActionsOrder() {
-            const container = document.getElementById('actions-container');
-            const nodes = container.querySelectorAll('.action-node');
-            const newOrder = [];
-            nodes.forEach(node => {
-                const id = parseInt(node.dataset.id);
-                const action = currentActions.find(a => a.id === id);
-                if (action) newOrder.push(action);
+                    const moved = removeActionById(draggedInfo.action.id);
+                    if (!moved) return;
+                    const sectionKey = dropZone === 'if-then' ? 'then' : dropZone === 'if-else' ? 'else' : 'do';
+                    insertActionIntoZone(controlInfo.action, sectionKey, moved, zone, e.clientY);
+                    commitActionChanges([moved.id]);
+                });
             });
-            currentActions = newOrder;
-            if (currentProject) { currentProject.actions = currentActions; saveProjects(); }
-            renderActions();
+
+            // Allow dropping directly on the canvas to move to the root list
+            container.ondragover = (e) => {
+                e.preventDefault();
+            };
+            container.ondrop = (e) => {
+                if (!draggedInfo) return;
+                e.preventDefault();
+
+                const moved = removeActionById(draggedInfo.action.id);
+                if (!moved) return;
+                insertIntoRootByPosition(moved, e.clientY);
+                commitActionChanges([moved.id]);
+            };
+
+            // Add drop handler for actions-container to allow moving actions out of nested blocks
+            const actionsContainer = document.getElementById('actions-container');
+            if (actionsContainer) {
+                actionsContainer.addEventListener('dragover', (e) => {
+                    // Only handle if not over other elements
+                    if (e.target === actionsContainer || e.target === e.currentTarget) {
+                        e.preventDefault();
+                        if (draggedInfo) {
+                            e.dataTransfer.dropEffect = 'move';
+                        }
+                    }
+                });
+
+                actionsContainer.addEventListener('drop', (e) => {
+                    // Only handle if not over other elements
+                    if (e.target === actionsContainer || e.target === e.currentTarget) {
+                        e.preventDefault();
+                        if (!draggedInfo) return;
+
+                        const moved = removeActionById(draggedInfo.action.id);
+                        if (!moved) return;
+                        insertIntoRootByPosition(moved, e.clientY);
+                        commitActionChanges([moved.id]);
+                    }
+                });
+            }
         }
 
         // ============ Menus ============
@@ -1730,6 +1917,9 @@
         let placementMode = false;
         let pendingAction = null;
         let placementCursor = null;
+        let placementMoveHandler = null;
+        let placementClickHandler = null;
+        let placementKeyHandler = null;
 
         async function addActionDirectly(template) {
             closeForceActionModal();
@@ -1768,11 +1958,7 @@
                 // If no actions exist, just add it directly. Otherwise enter placement mode
                 if (currentActions.length === 0) {
                     currentActions.push(newAction);
-                    if (currentProject) {
-                        currentProject.actions = currentActions;
-                        saveProjects();
-                    }
-                    renderActions([newAction.id]);
+                    commitActionChanges([newAction.id]);
                 } else {
                     // Enter placement mode
                     enterPlacementMode(newAction);
@@ -1798,14 +1984,17 @@
             document.body.appendChild(placementCursor);
             
             // Update cursor position on mouse move
-            const updateCursor = (e) => {
+            placementMoveHandler = (e) => {
                 if (!placementMode) return;
                 placementCursor.style.left = e.clientX + 'px';
                 placementCursor.style.top = e.clientY + 'px';
                 
                 // Highlight drop zones - prioritize drop zones over action nodes
-                const container = document.getElementById('actions-container');
-                const allZones = container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block');
+            const container = document.getElementById('actions-container');
+            let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, #actions-container, .root-drop-zone'));
+            // Also include the preview canvas as a fallback
+            const previewCanvas = document.getElementById('preview-canvas');
+            if (previewCanvas) allZones.push(previewCanvas);
                 let hoveredZone = null;
                 
                 allZones.forEach(zone => {
@@ -1829,16 +2018,18 @@
                 }
             };
             
-            document.addEventListener('mousemove', updateCursor);
+            document.addEventListener('mousemove', placementMoveHandler);
             
-            // Handle click to place
-            const placeAction = (e) => {
+            // Handle click to place (use single click listener to avoid double fire)
+            placementClickHandler = (e) => {
                 if (!placementMode) return;
-                e.preventDefault();
-                e.stopPropagation();
+                if (e.button !== 0) return;
                 
                 const container = document.getElementById('actions-container');
-                const allZones = container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block');
+                let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, #actions-container'));
+                // Also include the preview canvas as a fallback
+                const previewCanvas = document.getElementById('preview-canvas');
+                if (previewCanvas) allZones.push(previewCanvas);
                 let placed = false;
                 let targetZone = null;
                 
@@ -1857,57 +2048,52 @@
                     }
                 });
                 
-                if (targetZone && placed) {
-                    // Check if it's a drop zone (IF/REPEAT section)
+                if (targetZone) {
                     if (targetZone.classList.contains('drop-zone')) {
                         const actionId = parseInt(targetZone.dataset.actionId);
                         const dropZone = targetZone.dataset.dropZone;
-                        const controlAction = currentActions.find(a => a.id === actionId);
-                        
-                        if (controlAction) {
-                            if (dropZone === 'if-then') {
-                                if (!controlAction.then) controlAction.then = [];
-                                controlAction.then.push(pendingAction);
-                            } else if (dropZone === 'if-else') {
-                                if (!controlAction.else) controlAction.else = [];
-                                controlAction.else.push(pendingAction);
-                            } else if (dropZone === 'repeat') {
-                                if (!controlAction.do) controlAction.do = [];
-                                controlAction.do.push(pendingAction);
-                            }
+                        const controlInfo = findActionLocation(actionId);
+                        if (controlInfo?.action) {
+                            const sectionKey = dropZone === 'if-then' ? 'then' : dropZone === 'if-else' ? 'else' : 'do';
+                            insertActionIntoZone(controlInfo.action, sectionKey, pendingAction, targetZone, e.clientY);
+                            placed = true;
                         }
-                    } else if (targetZone.classList.contains('action-node')) {
-                        // Place after the action node
-                        const targetId = parseInt(targetZone.dataset.id);
-                        const index = currentActions.findIndex(a => a.id === targetId);
-                        if (index >= 0) {
-                            currentActions.splice(index + 1, 0, pendingAction);
-                        } else {
-                            currentActions.push(pendingAction);
+                    } else if (targetZone.classList.contains('action-node') || targetZone.classList.contains('if-block') || targetZone.classList.contains('repeat-block')) {
+                        // Place after the action node within same parent
+                        const targetId = parseInt(targetZone.dataset.id || targetZone.dataset.actionId);
+                        const targetInfo = findActionLocation(targetId);
+                        if (targetInfo) {
+                            const insertIndex = targetInfo.index + 1;
+                            targetInfo.parentArray.splice(insertIndex, 0, pendingAction);
+                            placed = true;
                         }
+                    } else if (targetZone.id === 'actions-container' || targetZone.classList.contains('root-drop-zone')) {
+                        insertIntoRootByPosition(pendingAction, e.clientY);
+                        placed = true;
+                    } else if (targetZone.id === 'preview-canvas') {
+                        // Place at end when clicking on empty canvas area
+                        currentActions.push(pendingAction);
+                        placed = true;
                     }
                 }
                 
                 if (!placed) {
-                    // Place at end
+                    // Place at end if no specific zone was detected
                     currentActions.push(pendingAction);
                 }
                 
                 // Clean up
                 exitPlacementMode();
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
-                }
-                renderActions([pendingAction.id]);
+                commitActionChanges([pendingAction.id]);
             };
             
-            document.addEventListener('click', placeAction, { once: true });
-            document.addEventListener('keydown', (e) => {
+            document.addEventListener('click', placementClickHandler);
+            placementKeyHandler = (e) => {
                 if (e.key === 'Escape') {
                     exitPlacementMode();
                 }
-            }, { once: true });
+            };
+            document.addEventListener('keydown', placementKeyHandler, { once: true });
         }
 
         function exitPlacementMode() {
@@ -1916,6 +2102,18 @@
             if (placementCursor) {
                 placementCursor.remove();
                 placementCursor = null;
+            }
+            if (placementMoveHandler) {
+                document.removeEventListener('mousemove', placementMoveHandler);
+                placementMoveHandler = null;
+            }
+            if (placementClickHandler) {
+                document.removeEventListener('click', placementClickHandler, true);
+                placementClickHandler = null;
+            }
+            if (placementKeyHandler) {
+                document.removeEventListener('keydown', placementKeyHandler);
+                placementKeyHandler = null;
             }
             document.getElementById('actions-container')?.querySelectorAll('.placement-hover').forEach(el => {
                 el.classList.remove('placement-hover');
@@ -2187,8 +2385,9 @@
 
             // Add linkable actions (outputs from previous actions in order)
             const currentActionId = parseInt(inputEl.dataset.actionId);
-            const currentIndex = currentActions.findIndex(a => a.id === currentActionId);
-            const previousActions = currentIndex > 0 ? currentActions.slice(0, currentIndex) : [];
+            const flatActions = flattenActions();
+            const currentIndex = flatActions.findIndex(a => a.id === currentActionId);
+            const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
             if (previousActions.length > 0) {
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-header">Link to Action</div>';
@@ -2250,8 +2449,10 @@
         }
 
         function linkActionParam(targetId, paramKey, sourceId, sourceUuid, sourceLabel) {
-            const target = currentActions.find(a => a.id === targetId);
-            const source = currentActions.find(a => a.id === sourceId);
+            const targetInfo = findActionLocation(targetId);
+            const sourceInfo = findActionLocation(sourceId);
+            const target = targetInfo?.action;
+            const source = sourceInfo?.action;
             if (!target || !source) return;
 
             // Ensure source has an output UUID
@@ -2282,7 +2483,7 @@
         }
 
         function clearLinkedParam(actionId, paramKey) {
-            const action = currentActions.find(a => a.id === actionId);
+            const action = findActionLocation(actionId)?.action;
             if (!action) return;
             delete action.params[paramKey];
             if (currentProject) {

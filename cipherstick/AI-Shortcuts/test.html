@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JSON to PLIST Converter</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 100%; height: 180px; font-family: monospace; font-size: 14px; }
+    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; cursor: pointer; }
+    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<h2>JSON → PLIST Converter</h2>
+
+<textarea id="jsonInput" placeholder="Paste JSON here...">{ "hello": "world", "number": 119, "nested": { "foo": "bar" } }</textarea>
+
+<br>
+<button onclick="convert()">Convert to PLIST</button>
+
+<h3>PLIST Output:</h3>
+<pre id="plistOutput"></pre>
+
+<script>
+function convert() {
+    let jsonText = document.getElementById("jsonInput").value.trim();
+    let obj;
+
+    try {
+        obj = JSON.parse(jsonText);
+    } catch (e) {
+        document.getElementById("plistOutput").textContent = "Invalid JSON: " + e;
+        return;
+    }
+
+    function toPlistValue(value) {
+        if (value === null) return "<string></string>";
+
+        let type = typeof value;
+
+        if (type === "string") {
+            return `<string>${escapeXml(value)}</string>`;
+        }
+
+        if (type === "number") {
+            return Number.isInteger(value)
+                ? `<integer>${value}</integer>`
+                : `<real>${value}</real>`;
+        }
+
+        if (type === "boolean") {
+            return value ? "<true/>" : "<false/>";
+        }
+
+        if (Array.isArray(value)) {
+            return (
+                "<array>\n" +
+                value.map(v => toPlistValue(v)).join("\n") +
+                "\n</array>"
+            );
+        }
+
+        if (type === "object") {
+            return (
+                "<dict>\n" +
+                Object.keys(value)
+                    .map(
+                        key =>
+                            `<key>${escapeXml(key)}</key>\n${toPlistValue(value[key])}`
+                    )
+                    .join("\n") +
+                "\n</dict>"
+            );
+        }
+
+        return `<string>${escapeXml(String(value))}</string>`;
+    }
+
+    function escapeXml(str) {
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    let plist =
+        `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" ` +
+        `"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n` +
+        `<plist version="1.0">\n` +
+        toPlistValue(obj) +
+        `\n</plist>`;
+
+    document.getElementById("plistOutput").textContent = plist;
+}
+</script>
+
+</body>
+</html>
