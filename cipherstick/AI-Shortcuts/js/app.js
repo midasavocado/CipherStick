@@ -1,7 +1,7 @@
 // ============ Configuration ============
         const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
         const IS_PRO_USER = false; // Set to true for pro users
-        const APP_VERSION = '2025-12-14-1';
+        const APP_VERSION = '2025-12-14-4';
         console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
 	        // ============ State ============
@@ -928,6 +928,8 @@
 
 	        const ACTION_LABEL_OVERRIDES = new Map([
 	            ['getcurrentapp', 'Get Current App'],
+	            ['getfoldercontents', 'Get Folder Contents'],
+	            ['file.getfoldercontents', 'Get Folder Contents'],
 	            ['returntohomescreen', 'Return to Home Screen'],
 	            ['waittoreturn', 'Wait to Return'],
 	            ['savetocameraroll', 'Save to Camera Roll'],
@@ -978,6 +980,7 @@
 	            'priority', 'qrcode', 'qr', 'roll', 'screen', 'setting', 'settings', 'shortcuts', 'sound', 'spell', 'store',
 	            'string', 'text', 'timer', 'to', 'transcribe', 'url', 'variable', 'video', 'volume', 'weather', 'web',
 	            'website', 'with', 'zip',
+	            'content', 'contents',
 	        ];
 
 	        const COMMON_WORDS_SORTED = Object.freeze(
@@ -1026,7 +1029,17 @@
 	                while (j < s.length) {
 	                    const rest = s.slice(j);
 	                    const nextIsWord = COMMON_WORDS_SORTED.some((w) => w.length > 1 && rest.startsWith(w));
-	                    if (nextIsWord) break;
+	                    // Avoid splitting "contents" into "c" + "on" + "tents" style junk:
+	                    // if we'd create a single-letter chunk only to match a connector, keep extending.
+	                    if (nextIsWord) {
+	                        const nextWord = COMMON_WORDS_SORTED.find((w) => w.length > 1 && rest.startsWith(w)) || '';
+	                        const chunkLen = j - i;
+	                        if (chunkLen <= 1 && ['on', 'in', 'or', 'to', 'of', 'and', 'for', 'from', 'with'].includes(nextWord)) {
+	                            // keep extending
+	                        } else {
+	                            break;
+	                        }
+	                    }
 	                    j++;
 	                    if (j - i >= 8) break;
 	                }
@@ -1406,6 +1419,7 @@
                         if (!line.trim() || !line.trim().startsWith('{')) continue;
                         try {
                             const packet = JSON.parse(line);
+                            console.log('[AI stream]', packet);
                             handleStreamPacket(packet);
                             if (packet.type === 'final' || packet.type === 'error') {
                                 finalData = packet;
