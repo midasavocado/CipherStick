@@ -1,6 +1,8 @@
 // ============ Configuration ============
         const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
         const IS_PRO_USER = false; // Set to true for pro users
+        const APP_VERSION = '2025-12-14-1';
+        console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
 	        // ============ State ============
 	        let currentProject = null;
@@ -924,6 +926,171 @@
 	                .replace(/[^a-z0-9.]+/g, '');
 	        }
 
+	        const ACTION_LABEL_OVERRIDES = new Map([
+	            ['getcurrentapp', 'Get Current App'],
+	            ['returntohomescreen', 'Return to Home Screen'],
+	            ['waittoreturn', 'Wait to Return'],
+	            ['savetocameraroll', 'Save to Camera Roll'],
+	            ['selectemailadresses', 'Select Email Addresses'],
+	            ['runjavascriptonwebpage', 'Run JavaScript on Web Page'],
+	            ['generateqrcodefromtext', 'Generate QR Code'],
+	        ]);
+
+	        const ACTION_LABEL_DROP_PREFIX = new Set([
+	            'file',
+	            'calendar',
+	            'weather',
+	            'data',
+	            'text',
+	            'list',
+	            'number',
+	            'math',
+	            'url',
+	            'variable',
+	            'clipboard',
+	            'message',
+	            'image',
+	            'device',
+	            'dnd',
+	            'shortcutsactions',
+	            'com',
+	        ]);
+
+	        const ACTION_LABEL_ACRONYMS = new Set([
+	            'url', 'qr', 'gif', 'llm', 'ai', 'api', 'json', 'pdf', 'gps', 'sms', 'ios',
+	        ]);
+
+	        const COMMON_ACTION_WORDS = [
+	            // verbs
+	            'add', 'append', 'ask', 'build', 'calculate', 'change', 'check', 'choose', 'clear', 'close', 'combine',
+	            'compress', 'convert', 'copy', 'count', 'create', 'delete', 'describe', 'detect', 'dismiss', 'download',
+	            'edit', 'encode', 'expand', 'extract', 'filter', 'find', 'format', 'generate', 'get', 'hash', 'import',
+	            'insert', 'list', 'lock', 'make', 'open', 'pause', 'play', 'prompt', 'random', 'remove', 'rename', 'repeat',
+	            'return', 'round', 'run', 'save', 'scan', 'select', 'send', 'set', 'show', 'speak', 'start', 'stop',
+	            'take', 'text', 'toggle', 'transcribe', 'translate', 'turn', 'update', 'wait',
+	            // nouns / common targets
+	            'action', 'activity', 'address', 'addresses', 'adresses', 'alarm', 'app', 'audio', 'background', 'barcode',
+	            'bill', 'bookmark', 'camera', 'calendar', 'case', 'center', 'comment', 'conditions', 'contact', 'contacts',
+	            'control', 'current', 'data', 'definition', 'details', 'document', 'each', 'email', 'event', 'expression',
+	            'file', 'files', 'flip', 'focus', 'folder', 'forecast', 'frame', 'from', 'gif', 'hash', 'home', 'image',
+	            'in', 'input', 'item', 'items', 'javascript', 'key', 'list', 'message', 'month', 'new', 'notification',
+	            'number', 'numbers', 'of', 'on', 'orientation', 'or', 'output', 'page', 'phone', 'phonenumber', 'photo',
+	            'priority', 'qrcode', 'qr', 'roll', 'screen', 'setting', 'settings', 'shortcuts', 'sound', 'spell', 'store',
+	            'string', 'text', 'timer', 'to', 'transcribe', 'url', 'variable', 'video', 'volume', 'weather', 'web',
+	            'website', 'with', 'zip',
+	        ];
+
+	        const COMMON_WORDS_SORTED = Object.freeze(
+	            [...new Set(COMMON_ACTION_WORDS)]
+	                .map((w) => String(w).toLowerCase().trim())
+	                .filter(Boolean)
+	                .sort((a, b) => b.length - a.length)
+	        );
+
+	        function splitLowerIdentifierIntoWords(lower) {
+	            const s = String(lower || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+	            if (!s) return [];
+
+	            const words = [];
+	            let matchedChars = 0;
+	            let i = 0;
+	            while (i < s.length) {
+	                // digits chunk
+	                if (/\d/.test(s[i])) {
+	                    let j = i + 1;
+	                    while (j < s.length && /\d/.test(s[j])) j++;
+	                    words.push(s.slice(i, j));
+	                    matchedChars += (j - i);
+	                    i = j;
+	                    continue;
+	                }
+
+	                let match = '';
+	                for (const w of COMMON_WORDS_SORTED) {
+	                    if (w.length <= 1) continue;
+	                    if (s.startsWith(w, i)) {
+	                        match = w;
+	                        break;
+	                    }
+	                }
+
+	                if (match) {
+	                    words.push(match);
+	                    matchedChars += match.length;
+	                    i += match.length;
+	                    continue;
+	                }
+
+	                // Unknown chunk: advance until we can match a word again.
+	                let j = i + 1;
+	                while (j < s.length) {
+	                    const rest = s.slice(j);
+	                    const nextIsWord = COMMON_WORDS_SORTED.some((w) => w.length > 1 && rest.startsWith(w));
+	                    if (nextIsWord) break;
+	                    j++;
+	                    if (j - i >= 8) break;
+	                }
+	                words.push(s.slice(i, j));
+	                i = j;
+	            }
+
+	            // Only accept if it meaningfully segmented (avoid turning everything into junk chunks).
+	            const coverage = matchedChars / Math.max(1, s.length);
+	            if (words.length >= 2 && coverage >= 0.55) return words;
+	            return [];
+	        }
+
+	        function normalizeSearchKey(value) {
+	            return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+	        }
+
+	        function formatActionNameForUI(raw) {
+	            const original = String(raw || '').trim();
+	            if (!original) return '';
+	            const normalized = normalizeActionKey(original);
+	            const override = ACTION_LABEL_OVERRIDES.get(normalized);
+	            if (override) return override;
+
+	            const dotParts = original.split('.').map(p => p.trim()).filter(Boolean);
+	            let parts = dotParts;
+	            if (parts.length > 1 && ACTION_LABEL_DROP_PREFIX.has(parts[0].toLowerCase())) {
+	                parts = parts.slice(1);
+	            }
+
+	            // Join remaining parts, split camelCase, clean common suffixes.
+	            let s = parts.join(' ');
+	            s = s.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+	            s = s.replace(/_/g, ' ');
+	            s = s.replace(/\s+/g, ' ').trim();
+	            s = s.replace(/\bIntent\b/g, '').replace(/\s+/g, ' ').trim();
+
+	            let rawWords = s.split(' ').filter(Boolean);
+	            // If it's still one glued-together identifier (e.g. "Addframetogif"), try to split it.
+	            const hasInternalCaps = /[A-Z]/.test(s.slice(1));
+	            const looksGlued = rawWords.length === 1 && !hasInternalCaps && /^[A-Za-z0-9]+$/.test(s) && s.length >= 6;
+	            if (looksGlued) {
+	                const split = splitLowerIdentifierIntoWords(s);
+	                if (split.length) rawWords = split;
+	            }
+
+	            // Avoid rendering "qrcode" as "Qrcode"
+	            rawWords = rawWords.flatMap((w) => (String(w).toLowerCase() === 'qrcode' ? ['qr', 'code'] : [w]));
+
+	            const words = rawWords.map((w, idx) => {
+	                const lower = String(w).toLowerCase();
+	                if (ACTION_LABEL_ACRONYMS.has(lower)) return lower.toUpperCase();
+	                // Keep small connector words lowercased unless first word.
+	                if (idx > 0 && ['to', 'of', 'and', 'or', 'in', 'on', 'with', 'for', 'from', 'each'].includes(lower)) return lower;
+	                return lower.charAt(0).toUpperCase() + lower.slice(1);
+	            });
+
+	            return words.join(' ').trim() || original;
+	        }
+
+	        function getActionDisplayLabel(action) {
+	            return formatActionNameForUI(action?.action || action?.title || '');
+	        }
+
 	        function actionHasLinkableOutput(action) {
 	            const key = normalizeActionKey(action?.action || action?.title);
 	            if (!key) return true;
@@ -1777,7 +1944,7 @@
 			                <div class="node-icon">${getActionIcon(action.action)}</div>
 			                <div class="node-content">
 			                    <div class="node-header">
-			                        <span class="node-title">${escapeHtml(action.title || action.action)}</span>
+			                        <span class="node-title">${escapeHtml(getActionDisplayLabel(action) || (action.title || action.action))}</span>
 			                        ${outputHtml}
 			                        ${actionsHtml}
 			                    </div>
@@ -2547,9 +2714,10 @@
 	                state.currentZone.classList.remove('drop-zone-hover');
 	            }
 	            state.currentZone = zone;
-	            if (zone?.classList) {
-	                zone.classList.add('drop-zone-hover');
-	            }
+	            if (!zone?.classList) return;
+	            // Don't outline the entire workspace when hovering the root drop target.
+	            if (zone.id === 'actions-container' || zone.id === 'preview-canvas') return;
+	            zone.classList.add('drop-zone-hover');
 	        }
 
 	        function reorderSetZonesActive(active) {
@@ -2661,7 +2829,13 @@
             try {
                 const response = await fetch('Templates/index.json');
                 const files = await response.json();
-                availableTemplates = files.map(f => typeof f === 'string' ? { file: f, action: f.replace('.json', '') } : { file: f.file, action: f.file.replace('.json', '') });
+                availableTemplates = files.map(f => {
+                    const file = typeof f === 'string' ? f : f?.file;
+                    const action = typeof file === 'string' ? file.replace('.json', '') : '';
+                    const label = formatActionNameForUI(action);
+                    const search = normalizeSearchKey(`${action} ${label} ${file || ''}`);
+                    return { file, action, label, search };
+                }).filter(t => t.file && t.action);
             } catch (e) { console.error('Failed to load templates:', e); }
         }
 
@@ -2685,13 +2859,15 @@
         function renderActionsList(filter = '') {
             const list = document.getElementById('actions-list');
             list.innerHTML = '';
-            const term = filter.toLowerCase();
-            const filtered = availableTemplates.filter(t => t.action.toLowerCase().includes(term));
+            const term = normalizeSearchKey(filter);
+            const filtered = term
+                ? availableTemplates.filter(t => t.search.includes(term))
+                : availableTemplates;
             filtered.forEach(t => {
                 const item = document.createElement('div');
                 item.className = 'dropdown-item';
                 item.style.cssText = 'padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;';
-                item.innerHTML = `<div class="node-icon" style="width:32px;height:32px;">${getActionIcon(t.action)}</div><span>${escapeHtml(t.action)}</span>`;
+                item.innerHTML = `<div class="node-icon" style="width:32px;height:32px;">${getActionIcon(t.action)}</div><span>${escapeHtml(t.label || t.action)}</span>`;
                 item.onclick = () => {
                     if (editMode) {
                         addActionDirectly(t);
@@ -2760,7 +2936,7 @@
             placementCursor.innerHTML = `
                 <div class="placement-cursor-content">
                     <div class="node-icon">${getActionIcon(action.action)}</div>
-                    <span>${escapeHtml(action.title || action.action)}</span>
+                    <span>${escapeHtml(getActionDisplayLabel(action) || (action.title || action.action))}</span>
                     <span class="placement-hint">Click to place action</span>
                 </div>
             `;
@@ -2796,6 +2972,9 @@
                 // Remove all hover classes first
                 allZones.forEach(zone => zone.classList.remove('placement-hover'));
                 // Add hover to the topmost/prioritized zone
+                if (hoveredZone && (hoveredZone.id === 'actions-container' || hoveredZone.id === 'preview-canvas')) {
+                    hoveredZone = null;
+                }
                 if (hoveredZone) {
                     hoveredZone.classList.add('placement-hover');
                 }
@@ -3146,7 +3325,7 @@
             if (forcedActions.find(a => a.action === template.action)) return; // Already forced
             forcedActions.push({ action: template.action, file: template.file });
             renderForcedActions();
-            addMessageToUI(`🎯 Will use **${template.action}** in next response`, 'assistant');
+            addMessageToUI(`🎯 Will use **${formatActionNameForUI(template.action)}** in next response`, 'assistant');
         }
 
         function removeForcedAction(action) {
@@ -3165,8 +3344,8 @@
             container.style.display = 'flex';
             container.innerHTML = forcedActions.map(a => `
                 <div class="forced-action-pill">
-                    <span>${escapeHtml(a.action)}</span>
-                    <button onclick="removeForcedAction('${escapeHtml(a.action)}')">&times;</button>
+                    <span title="${escapeHtml(a.action)}">${escapeHtml(formatActionNameForUI(a.action))}</span>
+                    <button onclick="removeForcedAction(${escapeHtml(JSON.stringify(String(a.action)) )})">&times;</button>
                 </div>
             `).join('');
         }
