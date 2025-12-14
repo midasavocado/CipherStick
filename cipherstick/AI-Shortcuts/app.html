@@ -2761,10 +2761,38 @@
                     return out;
                 };
 
+                const serializeTreeForExport = (nodes) => {
+                    if (!Array.isArray(nodes)) return [];
+                    const out = [];
+                    nodes.forEach((node) => {
+                        if (!node) return;
+                        if (node.type === 'if') {
+                            const base = serializeActionForExport(node.action);
+                            if (base?.params && base.params.WFControlFlowMode !== undefined) {
+                                delete base.params.WFControlFlowMode;
+                            }
+                            base.then = serializeTreeForExport(node.children || []);
+                            if (Array.isArray(node.elseChildren) && node.elseChildren.length) {
+                                base.else = serializeTreeForExport(node.elseChildren);
+                            }
+                            out.push(base);
+                            return;
+                        }
+                        if (node.type === 'repeat') {
+                            const base = serializeActionForExport(node.action);
+                            base.do = serializeTreeForExport(node.children || []);
+                            out.push(base);
+                            return;
+                        }
+                        out.push(serializeActionForExport(node.action));
+                    });
+                    return out;
+                };
+
                 // Build program object
                 const programObj = {
                     name: currentProject?.name || 'My Shortcut',
-                    actions: (currentActions || []).map(serializeActionForExport)
+                    actions: serializeTreeForExport(buildActionTree(currentActions || []))
                 };
 
                 // Convert to plist
