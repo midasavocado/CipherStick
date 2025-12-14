@@ -51,6 +51,7 @@
   "Getpodcastsfromlibrary.json",
   "Getvariable.json",
   "Getwebpagecontents.json",
+  "GetAppAndWebsiteActivity.json",
   "Hash.json",
   "If.json",
   "Image.Flip.json",

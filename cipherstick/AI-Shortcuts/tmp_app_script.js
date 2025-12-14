@@ -1,22 +1,28 @@
-
-        // ============ Configuration ============
+// ============ Configuration ============
         const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
         const IS_PRO_USER = false; // Set to true for pro users
 
-        // ============ State ============
-        let currentProject = null;
-        let projects = JSON.parse(localStorage.getItem('flux_projects')) || [];
-        let chatMode = 'standard'; // 'standard', 'discussion', 'thinking'
-        let availableTemplates = [];
-        let currentActions = [];
-        let currentProgramObj = null;
-        let isGenerating = false;
-        let editMode = false;
-        let forcedActions = [];
-        let animationsEnabled = localStorage.getItem('flux_animations') !== 'disabled';
-        let contextMenuTarget = null;
-        let tutorialStep = 0;
-        let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
+	        // ============ State ============
+	        let currentProject = null;
+	        let projects = JSON.parse(localStorage.getItem('flux_projects')) || [];
+	        let chatMode = 'standard'; // 'standard', 'discussion'
+	        let availableTemplates = [];
+	        let currentActions = [];
+		let currentProgramObj = null;
+		let isGenerating = false;
+		let editMode = false;
+		let forcedActions = [];
+	        let undoStack = [];
+	        let redoStack = [];
+	        let isRestoringHistory = false;
+	        const MAX_HISTORY_STATES = 80;
+		let reorderState = null;
+		let reorderListenersAttached = false;
+		let animationsEnabled = localStorage.getItem('flux_animations') !== 'disabled';
+		        let contextMenuTarget = null;
+		        let tutorialStep = 0;
+	        let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
+	        const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
 
         // ============ Init ============
         document.addEventListener('DOMContentLoaded', () => {
@@ -40,23 +46,27 @@
             }
         }
 
-        function initEventListeners() {
-            document.getElementById('chat-input')?.addEventListener('input', function () {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-            });
+	        function initEventListeners() {
+	            document.getElementById('chat-input')?.addEventListener('input', function () {
+	                this.style.height = 'auto';
+	                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+	            });
             document.getElementById('chat-input')?.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();
                 }
             });
-            document.getElementById('project-name-input')?.addEventListener('blur', function () {
-                if (currentProject && this.value.trim()) {
-                    currentProject.name = this.value.trim();
-                    saveProjects();
-                }
-            });
+	            document.getElementById('project-name-input')?.addEventListener('blur', function () {
+	                if (!currentProject) return;
+	                const nextName = this.value.trim();
+	                if (!nextName) return;
+	                if (nextName !== currentProject.name) {
+	                    pushUndoState();
+	                    currentProject.name = nextName;
+	                    saveProjects();
+	                }
+	            });
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#plus-menu') && !e.target.closest('#plus-menu-btn')) {
                     document.getElementById('plus-menu')?.classList.remove('active');
@@ -66,8 +76,31 @@
                     document.getElementById('profile-menu')?.classList.remove('active');
                 }
             });
-            document.getElementById('chat-input')?.addEventListener('input', updateMarkdownPreview);
-        }
+	            document.getElementById('chat-input')?.addEventListener('input', updateMarkdownPreview);
+
+	            document.addEventListener('keydown', (e) => {
+	                if (!currentProject) return;
+	                const key = String(e.key || '').toLowerCase();
+	                const isModifier = e.metaKey || e.ctrlKey;
+	                if (!isModifier || e.altKey) return;
+	                const target = e.target;
+	                if (target?.closest && target.closest('input, textarea, select, [contenteditable="true"]')) {
+	                    return;
+	                }
+	                if (key === 'z') {
+	                    e.preventDefault();
+	                    if (e.shiftKey) redoWorkspace();
+	                    else undoWorkspace();
+	                    return;
+	                }
+	                if (key === 'y') {
+	                    e.preventDefault();
+	                    redoWorkspace();
+	                }
+	            });
+
+	            updateUndoRedoButtons();
+	        }
 
         function initTheme() {
             if (!localStorage.getItem('flux_theme')) {
@@ -156,25 +189,340 @@
             }
         }
 
-        function loadProject(id) {
-            currentProject = projects.find(p => p.id === id);
-            if (!currentProject) { showProjectsView(); return; }
-            currentActions = currentProject.actions || [];
-            currentProgramObj = currentProject.programObj || null;
-            showWorkspaceView();
-            document.getElementById('project-name-input').value = currentProject.name;
-            window.history.replaceState({}, '', `app.html?id=${id}`);
+	        function loadProject(id) {
+	            currentProject = projects.find(p => p.id === id);
+	            if (!currentProject) { showProjectsView(); return; }
+	            currentActions = ensureActionUUIDs(currentProject.actions || []);
+	            currentProgramObj = currentProject.programObj || null;
+	            resetUndoRedoHistory();
+	            showWorkspaceView();
+	            document.getElementById('project-name-input').value = currentProject.name;
+	            window.history.replaceState({}, '', `app.html?id=${id}`);
             const messagesEl = document.getElementById('messages');
             messagesEl.innerHTML = '';
             // No welcome message - show empty state instead
-            if (currentProject.history.length > 0) {
-                currentProject.history.forEach(msg => addMessageToUI(msg.content, msg.role));
-            }
-            renderActions();
+	            if (currentProject.history.length > 0) {
+	                currentProject.history.forEach(msg => addMessageToUI(msg.content, msg.role));
+	            }
+	            renderActions();
+	            updateUndoRedoButtons();
+	        }
+
+	        function saveProjects() {
+	            localStorage.setItem('flux_projects', JSON.stringify(projects));
+	        }
+
+	        function clonePlainObject(value) {
+	            try {
+	                if (typeof structuredClone === 'function') return structuredClone(value);
+	            } catch (e) { }
+	            return JSON.parse(JSON.stringify(value));
+	        }
+
+	        function captureWorkspaceState() {
+	            return {
+	                name: currentProject?.name || '',
+	                actions: clonePlainObject(currentActions || [])
+	            };
+	        }
+
+	        function applyWorkspaceState(state) {
+	            if (!state || typeof state !== 'object') return;
+	            currentActions = ensureActionUUIDs(clonePlainObject(state.actions || []));
+	            if (currentProject) {
+	                if (typeof state.name === 'string' && state.name.trim()) {
+	                    currentProject.name = state.name.trim();
+	                    const nameInput = document.getElementById('project-name-input');
+	                    if (nameInput) nameInput.value = currentProject.name;
+	                }
+	                currentProject.actions = currentActions;
+	                saveProjects();
+	            }
+	            renderActions();
+	        }
+
+	        function resetUndoRedoHistory() {
+	            undoStack = [];
+	            redoStack = [];
+	            updateUndoRedoButtons();
+	        }
+
+	        function updateUndoRedoButtons() {
+	            const undoBtn = document.getElementById('undo-btn');
+	            const redoBtn = document.getElementById('redo-btn');
+	            if (undoBtn) undoBtn.disabled = !currentProject || undoStack.length === 0;
+	            if (redoBtn) redoBtn.disabled = !currentProject || redoStack.length === 0;
+	        }
+
+	        function pushUndoSnapshot(snapshot) {
+	            if (isRestoringHistory) return;
+	            if (!currentProject) return;
+	            if (!snapshot || typeof snapshot !== 'object') return;
+	            undoStack.push(clonePlainObject(snapshot));
+	            if (undoStack.length > MAX_HISTORY_STATES) undoStack.shift();
+	            redoStack = [];
+	            updateUndoRedoButtons();
+	        }
+
+	        function pushUndoState() {
+	            pushUndoSnapshot(captureWorkspaceState());
+	        }
+
+	        function undoWorkspace() {
+	            if (!currentProject) return;
+	            if (undoStack.length === 0) return;
+	            isRestoringHistory = true;
+	            redoStack.push(captureWorkspaceState());
+	            const prev = undoStack.pop();
+	            applyWorkspaceState(prev);
+	            isRestoringHistory = false;
+	            updateUndoRedoButtons();
+	        }
+
+	        function redoWorkspace() {
+	            if (!currentProject) return;
+	            if (redoStack.length === 0) return;
+	            isRestoringHistory = true;
+	            undoStack.push(captureWorkspaceState());
+	            const next = redoStack.pop();
+	            applyWorkspaceState(next);
+	            isRestoringHistory = false;
+	            updateUndoRedoButtons();
+	        }
+
+        function genUUID() {
+            return (crypto?.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            ));
         }
 
-        function saveProjects() {
-            localStorage.setItem('flux_projects', JSON.stringify(projects));
+        function ensureActionUUIDs(actions = []) {
+            return actions.map(a => {
+                if (!a.id) a.id = Date.now() + Math.floor(Math.random() * 100000);
+                if (!a.params) a.params = {};
+                if (!a.params.GroupingIdentifier && isControlAction(a)) {
+                    a.params.GroupingIdentifier = genUUID();
+                }
+                if (Array.isArray(a.then)) a.then = ensureActionUUIDs(a.then);
+                if (Array.isArray(a.else)) a.else = ensureActionUUIDs(a.else);
+                if (Array.isArray(a.do)) a.do = ensureActionUUIDs(a.do);
+                return a;
+            });
+        }
+
+        function findActionLocation(actionId, actions = currentActions, parentAction = null, parentArray = currentActions, section = 'root') {
+            if (!Array.isArray(actions)) return null;
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                if (action.id === actionId) {
+                    return { action, parentAction, parentArray, section, index: i };
+                }
+                if (isConditionalAction(action)) {
+                    const inThen = findActionLocation(actionId, action.then || [], action, action.then || [], 'then');
+                    if (inThen) return inThen;
+                    const inElse = findActionLocation(actionId, action.else || [], action, action.else || [], 'else');
+                    if (inElse) return inElse;
+                }
+                if (isRepeatAction(action)) {
+                    const inDo = findActionLocation(actionId, action.do || [], action, action.do || [], 'do');
+                    if (inDo) return inDo;
+                }
+            }
+            return null;
+        }
+
+        function actionContainsId(action, targetId) {
+            if (!action) return false;
+            const checkArray = (arr) => Array.isArray(arr) && arr.some(a => a?.id === targetId || actionContainsId(a, targetId));
+            return checkArray(action.then) || checkArray(action.else) || checkArray(action.do);
+        }
+
+        function removeActionById(actionId) {
+            const loc = findActionLocation(actionId);
+            if (!loc) return null;
+            const [removed] = loc.parentArray.splice(loc.index, 1);
+            return removed || loc.action;
+        }
+
+        function ensureSectionArray(action, sectionKey) {
+            if (!action) return null;
+            if (sectionKey === 'then') {
+                if (!Array.isArray(action.then)) action.then = [];
+                return action.then;
+            }
+            if (sectionKey === 'else') {
+                if (!Array.isArray(action.else)) action.else = [];
+                return action.else;
+            }
+            if (sectionKey === 'do') {
+                if (!Array.isArray(action.do)) action.do = [];
+                return action.do;
+            }
+            return currentActions;
+        }
+
+        function cloneActionDeep(action) {
+            const cloned = JSON.parse(JSON.stringify(action));
+            const assignIds = (act) => {
+                act.id = Date.now() + Math.floor(Math.random() * 1000);
+                if (isControlAction(act)) {
+                    if (!act.params) act.params = {};
+                    act.params.GroupingIdentifier = genUUID();
+                }
+                if (isConditionalAction(act)) {
+                    (act.then || []).forEach(assignIds);
+                    (act.else || []).forEach(assignIds);
+                }
+                if (isRepeatAction(act)) {
+                    (act.do || []).forEach(assignIds);
+                }
+            };
+            assignIds(cloned);
+            return cloned;
+        }
+
+        function resolveConditionOptions(action, rawValue) {
+            const params = action?.params || {};
+            const optionsSource =
+                params.ConditionOptions ||
+                params.WFConditionOptions ||
+                (rawValue && String(rawValue).includes('/') ? rawValue : null) ||
+                (params.Condition && String(params.Condition).includes('/') ? params.Condition : null) ||
+                (params.WFCondition && String(params.WFCondition).includes('/') ? params.WFCondition : null) ||
+                DEFAULT_CONDITION_OPTIONS;
+
+            const optionsString = String(optionsSource || DEFAULT_CONDITION_OPTIONS);
+            const options = optionsString.split('/').map(o => o.trim()).filter(o => o);
+
+            let selected =
+                params.ConditionValue ||
+                params.WFConditionValue ||
+                (!rawValue || String(rawValue).includes('/') ? null : rawValue) ||
+                (params.Condition && !String(params.Condition).includes('/') ? params.Condition : null) ||
+                (params.WFCondition && !String(params.WFCondition).includes('/') ? params.WFCondition : null);
+
+            if (!selected) selected = options[0] || 'Is';
+            if (!options.includes(selected) && options.length > 0) selected = options[0];
+
+            return { optionsString, options, selected };
+        }
+
+        function getConditionOptionsById(actionId, rawValue) {
+            const loc = findActionLocation(actionId);
+            return resolveConditionOptions(loc?.action, rawValue);
+        }
+
+        function isUnaryCondition(label = '') {
+            const val = String(label).toLowerCase();
+            return val === 'has any value' || val === 'does not have any value';
+        }
+
+        function flattenActions(actions = currentActions, result = []) {
+            if (!Array.isArray(actions)) return result;
+            actions.forEach(action => {
+                result.push(action);
+                if (isConditionalAction(action)) {
+                    flattenActions(action.then || [], result);
+                    flattenActions(action.else || [], result);
+                } else if (isRepeatAction(action)) {
+                    flattenActions(action.do || [], result);
+                }
+            });
+            return result;
+        }
+
+        function buildParamPlaceholder(paramKey) {
+            return `{{${String(paramKey || 'VALUE').toUpperCase()}}}`;
+        }
+
+        function getActionOutputInfo(action) {
+            if (!action?.params) return null;
+            const outputUUID = action.params.OutputUUID || action.params.UUID || action.params.ProvidedOutputUUID;
+            if (!outputUUID) return null;
+            const outputName = action.params.OutputName || action.title || action.action || 'Action Output';
+            return { outputUUID: String(outputUUID), outputName };
+        }
+
+        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
+            if (!Array.isArray(actions)) return set;
+            actions.forEach(action => {
+                const info = getActionOutputInfo(action);
+                if (info) set.add(info.outputUUID);
+                if (isConditionalAction(action)) {
+                    collectAvailableOutputs(action.then || [], set);
+                    collectAvailableOutputs(action.else || [], set);
+                } else if (isRepeatAction(action)) {
+                    collectAvailableOutputs(action.do || [], set);
+                }
+            });
+            return set;
+        }
+
+	        function pruneMissingOutputLinks() {
+	            currentActions = ensureActionUUIDs(currentActions);
+	            const flat = flattenActions(currentActions, []);
+	            const actionIndexById = new Map();
+	            const outputIndexByUuid = new Map();
+	            flat.forEach((action, idx) => {
+	                if (action?.id != null) actionIndexById.set(action.id, idx);
+	                const info = getActionOutputInfo(action);
+	                if (info?.outputUUID) {
+	                    const key = String(info.outputUUID);
+	                    if (!outputIndexByUuid.has(key)) outputIndexByUuid.set(key, idx);
+	                }
+	            });
+	            const validOutputs = new Set(outputIndexByUuid.keys());
+	            let mutated = false;
+	            const scrubAction = (action) => {
+	                if (!action?.params) return;
+	                const currentIndex = actionIndexById.get(action.id);
+	                Object.entries(action.params).forEach(([key, value]) => {
+	                    if (value && typeof value === 'object') {
+	                        const linkedUuid = value?.Value?.OutputUUID || value?.OutputUUID || '';
+	                        const linkedKey = linkedUuid ? String(linkedUuid) : '';
+	                        const sourceIndex = linkedKey ? outputIndexByUuid.get(linkedKey) : undefined;
+	                        if (
+	                            linkedKey &&
+	                            (!validOutputs.has(linkedKey) ||
+	                                (typeof currentIndex === 'number' && typeof sourceIndex === 'number' && sourceIndex >= currentIndex))
+	                        ) {
+	                            action.params[key] = buildParamPlaceholder(key);
+	                            mutated = true;
+	                        }
+	                    }
+	                });
+	                if (isConditionalAction(action)) {
+                    (action.then || []).forEach(scrubAction);
+                    (action.else || []).forEach(scrubAction);
+                } else if (isRepeatAction(action)) {
+                    (action.do || []).forEach(scrubAction);
+                }
+            };
+            (currentActions || []).forEach(scrubAction);
+            if (mutated && currentProject) {
+                currentProject.actions = currentActions;
+                saveProjects();
+            }
+        }
+
+        function getActionUUID(action) {
+            if (!action.params) action.params = {};
+            if (!action.params.GroupingIdentifier) action.params.GroupingIdentifier = genUUID();
+            return action.params.GroupingIdentifier;
+        }
+
+        function isConditionalAction(action) {
+            const id = (action.action || action.title || '').toLowerCase();
+            return id.includes('conditional') || id === 'if' || id === 'otherwise' || id === 'endif';
+        }
+
+        function isRepeatAction(action) {
+            const id = (action.action || action.title || '').toLowerCase();
+            return id.includes('repeat') || id === 'repeatwitheach' || id === 'repeatwith each';
+        }
+
+        function isControlAction(action) {
+            return isConditionalAction(action) || isRepeatAction(action);
         }
 
         function deleteProject(id) {
@@ -249,36 +597,72 @@
             }
         }
 
-        // ============ AI API ============
-        async function callGenerateAPI(userPrompt) {
-            isGenerating = true;
-            showPipelineOrbs();
-            showTypingIndicator();
+	        // ============ AI API ============
+	        function buildProgramPreviewActions(actions = currentActions) {
+	            if (!Array.isArray(actions)) return [];
+	            return actions.map(a => {
+	                const entry = { action: a.action || a.title || 'Unknown', params: a.params || {} };
+	                if (Array.isArray(a.then)) entry.then = buildProgramPreviewActions(a.then);
+	                if (Array.isArray(a.else)) entry.else = buildProgramPreviewActions(a.else);
+	                if (Array.isArray(a.do)) entry.do = buildProgramPreviewActions(a.do);
+	                return entry;
+	            });
+	        }
 
-            try {
-                const plan = (localStorage.getItem('flux_plan') || 'free') === 'paid' ? 'paid' : 'free';
-                const model = plan === 'paid' ? 'grok-4.1-fast' : 'openai/gpt-oss-120b:free';
+	        function getCurrentProgramPreviewText() {
+	            currentActions = ensureActionUUIDs(currentActions);
+	            const hasActions = Array.isArray(currentActions) && currentActions.length > 0;
+	            if (!hasActions) return '';
+	            const programObj = {
+	                name: currentProject?.name || 'My Shortcut',
+	                actions: buildProgramPreviewActions(currentActions)
+	            };
+	            return JSON.stringify(programObj, null, 2);
+	        }
+
+	        async function callGenerateAPI(userPrompt) {
+	            isGenerating = true;
+	            const isDiscussionMode = chatMode === 'discussion';
+	            if (!isDiscussionMode) showPipelineOrbs();
+	            showTypingIndicator();
+
+	            try {
+	                const plan = (localStorage.getItem('flux_plan') || 'free') === 'paid' ? 'paid' : 'free';
+	                const model = 'openai/gpt-oss-120b:free';
                 console.log(`[Flux] Using model: ${model} (plan: ${plan})`);
 
-                const isFollowUp = currentProject.history.filter(m => m.role === 'user').length > 1;
-                const body = {
-                    name: currentProject.name,
-                    prompt: userPrompt,
-                    basePrompt: isFollowUp ? currentProject.history[0]?.content : userPrompt,
-                    followPrompt: isFollowUp ? userPrompt : undefined,
-                    history: currentProject.history.slice(-10),
-                    mode: chatMode === 'thinking' ? 'think' : 'plan',
-                    model,
-                    plan,
-                    style: 'concise'
-                };
-                if (currentProgramObj) {
-                    body.programPreview = JSON.stringify(currentProgramObj);
-                }
+	                const forceInstruction = forcedActions.length
+	                    ? `You MUST include these actions in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}.`
+	                    : '';
 
-                const response = await fetch(`${API_BASE}/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+	                const userTurns = (currentProject?.history || []).filter(m => m.role === 'user');
+	                const isFollowUp = userTurns.length > 1;
+		                const mode = isDiscussionMode ? 'clarify' : (isFollowUp ? 'update' : 'plan');
+		                const basePrompt = userTurns[0]?.content || userPrompt;
+		                let programText = getCurrentProgramPreviewText();
+		                const recentHistory = currentProject?.history?.slice(-10) || [];
+		                const context = {
+		                    basePrompt,
+		                    programText,
+	                    history: recentHistory
+	                };
+	                const body = {
+	                    name: currentProject.name,
+	                    prompt: userPrompt,
+	                    followUp: isFollowUp,
+	                    mode,
+	                    context,
+	                    history: recentHistory,
+	                    model,
+	                    plan,
+	                    forcedActions,
+	                    forceInstruction,
+	                    style: 'concise'
+	                };
+
+	                const response = await fetch(`${API_BASE}/generate`, {
+	                    method: 'POST',
+	                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
 
@@ -329,7 +713,7 @@
 
         function handleStreamPacket(packet) {
             if (packet.type === 'progress') {
-                updatePipelineProgress(packet.step, packet.status);
+                updatePipelineProgress(packet.step, packet.status, packet.hint);
             }
         }
 
@@ -341,55 +725,79 @@
             else if (status === 'completed') stepEl.classList.add('completed');
         }
 
-        function resetPipelineSteps() {
-            ['plan', 'catalog', 'build', 'summarize'].forEach(s => {
-                const el = document.getElementById(`step-${s}`);
-                if (el) el.classList.remove('active', 'completed');
-                const orb = document.getElementById(`orb-${s}`);
-                orb?.classList.remove('active', 'completed');
-            });
-        }
+	        function resetPipelineSteps() {
+	            PIPELINE_STEPS.forEach(({ id }) => {
+	                const el = document.getElementById(`step-${id}`);
+	                if (el) el.classList.remove('active', 'completed');
+	                const orb = document.getElementById(`orb-${id}`);
+	                orb?.classList.remove('active', 'completed');
+	            });
+	            const hintEl = document.getElementById('pipeline-orbs-hint');
+	            if (hintEl) hintEl.textContent = getDefaultHint('plan', 'active');
+	        }
 
-        function updatePipelineProgress(step, status) {
-            const order = ['plan', 'catalog', 'build', 'summarize'];
-            const idx = order.indexOf(step);
+        function updatePipelineProgress(step, status, hint = '') {
+            const order = PIPELINE_STEPS.map(s => s.id);
+            // Map backend steps to frontend steps
+            const stepMap = {
+                'assess': 'plan',
+                'search': 'catalog',
+                'build': 'build',
+                'summarize': 'summarize'
+            };
+            const frontendStep = stepMap[step] || step;
+            const idx = order.indexOf(frontendStep);
             if (idx > 0 && status === 'started') {
                 for (let i = 0; i < idx; i++) {
                     updatePipelineOrb(order[i], 'completed');
                 }
             }
-            updatePipelineOrb(step, status);
+            updatePipelineOrb(frontendStep, status, hint);
         }
 
-        function handleFinalResponse(data) {
-            if (!data.ok) {
-                addMessageToUI(`⚠️ ${data.message || 'An error occurred'}`, 'assistant');
-                return;
-            }
-            ['plan', 'catalog', 'build', 'summarize'].forEach(s => updatePipelineOrb(s, 'completed'));
+	        function handleFinalResponse(data) {
+	            if (!data.ok) {
+	                addMessageToUI(`⚠️ ${data.message || 'An error occurred'}`, 'assistant');
+	                return;
+	            }
+	            const isDiscussionMode = chatMode === 'discussion';
+	            const nextName = typeof data.finalName === 'string' ? data.finalName.trim() : '';
+	            const willApplyProgram = !!data.program && !isDiscussionMode;
+	            const willApplyName = !!(nextName && currentProject && !isDiscussionMode && nextName !== currentProject.name);
+	            if (willApplyProgram || willApplyName) {
+	                pushUndoState();
+	            }
+	            PIPELINE_STEPS.forEach(({ id }) => updatePipelineOrb(id, 'completed'));
 
-            // Update project name from AI
-            if (data.finalName && currentProject) {
-                currentProject.name = data.finalName;
-                document.getElementById('project-name-input').value = data.finalName;
-            }
+	            // Update project name from AI
+	            if (willApplyName) {
+	                currentProject.name = nextName;
+	                document.getElementById('project-name-input').value = nextName;
+	            }
 
-            // Store program object
-            if (data.program) {
-                currentProgramObj = data.program;
-                if (currentProject) currentProject.programObj = currentProgramObj;
+	            // Store program object
+	            if (willApplyProgram) {
+	                currentProgramObj = data.program;
+	                if (currentProject) currentProject.programObj = currentProgramObj;
 
-                // Extract actions from program
-                if (Array.isArray(data.program.actions)) {
-                    currentActions = data.program.actions.map((act, i) => ({
-                        id: Date.now() + i,
-                        action: act.action || 'Unknown',
-                        title: act.action || 'Action',
-                        params: act.params || {}
-                    }));
-                    if (currentProject) currentProject.actions = currentActions;
-                }
-            }
+	                // Extract actions from program
+	                if (Array.isArray(data.program.actions)) {
+                    currentActions = data.program.actions.map((act, i) => {
+                        const actionObj = {
+                            id: Date.now() + i,
+                            action: act.action || 'Unknown',
+                            title: act.action || 'Action',
+                            params: act.params || {}
+                        };
+                        // Preserve nested structure (then/else/do arrays) if present
+                        if (Array.isArray(act.then)) actionObj.then = act.then;
+                        if (Array.isArray(act.else)) actionObj.else = act.else;
+                        if (Array.isArray(act.do)) actionObj.do = act.do;
+                        return actionObj;
+                    });
+	                    if (currentProject) currentProject.actions = currentActions;
+	                }
+	            }
 
             // Add AI response to chat
             if (data.answer) {
@@ -399,15 +807,20 @@
                 }
             }
 
-            saveProjects();
-            // Animate all actions from AI response
-            renderActions(true);
-        }
+	            saveProjects();
+	            if (willApplyProgram) {
+	                // Animate all actions from AI response
+	                renderActions(true);
+	            }
+	            updateUndoRedoButtons();
+	        }
 
         // ============ Actions Preview ============
         function renderActions(animateIds = null) {
             const container = document.getElementById('actions-container');
             const emptyState = document.getElementById('empty-state');
+            pruneMissingOutputLinks();
+            currentActions = ensureActionUUIDs(currentActions);
 
             if (currentActions.length === 0) {
                 container.classList.add('hidden');
@@ -419,43 +832,266 @@
             container.classList.remove('hidden');
             container.innerHTML = '';
 
-            currentActions.forEach((action, index) => {
-                let shouldAnimate = false;
-                if (animateIds === true) shouldAnimate = true;
-                else if (Array.isArray(animateIds) && animateIds.includes(action.id)) shouldAnimate = true;
+	            const tree = buildActionTree(currentActions);
+	            renderNodeList(tree, container, animateIds);
+	            initActionReordering();
 
-                const node = createActionNode(action, index, shouldAnimate);
-                container.appendChild(node);
-                if (index < currentActions.length - 1) {
-                    const line = document.createElement('div');
-                    line.className = 'connection-line';
-                    container.appendChild(line);
+	        }
+
+        function buildActionTree(actions) {
+            const root = [];
+            const stack = [{ id: null, target: root, node: null }];
+
+            actions.forEach(action => {
+                // Nested JSON format (already has then/else/do arrays)
+                if (isConditionalAction(action) && (Array.isArray(action.then) || Array.isArray(action.else))) {
+                    const node = {
+                        type: 'if',
+                        action,
+                        children: buildActionTree(action.then || []),
+                        elseChildren: buildActionTree(action.else || [])
+                    };
+                    stack[stack.length - 1].target.push(node);
+                    return;
                 }
+
+                if (isRepeatAction(action) && Array.isArray(action.do)) {
+                    const node = { type: 'repeat', action, children: buildActionTree(action.do || []) };
+                    stack[stack.length - 1].target.push(node);
+                    return;
+                }
+
+                // Flat list format using WFControlFlowMode
+                if (isConditionalAction(action)) {
+                    const mode = Number(action.params?.WFControlFlowMode ?? 0);
+                    const gid = action.params?.GroupingIdentifier || getActionUUID(action);
+                    if (mode === 0) {
+                        const node = { type: 'if', action, children: [], elseChildren: [] };
+                        stack[stack.length - 1].target.push(node);
+                        stack.push({ id: gid, target: node.children, node, inElse: false });
+                    } else if (mode === 1) {
+                        const idx = [...stack].reverse().findIndex(s => s.id === gid);
+                        if (idx !== -1) {
+                            const realIdx = stack.length - 1 - idx;
+                            const ref = stack[realIdx];
+                            ref.target = ref.node.elseChildren;
+                        }
+                    } else if (mode === 2) {
+                        if (stack.length > 1 && stack[stack.length - 1].id === gid) {
+                            stack.pop();
+                        } else {
+                            const pos = stack.findIndex(s => s.id === gid);
+                            if (pos > 0) stack.splice(pos, stack.length - pos);
+                        }
+                    }
+                    return;
+                }
+
+                if (isRepeatAction(action)) {
+                    const node = { type: 'repeat', action, children: [] };
+                    stack[stack.length - 1].target.push(node);
+                    stack.push({ id: action.params?.GroupingIdentifier || getActionUUID(action), target: node.children, node });
+                    return;
+                }
+
+                stack[stack.length - 1].target.push({ type: 'action', action });
             });
-            initDragAndDrop();
+
+            return root;
         }
 
-        function createActionNode(action, index, shouldAnimate = false) {
-            const node = document.createElement('div');
-            node.className = 'action-node';
-            if (shouldAnimate && animationsEnabled) {
-                node.classList.add('settling');
-                node.style.animationDelay = `${index * 0.1}s`;
-            }
-            node.draggable = editMode;
-            node.dataset.id = action.id;
-            node.dataset.index = index;
-            node.dataset.type = action.action;
+        function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { parentActionId: null, parentSection: 'root' }) {
+	            nodes.forEach((node, index) => {
+	                if (node.type === 'if') {
+	                    const block = document.createElement('div');
+	                    block.className = 'if-block';
+	                    block.dataset.actionId = node.action.id;
+	                    block.dataset.id = node.action.id;
+	                    block.dataset.parentId = parentMeta?.parentActionId || '';
+	                    block.dataset.parentSection = parentMeta?.parentSection || 'root';
+	                    
+	                    // Get IF condition parameters
+	                    const input = node.action.params?.Input || node.action.params?.WFInput || '{{VARIABLE}}';
+	                    const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '{{STRING}}';
+	                    const conditionMeta = resolveConditionOptions(node.action, node.action.params?.Condition || node.action.params?.WFCondition || DEFAULT_CONDITION_OPTIONS);
+                    const unaryCondition = isUnaryCondition(conditionMeta.selected);
+                    const conditionInputHtml = editMode
+                        ? getInputForType(node.action.id, 'Condition', conditionMeta.optionsString, false)
+                        : `<span class="condition-value">${escapeHtml(conditionMeta.selected)}</span>`;
+                    const inputInputHtml = editMode ? getInputForType(node.action.id, 'Input', input, false) : `<span class="condition-value">${formatLinkedValue(input)}</span>`;
+                    const compareToInputHtml = unaryCondition ? '' : (editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`);
+                    
+                    const actionsHtml = editMode ? `
+                        <div class="control-actions">
+                            <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                            <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        </div>
+                    ` : '';
+                    
+                    const thenEmpty = (!node.children || node.children.length === 0);
+                    const elseEmpty = (!node.elseChildren || node.elseChildren.length === 0);
+                    const thenEmptyHint = thenEmpty && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
+                    const elseEmptyHint = elseEmpty && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
+	                    const dropZoneClass = editMode ? 'drop-zone' : '';
+	                    const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
+	                    
+	                    block.innerHTML = `
+	                        <div class="if-header">
+	                            ${dragHandle}
+	                            <div class="if-condition-line">
+	                                <span class="if-label">If</span>
+	                                ${inputInputHtml}
+	                                ${conditionInputHtml}
+                                ${compareToInputHtml}
+                                <span class="if-then-label">Then</span>
+                            </div>
+                            ${actionsHtml}
+                        </div>
+                        <div class="if-then ${thenEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="if-then" data-action-id="${node.action.id}">
+                            ${thenEmpty ? '' : '<div class="control-section-content"></div>'}
+                            ${thenEmptyHint}
+                        </div>
+                        <div class="if-else-divider">Otherwise</div>
+                        <div class="if-else ${elseEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="if-else" data-action-id="${node.action.id}">
+                            ${elseEmpty ? '' : '<div class="control-section-content"></div>'}
+                            ${elseEmptyHint}
+                        </div>
+                        <div class="if-end">End</div>
+                    `;
+                    if (node.children && node.children.length > 0) {
+                        const thenContainer = block.querySelector('.if-then .control-section-content');
+                        if (thenContainer) {
+                            renderNodeList(node.children, thenContainer, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'then' });
+                        }
+                    }
+                    if (node.elseChildren && node.elseChildren.length > 0) {
+                        const elseContainer = block.querySelector('.if-else .control-section-content');
+                        if (elseContainer) {
+                            renderNodeList(node.elseChildren, elseContainer, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'else' });
+                        }
+                    }
+                    container.appendChild(block);
+	                } else if (node.type === 'repeat') {
+	                    const block = document.createElement('div');
+	                    block.className = 'repeat-block';
+	                    block.dataset.actionId = node.action.id;
+	                    block.dataset.id = node.action.id;
+	                    block.dataset.parentId = parentMeta?.parentActionId || '';
+	                    block.dataset.parentSection = parentMeta?.parentSection || 'root';
+	                    
+	                    // Get REPEAT parameters - check if it's RepeatWithEach
+	                    const actionName = (node.action.action || '').toLowerCase();
+	                    const isRepeatWithEach = actionName.includes('witheach') || actionName.includes('with each');
+                    const repeatCount = node.action.params?.Count || node.action.params?.WFRepeatCount || '';
+                    const repeatItems = node.action.params?.Items || node.action.params?.RepeatItemVariableName || node.action.params?.WFRepeatItemVariableName || '';
+                    
+                    const actionsHtml = editMode ? `
+                        <div class="control-actions">
+                            <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                            <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        </div>
+                    ` : '';
+                    
+	                    const emptyBodyClass = (!node.children || node.children.length === 0) ? 'empty-section' : '';
+	                    const emptyHint = (!node.children || node.children.length === 0) && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
+	                    const dropZoneClass = editMode ? 'drop-zone' : '';
+	                    const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
+                    
+                    let repeatHeaderHtml = '';
+                    if (isRepeatWithEach || repeatItems) {
+                        const itemsInputHtml = editMode ? getInputForType(node.action.id, 'Items', repeatItems || '{{VARIABLE}}', false) : `<span class="repeat-value">${formatLinkedValue(repeatItems || '')}</span>`;
+                        repeatHeaderHtml = `
+                            <div class="repeat-condition-line">
+                                <span class="repeat-label">Repeat with each item in</span>
+                                ${itemsInputHtml}
+                            </div>
+                        `;
+                    } else if (repeatCount) {
+                        const countInputHtml = editMode ? getInputForType(node.action.id, 'Count', repeatCount, false) : `<span class="repeat-value">${formatLinkedValue(repeatCount)}</span>`;
+                        repeatHeaderHtml = `
+                            <div class="repeat-condition-line">
+                                <span class="repeat-label">Repeat</span>
+                                ${countInputHtml}
+                                <span class="repeat-text">times</span>
+                            </div>
+                        `;
+                    } else {
+                        const countInputHtml = editMode ? getInputForType(node.action.id, 'Count', '{{NUMBER}}', false) : '<span class="repeat-value">(configure)</span>';
+                        repeatHeaderHtml = `
+                            <div class="repeat-condition-line">
+                                <span class="repeat-label">Repeat</span>
+                                ${countInputHtml}
+                                <span class="repeat-text">times</span>
+                            </div>
+                        `;
+                    }
+                    
+	                    block.innerHTML = `
+	                        <div class="repeat-header">
+	                            ${dragHandle}
+	                            ${repeatHeaderHtml}
+	                            ${actionsHtml}
+	                        </div>
+                        <div class="repeat-body ${emptyBodyClass} ${dropZoneClass}" data-drop-zone="repeat" data-action-id="${node.action.id}">
+                            ${emptyBodyClass ? '' : '<div class="control-section-content"></div>'}
+                            ${emptyHint}
+                        </div>
+                        <div class="repeat-end">End</div>
+                    `;
+	                    block.dataset.id = node.action.id;
+	                    block.dataset.type = node.action.action;
+                    if (node.children && node.children.length > 0) {
+                        const body = block.querySelector('.repeat-body .control-section-content');
+                        if (body) {
+                            renderNodeList(node.children, body, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'do' });
+                        }
+                    }
+                    container.appendChild(block);
+                } else {
+                    const shouldAnimate = animateIds === true || (Array.isArray(animateIds) && animateIds.includes(node.action.id));
+                    const actionNode = createActionNode(node.action, index, shouldAnimate, parentMeta);
+                    container.appendChild(actionNode);
+                }
+            });
+        }
+
+	        function createActionNode(action, index, shouldAnimate = false, parentMeta = { parentActionId: null, parentSection: 'root' }) {
+	            const node = document.createElement('div');
+	            node.className = 'action-node';
+	            if (shouldAnimate && animationsEnabled) {
+	                node.classList.add('settling');
+	                node.style.animationDelay = `${index * 0.1}s`;
+	            }
+	            node.dataset.id = action.id;
+	            node.dataset.index = index;
+	            node.dataset.type = action.action;
+	            node.dataset.parentId = parentMeta?.parentActionId || '';
+	            node.dataset.parentSection = parentMeta?.parentSection || 'root';
+
+	            // Get output information
+	            const outputUUID = action.params?.OutputUUID || action.params?.UUID || action.params?.ProvidedOutputUUID || null;
+	            const outputName = action.params?.OutputName || action.title || action.action || '';
+	            const outputDisplay = humanizeOutputName(outputName);
+	            if (outputUUID) node.classList.add('has-output');
+	            const outputHtml = outputUUID ? `<div class="node-output" data-output-uuid="${escapeHtml(String(outputUUID))}" title="Output: ${escapeHtml(outputDisplay)}">
+	                <span class="output-label">${escapeHtml(outputDisplay)}</span>
+	            </div>` : '';
 
             let paramsHtml = '';
             // Show params if in edit mode OR if they have a value (not empty/default)
-            if (action.params && Object.keys(action.params).length > 0) {
+            if (action.params && Object.keys(action.params).length > 0 && !isControlAction(action)) {
                 let hasVisibleParams = false;
                 let innerHtml = '<div class="node-params">';
                 for (const [key, value] of Object.entries(action.params)) {
-                    // In view mode, only show if value is present and not a placeholder
+                    // Skip UUID/OutputUUID/GroupingIdentifier as they're internal
+                    const lowerKey = String(key).toLowerCase();
+                    if (lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier') {
+                        continue;
+                    }
+                    // Always show params in edit mode, or if they have a non-placeholder value in view mode
                     const strVal = String(value);
                     const isPlaceholder = strVal.startsWith('{{') && strVal.endsWith('}}');
+                    // Show if edit mode OR (has value AND not a placeholder)
                     if (editMode || (strVal && !isPlaceholder)) {
                         hasVisibleParams = true;
                         const inputHtml = getInputForType(action.id, key, value, !editMode);
@@ -480,29 +1116,7 @@
                 </div>
             ` : '';
 
-            let controlScaffold = '';
-            const lowerAction = (action.action || '').toLowerCase();
-            if (lowerAction.includes('if')) {
-                controlScaffold = `
-                    <div class="control-block">
-                        <div class="control-label">IF</div>
-                        <div class="control-body">Then actions follow below.</div>
-                        <div class="control-divider">ELSE</div>
-                        <div class="control-body">Else actions follow below.</div>
-                        <div class="control-end">END IF</div>
-                    </div>
-                `;
-            } else if (lowerAction.includes('repeat')) {
-                controlScaffold = `
-                    <div class="control-block">
-                        <div class="control-label">REPEAT</div>
-                        <div class="control-body">Loop actions follow below.</div>
-                        <div class="control-end">END REPEAT</div>
-                    </div>
-                `;
-            }
-
-            const dragHandle = editMode ? '<div class="node-drag-handle"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
+	            const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
 
             node.innerHTML = `
                 ${dragHandle}
@@ -512,24 +1126,84 @@
                         <span class="node-title">${escapeHtml(action.title || action.action)}</span>
                         ${actionsHtml}
                     </div>
+                    ${outputHtml}
                     ${paramsHtml}
-                    ${controlScaffold}
                 </div>
             `;
             return node;
         }
 
         function getInputForType(actionId, key, value, readonly = false) {
+            if (String(key).toLowerCase() === 'uuid') {
+                return '';
+            }
+            if (key === 'Condition' || key === 'WFCondition') {
+                const { optionsString, options, selected } = getConditionOptionsById(actionId, value);
+                const selectedValue = options.includes(selected) ? selected : (options[0] || selected);
+                const optionsHtml = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
+                const fullOptionsString = optionsString || DEFAULT_CONDITION_OPTIONS;
+                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
+            }
             const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
             if (isObjectVal) {
-                const label = value?.Value?.OutputName || 'Linked Output';
+                const outputName = value?.Value?.OutputName || value?.OutputName || 'Linked Output';
+                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
                 const safeParam = escapeHtml(key).replace(/'/g, "\\'");
-                return `<div class="linked-output">${escapeHtml(label)} <button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')">Unlink</button></div>`;
+                const displayName = humanizeOutputName(outputName);
+                return `<div class="linked-output" data-output-uuid="${escapeHtml(outputUUID)}" title="Linked from: ${escapeHtml(outputName)}">
+                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+                </div>`;
             }
 
             const strValue = String(value);
-            const lowerVal = strValue.toLowerCase();
             const disabledAttr = readonly ? 'disabled' : '';
+            
+            // Check for !link: tokens first
+            if (strValue.trim().startsWith('!link:')) {
+                const linkLabel = strValue.replace(/^!link:/i, '').trim();
+                const displayName = humanizeOutputName(linkLabel);
+                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
+                return `<div class="linked-output" data-link-label="${escapeHtml(linkLabel)}" title="Linked from: ${escapeHtml(linkLabel)}">
+                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+                </div>`;
+            }
+            
+            // Check for variables like {{Ask Each Time}} - show as blue box
+            const variableMatch = strValue.match(/^\{\{([^}]+)\}\}$/);
+            if (variableMatch) {
+                const varName = variableMatch[1].trim();
+                // Check if it's a standard placeholder (STRING, VARIABLE, NUMBER, etc.)
+                const isStandardPlaceholder = /^(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)$/i.test(varName);
+                if (!isStandardPlaceholder) {
+                    // It's a named variable like "Ask Each Time" - show as blue box
+                    if (readonly) {
+                        return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
+                    } else {
+                        // In edit mode, show as styled input that looks like blue box
+                        const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                        return `<input type="text" class="param-value param-variable-input" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} placeholder="Enter variable">`;
+                    }
+                }
+            }
+            
+            // Check for placeholders like {{STRING}}, {{VARIABLE}}, {{NUMBER}}, etc.
+            const placeholderMatch = strValue.match(/^\{\{(\w+)\}\}$/);
+            if (placeholderMatch && !readonly) {
+                const placeholderType = placeholderMatch[1].toLowerCase();
+                if (placeholderType === 'number' || placeholderType === 'integer' || placeholderType === 'decimal') {
+                    return `<input type="number" class="param-value param-number" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter number" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">`;
+                } else if (placeholderType === 'boolean') {
+                    return `<input type="checkbox" class="param-checkbox" data-action-id="${actionId}" data-param="${escapeHtml(key)}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.checked)">`;
+                } else {
+                    // Default to text input for STRING, VARIABLE, etc.
+                    const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                    return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter ${placeholderType.toLowerCase()}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+                }
+            }
+            
+            const lowerVal = strValue.toLowerCase();
 
             // Boolean detection
             if (lowerVal === 'true' || lowerVal === 'false' || strValue === '{{BOOLEAN}}') {
@@ -538,21 +1212,97 @@
             }
 
             // Number detection
-            if (!isNaN(strValue) && strValue !== '') {
+            if (!isNaN(strValue) && strValue !== '' && !readonly) {
                 return `<input type="number" class="param-value param-number" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">`;
             }
 
-            // Dropdown for options like {{option1/option2/option3}}
-            const optionsMatch = strValue.match(/^\{\{([^}]+\/[^}]+)\}\}$/);
-            if (optionsMatch) {
-                const options = optionsMatch[1].split('/');
-                const optionsHtml = options.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('');
-                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
-            }
+	            // Option-style placeholders (e.g. "Small/Medium/Large" or "{{Small/Medium/Large}}")
+	            if (!readonly) {
+	                const braceOptionsMatch = strValue.match(/^\{\{([^}]+\/[^}]+)\}\}$/);
+	                const rawOptions = braceOptionsMatch ? braceOptionsMatch[1] : strValue;
+	                const trimmedOptions = String(rawOptions || '').trim();
+	                const looksLikeUrl = trimmedOptions.includes('://');
+	                const looksLikeDrivePath = /^[a-zA-Z]:/.test(trimmedOptions) && (trimmedOptions[2] === '/' || trimmedOptions[2] === '\\\\');
+	                const looksLikePath = trimmedOptions.startsWith('/') || looksLikeDrivePath;
+	                const hasLetters = /[a-zA-Z]/.test(trimmedOptions);
+	                const options = trimmedOptions.split('/').map(o => o.trim()).filter(Boolean);
+	                if (hasLetters && !looksLikeUrl && !looksLikePath && options.length >= 2) {
+	                    const placeholderText = options.join('/');
+	                    const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+	                    return `<input type="text" class="param-value param-option-placeholder" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="" placeholder="${escapeHtml(placeholderText)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+	                }
+	            }
 
+            // Check if this is a text field that can contain mixed content with links
+            // (like LLMPrompt in Askllm which can have text mixed with !link: tokens)
+            const canHaveMixedLinks = strValue.includes('!link:') && strValue.length > strValue.indexOf('!link:') + 6;
+            
+            if (canHaveMixedLinks && !readonly) {
+                // Use textarea for mixed content fields
+                const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<textarea class="param-value param-textarea" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} rows="3">${escapeHtml(strValue)}</textarea>`;
+            } else if (canHaveMixedLinks && readonly) {
+                // Display mixed content with proper formatting
+                return `<div class="param-value param-mixed-content">${formatLinkedValue(strValue)}</div>`;
+            }
+            
             // Default text input
             const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
             return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+        }
+
+        function humanizeOutputName(name) {
+            if (!name) return 'Output';
+            return String(name)
+                .replace(/^!link:/i, '')
+                .replace(/_/g, ' ')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/\b\w/g, l => l.toUpperCase())
+                .trim();
+        }
+
+        function formatLinkedValue(value) {
+            if (!value) return '';
+            const strVal = String(value);
+            if (strVal.trim().startsWith('!link:')) {
+                const linkLabel = strVal.replace(/^!link:/i, '').trim();
+                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+            }
+            // Check for variables like {{Ask Each Time}}, {{Clipboard}}, etc.
+            const variableMatch = strVal.match(/^\{\{([^}]+)\}\}$/);
+            if (variableMatch) {
+                const varName = variableMatch[1].trim();
+                return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
+            }
+            // Check if value contains !link: tokens mixed with text
+            if (strVal.includes('!link:')) {
+                // Parse mixed content
+                const parts = strVal.split(/(!link:[^\s]+)/gi);
+                return parts.map(part => {
+                    if (part.toLowerCase().startsWith('!link:')) {
+                        const linkLabel = part.replace(/^!link:/i, '').trim();
+                        return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+                    }
+                    // Also check for {{variable}} patterns in mixed content
+                    const varMatch = part.match(/\{\{([^}]+)\}\}/g);
+                    if (varMatch) {
+                        let result = part;
+                        varMatch.forEach(match => {
+                            const varName = match.replace(/\{\{|\}\}/g, '').trim();
+                            result = result.replace(match, `<span class="linked-value-inline">${escapeHtml(varName)}</span>`);
+                        });
+                        return result;
+                    }
+                    return escapeHtml(part);
+                }).join('');
+            }
+            // Check for {{variable}} patterns in the string
+            if (strVal.includes('{{') && strVal.includes('}}')) {
+                return strVal.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
+                    return `<span class="linked-value-inline">${escapeHtml(varName.trim())}</span>`;
+                });
+            }
+            return escapeHtml(strVal);
         }
 
         function formatParamValue(value) {
@@ -578,16 +1328,34 @@
             return icons[actionType] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>';
         }
 
-        function updateActionParam(actionId, paramKey, value) {
-            const action = currentActions.find(a => a.id === actionId);
-            if (action) {
-                action.params[paramKey] = value;
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
-                }
-            }
-        }
+	        function updateActionParam(actionId, paramKey, value) {
+	            const loc = findActionLocation(actionId);
+	            const action = loc?.action;
+	            if (!action) return;
+	            if (!action.params) action.params = {};
+
+	            if (paramKey === 'Condition' || paramKey === 'WFCondition') {
+	                const prevValue = action.params.ConditionValue ?? action.params.WFConditionValue ?? action.params.Condition ?? action.params.WFCondition ?? '';
+	                if (String(prevValue) !== String(value)) {
+	                    pushUndoState();
+	                }
+	                const selectEl = document.querySelector(`select[data-action-id="${actionId}"][data-param="${paramKey}"], select[data-action-id="${actionId}"][data-param="Condition"]`);
+	                const fullOptions = selectEl?.dataset.fullOptions || action.params.ConditionOptions || action.params.WFConditionOptions || DEFAULT_CONDITION_OPTIONS;
+	                action.params.ConditionOptions = fullOptions;
+	                action.params.WFConditionOptions = fullOptions;
+	                action.params.ConditionValue = value;
+	                action.params.WFConditionValue = value;
+	                action.params.Condition = value;
+	                action.params.WFCondition = value;
+	            } else {
+	                const prevValue = action.params[paramKey];
+	                if (prevValue !== value) {
+	                    pushUndoState();
+	                }
+	                action.params[paramKey] = value;
+	            }
+	            commitActionChanges();
+	        }
 
         let deleteTargetId = null;
         let deleteTargetType = null; // 'action' or 'project'
@@ -629,76 +1397,553 @@
                 } else {
                     renderProjectsGrid();
                 }
-            } else if (deleteTargetType === 'action') {
-                currentActions = currentActions.filter(a => a.id !== deleteTargetId);
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
+	            } else if (deleteTargetType === 'action') {
+	                pushUndoState();
+	                // Recursively collect all action IDs to delete (including nested ones)
+	                const idsToDelete = new Set([deleteTargetId]);
+                
+                function collectNestedActionIds(action) {
+                    if (isConditionalAction(action)) {
+                        // Collect actions from then and else arrays
+                        if (Array.isArray(action.then)) {
+                            action.then.forEach(a => {
+                                if (a && a.id) {
+                                    idsToDelete.add(a.id);
+                                    collectNestedActionIds(a);
+                                }
+                            });
+                        }
+                        if (Array.isArray(action.else)) {
+                            action.else.forEach(a => {
+                                if (a && a.id) {
+                                    idsToDelete.add(a.id);
+                                    collectNestedActionIds(a);
+                                }
+                            });
+                        }
+                    } else if (isRepeatAction(action)) {
+                        // Collect actions from do array
+                        if (Array.isArray(action.do)) {
+                            action.do.forEach(a => {
+                                if (a && a.id) {
+                                    idsToDelete.add(a.id);
+                                    collectNestedActionIds(a);
+                                }
+                            });
+                        }
+                    }
                 }
-                renderActions();
-            }
-            closeDeleteModal();
-        }
+                
+                const actionInfo = findActionLocation(deleteTargetId);
+                if (actionInfo?.action) {
+                    collectNestedActionIds(actionInfo.action);
+                }
+                
+                // Remove the selected action (and its nested children) from wherever it lives
+                removeActionById(deleteTargetId);
+                
+                // Clean up any stray nested references with matching IDs
+                const pruneNestedArrays = (arr) => {
+                    if (!Array.isArray(arr)) return;
+                    for (let i = arr.length - 1; i >= 0; i--) {
+                        const act = arr[i];
+                        if (!act) continue;
+                        if (idsToDelete.has(act.id)) {
+                            arr.splice(i, 1);
+                            continue;
+                        }
+                        if (isConditionalAction(act)) {
+                            pruneNestedArrays(act.then);
+                            pruneNestedArrays(act.else);
+                        } else if (isRepeatAction(act)) {
+                            pruneNestedArrays(act.do);
+                        }
+                    }
+                };
+	                pruneNestedArrays(currentActions);
+	                commitActionChanges();
+	            }
+	            closeDeleteModal();
+	        }
 
         function deleteAction(actionId) {
             showDeleteModal('action', actionId);
         }
 
-        function duplicateAction(actionId) {
-            const action = currentActions.find(a => a.id === actionId);
-            if (action) {
-                const newAction = { ...action, id: Date.now(), params: { ...action.params } };
-                const index = currentActions.findIndex(a => a.id === actionId);
-                currentActions.splice(index + 1, 0, newAction);
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
+	        function duplicateAction(actionId) {
+	            const loc = findActionLocation(actionId);
+	            if (!loc) return;
+	            pushUndoState();
+	            const newAction = cloneActionDeep(loc.action);
+	            loc.parentArray.splice(loc.index + 1, 0, newAction);
+	            commitActionChanges([newAction.id]);
+	        }
+
+	        function commitActionChanges(animateIds = null) {
+	            if (currentProject) {
+	                currentProject.actions = currentActions;
+	                saveProjects();
+	            }
+	            renderActions(animateIds);
+	            updateUndoRedoButtons();
+	        }
+
+        function scrollPreviewToBottom() {
+            requestAnimationFrame(() => {
+                const canvas = document.getElementById('preview-canvas');
+                if (canvas) {
+                    canvas.scrollTop = canvas.scrollHeight;
                 }
-                renderActions([newAction.id]);
+            });
+        }
+
+	        // ============ Placement Helpers ============
+	        function insertActionIntoZone(controlAction, sectionKey, movedAction, zoneEl, clientY) {
+	            if (!controlAction || !movedAction) return;
+	            const targetArray = ensureSectionArray(controlAction, sectionKey);
+	            if (!targetArray) return;
+
+	            // Determine insertion index based on cursor position vs visible children
+	            let insertIndex = targetArray.length;
+	            const contentEl = Array.from(zoneEl.children).find(c => c.classList?.contains('control-section-content')) || zoneEl;
+	            const childNodes = Array.from(contentEl.children)
+	                .filter(n =>
+	                    n?.dataset?.id &&
+	                    (n.classList?.contains('action-node') || n.classList?.contains('if-block') || n.classList?.contains('repeat-block'))
+	                );
+	            for (const child of childNodes) {
+	                const childId = parseInt(child.dataset.id);
+	                if (!Number.isFinite(childId)) continue;
+	                const midY = child.getBoundingClientRect().top + child.getBoundingClientRect().height / 2;
+	                if (clientY < midY) {
+	                    const idx = targetArray.findIndex(a => a.id === childId);
+	                    if (idx !== -1) {
+	                        insertIndex = idx;
+	                        break;
+	                    }
+	                }
+	            }
+	            targetArray.splice(insertIndex, 0, movedAction);
+	        }
+
+        function insertIntoRootByPosition(moved, clientY) {
+            let targetIndex = currentActions.length;
+            const container = document.getElementById('actions-container');
+            if (container) {
+                const rootNodes = Array.from(container.querySelectorAll('.action-node, .if-block, .repeat-block')).filter(n => !n.dataset.parentId && n.dataset.id);
+                for (let i = 0; i < rootNodes.length; i++) {
+                    const rect = rootNodes[i].getBoundingClientRect();
+                    if (clientY < rect.top + rect.height / 2) {
+                        const targetId = parseInt(rootNodes[i].dataset.actionId || rootNodes[i].dataset.id);
+                        const loc = findActionLocation(targetId);
+                        if (loc && loc.parentArray === currentActions) {
+                            targetIndex = loc.index;
+                            break;
+                        }
+                    }
+                }
             }
+            currentActions.splice(targetIndex, 0, moved);
         }
 
-        // ============ Drag and Drop ============
-        function initDragAndDrop() {
-            const container = document.getElementById('actions-container');
-            const nodes = container.querySelectorAll('.action-node');
-            let draggedEl = null;
+	        // ============ Reorder (Pointer Drag) ============
+	        function initActionReordering() {
+	            if (reorderListenersAttached) return;
+	            const container = document.getElementById('actions-container');
+	            if (!container) return;
 
-            nodes.forEach(node => {
-                node.addEventListener('dragstart', (e) => {
-                    draggedEl = node;
-                    node.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                });
-                node.addEventListener('dragend', () => {
-                    if (draggedEl) { draggedEl.classList.remove('dragging'); draggedEl = null; }
-                });
-                node.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    if (!draggedEl || draggedEl === node) return;
-                    const rect = node.getBoundingClientRect();
-                    const midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) container.insertBefore(draggedEl, node);
-                    else container.insertBefore(draggedEl, node.nextSibling);
-                });
-                node.addEventListener('drop', (e) => { e.preventDefault(); updateActionsOrder(); });
-            });
-        }
+	            reorderListenersAttached = true;
 
-        function updateActionsOrder() {
-            const container = document.getElementById('actions-container');
-            const nodes = container.querySelectorAll('.action-node');
-            const newOrder = [];
-            nodes.forEach(node => {
-                const id = parseInt(node.dataset.id);
-                const action = currentActions.find(a => a.id === id);
-                if (action) newOrder.push(action);
-            });
-            currentActions = newOrder;
-            if (currentProject) { currentProject.actions = currentActions; saveProjects(); }
-            renderActions();
-        }
+	            container.addEventListener('pointerdown', reorderOnPointerDown);
+	            window.addEventListener('pointermove', reorderOnPointerMove, { passive: false });
+	            window.addEventListener('pointerup', reorderOnPointerUp);
+	            window.addEventListener('pointercancel', reorderOnPointerCancel);
+	        }
 
+	        function reorderOnPointerDown(e) {
+	            if (!editMode) return;
+	            if (reorderState) return;
+	            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+	            // Don't start a drag when the user is interacting with controls/inputs.
+	            if (e.target.closest('input, textarea, select, button, a, [contenteditable="true"], .node-actions, .control-actions, .linked-output')) {
+	                return;
+	            }
+
+	            const itemEl = e.target.closest('.action-node, .if-block, .repeat-block');
+	            if (!itemEl?.dataset?.id) return;
+
+	            // On touch devices, dragging anywhere conflicts with scroll. Keep touch drag on the handle.
+	            if (e.pointerType === 'touch' && !e.target.closest('[data-reorder-handle="true"]')) {
+	                return;
+	            }
+
+	            const actionId = Number(itemEl.dataset.id);
+	            if (!Number.isFinite(actionId)) return;
+
+	            const loc = findActionLocation(actionId);
+	            if (!loc?.action) return;
+
+	            const rect = itemEl.getBoundingClientRect();
+		            reorderState = {
+		                phase: 'pending',
+		                pointerId: e.pointerId,
+		                handleEl: itemEl,
+		                draggedId: actionId,
+		                draggedRoot: loc.action,
+		                ghostEl: itemEl,
+		                placeholderEl: null,
+		                startX: e.clientX,
+		                startY: e.clientY,
+		                lastClientY: e.clientY,
+		                moveDirY: 0,
+		                offsetX: e.clientX - rect.left,
+		                offsetY: e.clientY - rect.top,
+		                width: rect.width,
+		                height: rect.height,
+		                currentZone: null
+	            };
+
+	            try {
+	                itemEl.setPointerCapture(e.pointerId);
+	            } catch (err) {}
+
+	            e.preventDefault();
+	        }
+
+	        function reorderOnPointerMove(e) {
+	            const state = reorderState;
+	            if (!state) return;
+	            if (e.pointerId !== state.pointerId) return;
+
+		            if (state.phase === 'pending') {
+		                const dx = e.clientX - state.startX;
+		                const dy = e.clientY - state.startY;
+		                if (Math.hypot(dx, dy) < 6) return;
+		                state.moveDirY = dy;
+		                state.lastClientY = e.clientY;
+		                reorderBeginDrag(state);
+		            }
+
+		            if (state.phase !== 'dragging') return;
+
+		            e.preventDefault();
+		            const deltaY = e.clientY - (state.lastClientY ?? e.clientY);
+		            if (Math.abs(deltaY) > 1) state.moveDirY = deltaY;
+		            state.lastClientY = e.clientY;
+		            reorderUpdateGhostPosition(state, e.clientX, e.clientY);
+		            reorderAutoScrollPreview(e.clientY);
+		            reorderUpdatePlaceholderPosition(state, e.clientX, e.clientY);
+		        }
+
+	        function reorderOnPointerUp(e) {
+	            const state = reorderState;
+	            if (!state) return;
+	            if (e.pointerId !== state.pointerId) return;
+
+	            reorderState = null;
+
+	            try {
+	                state.handleEl?.releasePointerCapture(state.pointerId);
+	            } catch (err) {}
+
+	            if (state.phase !== 'dragging' || !state.placeholderEl) {
+	                return;
+	            }
+
+	            const placeholderEl = state.placeholderEl;
+	            const listEl = placeholderEl.parentElement;
+		            const zone =
+		                placeholderEl.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone') ||
+		                document.getElementById('actions-container');
+		            const targetInfo = reorderGetTargetInfo(zone);
+		            const targetIndex = reorderGetPlaceholderIndex(listEl, placeholderEl);
+
+		            const beforeState = captureWorkspaceState();
+		            const moved = reorderApplyMove(state.draggedId, targetInfo, targetIndex, state.draggedRoot);
+		            reorderCleanup(state);
+
+		            if (moved) {
+		                pushUndoSnapshot(beforeState);
+		                commitActionChanges();
+		            } else {
+		                renderActions();
+		            }
+		        }
+
+	        function reorderOnPointerCancel(e) {
+	            const state = reorderState;
+	            if (!state) return;
+	            if (e.pointerId !== state.pointerId) return;
+
+	            reorderState = null;
+	            try {
+	                state.handleEl?.releasePointerCapture(state.pointerId);
+	            } catch (err) {}
+
+	            if (state.phase !== 'dragging') {
+	                return;
+	            }
+
+	            reorderCleanup(state);
+	            renderActions();
+	        }
+
+	        function reorderBeginDrag(state) {
+	            const placeholder = document.createElement('div');
+	            placeholder.className = 'drag-placeholder';
+	            placeholder.style.height = `${Math.max(24, state.height)}px`;
+	            placeholder.style.boxSizing = 'border-box';
+	            placeholder.style.pointerEvents = 'none';
+	            placeholder.innerHTML = '<div class="drag-placeholder-inner"></div>';
+
+	            state.placeholderEl = placeholder;
+
+	            const parent = state.ghostEl.parentNode;
+	            if (!parent) return;
+	            parent.insertBefore(placeholder, state.ghostEl);
+
+	            const ghost = state.ghostEl;
+	            ghost.classList.add('dragging');
+	            ghost.style.position = 'fixed';
+	            ghost.style.left = '0px';
+	            ghost.style.top = '0px';
+	            ghost.style.width = `${state.width}px`;
+	            ghost.style.height = `${state.height}px`;
+	            ghost.style.boxSizing = 'border-box';
+	            ghost.style.pointerEvents = 'none';
+	            ghost.style.zIndex = '10000';
+	            ghost.style.margin = '0';
+	            ghost.style.cursor = 'grabbing';
+	            ghost.style.opacity = '0.9';
+
+	            document.body.appendChild(ghost);
+
+	            state.phase = 'dragging';
+	            reorderSetZonesActive(true);
+
+	            reorderUpdateGhostPosition(state, state.startX, state.startY);
+	            reorderUpdatePlaceholderPosition(state, state.startX, state.startY);
+	        }
+
+	        function reorderUpdateGhostPosition(state, clientX, clientY) {
+	            const ghost = state?.ghostEl;
+	            if (!ghost) return;
+	            ghost.style.left = `${clientX - state.offsetX}px`;
+	            ghost.style.top = `${clientY - state.offsetY}px`;
+	        }
+
+	        function reorderAutoScrollPreview(clientY) {
+	            const canvas = document.getElementById('preview-canvas');
+	            if (!canvas) return;
+
+	            const rect = canvas.getBoundingClientRect();
+	            const edge = 64;
+	            const speed = 18;
+
+	            if (clientY < rect.top + edge) {
+	                canvas.scrollTop -= speed;
+	            } else if (clientY > rect.bottom - edge) {
+	                canvas.scrollTop += speed;
+	            }
+	        }
+
+	        function reorderUpdatePlaceholderPosition(state, clientX, clientY) {
+	            const placeholder = state.placeholderEl;
+	            if (!placeholder) return;
+
+	            const zone = reorderGetZoneFromPoint(clientX, clientY);
+	            if (!zone) {
+	                reorderSetZoneHover(state, null);
+	                return;
+	            }
+
+	            // Disallow dropping into self or descendants.
+	            const zoneParentId = zone.dataset?.actionId ? Number(zone.dataset.actionId) : null;
+	            if (
+	                zoneParentId &&
+	                (zoneParentId === state.draggedId || actionContainsId(state.draggedRoot, zoneParentId))
+	            ) {
+	                reorderSetZoneHover(state, null);
+	                return;
+	            }
+
+	            const contentEl = reorderGetZoneContent(zone);
+	            if (!contentEl) return;
+
+		            const beforeEl = reorderFindInsertBefore(contentEl, clientY, placeholder, state.moveDirY);
+		            if (beforeEl) {
+		                contentEl.insertBefore(placeholder, beforeEl);
+		            } else {
+		                reorderAppendPlaceholder(contentEl, placeholder);
+		            }
+
+	            reorderSetZoneHover(state, zone);
+	        }
+
+	        function reorderGetZoneFromPoint(clientX, clientY) {
+	            const el = document.elementFromPoint(clientX, clientY);
+	            if (!el) return null;
+
+	            const nestedZone = el.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone');
+	            if (nestedZone) return nestedZone;
+
+	            const actionsContainer = el.closest('#actions-container');
+	            if (actionsContainer) return actionsContainer;
+
+	            // If we're still in the preview canvas, treat as root drop.
+	            if (el.closest('#preview-canvas')) {
+	                return document.getElementById('actions-container');
+	            }
+
+	            return null;
+	        }
+
+	        function reorderGetZoneContent(zone) {
+	            if (!zone) return null;
+	            if (zone.id === 'actions-container') return zone;
+	            return (
+	                Array.from(zone.children).find(c => c.classList?.contains('control-section-content')) || zone
+	            );
+	        }
+
+	        function reorderIsItemElement(el) {
+	            return (
+	                !!el?.classList &&
+	                (el.classList.contains('action-node') || el.classList.contains('if-block') || el.classList.contains('repeat-block'))
+	            );
+	        }
+
+		        function reorderFindInsertBefore(listEl, clientY, placeholderEl, dirY = 0) {
+		            const items = Array.from(listEl.children).filter(el => reorderIsItemElement(el) && el !== placeholderEl);
+
+		            if (!dirY) {
+		                let closestOffset = Number.NEGATIVE_INFINITY;
+		                let closestEl = null;
+
+		                items.forEach(el => {
+		                    const rect = el.getBoundingClientRect();
+		                    const offset = clientY - (rect.top + rect.height / 2);
+		                    if (offset < 0 && offset > closestOffset) {
+		                        closestOffset = offset;
+		                        closestEl = el;
+		                    }
+		                });
+
+		                return closestEl;
+		            }
+
+		            for (let i = 0; i < items.length; i++) {
+		                const el = items[i];
+		                const rect = el.getBoundingClientRect();
+		                if (clientY < rect.top + 2) return el;
+		                if (clientY >= rect.top && clientY <= rect.bottom) {
+		                    if (dirY < 0) return el;
+		                    return items[i + 1] || null;
+		                }
+		            }
+
+		            return null;
+		        }
+
+	        function reorderAppendPlaceholder(listEl, placeholderEl) {
+	            const hintEl = Array.from(listEl.children).find(c => c.classList?.contains('empty-section-hint')) || null;
+	            if (hintEl) {
+	                listEl.insertBefore(placeholderEl, hintEl);
+	            } else {
+	                listEl.appendChild(placeholderEl);
+	            }
+	        }
+
+	        function reorderSetZoneHover(state, zone) {
+	            if (state.currentZone && state.currentZone !== zone) {
+	                state.currentZone.classList.remove('drop-zone-hover');
+	            }
+	            state.currentZone = zone;
+	            if (zone?.classList) {
+	                zone.classList.add('drop-zone-hover');
+	            }
+	        }
+
+	        function reorderSetZonesActive(active) {
+	            const container = document.getElementById('actions-container');
+	            if (!container) return;
+	            container.querySelectorAll('.drop-zone').forEach(z => z.classList.toggle('drop-zone-active', active));
+	        }
+
+	        function reorderGetTargetInfo(zone) {
+	            if (!zone) return null;
+
+	            if (zone.id === 'actions-container') {
+	                return { parentId: null, section: 'root' };
+	            }
+
+	            const parentId = Number(zone.dataset?.actionId);
+	            if (!Number.isFinite(parentId)) return null;
+
+	            const dropZone = zone.dataset?.dropZone;
+	            const section =
+	                dropZone === 'if-then' ? 'then' :
+	                dropZone === 'if-else' ? 'else' :
+	                dropZone === 'repeat' ? 'do' :
+	                null;
+	            if (!section) return null;
+
+	            return { parentId, section };
+	        }
+
+	        function reorderGetPlaceholderIndex(listEl, placeholderEl) {
+	            if (!listEl) return 0;
+	            let index = 0;
+	            for (const child of Array.from(listEl.children)) {
+	                if (child === placeholderEl) break;
+	                if (reorderIsItemElement(child)) index += 1;
+	            }
+	            return index;
+	        }
+
+	        function reorderApplyMove(actionId, targetInfo, targetIndex, draggedRoot) {
+	            if (!targetInfo) return false;
+
+	            const targetParentId = targetInfo.parentId ? Number(targetInfo.parentId) : null;
+	            if (targetParentId && (targetParentId === actionId || actionContainsId(draggedRoot, targetParentId))) {
+	                return false;
+	            }
+
+	            const moved = removeActionById(actionId);
+	            if (!moved) return false;
+
+	            let targetArray;
+	            if (!targetParentId) {
+	                targetArray = currentActions;
+	            } else {
+	                const parentLoc = findActionLocation(targetParentId);
+	                targetArray = parentLoc?.action ? ensureSectionArray(parentLoc.action, targetInfo.section) : currentActions;
+	            }
+
+	            if (!Array.isArray(targetArray)) targetArray = currentActions;
+	            if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex > targetArray.length) {
+	                targetIndex = targetArray.length;
+	            }
+
+	            targetArray.splice(targetIndex, 0, moved);
+	            return true;
+	        }
+
+	        function reorderCleanup(state) {
+	            reorderSetZonesActive(false);
+	            if (state.currentZone) {
+	                state.currentZone.classList.remove('drop-zone-hover');
+	            }
+
+	            if (state.placeholderEl?.parentNode) {
+	                state.placeholderEl.parentNode.removeChild(state.placeholderEl);
+	            }
+
+	            if (state.ghostEl?.parentNode) {
+	                state.ghostEl.parentNode.removeChild(state.ghostEl);
+	            }
+	        }
         // ============ Menus ============
         function togglePlusMenu() {
             const menu = document.getElementById('plus-menu');
@@ -716,8 +1961,7 @@
             document.getElementById('plus-menu')?.classList.remove('active');
             document.getElementById('plus-menu-btn')?.classList.remove('active');
             const input = document.getElementById('chat-input');
-            if (mode === 'thinking') input.placeholder = '🧠 Thinking mode active...';
-            else if (mode === 'discussion') input.placeholder = '💬 Discussion mode...';
+            if (mode === 'discussion') input.placeholder = 'Discussion mode...';
             else input.placeholder = 'Describe your shortcut...';
         }
 
@@ -766,6 +2010,13 @@
             });
         }
 
+        let placementMode = false;
+        let pendingAction = null;
+        let placementCursor = null;
+        let placementMoveHandler = null;
+        let placementClickHandler = null;
+        let placementKeyHandler = null;
+
         async function addActionDirectly(template) {
             closeForceActionModal();
             try {
@@ -798,10 +2049,167 @@
                     data = { action: template.action, params: {} };
                 }
                 const newAction = { id: Date.now(), action: data.action || template.action, title: data.action || template.action, params: data.params || {} };
+                getActionUUID(newAction);
                 currentActions.push(newAction);
-                if (currentProject) { currentProject.actions = currentActions; saveProjects(); }
-                renderActions([newAction.id]);
+                commitActionChanges([newAction.id]);
+                scrollPreviewToBottom();
             } catch (e) { console.error('Failed to load action template:', e); }
+        }
+
+        function enterPlacementMode(action) {
+            placementMode = true;
+            pendingAction = action;
+            
+            // Create floating cursor element
+            if (placementCursor) placementCursor.remove();
+            placementCursor = document.createElement('div');
+            placementCursor.className = 'placement-cursor';
+            placementCursor.innerHTML = `
+                <div class="placement-cursor-content">
+                    <div class="node-icon">${getActionIcon(action.action)}</div>
+                    <span>${escapeHtml(action.title || action.action)}</span>
+                    <span class="placement-hint">Click to place action</span>
+                </div>
+            `;
+            document.body.appendChild(placementCursor);
+            
+            // Update cursor position on mouse move
+            placementMoveHandler = (e) => {
+                if (!placementMode) return;
+                placementCursor.style.left = e.clientX + 'px';
+                placementCursor.style.top = e.clientY + 'px';
+                
+                // Highlight drop zones - prioritize drop zones over action nodes
+            const container = document.getElementById('actions-container');
+            let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, #actions-container, .root-drop-zone'));
+            // Also include the preview canvas as a fallback
+            const previewCanvas = document.getElementById('preview-canvas');
+            if (previewCanvas) allZones.push(previewCanvas);
+                let hoveredZone = null;
+                
+                allZones.forEach(zone => {
+                    const rect = zone.getBoundingClientRect();
+                    if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        // Prioritize drop zones
+                        if (zone.classList.contains('drop-zone')) {
+                            hoveredZone = zone;
+                        } else if (!hoveredZone) {
+                            hoveredZone = zone;
+                        }
+                    }
+                });
+                
+                // Remove all hover classes first
+                allZones.forEach(zone => zone.classList.remove('placement-hover'));
+                // Add hover to the topmost/prioritized zone
+                if (hoveredZone) {
+                    hoveredZone.classList.add('placement-hover');
+                }
+            };
+            
+            document.addEventListener('mousemove', placementMoveHandler);
+            
+            // Handle click to place (use single click listener to avoid double fire)
+	            placementClickHandler = (e) => {
+	                if (!placementMode) return;
+	                if (e.button !== 0) return;
+	                if (!pendingAction) return;
+	                pushUndoState();
+	                
+	                const container = document.getElementById('actions-container');
+	                let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, #actions-container'));
+                // Also include the preview canvas as a fallback
+                const previewCanvas = document.getElementById('preview-canvas');
+                if (previewCanvas) allZones.push(previewCanvas);
+                let placed = false;
+                let targetZone = null;
+                
+                // Find the zone under the cursor, prioritizing drop zones
+                allZones.forEach(zone => {
+                    const rect = zone.getBoundingClientRect();
+                    if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        if (zone.classList.contains('drop-zone')) {
+                            targetZone = zone;
+                            placed = true;
+                        } else if (!targetZone) {
+                            targetZone = zone;
+                            placed = true;
+                        }
+                    }
+                });
+                
+                if (targetZone) {
+                    if (targetZone.classList.contains('drop-zone')) {
+                        const actionId = parseInt(targetZone.dataset.actionId);
+                        const dropZone = targetZone.dataset.dropZone;
+                        const controlInfo = findActionLocation(actionId);
+                        if (controlInfo?.action) {
+                            const sectionKey = dropZone === 'if-then' ? 'then' : dropZone === 'if-else' ? 'else' : 'do';
+                            insertActionIntoZone(controlInfo.action, sectionKey, pendingAction, targetZone, e.clientY);
+                            placed = true;
+                        }
+                    } else if (targetZone.classList.contains('action-node') || targetZone.classList.contains('if-block') || targetZone.classList.contains('repeat-block')) {
+                        // Place after the action node within same parent
+                        const targetId = parseInt(targetZone.dataset.id || targetZone.dataset.actionId);
+                        const targetInfo = findActionLocation(targetId);
+                        if (targetInfo) {
+                            const insertIndex = targetInfo.index + 1;
+                            targetInfo.parentArray.splice(insertIndex, 0, pendingAction);
+                            placed = true;
+                        }
+                    } else if (targetZone.id === 'actions-container' || targetZone.classList.contains('root-drop-zone')) {
+                        insertIntoRootByPosition(pendingAction, e.clientY);
+                        placed = true;
+                    } else if (targetZone.id === 'preview-canvas') {
+                        // Place at end when clicking on empty canvas area
+                        currentActions.push(pendingAction);
+                        placed = true;
+                    }
+                }
+                
+                if (!placed) {
+                    // Place at end if no specific zone was detected
+                    currentActions.push(pendingAction);
+                }
+                
+                // Clean up
+                exitPlacementMode();
+                commitActionChanges([pendingAction.id]);
+            };
+            
+            document.addEventListener('click', placementClickHandler);
+            placementKeyHandler = (e) => {
+                if (e.key === 'Escape') {
+                    exitPlacementMode();
+                }
+            };
+            document.addEventListener('keydown', placementKeyHandler, { once: true });
+        }
+
+        function exitPlacementMode() {
+            placementMode = false;
+            pendingAction = null;
+            if (placementCursor) {
+                placementCursor.remove();
+                placementCursor = null;
+            }
+            if (placementMoveHandler) {
+                document.removeEventListener('mousemove', placementMoveHandler);
+                placementMoveHandler = null;
+            }
+            if (placementClickHandler) {
+                document.removeEventListener('click', placementClickHandler, true);
+                placementClickHandler = null;
+            }
+            if (placementKeyHandler) {
+                document.removeEventListener('keydown', placementKeyHandler);
+                placementKeyHandler = null;
+            }
+            document.getElementById('actions-container')?.querySelectorAll('.placement-hover').forEach(el => {
+                el.classList.remove('placement-hover');
+            });
         }
 
         // ============ Download ============
@@ -913,35 +2321,57 @@
         }
 
         // ============ Pipeline Orbs (in chat) ============
-        function showPipelineOrbs() {
-            const container = document.getElementById('messages');
-            const existing = document.getElementById('pipeline-orbs');
-            if (existing) existing.remove();
+        const PIPELINE_STEPS = [
+            { id: 'plan', label: 'Planning', hint: 'Analyzing your request...' },
+            { id: 'catalog', label: 'Searching', hint: 'Finding matching actions...' },
+            { id: 'build', label: 'Building', hint: 'Assembling your shortcut...' },
+            { id: 'summarize', label: 'Finalizing', hint: 'Polishing results...' }
+        ];
 
-            const orbsDiv = document.createElement('div');
-            orbsDiv.id = 'pipeline-orbs';
-            orbsDiv.className = 'pipeline-orbs';
-            orbsDiv.innerHTML = `
-                <div class="orb" id="orb-plan"><span>Planning</span></div>
-                <div class="orb-line"></div>
-                <div class="orb" id="orb-catalog"><span>Searching</span></div>
-                <div class="orb-line"></div>
-                <div class="orb" id="orb-build"><span>Building</span></div>
-                <div class="orb-line"></div>
-                <div class="orb" id="orb-summarize"><span>Finalizing</span></div>
-            `;
-            container.appendChild(orbsDiv);
-            container.scrollTop = container.scrollHeight;
-            resetPipelineSteps();
-            updatePipelineOrb('plan', 'started');
-        }
+	        function showPipelineOrbs() {
+	            const container = document.getElementById('messages');
+	            const existing = document.getElementById('pipeline-orbs');
+	            if (existing) existing.remove();
 
-        function updatePipelineOrb(step, status) {
-            const orb = document.getElementById(`orb-${step}`);
-            if (!orb) return;
-            orb.classList.remove('active', 'completed');
-            if (status === 'started') orb.classList.add('active');
-            else if (status === 'completed') orb.classList.add('completed');
+	            const orbsDiv = document.createElement('div');
+	            orbsDiv.id = 'pipeline-orbs';
+	            orbsDiv.className = 'pipeline-orbs';
+	            orbsDiv.innerHTML = `
+	                <div class="pipeline-orbs-row" role="group" aria-label="Generation progress">
+	                    ${PIPELINE_STEPS.map((step, idx) => `
+	                        <div class="orb" id="orb-${step.id}" data-orb-step="${step.id}">
+	                            <span>${step.label}</span>
+	                        </div>
+	                        ${idx < PIPELINE_STEPS.length - 1 ? '<div class="orb-line" aria-hidden="true"></div>' : ''}
+	                    `).join('')}
+	                </div>
+	                <div class="pipeline-orbs-hint" id="pipeline-orbs-hint">${escapeHtml(PIPELINE_STEPS[0]?.hint || 'Working...')}</div>
+	            `;
+	            container.appendChild(orbsDiv);
+	            container.scrollTop = container.scrollHeight;
+	            resetPipelineSteps();
+	            updatePipelineOrb('plan', 'started', 'Analyzing your request...');
+	        }
+
+	        function updatePipelineOrb(step, status, hint = '') {
+	            const orb = document.getElementById(`orb-${step}`);
+	            if (!orb) return;
+	            orb.classList.remove('active', 'completed');
+	            if (status === 'started') orb.classList.add('active');
+	            else if (status === 'completed') orb.classList.add('completed');
+
+	            const hintEl = document.getElementById('pipeline-orbs-hint');
+	            if (hintEl && (status === 'started' || hint)) {
+	                const state = status === 'completed' ? 'completed' : status === 'started' ? 'active' : 'idle';
+	                hintEl.textContent = hint || getDefaultHint(step, state);
+	            }
+	        }
+        
+        function getDefaultHint(step, state = 'idle') {
+            const meta = PIPELINE_STEPS.find(s => s.id === step);
+            if (state === 'completed') return 'Done';
+            if (state === 'active') return meta?.hint || 'In progress...';
+            return 'Waiting...';
         }
 
         function removePipelineOrbs() {
@@ -949,30 +2379,12 @@
         }
 
         // ============ Forced Actions ============
-        function addForcedAction(template) {
+        async function addForcedAction(template) {
             closeForceActionModal();
             if (forcedActions.find(a => a.action === template.action)) return; // Already forced
-            // Immediately add the action to the workflow
-            try {
-                const response = await fetch(`Templates/${template.file}`);
-                const data = await response.json();
-                const newAction = {
-                    id: Date.now(),
-                    action: data.action || template.action,
-                    title: data.action || template.action,
-                    params: data.params || {}
-                };
-                currentActions.push(newAction);
-                if (currentProject) {
-                    currentProject.actions = currentActions;
-                    saveProjects();
-                }
-                renderActions([newAction.id]);
-                addMessageToUI(`🎯 Added action: ${newAction.title}`, 'assistant');
-            } catch (e) {
-                console.error('Force action failed:', e);
-                alert('Could not add that action. Please try again.');
-            }
+            forcedActions.push({ action: template.action, file: template.file });
+            renderForcedActions();
+            addMessageToUI(`🎯 Will use **${template.action}** in next response`, 'assistant');
         }
 
         function removeForcedAction(action) {
@@ -999,25 +2411,20 @@
 
         // ============ Mode Toggle (in plus menu) ============
         function toggleMode(mode) {
-            if (mode === 'thinking' && (localStorage.getItem('flux_plan') || 'free') !== 'paid') {
-                alert('Thinking mode is a Pro feature.');
-                return;
-            }
             if (chatMode === mode) {
                 chatMode = 'standard';
             } else {
                 chatMode = mode;
             }
             updateModeIndicators();
+            setChatMode(chatMode);
             // Don't close menu - let user see the state change
         }
 
         function updateModeIndicators() {
             const discussionToggle = document.getElementById('discussion-mode-toggle');
-            const thinkingToggle = document.getElementById('thinking-mode-toggle');
 
             discussionToggle?.classList.toggle('active', chatMode === 'discussion');
-            thinkingToggle?.classList.toggle('active', chatMode === 'thinking');
         }
 
         // ============ Animations Toggle ============
@@ -1054,14 +2461,18 @@
 
             // Add linkable actions (outputs from previous actions in order)
             const currentActionId = parseInt(inputEl.dataset.actionId);
-            const currentIndex = currentActions.findIndex(a => a.id === currentActionId);
-            const previousActions = currentIndex > 0 ? currentActions.slice(0, currentIndex) : [];
-            if (previousActions.length > 0) {
+            const flatActions = flattenActions();
+            const currentIndex = flatActions.findIndex(a => a.id === currentActionId);
+            const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
+            const linkableActions = previousActions
+                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
+                .filter(entry => entry.output);
+            if (linkableActions.length > 0) {
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-header">Link to Action</div>';
-                previousActions.forEach(a => {
-                    const uuid = a.params?.UUID || a.params?.Uuid || a.params?.uuid || a.params?.ProvidedOutputUUID;
-                    const label = a.title || a.action || 'Action';
+                linkableActions.forEach(({ action: a, output }) => {
+                    const uuid = output.outputUUID;
+                    const label = output.outputName || a.title || a.action || 'Action';
                     const safeLabel = escapeHtml(label).replace(/\"/g, '&quot;');
                     menuHtml += `<div class="context-menu-item" data-source-id="${a.id}" data-source-uuid="${uuid || ''}" data-source-label="${safeLabel}">🔗 ${escapeHtml(label)}</div>`;
                 });
@@ -1116,38 +2527,53 @@
             document.getElementById('variable-context-menu')?.classList.remove('active');
         }
 
-        function linkActionParam(targetId, paramKey, sourceId, sourceUuid, sourceLabel) {
-            const target = currentActions.find(a => a.id === targetId);
-            const source = currentActions.find(a => a.id === sourceId);
-            if (!target || !source) return;
+	        function linkActionParam(targetId, paramKey, sourceId, sourceUuid, sourceLabel) {
+	            const targetInfo = findActionLocation(targetId);
+	            const sourceInfo = findActionLocation(sourceId);
+	            const target = targetInfo?.action;
+	            const source = sourceInfo?.action;
+	            if (!target || !source) return;
 
-            const outputUUID = (sourceUuid && String(sourceUuid)) || String(source.id);
-            const outputName = sourceLabel || source.title || source.action || 'Previous Output';
-            target.params[paramKey] = {
-                Value: {
-                    OutputName: outputName,
-                    OutputUUID: outputUUID,
-                    Type: 'ActionOutput'
-                },
-                WFSerializationType: 'WFTextTokenAttachment'
-            };
-            if (currentProject) {
-                currentProject.actions = currentActions;
-                saveProjects();
-            }
-            renderActions([targetId]);
-        }
+	            const sourceOutput = getActionOutputInfo(source);
+	            const outputUUID = sourceUuid ? String(sourceUuid) : sourceOutput?.outputUUID;
+	            const outputName = sourceLabel || sourceOutput?.outputName || 'Previous Output';
 
-        function clearLinkedParam(actionId, paramKey) {
-            const action = currentActions.find(a => a.id === actionId);
-            if (!action) return;
-            delete action.params[paramKey];
-            if (currentProject) {
-                currentProject.actions = currentActions;
-                saveProjects();
-            }
-            renderActions([actionId]);
-        }
+	            // Only allow linking when the source exposes an output
+	            const availableOutputs = collectAvailableOutputs();
+	            if (!outputUUID || !availableOutputs.has(String(outputUUID))) {
+	                console.warn('Link aborted: source action has no output to link.');
+	                clearLinkedParam(targetId, paramKey);
+	                return;
+	            }
+
+	            if (!target.params) target.params = {};
+	            const existing = target.params[paramKey];
+	            const existingUuid = existing?.Value?.OutputUUID || existing?.OutputUUID || '';
+	            if (existingUuid && String(existingUuid) === String(outputUUID)) {
+	                return;
+	            }
+	            pushUndoState();
+	            target.params[paramKey] = {
+	                Value: {
+	                    OutputName: outputName,
+	                    OutputUUID: outputUUID, // Use the same UUID as source
+	                    Type: 'ActionOutput'
+	                },
+	                WFSerializationType: 'WFTextTokenAttachment'
+	            };
+	            commitActionChanges([targetId, sourceId]);
+	        }
+
+	        function clearLinkedParam(actionId, paramKey) {
+	            const action = findActionLocation(actionId)?.action;
+	            if (!action) return;
+	            const fallback = buildParamPlaceholder(paramKey);
+	            if (!action.params) action.params = {};
+	            if (action.params[paramKey] === fallback) return;
+	            pushUndoState();
+	            action.params[paramKey] = fallback;
+	            commitActionChanges([actionId]);
+	        }
 
         // Mobile: add button to insert variable
         function addVariableInsertButton(inputEl) {
@@ -1168,7 +2594,7 @@
         // ============ Tutorial System ============
         const tutorialSteps = [
             { target: '#chat-input', title: 'Chat Input', text: 'Describe the shortcut you want to build. The AI will create it for you!' },
-            { target: '#plus-menu-btn', title: 'Quick Actions', text: 'Click here to access Force Action, Discussion Mode, and Thinking Mode. Modes turn blue when active.' },
+            { target: '#plus-menu-btn', title: 'Quick Actions', text: 'Click here to access Force Action and Discussion Mode. Modes turn blue when active.' },
             { target: '#preview-canvas', title: 'Shortcut Preview', text: 'Your shortcut actions will appear here. Click Edit to drag and reorder them!' },
             { target: '#edit-btn', title: 'Edit Mode', text: 'Click Edit to modify, add, or remove actions. You can also right-click inputs to insert variables.' },
             { target: '#top-download-btn', title: 'Download', text: 'When you\'re done, download your shortcut to use in the Shortcuts app!' }
@@ -1300,4 +2726,3 @@
             updateModeIndicators();
             renderForcedActions();
         });
-    
