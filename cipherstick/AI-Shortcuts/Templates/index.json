@@ -52,6 +52,7 @@
   "Getvariable.json",
   "Getwebpagecontents.json",
   "GetAppAndWebsiteActivity.json",
+  "GenerateImage.json",
   "Hash.json",
   "If.json",
   "Image.Flip.json",
