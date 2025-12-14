@@ -547,6 +547,8 @@
     font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.2s ease;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .linked-output:hover {
@@ -559,6 +561,10 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .linked-output-label::before {
@@ -596,10 +602,13 @@
     font-weight: 500;
     margin-bottom: 0.5rem;
     margin-top: 0.25rem;
+    max-width: calc(100% - 2rem);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .action-node.has-output {
-    padding-bottom: 2.75rem;
+    padding-bottom: 3.1rem;
 }
 
 .action-node.has-output .node-output {
@@ -613,6 +622,10 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .node-output .output-label::before {

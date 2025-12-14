@@ -881,10 +881,10 @@
             return `{{${String(paramKey || 'VALUE').toUpperCase()}}}`;
         }
 
-        function getActionOutputInfo(action) {
-            if (!action?.params) return null;
-            const outputUUID = action.params.UUID;
-            if (!outputUUID) return null;
+	        function getActionOutputInfo(action) {
+	            if (!action?.params) return null;
+	            const outputUUID = action.params.UUID;
+	            if (!outputUUID) return null;
             const rawUUID = String(outputUUID).trim();
             const rawNameCandidate =
                 (action.params.CustomOutputNameEnabled && typeof action.params.CustomOutputName === 'string' && action.params.CustomOutputName.trim())
@@ -894,14 +894,33 @@
                         : (rawUUID.toLowerCase().startsWith('!link:') ? rawUUID.slice(6).trim() : '')
                             || action.title || action.action || 'Action Output';
 
-            const outputName = String(rawNameCandidate || '').trim() || 'Action Output';
-            return { outputUUID: rawUUID, outputName };
-        }
+	            const outputName = String(rawNameCandidate || '').trim() || 'Action Output';
+	            return { outputUUID: rawUUID, outputName };
+	        }
 
-        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
-            if (!Array.isArray(actions)) return set;
-            actions.forEach(action => {
-                const info = getActionOutputInfo(action);
+	        let outputNameIndexByUUID = new Map();
+
+	        function rebuildOutputNameIndex(actions = currentActions) {
+	            const next = new Map();
+	            const flat = flattenActions(actions, []);
+	            flat.forEach(action => {
+	                const info = getActionOutputInfo(action);
+	                if (info?.outputUUID) next.set(String(info.outputUUID), String(info.outputName || '').trim() || 'Action Output');
+	            });
+	            outputNameIndexByUUID = next;
+	            return outputNameIndexByUUID;
+	        }
+
+	        function resolveOutputNameByUUID(outputUUID, fallbackName = null) {
+	            const key = typeof outputUUID === 'string' ? outputUUID.trim() : String(outputUUID || '').trim();
+	            if (!key) return fallbackName;
+	            return outputNameIndexByUUID.get(key) || fallbackName;
+	        }
+
+	        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
+	            if (!Array.isArray(actions)) return set;
+	            actions.forEach(action => {
+	                const info = getActionOutputInfo(action);
                 if (info) set.add(info.outputUUID);
                 if (isConditionalAction(action)) {
                     collectAvailableOutputs(action.then || [], set);
@@ -960,11 +979,34 @@
             }
         }
 
-        function getActionUUID(action) {
-            if (!action.params) action.params = {};
-            if (!action.params.GroupingIdentifier) action.params.GroupingIdentifier = genUUID();
-            return action.params.GroupingIdentifier;
-        }
+	        function getActionUUID(action) {
+	            if (!action.params) action.params = {};
+	            if (!action.params.GroupingIdentifier) action.params.GroupingIdentifier = genUUID();
+	            return action.params.GroupingIdentifier;
+	        }
+
+	        const NON_LINKABLE_OUTPUT_ACTION_KEYS = new Set([
+	            'notification',
+	            'alert',
+	            'comment',
+	            'nothing',
+	            'vibrate'
+	        ]);
+
+	        function normalizeActionKey(raw) {
+	            return String(raw || '')
+	                .trim()
+	                .toLowerCase()
+	                .replace(/[^a-z0-9.]+/g, '');
+	        }
+
+	        function actionHasLinkableOutput(action) {
+	            const key = normalizeActionKey(action?.action || action?.title);
+	            if (!key) return true;
+	            if (NON_LINKABLE_OUTPUT_ACTION_KEYS.has(key)) return false;
+	            if (key.includes('notification')) return false;
+	            return true;
+	        }
 
         function isConditionalAction(action) {
             const id = (action.action || action.title || '').toLowerCase();
@@ -1335,15 +1377,16 @@
 	        }
 
         // ============ Actions Preview ============
-        function renderActions(animateIds = null) {
-            const container = document.getElementById('actions-container');
-            const emptyState = document.getElementById('empty-state');
-            pruneMissingOutputLinks();
-            currentActions = ensureActionUUIDs(currentActions);
+	        function renderActions(animateIds = null) {
+	            const container = document.getElementById('actions-container');
+	            const emptyState = document.getElementById('empty-state');
+	            pruneMissingOutputLinks();
+	            currentActions = ensureActionUUIDs(currentActions);
+	            rebuildOutputNameIndex(currentActions);
 
-            if (currentActions.length === 0) {
-                container.classList.add('hidden');
-                emptyState.classList.remove('hidden');
+	            if (currentActions.length === 0) {
+	                container.classList.add('hidden');
+	                emptyState.classList.remove('hidden');
                 return;
             }
 
@@ -1351,11 +1394,11 @@
             container.classList.remove('hidden');
             container.innerHTML = '';
 
-	            const tree = buildActionTree(currentActions);
-	            renderNodeList(tree, container, animateIds);
-	            initActionReordering();
+		            const tree = buildActionTree(currentActions);
+		            renderNodeList(tree, container, animateIds);
+		            initActionReordering();
 
-	        }
+		        }
 
         function buildActionTree(actions) {
             const root = [];
@@ -1587,14 +1630,15 @@
 	            node.dataset.parentId = parentMeta?.parentActionId || '';
 	            node.dataset.parentSection = parentMeta?.parentSection || 'root';
 
-	            // Get output information
-	            const outputInfo = getActionOutputInfo(action);
-	            const outputUUID = outputInfo?.outputUUID || null;
-	            const outputDisplay = outputInfo ? humanizeOutputName(outputInfo.outputName) : '';
-	            if (outputUUID) node.classList.add('has-output');
-	            const outputHtml = outputUUID ? `<div class="node-output" data-output-uuid="${escapeHtml(String(outputUUID))}" title="Output: ${escapeHtml(outputDisplay)}">
-	                <span class="output-label">${escapeHtml(outputDisplay)}</span>
-	            </div>` : '';
+		            // Get output information
+		            const outputInfo = getActionOutputInfo(action);
+		            const outputUUID = outputInfo?.outputUUID || null;
+		            const outputDisplay = outputInfo ? humanizeOutputName(outputInfo.outputName) : '';
+		            const showOutputBadge = Boolean(outputUUID && actionHasLinkableOutput(action));
+		            if (showOutputBadge) node.classList.add('has-output');
+		            const outputHtml = showOutputBadge ? `<div class="node-output" data-output-uuid="${escapeHtml(String(outputUUID))}" title="Output: ${escapeHtml(outputDisplay)}">
+		                <span class="output-label">${escapeHtml(outputDisplay)}</span>
+		            </div>` : '';
 
             let paramsHtml = '';
             // Show params if in edit mode OR if they have a value (not empty/default)
@@ -1652,10 +1696,10 @@
             return node;
         }
 
-        function getInputForType(actionId, key, value, readonly = false) {
-            if (String(key).toLowerCase() === 'uuid') {
-                return '';
-            }
+	        function getInputForType(actionId, key, value, readonly = false) {
+	            if (String(key).toLowerCase() === 'uuid') {
+	                return '';
+	            }
             if (key === 'Condition' || key === 'WFCondition') {
                 const { optionsString, options, selected } = getConditionOptionsById(actionId, value);
                 const selectedValue = options.includes(selected) ? selected : (options[0] || selected);
@@ -1663,17 +1707,18 @@
                 const fullOptionsString = optionsString || DEFAULT_CONDITION_OPTIONS;
                 return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
             }
-            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
-            if (isObjectVal) {
-                const outputName = value?.Value?.OutputName || value?.OutputName || 'Linked Output';
-                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
-                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
-                const displayName = humanizeOutputName(outputName);
-                return `<div class="linked-output" data-output-uuid="${escapeHtml(outputUUID)}" title="Linked from: ${escapeHtml(outputName)}">
-                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
-                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
-                </div>`;
-            }
+	            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
+	            if (isObjectVal) {
+	                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+	                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
+	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || 'Linked Output';
+	                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
+	                const displayName = humanizeOutputName(outputName);
+	                return `<div class="linked-output" data-output-uuid="${escapeHtml(outputUUID)}" title="Linked from: ${escapeHtml(outputName)}">
+	                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+	                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+	                </div>`;
+	            }
 
             const strValue = String(value);
             const disabledAttr = readonly ? 'disabled' : '';
@@ -1766,22 +1811,28 @@
             }
             
             // Default text input
-            const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
-            return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
-        }
+	            const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
+	            return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+	        }
 
-        function humanizeOutputName(name) {
-            if (!name) return 'Output';
-            return String(name).replace(/^!link:/i, '').trim() || 'Output';
-        }
+	        function humanizeOutputName(name) {
+	            if (!name) return 'Output';
+	            return String(name).replace(/^!link:/i, '').trim() || 'Output';
+	        }
 
-        function formatLinkedValue(value) {
-            if (!value) return '';
-            const strVal = String(value);
-            if (strVal.trim().startsWith('!link:')) {
-                const linkLabel = strVal.replace(/^!link:/i, '').trim();
-                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
-            }
+	        function formatLinkedValue(value) {
+	            if (!value) return '';
+	            if (value && typeof value === 'object' && !Array.isArray(value)) {
+	                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+	                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
+	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || storedOutputName || 'Linked Output';
+	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(outputName))}</span>`;
+	            }
+	            const strVal = String(value);
+	            if (strVal.trim().startsWith('!link:')) {
+	                const linkLabel = strVal.replace(/^!link:/i, '').trim();
+	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+	            }
             // Check for variables like {{Ask Each Time}}, {{Clipboard}}, etc.
             const variableMatch = strVal.match(/^\{\{([^}]+)\}\}$/);
             if (variableMatch) {
@@ -3030,7 +3081,7 @@
         }
 
         // ============ Context Menu (Right Click / Variable Insert) ============
-        function showVariableMenu(event, inputEl) {
+	        function showVariableMenu(event, inputEl) {
             event.preventDefault();
             contextMenuTarget = inputEl;
             const menu = document.getElementById('variable-context-menu');
@@ -3048,9 +3099,9 @@
             const flatActions = flattenActions();
             const currentIndex = flatActions.findIndex(a => a.id === currentActionId);
             const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
-            const linkableActions = previousActions
-                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
-                .filter(entry => entry.output);
+	            const linkableActions = previousActions
+	                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
+	                .filter(entry => entry.output && actionHasLinkableOutput(entry.action));
             if (linkableActions.length > 0) {
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-header">Link to Action</div>';
