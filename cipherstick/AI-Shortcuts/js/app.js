@@ -1,7 +1,7 @@
 // ============ Configuration ============
         const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
         const IS_PRO_USER = false; // Set to true for pro users
-        const APP_VERSION = '2025-12-14-5';
+        const APP_VERSION = '2025-12-14-6';
         console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
 	        // ============ State ============
@@ -1360,12 +1360,12 @@
 
 	            try {
 	                const plan = (localStorage.getItem('flux_plan') || 'free') === 'paid' ? 'paid' : 'free';
-	                // gpt-oss-120b:free is unreliable / unavailable on some OpenRouter keys; default to a stable model.
-	                const model = 'openai/gpt-4o-mini';
+	                // Default back to your preferred model; backend will fall back if it's unavailable.
+	                const model = localStorage.getItem('flux_model') || 'openai/gpt-oss-120b:free';
                 console.log(`[Flux] Using model: ${model} (plan: ${plan})`);
 
 	                const forceInstruction = forcedActions.length
-	                    ? `You MUST include these actions in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}.`
+	                    ? `You MUST include these actions somewhere in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}. This is a minimum requirement; you may include other actions too.`
 	                    : '';
 
 	                const userTurns = (currentProject?.history || []).filter(m => m.role === 'user');
