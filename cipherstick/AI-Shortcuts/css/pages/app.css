@@ -198,18 +198,19 @@
 .pipeline-orbs {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     gap: 0.6rem;
     padding: 1.1rem 0.75rem;
     margin: 0.9rem 0;
     animation: orbsSlideIn 0.5s ease;
+    width: 100%;
 }
 
 .pipeline-orbs-row {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.35rem;
 }
 
@@ -290,10 +291,11 @@
 .pipeline-orbs-hint {
     font-size: 0.78rem;
     color: var(--text-muted);
-    text-align: center;
+    text-align: left;
     line-height: 1.35;
     opacity: 0.9;
     max-width: 520px;
+    width: 100%;
 }
 
 @keyframes orbPulse {
@@ -408,6 +410,32 @@
     margin: 0;
 }
 
+.message-bubble p+p {
+    margin-top: 0.5rem;
+}
+
+.message-bubble h3,
+.message-bubble h4,
+.message-bubble h5 {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.message-bubble h3 {
+    font-size: 1.05rem;
+}
+
+.message-bubble h4 {
+    font-size: 0.98rem;
+    opacity: 0.95;
+}
+
+.message-bubble h5 {
+    font-size: 0.92rem;
+    opacity: 0.9;
+}
+
 .message-bubble ul,
 .message-bubble ol {
     margin: 0.5rem 0;
@@ -419,6 +447,50 @@
     padding: 0.1rem 0.3rem;
     border-radius: 4px;
     font-size: 0.85em;
+}
+
+.message.user .message-bubble code {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.message-bubble pre {
+    margin: 0.6rem 0;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    overflow-x: auto;
+}
+
+.message.user .message-bubble pre {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.message-bubble pre code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    display: block;
+    font-size: 0.85em;
+    line-height: 1.45;
+    white-space: pre;
+}
+
+.message-bubble blockquote {
+    margin: 0.6rem 0;
+    padding: 0.15rem 0 0.15rem 0.85rem;
+    border-left: 3px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+.message.user .message-bubble blockquote {
+    border-left-color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.message-bubble blockquote p {
+    margin: 0;
 }
 
 /* --- Chat Input Area --- */
@@ -600,22 +672,14 @@
     border: 1.5px solid #22c55e;
     font-size: 0.85rem;
     font-weight: 500;
-    margin-bottom: 0.5rem;
-    margin-top: 0.25rem;
-    max-width: calc(100% - 2rem);
+    margin: 0;
+    max-width: min(340px, 45%);
     min-width: 0;
     overflow: hidden;
 }
 
 .action-node.has-output {
-    padding-bottom: 3.1rem;
-}
-
-.action-node.has-output .node-output {
-    position: absolute;
-    right: 1rem;
-    bottom: 0.9rem;
-    margin: 0;
+    /* output badge lives in header now */
 }
 
 .node-output .output-label {
@@ -723,6 +787,12 @@
     max-width: 250px;
     padding: 0.4rem 2rem 0.4rem 0.75rem;
     background-color: var(--bg-color);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a97a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 14px 14px;
     border: 1.5px solid var(--border-color);
     border-radius: 8px;
     font-size: 0.85rem;
@@ -1323,6 +1393,7 @@
     justify-content: flex-start;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
+    min-width: 0;
 }
 
 .node-title {

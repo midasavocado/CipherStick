@@ -40,7 +40,7 @@
   "GetOrientation.json",
   "Getbatterylevel.json",
   "Getclipboard.json",
-  "Getcurrent.json",
+  "Getcurrentapp.json",
   "Getcurrentlocation.json",
   "Getipaddress.json",
   "Getitemfromlist.json",

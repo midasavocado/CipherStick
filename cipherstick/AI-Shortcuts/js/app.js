@@ -189,12 +189,15 @@
             }
         }
 
-	        function loadProject(id) {
-	            currentProject = projects.find(p => p.id === id);
-	            if (!currentProject) { showProjectsView(); return; }
-	            currentActions = ensureActionUUIDs(currentProject.actions || []);
-	            currentProgramObj = currentProject.programObj || null;
-	            resetUndoRedoHistory();
+		        function loadProject(id) {
+		            currentProject = projects.find(p => p.id === id);
+		            if (!currentProject) { showProjectsView(); return; }
+		            currentActions = ensureActionUUIDs(currentProject.actions || []);
+		            currentActions = normalizeControlFlowToNested(currentActions);
+		            currentProject.actions = currentActions;
+		            saveProjects();
+		            currentProgramObj = currentProject.programObj || null;
+		            resetUndoRedoHistory();
 	            showWorkspaceView();
 	            document.getElementById('project-name-input').value = currentProject.name;
 	            window.history.replaceState({}, '', `app.html?id=${id}`);
@@ -229,6 +232,7 @@
 	        function applyWorkspaceState(state) {
 	            if (!state || typeof state !== 'object') return;
 	            currentActions = ensureActionUUIDs(clonePlainObject(state.actions || []));
+	            currentActions = normalizeControlFlowToNested(currentActions);
 	            if (currentProject) {
 	                if (typeof state.name === 'string' && state.name.trim()) {
 	                    currentProject.name = state.name.trim();
@@ -250,8 +254,15 @@
 	        function updateUndoRedoButtons() {
 	            const undoBtn = document.getElementById('undo-btn');
 	            const redoBtn = document.getElementById('redo-btn');
-	            if (undoBtn) undoBtn.disabled = !currentProject || undoStack.length === 0;
-	            if (redoBtn) redoBtn.disabled = !currentProject || redoStack.length === 0;
+	            const shouldShow = !!currentProject && !!editMode;
+	            if (undoBtn) {
+	                undoBtn.disabled = !currentProject || undoStack.length === 0;
+	                undoBtn.style.display = shouldShow ? 'inline-flex' : 'none';
+	            }
+	            if (redoBtn) {
+	                redoBtn.disabled = !currentProject || redoStack.length === 0;
+	                redoBtn.style.display = shouldShow ? 'inline-flex' : 'none';
+	            }
 	        }
 
 	        function pushUndoSnapshot(snapshot) {
@@ -300,6 +311,15 @@
             return actions.map(a => {
                 if (!a.id) a.id = Date.now() + Math.floor(Math.random() * 100000);
                 if (!a.params) a.params = {};
+                const currentUuid = typeof a.params.UUID === 'string' ? a.params.UUID.trim() : '';
+                if (!currentUuid) {
+                    const fromOutputUUID = typeof a.params.OutputUUID === 'string' ? a.params.OutputUUID.trim() : '';
+                    const fromProvided = typeof a.params.ProvidedOutputUUID === 'string' ? a.params.ProvidedOutputUUID.trim() : '';
+                    a.params.UUID = fromOutputUUID || fromProvided || genUUID();
+                } else {
+                    a.params.UUID = currentUuid;
+                }
+                if (a.params.ProvidedOutputUUID) delete a.params.ProvidedOutputUUID;
                 if (!a.params.GroupingIdentifier && isControlAction(a)) {
                     a.params.GroupingIdentifier = genUUID();
                 }
@@ -308,6 +328,177 @@
                 if (Array.isArray(a.do)) a.do = ensureActionUUIDs(a.do);
                 return a;
             });
+        }
+
+        // Normalize flat WFControlFlowMode marker lists into nested JSON blocks ({ then/else/do }).
+        // This prevents reordering from moving only the start-marker and accidentally "swallowing" actions.
+        function normalizeControlFlowToNested(actions) {
+            if (!Array.isArray(actions)) return [];
+
+            const root = [];
+            const stack = [{ kind: 'root', id: null, node: null, target: root }];
+
+            const currentTarget = () => stack[stack.length - 1].target;
+
+            const parseMode = (raw) => {
+                if (raw === undefined || raw === null || raw === '') return null;
+                const n = Number(raw);
+                return Number.isFinite(n) ? n : null;
+            };
+
+            const actionKey = (action) => normalizeActionKey(action?.action || action?.title);
+
+            const conditionalMarkerMode = (action) => {
+                const mode = parseMode(action?.params?.WFControlFlowMode);
+                if (mode != null) return mode;
+                const key = actionKey(action);
+                if (key === 'otherwise' || key === 'else') return 1;
+                if (key === 'endif') return 2;
+                return null;
+            };
+
+            const repeatMarkerMode = (action) => {
+                const mode = parseMode(action?.params?.WFControlFlowMode);
+                if (mode != null) return mode;
+                const key = actionKey(action);
+                if (key === 'endrepeat') return 2;
+                return null;
+            };
+
+            const findTopFrameIndex = (kind) => {
+                for (let i = stack.length - 1; i >= 1; i--) {
+                    if (stack[i].kind === kind) return i;
+                }
+                return -1;
+            };
+
+            const findFrameIndex = (kind, gid) => {
+                if (!gid) return -1;
+                for (let i = stack.length - 1; i >= 1; i--) {
+                    if (stack[i].kind === kind && stack[i].id === gid) return i;
+                }
+                return -1;
+            };
+
+            const popUntil = (kind, gid) => {
+                const idx = gid ? findFrameIndex(kind, gid) : -1;
+                if (idx !== -1) {
+                    stack.length = idx;
+                    return;
+                }
+                const fallback = findTopFrameIndex(kind);
+                if (fallback !== -1) stack.length = fallback;
+            };
+
+            actions.forEach((action) => {
+                if (!action || typeof action !== 'object') return;
+                if (!action.params || typeof action.params !== 'object') action.params = {};
+
+                // Already-nested JSON: recurse and keep.
+                if (isConditionalAction(action) && (Array.isArray(action.then) || Array.isArray(action.else))) {
+                    if (Array.isArray(action.then)) action.then = normalizeControlFlowToNested(action.then);
+                    if (Array.isArray(action.else)) action.else = normalizeControlFlowToNested(action.else);
+                    if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+                    currentTarget().push(action);
+                    return;
+                }
+                if (isRepeatAction(action) && Array.isArray(action.do)) {
+                    action.do = normalizeControlFlowToNested(action.do);
+                    if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+                    currentTarget().push(action);
+                    return;
+                }
+
+                if (isConditionalAction(action)) {
+                    const mode = conditionalMarkerMode(action);
+                    if (mode != null) {
+                        const explicitGid = typeof action.params.GroupingIdentifier === 'string' && action.params.GroupingIdentifier.trim()
+                            ? action.params.GroupingIdentifier.trim()
+                            : null;
+
+                        if (mode === 0) {
+                            const gid = explicitGid || genUUID();
+                            action.params.GroupingIdentifier = gid;
+                            if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+                            action.then = [];
+                            action.else = [];
+                            currentTarget().push(action);
+                            stack.push({ kind: 'if', id: gid, node: action, target: action.then });
+                            return;
+                        }
+
+                        if (mode === 1) {
+                            let idx = explicitGid ? findFrameIndex('if', explicitGid) : -1;
+                            if (idx === -1) idx = findTopFrameIndex('if');
+                            if (idx !== -1) {
+                                stack[idx].target = stack[idx].node.else;
+                                action.params.GroupingIdentifier = stack[idx].id;
+                            }
+                            return; // drop Else marker
+                        }
+
+                        if (mode === 2) {
+                            popUntil('if', explicitGid);
+                            return; // drop End If marker
+                        }
+                    }
+                }
+
+	                if (isRepeatAction(action)) {
+	                    const mode = repeatMarkerMode(action);
+	                    if (mode != null) {
+	                        const explicitGid = typeof action.params.GroupingIdentifier === 'string' && action.params.GroupingIdentifier.trim()
+	                            ? action.params.GroupingIdentifier.trim()
+                            : null;
+
+                        if (mode === 0) {
+                            const gid = explicitGid || genUUID();
+                            action.params.GroupingIdentifier = gid;
+                            if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+                            action.do = [];
+                            currentTarget().push(action);
+                            stack.push({ kind: 'repeat', id: gid, node: action, target: action.do });
+                            return;
+                        }
+
+                        if (mode === 2) {
+                            popUntil('repeat', explicitGid);
+                            return; // drop End Repeat marker
+                        }
+	                    }
+	                }
+
+	                // If/Repeat actions created without marker params should still behave as blocks
+	                // (so the custom If/Else + Repeat UI shows up, and drag/drop works on whole blocks).
+	                if (isConditionalAction(action)) {
+	                    const key = actionKey(action);
+	                    const mode = parseMode(action?.params?.WFControlFlowMode);
+	                    const hasBlockArrays = Array.isArray(action.then) || Array.isArray(action.else);
+	                    if (!hasBlockArrays && mode == null && (key === 'if' || key.includes('conditional'))) {
+	                        action.then = [];
+	                        action.else = [];
+	                        if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+	                        currentTarget().push(action);
+	                        return;
+	                    }
+	                }
+
+	                if (isRepeatAction(action)) {
+	                    const key = actionKey(action);
+	                    const mode = parseMode(action?.params?.WFControlFlowMode);
+	                    const isEndMarker = key.includes('endrepeat');
+	                    if (!Array.isArray(action.do) && mode == null && !isEndMarker && key.includes('repeat')) {
+	                        action.do = [];
+	                        if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+	                        currentTarget().push(action);
+	                        return;
+	                    }
+	                }
+
+	                currentTarget().push(action);
+	            });
+
+            return root;
         }
 
         function findActionLocation(actionId, actions = currentActions, parentAction = null, parentArray = currentActions, section = 'root') {
@@ -363,21 +554,100 @@
 
         function cloneActionDeep(action) {
             const cloned = JSON.parse(JSON.stringify(action));
-            const assignIds = (act) => {
-                act.id = Date.now() + Math.floor(Math.random() * 1000);
-                if (isControlAction(act)) {
-                    if (!act.params) act.params = {};
-                    act.params.GroupingIdentifier = genUUID();
-                }
+            const all = [];
+            const collect = (act) => {
+                if (!act || typeof act !== 'object') return;
+                all.push(act);
                 if (isConditionalAction(act)) {
-                    (act.then || []).forEach(assignIds);
-                    (act.else || []).forEach(assignIds);
-                }
-                if (isRepeatAction(act)) {
-                    (act.do || []).forEach(assignIds);
+                    (act.then || []).forEach(collect);
+                    (act.else || []).forEach(collect);
+                } else if (isRepeatAction(act)) {
+                    (act.do || []).forEach(collect);
                 }
             };
-            assignIds(cloned);
+            collect(cloned);
+
+            const baseId = Date.now();
+            let idCounter = 0;
+            const uuidMap = new Map(); // old -> new
+            const usedLinkLabels = new Set();
+
+            const makeCopyLinkLabel = (label) => {
+                const cleaned = String(label || '').replace(/[^\w.-]/g, '').trim() || 'copy';
+                let candidate = `${cleaned}_copy`;
+                let suffix = 2;
+                while (usedLinkLabels.has(candidate)) {
+                    candidate = `${cleaned}_copy${suffix++}`;
+                }
+                usedLinkLabels.add(candidate);
+                return candidate;
+            };
+
+            // First pass: assign new IDs + control group IDs, and build UUID remap for internal outputs.
+            all.forEach((act) => {
+                act.id = baseId + (idCounter++) + Math.floor(Math.random() * 1000);
+                if (!act.params) act.params = {};
+                if (isControlAction(act)) {
+                    act.params.GroupingIdentifier = genUUID();
+                }
+
+                const oldUuidRaw =
+                    (typeof act.params.UUID === 'string' && act.params.UUID.trim()) ? act.params.UUID.trim()
+                        : (typeof act.params.OutputUUID === 'string' && act.params.OutputUUID.trim()) ? act.params.OutputUUID.trim()
+                            : null;
+                if (!oldUuidRaw || uuidMap.has(oldUuidRaw)) return;
+
+                if (oldUuidRaw.toLowerCase().startsWith('!link:')) {
+                    const oldLabel = oldUuidRaw.slice(6).trim();
+                    const newLabel = makeCopyLinkLabel(oldLabel);
+                    uuidMap.set(oldUuidRaw, `!link:${newLabel}`);
+                } else {
+                    uuidMap.set(oldUuidRaw, genUUID());
+                }
+            });
+
+            const remapStringValue = (value) => {
+                const str = String(value);
+                // Replace embedded tokens first (for mixed strings).
+                const withTokens = str.replace(/!link:[^\s]+/gi, (token) => uuidMap.get(token.trim()) || token);
+                const trimmed = withTokens.trim();
+                return uuidMap.get(trimmed) || withTokens;
+            };
+
+            const remapAny = (value) => {
+                if (typeof value === 'string') return remapStringValue(value);
+                if (Array.isArray(value)) return value.map(remapAny);
+                if (value && typeof value === 'object') {
+                    Object.keys(value).forEach((k) => {
+                        value[k] = remapAny(value[k]);
+                    });
+                    return value;
+                }
+                return value;
+            };
+
+            // Second pass: apply new UUIDs to producers, and update internal references.
+            all.forEach((act) => {
+                if (!act.params) act.params = {};
+                // Migrate any legacy field first
+                if (act.params.ProvidedOutputUUID && !act.params.UUID) {
+                    act.params.UUID = act.params.ProvidedOutputUUID;
+                }
+                if (act.params.ProvidedOutputUUID) delete act.params.ProvidedOutputUUID;
+
+                const uuidBefore =
+                    (typeof act.params.UUID === 'string' && act.params.UUID.trim()) ? act.params.UUID.trim()
+                        : (typeof act.params.OutputUUID === 'string' && act.params.OutputUUID.trim()) ? act.params.OutputUUID.trim()
+                            : '';
+                const remappedUuid = uuidBefore ? (uuidMap.get(uuidBefore) || uuidBefore) : genUUID();
+                act.params.UUID = remappedUuid;
+                if (typeof act.params.OutputUUID === 'string' && act.params.OutputUUID.trim() === uuidBefore) {
+                    act.params.OutputUUID = remappedUuid;
+                }
+
+                // Update any internal param references to duplicated actions
+                act.params = remapAny(act.params);
+            });
             return cloned;
         }
 
@@ -435,18 +705,47 @@
             return `{{${String(paramKey || 'VALUE').toUpperCase()}}}`;
         }
 
-        function getActionOutputInfo(action) {
-            if (!action?.params) return null;
-            const outputUUID = action.params.OutputUUID || action.params.UUID || action.params.ProvidedOutputUUID;
-            if (!outputUUID) return null;
-            const outputName = action.params.OutputName || action.title || action.action || 'Action Output';
-            return { outputUUID: String(outputUUID), outputName };
-        }
+	        function getActionOutputInfo(action) {
+	            if (!action?.params) return null;
+	            if (!actionHasLinkableOutput(action)) return null;
+	            const outputUUID = action.params.UUID;
+	            if (!outputUUID) return null;
+	            const rawUUID = String(outputUUID).trim();
+	            const rawNameCandidate =
+	                (action.params.CustomOutputNameEnabled && typeof action.params.CustomOutputName === 'string' && action.params.CustomOutputName.trim())
+                    ? action.params.CustomOutputName.trim()
+                    : (typeof action.params.OutputName === 'string' && action.params.OutputName.trim())
+                        ? action.params.OutputName.trim()
+                        : (rawUUID.toLowerCase().startsWith('!link:') ? rawUUID.slice(6).trim() : '')
+                            || action.title || action.action || 'Action Output';
 
-        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
-            if (!Array.isArray(actions)) return set;
-            actions.forEach(action => {
-                const info = getActionOutputInfo(action);
+	            const outputName = String(rawNameCandidate || '').trim() || 'Action Output';
+	            return { outputUUID: rawUUID, outputName };
+	        }
+
+	        let outputNameIndexByUUID = new Map();
+
+	        function rebuildOutputNameIndex(actions = currentActions) {
+	            const next = new Map();
+	            const flat = flattenActions(actions, []);
+	            flat.forEach(action => {
+	                const info = getActionOutputInfo(action);
+	                if (info?.outputUUID) next.set(String(info.outputUUID), String(info.outputName || '').trim() || 'Action Output');
+	            });
+	            outputNameIndexByUUID = next;
+	            return outputNameIndexByUUID;
+	        }
+
+	        function resolveOutputNameByUUID(outputUUID, fallbackName = null) {
+	            const key = typeof outputUUID === 'string' ? outputUUID.trim() : String(outputUUID || '').trim();
+	            if (!key) return fallbackName;
+	            return outputNameIndexByUUID.get(key) || fallbackName;
+	        }
+
+	        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
+	            if (!Array.isArray(actions)) return set;
+	            actions.forEach(action => {
+	                const info = getActionOutputInfo(action);
                 if (info) set.add(info.outputUUID);
                 if (isConditionalAction(action)) {
                     collectAvailableOutputs(action.then || [], set);
@@ -472,11 +771,64 @@
 	                }
 	            });
 	            const validOutputs = new Set(outputIndexByUuid.keys());
+	            const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 	            let mutated = false;
+	            const OUTPUT_TOKEN_PLACEHOLDER = buildParamPlaceholder('Output');
+
+	            const tokenIsLinkish = (token) => {
+	                const t = String(token || '').trim();
+	                if (!t) return false;
+	                if (t.startsWith('{{') && t.endsWith('}}')) return false;
+	                if (t.toLowerCase().startsWith('!link:')) return true;
+	                if (uuidLike.test(t)) return true;
+	                return false;
+	            };
+
+	            const tokenIsValidLink = (token, currentIndex) => {
+	                const t = String(token || '').trim();
+	                if (!tokenIsLinkish(t)) return true;
+	                const sourceIndex = outputIndexByUuid.get(t);
+	                if (!validOutputs.has(t)) return false;
+	                if (typeof currentIndex === 'number' && typeof sourceIndex === 'number' && sourceIndex >= currentIndex) return false;
+	                return true;
+	            };
+
+	            const scrubString = (key, rawValue, currentIndex) => {
+	                const str = String(rawValue);
+	                const trimmed = str.trim();
+	                if (!trimmed) return rawValue;
+	                if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) return rawValue;
+
+	                // Pure link token
+	                if (tokenIsLinkish(trimmed) && trimmed === str.trim()) {
+	                    if (!tokenIsValidLink(trimmed, currentIndex)) {
+	                        mutated = true;
+	                        return buildParamPlaceholder(key);
+	                    }
+	                    return rawValue;
+	                }
+
+	                // Mixed text: replace only invalid tokens.
+	                if (!str.toLowerCase().includes('!link:')) return rawValue;
+	                const replaced = str.replace(/!link:[^\s]+/gi, (token) => {
+	                    if (!tokenIsValidLink(token, currentIndex)) {
+	                        mutated = true;
+	                        return OUTPUT_TOKEN_PLACEHOLDER;
+	                    }
+	                    return token;
+	                });
+	                return replaced;
+	            };
+
 	            const scrubAction = (action) => {
 	                if (!action?.params) return;
 	                const currentIndex = actionIndexById.get(action.id);
 	                Object.entries(action.params).forEach(([key, value]) => {
+	                    if (typeof value === 'string') {
+	                        const next = scrubString(key, value, currentIndex);
+	                        if (next !== value) action.params[key] = next;
+	                        return;
+	                    }
 	                    if (value && typeof value === 'object') {
 	                        const linkedUuid = value?.Value?.OutputUUID || value?.OutputUUID || '';
 	                        const linkedKey = linkedUuid ? String(linkedUuid) : '';
@@ -492,24 +844,104 @@
 	                    }
 	                });
 	                if (isConditionalAction(action)) {
-                    (action.then || []).forEach(scrubAction);
-                    (action.else || []).forEach(scrubAction);
-                } else if (isRepeatAction(action)) {
-                    (action.do || []).forEach(scrubAction);
-                }
-            };
-            (currentActions || []).forEach(scrubAction);
-            if (mutated && currentProject) {
-                currentProject.actions = currentActions;
-                saveProjects();
-            }
-        }
+	            (action.then || []).forEach(scrubAction);
+	            (action.else || []).forEach(scrubAction);
+	        } else if (isRepeatAction(action)) {
+	            (action.do || []).forEach(scrubAction);
+	        }
+	    };
+	    (currentActions || []).forEach(scrubAction);
+	    if (mutated && currentProject) {
+	        currentProject.actions = currentActions;
+	        saveProjects();
+	    }
+	}
 
-        function getActionUUID(action) {
-            if (!action.params) action.params = {};
-            if (!action.params.GroupingIdentifier) action.params.GroupingIdentifier = genUUID();
-            return action.params.GroupingIdentifier;
-        }
+	        function getActionUUID(action) {
+	            if (!action.params) action.params = {};
+	            if (!action.params.GroupingIdentifier) action.params.GroupingIdentifier = genUUID();
+	            return action.params.GroupingIdentifier;
+	        }
+
+	        const NON_LINKABLE_OUTPUT_ACTION_KEYS = new Set([
+	            // Control / non-output actions
+	            'if',
+	            'repeat',
+	            'repeatwitheach',
+	            'output',
+	            'stopandoutput',
+	            'exit',
+	            'dismisssiri',
+	            'delay',
+	            'nothing',
+	            'control.comment',
+	            'comment',
+	            'alert',
+	            'notification',
+	            'vibrate',
+	            // Common non-output utility actions
+	            'openapp',
+	            'openurl',
+	            'pausemusic',
+	            'playsound',
+	            'playsoundfile',
+	            'print',
+	            'returntohomescreen',
+	            'showcontrolcenter',
+	            'lockscreen',
+	            // “Set …” actions (generally no output)
+	            'clipboard.set',
+	            'setvariable',
+	            'variable.append',
+	            'setvolume',
+	            'setbrightness',
+	            // App/automation helpers that typically don't return a result
+	            'airdrop.send',
+	            'chrome.addbookmark',
+	            'com.addreadinglistitemtochromeintent',
+	            'chatgpt.configureopennewchatinapp',
+	            'calendar.setcalendarfocusconfiguration',
+	            'clock.starttimer',
+	            'clock.createalarm',
+	            'message.send'
+	            ,
+	            // Creation/utility actions user marked as non-output
+	            'addnewcontact',
+	            'addnewevent',
+	            'addnewreminder',
+	            'calendar.createcalendar',
+	            'file.rename',
+	            'savetocameraroll',
+	            'showdefinition',
+	            'waittoreturn',
+	            'speaktext'
+	        ]);
+
+	        function normalizeActionKey(raw) {
+	            return String(raw || '')
+	                .trim()
+	                .toLowerCase()
+	                .replace(/[^a-z0-9.]+/g, '');
+	        }
+
+	        function actionHasLinkableOutput(action) {
+	            const key = normalizeActionKey(action?.action || action?.title);
+	            if (!key) return true;
+	            if (NON_LINKABLE_OUTPUT_ACTION_KEYS.has(key)) return false;
+
+	            // Heuristics for “no output” actions not in the explicit list.
+	            // Keep this conservative: we only hide output when it's very likely to have none.
+	            if (key.startsWith('set') || key.includes('.set')) return false;
+	            if (key.startsWith('open')) return false;
+	            if (key.startsWith('show') && !key.startsWith('showdefinition')) return false;
+	            if (key.includes('notification') || key.includes('alert')) return false;
+	            if (key.includes('vibrate') || key.includes('dismiss') || key.includes('returntohomescreen')) return false;
+	            if (key.endsWith('.send') || key.includes('sendmessage') || key.includes('message.send')) return false;
+	            if (key.endsWith('.delete') || key.includes('file.delete')) return false;
+	            if (key.includes('speak') || key.includes('playsound') || key.includes('pausemusic')) return false;
+
+	            return true;
+	        }
 
         function isConditionalAction(action) {
             const id = (action.action || action.title || '').toLowerCase();
@@ -562,11 +994,131 @@
         }
 
         function formatMessage(text) {
-            return escapeHtml(text)
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code>$1</code>')
-                .replace(/\n/g, '<br>');
+            return renderMarkdown(String(text || ''));
+        }
+
+        function renderMarkdown(src) {
+            const text = String(src || '').replace(/\r\n/g, '\n');
+            if (!text) return '';
+
+            const lines = text.split('\n');
+            const blocks = [];
+            let i = 0;
+
+            const isFence = (line) => /^\s*```/.test(line);
+            const isHeading = (line) => /^\s*#{1,3}\s+/.test(line);
+            const isQuote = (line) => /^\s*>\s?/.test(line);
+            const isUl = (line) => /^\s*[-*+]\s+/.test(line);
+            const isOl = (line) => /^\s*\d+\.\s+/.test(line);
+
+            while (i < lines.length) {
+                const line = lines[i] ?? '';
+
+                const fenceMatch = line.match(/^\s*```([a-zA-Z0-9_-]+)?\s*$/);
+                if (fenceMatch) {
+                    const lang = (fenceMatch[1] || '').trim();
+                    i++;
+                    const codeLines = [];
+                    while (i < lines.length && !lines[i].match(/^\s*```\s*$/)) {
+                        codeLines.push(lines[i]);
+                        i++;
+                    }
+                    if (i < lines.length) i++; // closing fence
+                    const code = codeLines.join('\n');
+                    const langAttr = lang ? ` data-lang="${escapeAttr(lang)}"` : '';
+                    blocks.push(`<pre><code${langAttr}>${escapeHtml(code)}</code></pre>`);
+                    continue;
+                }
+
+                if (!line.trim()) {
+                    i++;
+                    continue;
+                }
+
+                const headingMatch = line.match(/^\s*(#{1,3})\s+(.+?)\s*$/);
+                if (headingMatch) {
+                    const level = headingMatch[1].length; // 1–3
+                    const headingText = headingMatch[2];
+                    const tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
+                    blocks.push(`<${tag}>${renderInlineMarkdown(headingText)}</${tag}>`);
+                    i++;
+                    continue;
+                }
+
+                if (isQuote(line)) {
+                    const quoteLines = [];
+                    while (i < lines.length && isQuote(lines[i])) {
+                        quoteLines.push((lines[i] || '').replace(/^\s*>\s?/, ''));
+                        i++;
+                    }
+                    blocks.push(`<blockquote>${renderMarkdown(quoteLines.join('\n'))}</blockquote>`);
+                    continue;
+                }
+
+                if (isUl(line)) {
+                    const items = [];
+                    while (i < lines.length && isUl(lines[i])) {
+                        items.push((lines[i] || '').replace(/^\s*[-*+]\s+/, ''));
+                        i++;
+                    }
+                    blocks.push(`<ul>${items.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`);
+                    continue;
+                }
+
+                if (isOl(line)) {
+                    const items = [];
+                    while (i < lines.length && isOl(lines[i])) {
+                        items.push((lines[i] || '').replace(/^\s*\d+\.\s+/, ''));
+                        i++;
+                    }
+                    blocks.push(`<ol>${items.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ol>`);
+                    continue;
+                }
+
+                // Paragraph: collect until a blank line or another block opener.
+                const paraLines = [];
+                while (i < lines.length) {
+                    const l = lines[i] ?? '';
+                    if (!l.trim()) break;
+                    if (isFence(l) || isHeading(l) || isQuote(l) || isUl(l) || isOl(l)) break;
+                    paraLines.push(l);
+                    i++;
+                }
+                const para = paraLines.join('\n');
+                blocks.push(`<p>${renderInlineMarkdown(para).replace(/\n/g, '<br>')}</p>`);
+            }
+
+            return blocks.join('');
+        }
+
+        function renderInlineMarkdown(src) {
+            const raw = String(src || '');
+
+            // Split on inline code spans so we don't format inside them.
+            const parts = [];
+            const re = /`([^`]+)`/g;
+            let last = 0;
+            let m;
+            while ((m = re.exec(raw)) !== null) {
+                if (m.index > last) parts.push({ type: 'text', value: raw.slice(last, m.index) });
+                parts.push({ type: 'code', value: m[1] });
+                last = m.index + m[0].length;
+            }
+            if (last < raw.length) parts.push({ type: 'text', value: raw.slice(last) });
+
+            return parts.map(part => {
+                if (part.type === 'code') return `<code>${escapeHtml(part.value)}</code>`;
+
+                let t = escapeHtml(part.value);
+                // Keep regexes conservative so they don't cross HTML tags we inject.
+                t = t.replace(/\*\*([^<]+?)\*\*/g, '<strong>$1</strong>');
+                t = t.replace(/\*([^<]+?)\*/g, '<em>$1</em>');
+                return t;
+            }).join('');
+        }
+
+        function escapeAttr(str) {
+            return escapeHtml(String(str || '')).replace(/`/g, '&#96;');
         }
 
         function escapeHtml(str) {
@@ -726,6 +1278,14 @@
         }
 
 	        function resetPipelineSteps() {
+	            clearPipelinePendingStart();
+	            currentPipelineStep = null;
+	            if (pipelineStepCompleteTimers && typeof pipelineStepCompleteTimers.forEach === 'function') {
+	                pipelineStepCompleteTimers.forEach((t) => { try { clearTimeout(t); } catch (e) { } });
+	                pipelineStepCompleteTimers.clear();
+	            }
+	            pipelineStepStartedAt?.clear?.();
+
 	            PIPELINE_STEPS.forEach(({ id }) => {
 	                const el = document.getElementById(`step-${id}`);
 	                if (el) el.classList.remove('active', 'completed');
@@ -747,11 +1307,66 @@
             };
             const frontendStep = stepMap[step] || step;
             const idx = order.indexOf(frontendStep);
-            if (idx > 0 && status === 'started') {
-                for (let i = 0; i < idx; i++) {
-                    updatePipelineOrb(order[i], 'completed');
+            const now = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+
+            if (status === 'started') {
+                const applyStart = () => {
+                    const startNow = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+                    clearPipelinePendingStart();
+                    currentPipelineStep = frontendStep;
+                    clearPipelineStepTimer(frontendStep);
+                    pipelineStepStartedAt.set(frontendStep, startNow);
+                    if (idx > 0) {
+                        for (let i = 0; i < idx; i++) {
+                            clearPipelineStepTimer(order[i]);
+                            updatePipelineOrb(order[i], 'completed');
+                        }
+                    }
+                    updatePipelineOrb(frontendStep, 'started', hint);
+                };
+
+                const prevStep = idx > 0 ? order[idx - 1] : null;
+                const prevStartedAt = prevStep ? pipelineStepStartedAt.get(prevStep) : null;
+                const prevElapsed = (prevStep && typeof prevStartedAt === 'number') ? (now - prevStartedAt) : null;
+                const delayMs = (prevStep && prevStep === currentPipelineStep && prevElapsed != null && prevElapsed < MIN_PIPELINE_ACTIVE_MS)
+                    ? (MIN_PIPELINE_ACTIVE_MS - prevElapsed)
+                    : 0;
+
+                if (delayMs > 0) {
+                    clearPipelinePendingStart();
+                    pipelinePendingStartTimer = setTimeout(applyStart, delayMs);
+                    return;
                 }
+
+                applyStart();
+                return;
             }
+
+            if (status === 'completed') {
+                const startedAt = pipelineStepStartedAt.get(frontendStep);
+                const elapsed = typeof startedAt === 'number' ? (now - startedAt) : null;
+                const remaining = (elapsed != null && elapsed < MIN_PIPELINE_ACTIVE_MS)
+                    ? (MIN_PIPELINE_ACTIVE_MS - elapsed)
+                    : 0;
+
+                clearPipelineStepTimer(frontendStep);
+
+                const applyCompletion = () => {
+                    if (frontendStep === currentPipelineStep) updatePipelineOrb(frontendStep, 'completed', hint);
+                    else updatePipelineOrb(frontendStep, 'completed');
+                };
+
+                if (remaining > 0) {
+                    pipelineStepCompleteTimers.set(frontendStep, setTimeout(() => {
+                        pipelineStepCompleteTimers.delete(frontendStep);
+                        applyCompletion();
+                    }, remaining));
+                } else {
+                    applyCompletion();
+                }
+                return;
+            }
+
             updatePipelineOrb(frontendStep, status, hint);
         }
 
@@ -782,22 +1397,24 @@
 
 	                // Extract actions from program
 	                if (Array.isArray(data.program.actions)) {
-                    currentActions = data.program.actions.map((act, i) => {
-                        const actionObj = {
-                            id: Date.now() + i,
-                            action: act.action || 'Unknown',
-                            title: act.action || 'Action',
-                            params: act.params || {}
-                        };
-                        // Preserve nested structure (then/else/do arrays) if present
-                        if (Array.isArray(act.then)) actionObj.then = act.then;
-                        if (Array.isArray(act.else)) actionObj.else = act.else;
-                        if (Array.isArray(act.do)) actionObj.do = act.do;
-                        return actionObj;
-                    });
-	                    if (currentProject) currentProject.actions = currentActions;
-	                }
-	            }
+	                    currentActions = data.program.actions.map((act, i) => {
+	                        const actionObj = {
+	                            id: Date.now() + i,
+	                            action: act.action || 'Unknown',
+	                            title: act.action || 'Action',
+	                            params: act.params || {}
+	                        };
+	                        // Preserve nested structure (then/else/do arrays) if present
+	                        if (Array.isArray(act.then)) actionObj.then = act.then;
+	                        if (Array.isArray(act.else)) actionObj.else = act.else;
+	                        if (Array.isArray(act.do)) actionObj.do = act.do;
+	                        return actionObj;
+	                    });
+		                    currentActions = ensureActionUUIDs(currentActions);
+		                    currentActions = normalizeControlFlowToNested(currentActions);
+		                    if (currentProject) currentProject.actions = currentActions;
+		                }
+		            }
 
             // Add AI response to chat
             if (data.answer) {
@@ -815,16 +1432,22 @@
 	            updateUndoRedoButtons();
 	        }
 
-        // ============ Actions Preview ============
-        function renderActions(animateIds = null) {
-            const container = document.getElementById('actions-container');
-            const emptyState = document.getElementById('empty-state');
-            pruneMissingOutputLinks();
-            currentActions = ensureActionUUIDs(currentActions);
+	        // ============ Actions Preview ============
+		        function renderActions(animateIds = null) {
+		            const container = document.getElementById('actions-container');
+		            const emptyState = document.getElementById('empty-state');
+		            currentActions = ensureActionUUIDs(currentActions);
+		            currentActions = normalizeControlFlowToNested(currentActions);
+		            if (currentProject) {
+		                currentProject.actions = currentActions;
+		                saveProjects();
+		            }
+		            pruneMissingOutputLinks();
+		            rebuildOutputNameIndex(currentActions);
 
-            if (currentActions.length === 0) {
-                container.classList.add('hidden');
-                emptyState.classList.remove('hidden');
+	            if (currentActions.length === 0) {
+	                container.classList.add('hidden');
+	                emptyState.classList.remove('hidden');
                 return;
             }
 
@@ -832,11 +1455,11 @@
             container.classList.remove('hidden');
             container.innerHTML = '';
 
-	            const tree = buildActionTree(currentActions);
-	            renderNodeList(tree, container, animateIds);
-	            initActionReordering();
+		            const tree = buildActionTree(currentActions);
+		            renderNodeList(tree, container, animateIds);
+		            initActionReordering();
 
-	        }
+		        }
 
         function buildActionTree(actions) {
             const root = [];
@@ -861,9 +1484,20 @@
                     return;
                 }
 
-                // Flat list format using WFControlFlowMode
+                // Flat list format using WFControlFlowMode (legacy import).
+                // If we're missing explicit control-flow markers, treat these as normal actions (no implicit nesting).
                 if (isConditionalAction(action)) {
-                    const mode = Number(action.params?.WFControlFlowMode ?? 0);
+                    const rawMode = action?.params?.WFControlFlowMode;
+                    const key = normalizeActionKey(action?.action || action?.title);
+                    const hasMode = !(rawMode === undefined || rawMode === null || rawMode === '');
+                    const mode = hasMode
+                        ? Number(rawMode)
+                        : (key === 'otherwise' ? 1 : (key === 'endif' ? 2 : null));
+                    if (mode == null || !Number.isFinite(mode)) {
+                        stack[stack.length - 1].target.push({ type: 'action', action });
+                        return;
+                    }
+
                     const gid = action.params?.GroupingIdentifier || getActionUUID(action);
                     if (mode === 0) {
                         const node = { type: 'if', action, children: [], elseChildren: [] };
@@ -888,9 +1522,28 @@
                 }
 
                 if (isRepeatAction(action)) {
-                    const node = { type: 'repeat', action, children: [] };
-                    stack[stack.length - 1].target.push(node);
-                    stack.push({ id: action.params?.GroupingIdentifier || getActionUUID(action), target: node.children, node });
+                    const rawMode = action?.params?.WFControlFlowMode;
+                    const key = normalizeActionKey(action?.action || action?.title);
+                    const hasMode = !(rawMode === undefined || rawMode === null || rawMode === '');
+                    const mode = hasMode ? Number(rawMode) : (key === 'endrepeat' ? 2 : null);
+                    if (mode == null || !Number.isFinite(mode)) {
+                        stack[stack.length - 1].target.push({ type: 'action', action });
+                        return;
+                    }
+
+                    const gid = action.params?.GroupingIdentifier || getActionUUID(action);
+                    if (mode === 0) {
+                        const node = { type: 'repeat', action, children: [] };
+                        stack[stack.length - 1].target.push(node);
+                        stack.push({ id: gid, target: node.children, node });
+                    } else if (mode === 2) {
+                        if (stack.length > 1 && stack[stack.length - 1].id === gid) {
+                            stack.pop();
+                        } else {
+                            const pos = stack.findIndex(s => s.id === gid);
+                            if (pos > 0) stack.splice(pos, stack.length - pos);
+                        }
+                    }
                     return;
                 }
 
@@ -1068,14 +1721,15 @@
 	            node.dataset.parentId = parentMeta?.parentActionId || '';
 	            node.dataset.parentSection = parentMeta?.parentSection || 'root';
 
-	            // Get output information
-	            const outputUUID = action.params?.OutputUUID || action.params?.UUID || action.params?.ProvidedOutputUUID || null;
-	            const outputName = action.params?.OutputName || action.title || action.action || '';
-	            const outputDisplay = humanizeOutputName(outputName);
-	            if (outputUUID) node.classList.add('has-output');
-	            const outputHtml = outputUUID ? `<div class="node-output" data-output-uuid="${escapeHtml(String(outputUUID))}" title="Output: ${escapeHtml(outputDisplay)}">
-	                <span class="output-label">${escapeHtml(outputDisplay)}</span>
-	            </div>` : '';
+		            // Get output information
+		            const outputInfo = getActionOutputInfo(action);
+		            const outputUUID = outputInfo?.outputUUID || null;
+		            const outputDisplay = outputInfo ? humanizeOutputName(outputInfo.outputName) : '';
+		            const showOutputBadge = Boolean(outputUUID && actionHasLinkableOutput(action));
+		            if (showOutputBadge) node.classList.add('has-output');
+		            const outputHtml = showOutputBadge ? `<div class="node-output" data-output-uuid="${escapeHtml(String(outputUUID))}" title="Output: ${escapeHtml(outputDisplay)}">
+		                <span class="output-label">${escapeHtml(outputDisplay)}</span>
+		            </div>` : '';
 
             let paramsHtml = '';
             // Show params if in edit mode OR if they have a value (not empty/default)
@@ -1085,7 +1739,7 @@
                 for (const [key, value] of Object.entries(action.params)) {
                     // Skip UUID/OutputUUID/GroupingIdentifier as they're internal
                     const lowerKey = String(key).toLowerCase();
-                    if (lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier') {
+                    if (lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier' || lowerKey === 'providedoutputuuid') {
                         continue;
                     }
                     // Always show params in edit mode, or if they have a non-placeholder value in view mode
@@ -1118,25 +1772,25 @@
 
 	            const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
 
-            node.innerHTML = `
-                ${dragHandle}
-                <div class="node-icon">${getActionIcon(action.action)}</div>
-                <div class="node-content">
-                    <div class="node-header">
-                        <span class="node-title">${escapeHtml(action.title || action.action)}</span>
-                        ${actionsHtml}
-                    </div>
-                    ${outputHtml}
-                    ${paramsHtml}
-                </div>
-            `;
-            return node;
-        }
+			            node.innerHTML = `
+			                ${dragHandle}
+			                <div class="node-icon">${getActionIcon(action.action)}</div>
+			                <div class="node-content">
+			                    <div class="node-header">
+			                        <span class="node-title">${escapeHtml(action.title || action.action)}</span>
+			                        ${outputHtml}
+			                        ${actionsHtml}
+			                    </div>
+			                    ${paramsHtml}
+			                </div>
+			            `;
+			            return node;
+			        }
 
-        function getInputForType(actionId, key, value, readonly = false) {
-            if (String(key).toLowerCase() === 'uuid') {
-                return '';
-            }
+	        function getInputForType(actionId, key, value, readonly = false) {
+	            if (String(key).toLowerCase() === 'uuid') {
+	                return '';
+	            }
             if (key === 'Condition' || key === 'WFCondition') {
                 const { optionsString, options, selected } = getConditionOptionsById(actionId, value);
                 const selectedValue = options.includes(selected) ? selected : (options[0] || selected);
@@ -1144,17 +1798,18 @@
                 const fullOptionsString = optionsString || DEFAULT_CONDITION_OPTIONS;
                 return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
             }
-            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
-            if (isObjectVal) {
-                const outputName = value?.Value?.OutputName || value?.OutputName || 'Linked Output';
-                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
-                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
-                const displayName = humanizeOutputName(outputName);
-                return `<div class="linked-output" data-output-uuid="${escapeHtml(outputUUID)}" title="Linked from: ${escapeHtml(outputName)}">
-                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
-                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
-                </div>`;
-            }
+	            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
+	            if (isObjectVal) {
+	                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+	                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
+	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || 'Linked Output';
+	                const safeParam = escapeHtml(key).replace(/'/g, "\\'");
+	                const displayName = humanizeOutputName(outputName);
+	                return `<div class="linked-output" data-output-uuid="${escapeHtml(outputUUID)}" title="Linked from: ${escapeHtml(outputName)}">
+	                    <span class="linked-output-label">${escapeHtml(displayName)}</span>
+	                    ${!readonly ? `<button type="button" class="node-action-btn" onclick="clearLinkedParam(${actionId}, '${safeParam}')" title="Unlink">Unlink</button>` : ''}
+	                </div>`;
+	            }
 
             const strValue = String(value);
             const disabledAttr = readonly ? 'disabled' : '';
@@ -1247,27 +1902,28 @@
             }
             
             // Default text input
-            const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
-            return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
-        }
+	            const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
+	            return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+	        }
 
-        function humanizeOutputName(name) {
-            if (!name) return 'Output';
-            return String(name)
-                .replace(/^!link:/i, '')
-                .replace(/_/g, ' ')
-                .replace(/([a-z])([A-Z])/g, '$1 $2')
-                .replace(/\b\w/g, l => l.toUpperCase())
-                .trim();
-        }
+	        function humanizeOutputName(name) {
+	            if (!name) return 'Output';
+	            return String(name).replace(/^!link:/i, '').trim() || 'Output';
+	        }
 
-        function formatLinkedValue(value) {
-            if (!value) return '';
-            const strVal = String(value);
-            if (strVal.trim().startsWith('!link:')) {
-                const linkLabel = strVal.replace(/^!link:/i, '').trim();
-                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
-            }
+	        function formatLinkedValue(value) {
+	            if (!value) return '';
+	            if (value && typeof value === 'object' && !Array.isArray(value)) {
+	                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+	                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
+	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || storedOutputName || 'Linked Output';
+	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(outputName))}</span>`;
+	            }
+	            const strVal = String(value);
+	            if (strVal.trim().startsWith('!link:')) {
+	                const linkLabel = strVal.replace(/^!link:/i, '').trim();
+	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+	            }
             // Check for variables like {{Ask Each Time}}, {{Clipboard}}, etc.
             const variableMatch = strVal.match(/^\{\{([^}]+)\}\}$/);
             if (variableMatch) {
@@ -1479,12 +2135,14 @@
 	            commitActionChanges([newAction.id]);
 	        }
 
-	        function commitActionChanges(animateIds = null) {
-	            if (currentProject) {
-	                currentProject.actions = currentActions;
-	                saveProjects();
-	            }
-	            renderActions(animateIds);
+		        function commitActionChanges(animateIds = null) {
+		            currentActions = ensureActionUUIDs(currentActions);
+		            currentActions = normalizeControlFlowToNested(currentActions);
+		            if (currentProject) {
+		                currentProject.actions = currentActions;
+		                saveProjects();
+		            }
+		            renderActions(animateIds);
 	            updateUndoRedoButtons();
 	        }
 
@@ -1611,10 +2269,10 @@
 	            e.preventDefault();
 	        }
 
-	        function reorderOnPointerMove(e) {
-	            const state = reorderState;
-	            if (!state) return;
-	            if (e.pointerId !== state.pointerId) return;
+		        function reorderOnPointerMove(e) {
+		            const state = reorderState;
+		            if (!state) return;
+		            if (e.pointerId !== state.pointerId) return;
 
 		            if (state.phase === 'pending') {
 		                const dx = e.clientX - state.startX;
@@ -1627,14 +2285,14 @@
 
 		            if (state.phase !== 'dragging') return;
 
-		            e.preventDefault();
-		            const deltaY = e.clientY - (state.lastClientY ?? e.clientY);
-		            if (Math.abs(deltaY) > 1) state.moveDirY = deltaY;
-		            state.lastClientY = e.clientY;
-		            reorderUpdateGhostPosition(state, e.clientX, e.clientY);
-		            reorderAutoScrollPreview(e.clientY);
-		            reorderUpdatePlaceholderPosition(state, e.clientX, e.clientY);
-		        }
+			            e.preventDefault();
+			            const deltaY = e.clientY - (state.lastClientY ?? e.clientY);
+			            if (Math.abs(deltaY) > 1) state.moveDirY = deltaY;
+			            state.lastClientY = e.clientY;
+			            reorderUpdateGhostPosition(state, e.clientX, e.clientY);
+			            reorderAutoScrollPreview(e.clientY);
+			            reorderRequestPlaceholderUpdate(state, e.clientX, e.clientY);
+			        }
 
 	        function reorderOnPointerUp(e) {
 	            const state = reorderState;
@@ -1689,7 +2347,7 @@
 	            renderActions();
 	        }
 
-	        function reorderBeginDrag(state) {
+		        function reorderBeginDrag(state) {
 	            const placeholder = document.createElement('div');
 	            placeholder.className = 'drag-placeholder';
 	            placeholder.style.height = `${Math.max(24, state.height)}px`;
@@ -1722,9 +2380,9 @@
 	            state.phase = 'dragging';
 	            reorderSetZonesActive(true);
 
-	            reorderUpdateGhostPosition(state, state.startX, state.startY);
-	            reorderUpdatePlaceholderPosition(state, state.startX, state.startY);
-	        }
+		            reorderUpdateGhostPosition(state, state.startX, state.startY);
+		            reorderUpdatePlaceholderPosition(state, state.startX, state.startY);
+		        }
 
 	        function reorderUpdateGhostPosition(state, clientX, clientY) {
 	            const ghost = state?.ghostEl;
@@ -1748,9 +2406,20 @@
 	            }
 	        }
 
-	        function reorderUpdatePlaceholderPosition(state, clientX, clientY) {
-	            const placeholder = state.placeholderEl;
-	            if (!placeholder) return;
+		        function reorderRequestPlaceholderUpdate(state, clientX, clientY) {
+		            if (!state || state.phase !== 'dragging') return;
+		            state.pendingClientX = clientX;
+		            state.pendingClientY = clientY;
+		            if (state.placeholderRAF) return;
+		            state.placeholderRAF = requestAnimationFrame(() => {
+		                state.placeholderRAF = null;
+		                reorderUpdatePlaceholderPosition(state, state.pendingClientX, state.pendingClientY);
+		            });
+		        }
+
+		        function reorderUpdatePlaceholderPosition(state, clientX, clientY) {
+		            const placeholder = state.placeholderEl;
+		            if (!placeholder) return;
 
 	            const zone = reorderGetZoneFromPoint(clientX, clientY);
 	            if (!zone) {
@@ -1781,15 +2450,33 @@
 	            reorderSetZoneHover(state, zone);
 	        }
 
-	        function reorderGetZoneFromPoint(clientX, clientY) {
-	            const el = document.elementFromPoint(clientX, clientY);
-	            if (!el) return null;
+		        function reorderGetZoneFromPoint(clientX, clientY) {
+		            const el = document.elementFromPoint(clientX, clientY);
+		            if (!el) return null;
 
-	            const nestedZone = el.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone');
-	            if (nestedZone) return nestedZone;
+		            const nestedZone = el.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone');
+		            if (nestedZone) return nestedZone;
 
-	            const actionsContainer = el.closest('#actions-container');
-	            if (actionsContainer) return actionsContainer;
+		            // Make it easy to drop into If/Repeat even when hovering the header/card.
+		            const ifBlock = el.closest('.if-block');
+		            if (ifBlock) {
+		                const thenZone = ifBlock.querySelector('.if-then.drop-zone');
+		                const elseZone = ifBlock.querySelector('.if-else.drop-zone');
+		                if (thenZone && elseZone) {
+		                    const elseRect = elseZone.getBoundingClientRect();
+		                    return clientY < elseRect.top ? thenZone : elseZone;
+		                }
+		                if (thenZone) return thenZone;
+		            }
+
+		            const repeatBlock = el.closest('.repeat-block');
+		            if (repeatBlock) {
+		                const bodyZone = repeatBlock.querySelector('.repeat-body.drop-zone');
+		                if (bodyZone) return bodyZone;
+		            }
+
+		            const actionsContainer = el.closest('#actions-container');
+		            if (actionsContainer) return actionsContainer;
 
 	            // If we're still in the preview canvas, treat as root drop.
 	            if (el.closest('#preview-canvas')) {
@@ -1930,11 +2617,15 @@
 	            return true;
 	        }
 
-	        function reorderCleanup(state) {
-	            reorderSetZonesActive(false);
-	            if (state.currentZone) {
-	                state.currentZone.classList.remove('drop-zone-hover');
-	            }
+		        function reorderCleanup(state) {
+		            reorderSetZonesActive(false);
+		            if (state?.placeholderRAF) {
+		                cancelAnimationFrame(state.placeholderRAF);
+		                state.placeholderRAF = null;
+		            }
+		            if (state.currentZone) {
+		                state.currentZone.classList.remove('drop-zone-hover');
+		            }
 
 	            if (state.placeholderEl?.parentNode) {
 	                state.placeholderEl.parentNode.removeChild(state.placeholderEl);
@@ -1974,13 +2665,15 @@
             } catch (e) { console.error('Failed to load templates:', e); }
         }
 
-        function openForceActionModal() {
-            document.getElementById('plus-menu')?.classList.remove('active');
-            document.getElementById('plus-menu-btn')?.classList.remove('active');
-            document.getElementById('force-action-modal').classList.add('active');
-            renderActionsList();
-            const searchInput = document.getElementById('action-search');
-            searchInput.value = '';
+	        function openForceActionModal() {
+	            document.getElementById('plus-menu')?.classList.remove('active');
+	            document.getElementById('plus-menu-btn')?.classList.remove('active');
+	            const titleEl = document.getElementById('force-action-modal-title');
+	            if (titleEl) titleEl.textContent = editMode ? 'Add Action' : 'Force Action';
+	            document.getElementById('force-action-modal').classList.add('active');
+	            renderActionsList();
+	            const searchInput = document.getElementById('action-search');
+	            searchInput.value = '';
             searchInput.focus();
             searchInput.oninput = () => renderActionsList(searchInput.value);
         }
@@ -2234,10 +2927,50 @@
             statusText.textContent = 'Converting to shortcut format...';
 
             try {
+                const serializeActionForExport = (action) => {
+                    if (!action || typeof action !== 'object') return action;
+                    const out = {
+                        action: action.action || action.title || 'Unknown',
+                        params: clonePlainObject(action.params || {})
+                    };
+                    if (Array.isArray(action.then)) out.then = action.then.map(serializeActionForExport);
+                    if (Array.isArray(action.else)) out.else = action.else.map(serializeActionForExport);
+                    if (Array.isArray(action.do)) out.do = action.do.map(serializeActionForExport);
+                    return out;
+                };
+
+                const serializeTreeForExport = (nodes) => {
+                    if (!Array.isArray(nodes)) return [];
+                    const out = [];
+                    nodes.forEach((node) => {
+                        if (!node) return;
+                        if (node.type === 'if') {
+                            const base = serializeActionForExport(node.action);
+                            if (base?.params && base.params.WFControlFlowMode !== undefined) {
+                                delete base.params.WFControlFlowMode;
+                            }
+                            base.then = serializeTreeForExport(node.children || []);
+                            if (Array.isArray(node.elseChildren) && node.elseChildren.length) {
+                                base.else = serializeTreeForExport(node.elseChildren);
+                            }
+                            out.push(base);
+                            return;
+                        }
+                        if (node.type === 'repeat') {
+                            const base = serializeActionForExport(node.action);
+                            base.do = serializeTreeForExport(node.children || []);
+                            out.push(base);
+                            return;
+                        }
+                        out.push(serializeActionForExport(node.action));
+                    });
+                    return out;
+                };
+
                 // Build program object
                 const programObj = {
                     name: currentProject?.name || 'My Shortcut',
-                    actions: currentActions.map(a => ({ action: a.action, params: a.params }))
+                    actions: serializeTreeForExport(buildActionTree(currentActions || []))
                 };
 
                 // Convert to plist
@@ -2317,6 +3050,7 @@
                 document.getElementById('actions-container')?.classList.remove('edit-mode');
                 if (addBtn) addBtn.style.display = 'none';
             }
+            updateUndoRedoButtons();
             renderActions();
         }
 
@@ -2327,6 +3061,27 @@
             { id: 'build', label: 'Building', hint: 'Assembling your shortcut...' },
             { id: 'summarize', label: 'Finalizing', hint: 'Polishing results...' }
         ];
+
+	        const MIN_PIPELINE_ACTIVE_MS = 350;
+	        const pipelineStepStartedAt = new Map();
+	        const pipelineStepCompleteTimers = new Map();
+	        let currentPipelineStep = null;
+	        let pipelinePendingStartTimer = null;
+
+	        function clearPipelinePendingStart() {
+	            if (pipelinePendingStartTimer) {
+	                clearTimeout(pipelinePendingStartTimer);
+	                pipelinePendingStartTimer = null;
+	            }
+	        }
+
+	        function clearPipelineStepTimer(step) {
+	            const t = pipelineStepCompleteTimers.get(step);
+	            if (t) {
+	                clearTimeout(t);
+	                pipelineStepCompleteTimers.delete(step);
+	            }
+	        }
 
 	        function showPipelineOrbs() {
 	            const container = document.getElementById('messages');
@@ -2350,7 +3105,7 @@
 	            container.appendChild(orbsDiv);
 	            container.scrollTop = container.scrollHeight;
 	            resetPipelineSteps();
-	            updatePipelineOrb('plan', 'started', 'Analyzing your request...');
+	            updatePipelineProgress('assess', 'started', 'Analyzing your request...');
 	        }
 
 	        function updatePipelineOrb(step, status, hint = '') {
@@ -2374,9 +3129,16 @@
             return 'Waiting...';
         }
 
-        function removePipelineOrbs() {
-            document.getElementById('pipeline-orbs')?.remove();
-        }
+	        function removePipelineOrbs() {
+	            clearPipelinePendingStart();
+	            currentPipelineStep = null;
+	            pipelineStepStartedAt?.clear?.();
+	            if (pipelineStepCompleteTimers && typeof pipelineStepCompleteTimers.forEach === 'function') {
+	                pipelineStepCompleteTimers.forEach((t) => { try { clearTimeout(t); } catch (e) { } });
+	                pipelineStepCompleteTimers.clear();
+	            }
+	            document.getElementById('pipeline-orbs')?.remove();
+	        }
 
         // ============ Forced Actions ============
         async function addForcedAction(template) {
@@ -2446,7 +3208,7 @@
         }
 
         // ============ Context Menu (Right Click / Variable Insert) ============
-        function showVariableMenu(event, inputEl) {
+	        function showVariableMenu(event, inputEl) {
             event.preventDefault();
             contextMenuTarget = inputEl;
             const menu = document.getElementById('variable-context-menu');
@@ -2464,9 +3226,9 @@
             const flatActions = flattenActions();
             const currentIndex = flatActions.findIndex(a => a.id === currentActionId);
             const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
-            const linkableActions = previousActions
-                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
-                .filter(entry => entry.output);
+	            const linkableActions = previousActions
+	                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
+	                .filter(entry => entry.output && actionHasLinkableOutput(entry.action));
             if (linkableActions.length > 0) {
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-header">Link to Action</div>';
