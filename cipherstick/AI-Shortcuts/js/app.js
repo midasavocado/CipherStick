@@ -1,7 +1,7 @@
 // ============ Configuration ============
         const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
         const IS_PRO_USER = false; // Set to true for pro users
-        const APP_VERSION = '2025-12-14-4';
+        const APP_VERSION = '2025-12-14-5';
         console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
 	        // ============ State ============
@@ -1360,7 +1360,8 @@
 
 	            try {
 	                const plan = (localStorage.getItem('flux_plan') || 'free') === 'paid' ? 'paid' : 'free';
-	                const model = 'openai/gpt-oss-120b:free';
+	                // gpt-oss-120b:free is unreliable / unavailable on some OpenRouter keys; default to a stable model.
+	                const model = 'openai/gpt-4o-mini';
                 console.log(`[Flux] Using model: ${model} (plan: ${plan})`);
 
 	                const forceInstruction = forcedActions.length
