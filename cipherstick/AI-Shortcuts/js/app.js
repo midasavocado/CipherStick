@@ -704,7 +704,30 @@
         }
 
         function buildParamPlaceholder(paramKey) {
-            return `{{${String(paramKey || 'VALUE').toUpperCase()}}}`;
+            // Avoid leaking template-style placeholders (e.g. {{OUTPUT}}) into the UI.
+            // Use empty string instead; the UI already provides contextual placeholders.
+            return '';
+        }
+
+        function paramKeySupportsInlineLinks(paramKey) {
+            const key = String(paramKey || '').trim().toLowerCase();
+            if (!key) return false;
+            // Heuristic: "Text-like" fields where Shortcuts allows mixing words + variables.
+            // (e.g., Text/Prompt/Body/Title/Message/etc.)
+            if (key === 'text') return true;
+            return (
+                key.includes('text') ||
+                key.includes('prompt') ||
+                key.includes('body') ||
+                key.includes('title') ||
+                key.includes('message') ||
+                key.includes('subject') ||
+                key.includes('comment') ||
+                key.includes('notes') ||
+                key.includes('query') ||
+                key.includes('caption') ||
+                key.includes('description')
+            );
         }
 
 	        function getActionOutputInfo(action) {
@@ -789,8 +812,22 @@
 	            const tokenIsValidLink = (token, currentIndex) => {
 	                const t = String(token || '').trim();
 	                if (!tokenIsLinkish(t)) return true;
-	                const sourceIndex = outputIndexByUuid.get(t);
-	                if (!validOutputs.has(t)) return false;
+	                let lookupKey = t;
+	                let sourceIndex = outputIndexByUuid.get(lookupKey);
+	                if (!validOutputs.has(lookupKey)) {
+	                    // Allow "!link:<uuid>" tokens to refer to a literal UUID output.
+	                    if (lookupKey.toLowerCase().startsWith('!link:')) {
+	                        const label = lookupKey.slice(6).trim();
+	                        if (label && uuidLike.test(label) && validOutputs.has(label)) {
+	                            lookupKey = label;
+	                            sourceIndex = outputIndexByUuid.get(label);
+	                        } else {
+	                            return false;
+	                        }
+	                    } else {
+	                        return false;
+	                    }
+	                }
 	                if (typeof currentIndex === 'number' && typeof sourceIndex === 'number' && sourceIndex >= currentIndex) return false;
 	                return true;
 	            };
@@ -799,13 +836,22 @@
 	                const str = String(rawValue);
 	                const trimmed = str.trim();
 	                if (!trimmed) return rawValue;
-	                if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) return rawValue;
+	                if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) {
+	                    const inner = trimmed.slice(2, -2).trim();
+	                    const isAllCapsPlaceholder = /^[A-Z0-9_]+$/.test(inner);
+	                    const isStandardTypePlaceholder = /^(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)$/i.test(inner);
+	                    if (isAllCapsPlaceholder && !isStandardTypePlaceholder) {
+	                        mutated = true;
+	                        return '';
+	                    }
+	                    return rawValue;
+	                }
 
 	                // Pure link token
 	                if (tokenIsLinkish(trimmed) && trimmed === str.trim()) {
 	                    if (!tokenIsValidLink(trimmed, currentIndex)) {
 	                        mutated = true;
-	                        return buildParamPlaceholder(key);
+	                        return '';
 	                    }
 	                    return rawValue;
 	                }
@@ -815,11 +861,11 @@
 	                const replaced = str.replace(/!link:[^\s]+/gi, (token) => {
 	                    if (!tokenIsValidLink(token, currentIndex)) {
 	                        mutated = true;
-	                        return OUTPUT_TOKEN_PLACEHOLDER;
+	                        return '';
 	                    }
 	                    return token;
 	                });
-	                return replaced;
+	                return replaced.replace(/\s{2,}/g, ' ');
 	            };
 
 	            const scrubAction = (action) => {
@@ -833,14 +879,24 @@
 	                    }
 	                    if (value && typeof value === 'object') {
 	                        const linkedUuid = value?.Value?.OutputUUID || value?.OutputUUID || '';
-	                        const linkedKey = linkedUuid ? String(linkedUuid) : '';
-	                        const sourceIndex = linkedKey ? outputIndexByUuid.get(linkedKey) : undefined;
+	                        const linkedKeyRaw = linkedUuid ? String(linkedUuid) : '';
+	                        let linkedKey = linkedKeyRaw.trim();
+	                        if (!linkedKey) return;
+	                        let lookupKey = linkedKey;
+	                        let sourceIndex = outputIndexByUuid.get(lookupKey);
+	                        if (!validOutputs.has(lookupKey) && lookupKey.toLowerCase().startsWith('!link:')) {
+	                            const label = lookupKey.slice(6).trim();
+	                            if (label && uuidLike.test(label) && validOutputs.has(label)) {
+	                                lookupKey = label;
+	                                sourceIndex = outputIndexByUuid.get(label);
+	                            }
+	                        }
 	                        if (
 	                            linkedKey &&
-	                            (!validOutputs.has(linkedKey) ||
+	                            (!validOutputs.has(lookupKey) ||
 	                                (typeof currentIndex === 'number' && typeof sourceIndex === 'number' && sourceIndex >= currentIndex))
 	                        ) {
-	                            action.params[key] = buildParamPlaceholder(key);
+	                            action.params[key] = '';
 	                            mutated = true;
 	                        }
 	                    }
@@ -1997,9 +2053,16 @@
             const disabledAttr = readonly ? 'disabled' : '';
             
             // Check for !link: tokens first
-            if (strValue.trim().startsWith('!link:')) {
-                const linkLabel = strValue.replace(/^!link:/i, '').trim();
-                const displayName = humanizeOutputName(linkLabel);
+            const trimmedValue = strValue.trim();
+            const isPureLinkToken = /^!link:[^\s]+$/i.test(trimmedValue);
+            const isTextLikeField = paramKeySupportsInlineLinks(key);
+            if (isPureLinkToken && !isTextLikeField) {
+                const linkLabel = trimmedValue.replace(/^!link:/i, '').trim();
+                const resolvedName =
+                    resolveOutputNameByUUID(trimmedValue, null) ||
+                    resolveOutputNameByUUID(linkLabel, null) ||
+                    linkLabel;
+                const displayName = humanizeOutputName(resolvedName);
                 const safeParam = escapeHtml(key).replace(/'/g, "\\'");
                 return `<div class="linked-output" data-link-label="${escapeHtml(linkLabel)}" title="Linked from: ${escapeHtml(linkLabel)}">
                     <span class="linked-output-label">${escapeHtml(displayName)}</span>
@@ -2101,11 +2164,16 @@
 	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || storedOutputName || 'Linked Output';
 	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(outputName))}</span>`;
 	            }
-	            const strVal = String(value);
-	            if (strVal.trim().startsWith('!link:')) {
-	                const linkLabel = strVal.replace(/^!link:/i, '').trim();
-	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
-	            }
+            const strVal = String(value);
+            const trimmedVal = strVal.trim();
+            if (/^!link:[^\s]+$/i.test(trimmedVal)) {
+                const linkLabel = trimmedVal.replace(/^!link:/i, '').trim();
+                const resolvedName =
+                    resolveOutputNameByUUID(trimmedVal, null) ||
+                    resolveOutputNameByUUID(linkLabel, null) ||
+                    linkLabel;
+                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(resolvedName))}</span>`;
+            }
             // Check for variables like {{Ask Each Time}}, {{Clipboard}}, etc.
             const variableMatch = strVal.match(/^\{\{([^}]+)\}\}$/);
             if (variableMatch) {
@@ -3499,6 +3567,32 @@
 	            if (!outputUUID || !availableOutputs.has(String(outputUUID))) {
 	                console.warn('Link aborted: source action has no output to link.');
 	                clearLinkedParam(targetId, paramKey);
+	                return;
+	            }
+
+	            // Text-like fields should allow mixing text + links, so insert an inline link token.
+	            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget && typeof contextMenuTarget.value === 'string') {
+	                const base = String(outputUUID).trim();
+	                const token = base.toLowerCase().startsWith('!link:') ? base : `!link:${base}`;
+
+	                const start = contextMenuTarget.selectionStart ?? contextMenuTarget.value.length;
+	                const end = contextMenuTarget.selectionEnd ?? contextMenuTarget.value.length;
+	                const currentText = contextMenuTarget.value;
+	                const left = currentText.slice(0, start);
+	                const right = currentText.slice(end);
+	                const needsLeadingSpace = left.length > 0 && !/\s$/.test(left);
+	                const needsTrailingSpace = right.length > 0 && !/^\s/.test(right);
+	                const insertText =
+	                    (needsLeadingSpace ? ' ' : '') +
+	                    token +
+	                    (needsTrailingSpace ? ' ' : '');
+
+	                contextMenuTarget.value = left + insertText + right;
+	                const nextCursor = (left + insertText).length;
+	                contextMenuTarget.focus();
+	                try { contextMenuTarget.setSelectionRange(nextCursor, nextCursor); } catch { }
+	                contextMenuTarget.dispatchEvent(new Event('change'));
+	                document.getElementById('variable-context-menu')?.classList.remove('active');
 	                return;
 	            }
 
