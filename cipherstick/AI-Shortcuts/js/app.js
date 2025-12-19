@@ -865,6 +865,44 @@
             return /^!id:(\{\{[^}]+?\}\}|[^\s]+)$/i.test(raw.trim());
         }
 
+        function getIdLabelForDisplay(raw) {
+            return normalizeIdLabel(raw) || '';
+        }
+
+        function normalizeIdParamForStorage(raw) {
+            const label = normalizeIdLabel(raw);
+            return label ? `{{${label}}}` : '';
+        }
+
+        function updateActionIdParam(actionId, rawValue, options = {}) {
+            const loc = findActionLocation(actionId);
+            const action = loc?.action;
+            if (!action) return;
+            if (!action.params) action.params = {};
+            const stored = normalizeIdParamForStorage(rawValue);
+            const prevRaw = action.params.ID ?? action.params.Id ?? action.params.id ?? '';
+            const prevStored = normalizeIdParamForStorage(prevRaw);
+            if (prevStored !== stored) {
+                pushUndoState();
+            }
+            if (stored) {
+                action.params.ID = stored;
+            } else {
+                delete action.params.ID;
+                delete action.params.Id;
+                delete action.params.id;
+            }
+            const render = options.render !== false;
+            commitActionChanges(null, { render, suppressAnimations: true });
+        }
+
+        function handleIdInputBlur(el) {
+            if (!el) return;
+            const actionId = parseInt(el.dataset.actionId);
+            if (!Number.isFinite(actionId)) return;
+            updateActionIdParam(actionId, el.value, { render: true });
+        }
+
         function paramKeySupportsInlineLinks(paramKey) {
             const key = String(paramKey || '').trim().toLowerCase();
             if (!key) return false;
@@ -976,7 +1014,7 @@
             return normalized.map(escapeListItemValue).join(LIST_ITEM_SEPARATOR);
         }
 
-        function updateListParamFromEditor(el) {
+        function updateListParamFromEditor(el, options = {}) {
             if (!el) return;
             const container = el.closest('.list-editor');
             const actionId = Number(container?.dataset?.actionId || el.dataset.actionId);
@@ -988,11 +1026,11 @@
             const action = findActionLocation(actionId)?.action;
             const currentValue = action?.params?.[paramKey] ?? '';
             if (String(currentValue ?? '') === String(serialized ?? '')) return;
-            updateActionParam(actionId, paramKey, serialized);
+            updateActionParam(actionId, paramKey, serialized, options);
         }
 
         function handleListItemBlur(el) {
-            updateListParamFromEditor(el);
+            updateListParamFromEditor(el, { render: false });
             normalizeRichInputDisplay(el);
         }
 
@@ -1003,7 +1041,7 @@
             const currentValue = action.params[paramKey] ?? '';
             const items = parseListParamValue(currentValue, { allowEmpty: true });
             items.push('');
-            updateActionParam(actionId, paramKey, serializeListParamValue(items));
+            updateActionParam(actionId, paramKey, serializeListParamValue(items), { suppressAnimations: true });
         }
 
         function removeListItem(actionId, paramKey, index) {
@@ -1014,7 +1052,7 @@
             const items = parseListParamValue(currentValue, { allowEmpty: true });
             if (index < 0 || index >= items.length) return;
             items.splice(index, 1);
-            updateActionParam(actionId, paramKey, serializeListParamValue(items));
+            updateActionParam(actionId, paramKey, serializeListParamValue(items), { suppressAnimations: true });
         }
 
         function renderListEditor(actionId, paramKey, rawValue, readonly = false) {
@@ -1042,7 +1080,14 @@
 
             const addBtn = readonly
                 ? ''
-                : `<button type="button" class="node-action-btn list-item-add" onclick="addListItem(${actionId}, '${safeParam}')">+ Add item</button>`;
+                : `
+                    <div class="list-editor-actions">
+                        <button type="button" class="node-action-btn list-item-add" onclick="addListItem(${actionId}, '${safeParam}')">
+                            <span class="list-item-add-plus">+</span>
+                            Add item
+                        </button>
+                    </div>
+                `;
 
             return `
                 <div class="list-editor" data-action-id="${actionId}" data-param="${escapeHtml(paramKey)}">
@@ -1148,17 +1193,19 @@
             return out.replace(/\n+$/g, '');
         }
 
-        function handleRichInputChange(el) {
+        function handleRichInputChange(el, options = {}) {
             if (!el) return;
             if (el.dataset?.listParam) {
-                updateListParamFromEditor(el);
+                updateListParamFromEditor(el, options);
                 return;
             }
             const actionId = parseInt(el.dataset.actionId);
             const paramKey = el.dataset.param;
             if (!Number.isFinite(actionId) || !paramKey) return;
             const value = extractRichInputValue(el);
-            updateActionParam(actionId, paramKey, value);
+            const existing = findActionLocation(actionId)?.action?.params?.[paramKey] ?? '';
+            if (String(existing ?? '') === String(value ?? '')) return;
+            updateActionParam(actionId, paramKey, value, options);
         }
 
         function normalizeRichInputDisplay(el) {
@@ -1175,12 +1222,17 @@
                 handleListItemBlur(el);
                 return;
             }
-            handleRichInputChange(el);
+            handleRichInputChange(el, { render: false });
             normalizeRichInputDisplay(el);
         }
 
         function isRichInputElement(el) {
             return Boolean(el && el.classList && el.classList.contains('param-rich-input'));
+        }
+
+        function flushRichInputs() {
+            const inputs = Array.from(document.querySelectorAll('.param-rich-input[contenteditable="true"]') || []);
+            inputs.forEach((input) => handleRichInputChange(input, { render: false }));
         }
 
         function saveRichInputSelection(el) {
@@ -1254,7 +1306,7 @@
                 el.appendChild(fragment);
             }
             el.focus();
-            handleRichInputChange(el);
+            handleRichInputChange(el, { render: false });
         }
 
 	        function getActionOutputInfo(action) {
@@ -2214,9 +2266,13 @@
 	        }
 
 	        // ============ Actions Preview ============
-        function renderActions(animateIds = null) {
+        function renderActions(animateIds = null, options = {}) {
+            const suppressAnimations = options?.suppressAnimations === true;
             const container = document.getElementById('actions-container');
             const emptyState = document.getElementById('empty-state');
+            if (suppressAnimations && container) {
+                container.classList.add('suppress-anim');
+            }
             currentActions = ensureActionUUIDs(currentActions);
             currentActions = normalizeControlFlowToNested(currentActions);
             if (currentProject) {
@@ -2227,9 +2283,12 @@
             rebuildOutputNameIndex(currentActions);
             updateProgramExportCache();
 
-	            if (currentActions.length === 0) {
-	                container.classList.add('hidden');
-	                emptyState.classList.remove('hidden');
+            if (currentActions.length === 0) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                if (suppressAnimations && container) {
+                    container.classList.remove('suppress-anim');
+                }
                 return;
             }
 
@@ -2240,6 +2299,11 @@
 		            const tree = buildActionTree(currentActions);
 		            renderNodeList(tree, container, animateIds);
 		            initActionReordering();
+                    if (suppressAnimations && container) {
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => container.classList.remove('suppress-anim'));
+                        });
+                    }
 
 		        }
 
@@ -2347,14 +2411,18 @@
 	                    
 	                    // Get IF condition parameters
 	                    const input = node.action.params?.Input || node.action.params?.WFInput || '{{VARIABLE}}';
-	                    const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '{{STRING}}';
-	                    const conditionMeta = resolveConditionOptions(node.action, node.action.params?.Condition || node.action.params?.WFCondition || DEFAULT_CONDITION_OPTIONS);
+                    const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '{{STRING}}';
+                    const conditionMeta = resolveConditionOptions(node.action, node.action.params?.Condition || node.action.params?.WFCondition || DEFAULT_CONDITION_OPTIONS);
                     const unaryCondition = isUnaryCondition(conditionMeta.selected);
                     const conditionInputHtml = editMode
                         ? getInputForType(node.action.id, 'Condition', conditionMeta.optionsString, false)
                         : `<span class="condition-value">${escapeHtml(conditionMeta.selected)}</span>`;
                     const inputInputHtml = editMode ? getInputForType(node.action.id, 'Input', input, false) : `<span class="condition-value">${formatLinkedValue(input)}</span>`;
                     const compareToInputHtml = unaryCondition ? '' : (editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`);
+                    const idValue = node.action.params?.ID ?? node.action.params?.Id ?? node.action.params?.id ?? '';
+                    const idLabel = getIdLabelForDisplay(idValue);
+                    const idInputHtml = (editMode || idLabel) ? getInputForType(node.action.id, 'ID', idValue, !editMode) : '';
+                    const idLine = idInputHtml ? `<div class="control-id-line"><span class="param-label">ID</span>${idInputHtml}</div>` : '';
                     
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
@@ -2380,6 +2448,7 @@
                                 ${compareToInputHtml}
                                 <span class="if-then-label">Then</span>
                             </div>
+                            ${idLine}
                             ${actionsHtml}
                         </div>
                         <div class="if-then ${thenEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="if-then" data-action-id="${node.action.id}">
@@ -2419,6 +2488,10 @@
 	                    const isRepeatWithEach = actionName.includes('witheach') || actionName.includes('with each');
                     const repeatCount = node.action.params?.Count || node.action.params?.WFRepeatCount || '';
                     const repeatItems = node.action.params?.Items || node.action.params?.RepeatItemVariableName || node.action.params?.WFRepeatItemVariableName || '';
+                    const repeatIdValue = node.action.params?.ID ?? node.action.params?.Id ?? node.action.params?.id ?? '';
+                    const repeatIdLabel = getIdLabelForDisplay(repeatIdValue);
+                    const repeatIdInputHtml = (editMode || repeatIdLabel) ? getInputForType(node.action.id, 'ID', repeatIdValue, !editMode) : '';
+                    const repeatIdLine = repeatIdInputHtml ? `<div class="control-id-line"><span class="param-label">ID</span>${repeatIdInputHtml}</div>` : '';
                     
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
@@ -2465,6 +2538,7 @@
 	                        <div class="repeat-header">
 	                            ${dragHandle}
 	                            ${repeatHeaderHtml}
+                                ${repeatIdLine}
 	                            ${actionsHtml}
 	                        </div>
                         <div class="repeat-body ${emptyBodyClass} ${dropZoneClass}" data-drop-zone="repeat" data-action-id="${node.action.id}">
@@ -2515,20 +2589,31 @@
 
             let paramsHtml = '';
             // Show params if in edit mode OR if they have a value (not empty/default)
-            if (action.params && Object.keys(action.params).length > 0 && !isControlAction(action)) {
+            if (!isControlAction(action) && (editMode || (action.params && Object.keys(action.params).length > 0))) {
                 let hasVisibleParams = false;
                 let innerHtml = '<div class="node-params">';
-                for (const [key, value] of Object.entries(action.params)) {
+                const paramsObj = action.params || {};
+                const idValue = paramsObj.ID ?? paramsObj.Id ?? paramsObj.id ?? '';
+                const shouldIncludeId = editMode || Boolean(getIdLabelForDisplay(idValue));
+                const orderedParams = [];
+                if (shouldIncludeId) orderedParams.push(['ID', idValue]);
+                for (const [key, value] of Object.entries(paramsObj)) {
+                    if (String(key).toLowerCase() === 'id') continue;
+                    orderedParams.push([key, value]);
+                }
+                for (const [key, value] of orderedParams) {
                     // Skip UUID/OutputUUID/GroupingIdentifier as they're internal
                     const lowerKey = String(key).toLowerCase();
                     if (lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier' || lowerKey === 'providedoutputuuid') {
                         continue;
                     }
                     // Always show params in edit mode, or if they have a non-placeholder value in view mode
-                    const strVal = String(value);
-                    const isPlaceholder = strVal.startsWith('{{') && strVal.endsWith('}}');
+                    const strVal = String(value ?? '');
+                    const isIdField = lowerKey === 'id';
+                    const isPlaceholder = !isIdField && strVal.startsWith('{{') && strVal.endsWith('}}');
+                    const displayValue = isIdField ? getIdLabelForDisplay(value) : strVal;
                     // Show if edit mode OR (has value AND not a placeholder)
-                    if (editMode || (strVal && !isPlaceholder)) {
+                    if (editMode || (displayValue && !isPlaceholder)) {
                         hasVisibleParams = true;
                         const inputHtml = getInputForType(action.id, key, value, !editMode);
                         innerHtml += `
@@ -2569,10 +2654,18 @@
 			            return node;
 			        }
 
-	        function getInputForType(actionId, key, value, readonly = false) {
-	            if (String(key).toLowerCase() === 'uuid') {
-	                return '';
-	            }
+        function getInputForType(actionId, key, value, readonly = false) {
+            if (String(key).toLowerCase() === 'uuid') {
+                return '';
+            }
+            if (String(key).toLowerCase() === 'id') {
+                const idLabel = getIdLabelForDisplay(value);
+                if (readonly) {
+                    return `<span class="param-value param-id-display">${escapeHtml(idLabel || '')}</span>`;
+                }
+                const contextMenuAttr = '';
+                return `<input type="text" class="param-value param-id-input" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(idLabel)}" placeholder="ID" onblur="handleIdInputBlur(this)" ${contextMenuAttr}>`;
+            }
             const action = findActionLocation(actionId)?.action;
             if (action && isListEditorAction(action) && isListEditorParam(key)) {
                 return renderListEditor(actionId, key, value, readonly);
@@ -2804,13 +2897,15 @@
             return icons[actionType] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>';
         }
 
-	        function updateActionParam(actionId, paramKey, value) {
-	            const loc = findActionLocation(actionId);
-	            const action = loc?.action;
-	            if (!action) return;
-	            if (!action.params) action.params = {};
+        function updateActionParam(actionId, paramKey, value, options = {}) {
+            const render = options.render !== false;
+            const suppressAnimations = options.suppressAnimations === true;
+            const loc = findActionLocation(actionId);
+            const action = loc?.action;
+            if (!action) return;
+            if (!action.params) action.params = {};
 
-	            if (paramKey === 'Condition' || paramKey === 'WFCondition') {
+            if (paramKey === 'Condition' || paramKey === 'WFCondition') {
 	                const prevValue = action.params.ConditionValue ?? action.params.WFConditionValue ?? action.params.Condition ?? action.params.WFCondition ?? '';
 	                if (String(prevValue) !== String(value)) {
 	                    pushUndoState();
@@ -2830,8 +2925,8 @@
 	                }
 	                action.params[paramKey] = value;
 	            }
-	            commitActionChanges();
-	        }
+            commitActionChanges(null, { render, suppressAnimations });
+        }
 
         let deleteTargetId = null;
         let deleteTargetType = null; // 'action' or 'project'
@@ -2955,14 +3050,22 @@
 	            commitActionChanges([newAction.id]);
 	        }
 
-		        function commitActionChanges(animateIds = null) {
+		        function commitActionChanges(animateIds = null, options = {}) {
+                    const render = options.render !== false;
+                    const suppressAnimations = options.suppressAnimations === true;
 		            currentActions = ensureActionUUIDs(currentActions);
 		            currentActions = normalizeControlFlowToNested(currentActions);
 		            if (currentProject) {
 		                currentProject.actions = currentActions;
 		                saveProjects();
 		            }
-		            renderActions(animateIds);
+                    if (render) {
+		                renderActions(animateIds, { suppressAnimations });
+                    } else {
+                        pruneMissingOutputLinks();
+                        rebuildOutputNameIndex(currentActions);
+                        updateProgramExportCache();
+                    }
 	            updateUndoRedoButtons();
 	        }
 
@@ -3857,6 +3960,11 @@
                 if (addBtn) addBtn.style.display = 'none';
             }
             updateUndoRedoButtons();
+            if (!editMode) {
+                flushRichInputs();
+                renderActions(null, { suppressAnimations: true });
+                return;
+            }
             renderActions();
         }
 
@@ -4093,7 +4201,7 @@
                 const input = btn.closest('.param-rich-input');
                 if (!pill || !input) return;
                 pill.remove();
-                handleRichInputChange(input);
+                handleRichInputChange(input, { render: false });
                 normalizeRichInputDisplay(input);
                 input.focus();
             });
@@ -4128,7 +4236,7 @@
                 e.preventDefault();
                 const nextFocus = e.key === 'Backspace' ? node.previousSibling : node.nextSibling;
                 node.remove();
-                handleRichInputChange(input);
+                handleRichInputChange(input, { render: false });
                 normalizeRichInputDisplay(input);
                 input.focus();
                 if (nextFocus && nextFocus.nodeType === Node.TEXT_NODE) {

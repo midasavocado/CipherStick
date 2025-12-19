@@ -737,6 +737,18 @@
     align-items: center;
 }
 
+.control-id-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-id-line .param-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    min-width: 24px;
+}
+
 .if-label,
 .repeat-label,
 .if-then-label {
@@ -1510,9 +1522,30 @@
     flex: 1;
 }
 
-.list-item-add {
-    align-self: flex-start;
+.list-editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     margin-left: 1.6rem;
+}
+
+.list-item-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    width: auto;
+    height: auto;
+    border-radius: 999px;
+    border: 1px dashed var(--border-color);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--text-color);
+    font-size: 0.75rem;
+}
+
+.list-item-add-plus {
+    font-weight: 700;
+    line-height: 1;
 }
 
 .list-editor-empty {
@@ -1526,6 +1559,16 @@
     color: var(--text-muted);
     opacity: 0.75;
     pointer-events: none;
+}
+
+.param-id-input {
+    font-family: 'SF Mono', Monaco, monospace;
+    letter-spacing: 0.02em;
+}
+
+.param-id-display {
+    font-family: 'SF Mono', Monaco, monospace;
+    color: var(--text-muted);
 }
 
 .if-header .param-rich-input,
@@ -2175,6 +2218,12 @@ body.mode-dark .theme-toggle-thumb {
 
 .action-node.settling {
     animation: settleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+#actions-container.suppress-anim .action-node,
+#actions-container.suppress-anim .action-node.settling,
+#actions-container.suppress-anim .action-node.swirling {
+    animation: none !important;
 }
 
 /* --- Download Modal Pro Badge Fix --- */
