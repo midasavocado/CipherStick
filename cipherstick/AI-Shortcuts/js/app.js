@@ -11,6 +11,7 @@
 	        let availableTemplates = [];
 	        let currentActions = [];
 		let currentProgramObj = null;
+        let currentExportCache = null;
 		let isGenerating = false;
 		let editMode = false;
 		let forcedActions = [];
@@ -22,6 +23,7 @@
 		let reorderListenersAttached = false;
 		let animationsEnabled = localStorage.getItem('flux_animations') !== 'disabled';
 		        let contextMenuTarget = null;
+                let richInputSelection = null;
 		        let tutorialStep = 0;
 	        let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
 	        const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
@@ -191,13 +193,14 @@
             }
         }
 
-		        function loadProject(id) {
-		            currentProject = projects.find(p => p.id === id);
-		            if (!currentProject) { showProjectsView(); return; }
-		            currentActions = ensureActionUUIDs(currentProject.actions || []);
-		            currentActions = normalizeControlFlowToNested(currentActions);
-		            currentProject.actions = currentActions;
-		            saveProjects();
+        function loadProject(id) {
+            currentProject = projects.find(p => p.id === id);
+            if (!currentProject) { showProjectsView(); return; }
+            currentExportCache = null;
+            currentActions = ensureActionUUIDs(currentProject.actions || []);
+            currentActions = normalizeControlFlowToNested(currentActions);
+            currentProject.actions = currentActions;
+            saveProjects();
 		            currentProgramObj = currentProject.programObj || null;
 		            resetUndoRedoHistory();
 	            showWorkspaceView();
@@ -217,12 +220,91 @@
 	            localStorage.setItem('flux_projects', JSON.stringify(projects));
 	        }
 
-	        function clonePlainObject(value) {
-	            try {
-	                if (typeof structuredClone === 'function') return structuredClone(value);
-	            } catch (e) { }
-	            return JSON.parse(JSON.stringify(value));
-	        }
+        function clonePlainObject(value) {
+            try {
+                if (typeof structuredClone === 'function') return structuredClone(value);
+            } catch (e) { }
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function serializeActionForExport(action) {
+            if (!action || typeof action !== 'object') return action;
+            const out = {
+                action: action.action || action.title || 'Unknown',
+                params: clonePlainObject(action.params || {})
+            };
+            if (Array.isArray(action.then)) out.then = action.then.map(serializeActionForExport);
+            if (Array.isArray(action.else)) out.else = action.else.map(serializeActionForExport);
+            if (Array.isArray(action.do)) out.do = action.do.map(serializeActionForExport);
+            return out;
+        }
+
+        function serializeTreeForExport(nodes) {
+            if (!Array.isArray(nodes)) return [];
+            const out = [];
+            nodes.forEach((node) => {
+                if (!node) return;
+                if (node.type === 'if') {
+                    const base = serializeActionForExport(node.action);
+                    if (base?.params && base.params.WFControlFlowMode !== undefined) {
+                        delete base.params.WFControlFlowMode;
+                    }
+                    base.then = serializeTreeForExport(node.children || []);
+                    if (Array.isArray(node.elseChildren) && node.elseChildren.length) {
+                        base.else = serializeTreeForExport(node.elseChildren);
+                    }
+                    out.push(base);
+                    return;
+                }
+                if (node.type === 'repeat') {
+                    const base = serializeActionForExport(node.action);
+                    base.do = serializeTreeForExport(node.children || []);
+                    out.push(base);
+                    return;
+                }
+                out.push(serializeActionForExport(node.action));
+            });
+            return out;
+        }
+
+        function buildProgramExport(actions = currentActions) {
+            return {
+                name: currentProject?.name || 'My Shortcut',
+                actions: serializeTreeForExport(buildActionTree(actions || []))
+            };
+        }
+
+        function updateProgramExportCache() {
+            const programObj = buildProgramExport(currentActions);
+            const programJson = JSON.stringify(programObj);
+            currentExportCache = { programObj, programJson, updated: Date.now() };
+            if (currentProject) {
+                if (currentProject.exportCacheJson !== programJson) {
+                    currentProject.exportCacheJson = programJson;
+                    currentProject.exportCacheUpdated = Date.now();
+                    saveProjects();
+                }
+            }
+            return currentExportCache;
+        }
+
+        function getProgramExportCache() {
+            if (currentExportCache?.programJson) return currentExportCache;
+            if (currentProject?.exportCacheJson) {
+                try {
+                    const parsed = JSON.parse(currentProject.exportCacheJson);
+                    currentExportCache = {
+                        programObj: parsed,
+                        programJson: currentProject.exportCacheJson,
+                        updated: currentProject.exportCacheUpdated || Date.now()
+                    };
+                    return currentExportCache;
+                } catch (err) {
+                    console.warn('Export cache parse error, rebuilding:', err);
+                }
+            }
+            return updateProgramExportCache();
+        }
 
 	        function captureWorkspaceState() {
 	            return {
@@ -797,6 +879,210 @@
                 key.includes('caption') ||
                 key.includes('description')
             );
+        }
+
+        const INLINE_TOKEN_RE = /!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|\{\{[^}]+?\}\}/gi;
+        const STANDARD_PLACEHOLDER_RE = /^\{\{(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)\}\}$/i;
+
+        function isStandardPlaceholderToken(token) {
+            return STANDARD_PLACEHOLDER_RE.test(String(token || '').trim());
+        }
+
+        function getRichInputPlaceholder(key, rawValue) {
+            const trimmed = String(rawValue || '').trim();
+            if (STANDARD_PLACEHOLDER_RE.test(trimmed)) {
+                const type = trimmed.slice(2, -2).trim().toLowerCase();
+                if (type === 'variable') return 'Enter variable';
+                if (type === 'number' || type === 'integer' || type === 'decimal') return 'Enter number';
+                if (type === 'boolean') return 'Enter true or false';
+                return 'Enter text';
+            }
+            const lowerKey = String(key || '').trim().toLowerCase();
+            if (lowerKey.includes('prompt')) return 'Enter prompt';
+            if (lowerKey.includes('title')) return 'Enter title';
+            if (lowerKey.includes('message')) return 'Enter message';
+            if (lowerKey.includes('subject')) return 'Enter subject';
+            if (lowerKey.includes('body')) return 'Enter body';
+            if (lowerKey.includes('text')) return 'Enter text';
+            return lowerKey ? `Enter ${lowerKey}` : 'Enter text';
+        }
+
+        function tokenizeRichText(raw) {
+            const text = String(raw || '');
+            if (!text) return [];
+            const out = [];
+            INLINE_TOKEN_RE.lastIndex = 0;
+            let lastIndex = 0;
+            let match;
+            while ((match = INLINE_TOKEN_RE.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                    out.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+                }
+                out.push({ type: 'token', value: match[0] });
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < text.length) {
+                out.push({ type: 'text', value: text.slice(lastIndex) });
+            }
+            return out;
+        }
+
+        function getTokenDisplayLabel(token) {
+            const trimmed = String(token || '').trim();
+            if (isIdToken(trimmed) || /^!link:/i.test(trimmed)) return normalizeIdLabel(trimmed);
+            if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) {
+                return trimmed.slice(2, -2).trim();
+            }
+            return trimmed;
+        }
+
+        function buildVariablePillHtml(token) {
+            const rawToken = String(token || '');
+            const label = getTokenDisplayLabel(rawToken);
+            const resolved =
+                resolveOutputNameByUUID(rawToken, null) ||
+                resolveOutputNameByUUID(label, null);
+            const display = humanizeOutputName(resolved || label || rawToken);
+            return `<span class="variable-pill" contenteditable="false" data-token="${escapeAttr(rawToken)}"><span class="variable-pill-label">${escapeHtml(display)}</span><button type="button" class="variable-pill-remove" title="Remove">&times;</button></span>`;
+        }
+
+        function formatRichInputHtml(rawValue) {
+            if (!rawValue) return '';
+            const parts = tokenizeRichText(rawValue);
+            if (!parts.length) return '';
+            return parts.map(part => {
+                if (part.type === 'token') {
+                    return buildVariablePillHtml(part.value);
+                }
+                return escapeHtml(part.value).replace(/\n/g, '<br>');
+            }).join('');
+        }
+
+        function extractRichInputText(node) {
+            if (!node) return '';
+            if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+            if (node.nodeType !== Node.ELEMENT_NODE) return '';
+            const el = node;
+            if (el.classList.contains('variable-pill')) {
+                return el.dataset.token || '';
+            }
+            if (el.tagName === 'BR') return '\n';
+            let text = '';
+            el.childNodes.forEach(child => {
+                text += extractRichInputText(child);
+            });
+            if (el.tagName === 'DIV' || el.tagName === 'P') text += '\n';
+            return text;
+        }
+
+        function extractRichInputValue(el) {
+            if (!el) return '';
+            let out = '';
+            el.childNodes.forEach(child => {
+                out += extractRichInputText(child);
+            });
+            return out.replace(/\n+$/g, '');
+        }
+
+        function handleRichInputChange(el) {
+            if (!el) return;
+            const actionId = parseInt(el.dataset.actionId);
+            const paramKey = el.dataset.param;
+            if (!Number.isFinite(actionId) || !paramKey) return;
+            const value = extractRichInputValue(el);
+            updateActionParam(actionId, paramKey, value);
+        }
+
+        function normalizeRichInputDisplay(el) {
+            if (!el) return;
+            const value = extractRichInputValue(el);
+            const html = formatRichInputHtml(value);
+            if (el.innerHTML !== html) {
+                el.innerHTML = html;
+            }
+        }
+
+        function handleRichInputBlur(el) {
+            handleRichInputChange(el);
+            normalizeRichInputDisplay(el);
+        }
+
+        function isRichInputElement(el) {
+            return Boolean(el && el.classList && el.classList.contains('param-rich-input'));
+        }
+
+        function saveRichInputSelection(el) {
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return;
+            const range = selection.getRangeAt(0);
+            if (el.contains(range.startContainer)) {
+                richInputSelection = range.cloneRange();
+            }
+        }
+
+        function restoreRichInputSelection(el) {
+            const selection = window.getSelection();
+            if (!selection) return;
+            selection.removeAllRanges();
+            if (richInputSelection && el.contains(richInputSelection.startContainer)) {
+                selection.addRange(richInputSelection);
+                return;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            selection.addRange(range);
+        }
+
+        function insertTokenIntoRichInput(el, token) {
+            if (!el) return;
+            const rawToken = String(token || '').trim();
+            if (!rawToken) return;
+            restoreRichInputSelection(el);
+            const selection = window.getSelection();
+            const range = selection && selection.rangeCount ? selection.getRangeAt(0) : null;
+            const pillWrapper = document.createElement('span');
+            pillWrapper.innerHTML = buildVariablePillHtml(rawToken);
+            const pill = pillWrapper.firstElementChild;
+
+            const fragment = document.createDocumentFragment();
+            const leftRange = range ? range.cloneRange() : null;
+            const rightRange = range ? range.cloneRange() : null;
+            let needsLeadingSpace = false;
+            let needsTrailingSpace = false;
+
+            if (range) {
+                leftRange.selectNodeContents(el);
+                leftRange.setEnd(range.startContainer, range.startOffset);
+                rightRange.selectNodeContents(el);
+                rightRange.setStart(range.endContainer, range.endOffset);
+                const leftText = leftRange.toString();
+                const rightText = rightRange.toString();
+                needsLeadingSpace = leftText.length > 0 && !/\s$/.test(leftText);
+                needsTrailingSpace = rightText.length > 0 && !/^\s/.test(rightText);
+                range.deleteContents();
+            }
+
+            if (needsLeadingSpace) fragment.appendChild(document.createTextNode(' '));
+            fragment.appendChild(pill);
+            if (needsTrailingSpace) fragment.appendChild(document.createTextNode(' '));
+
+            if (range) {
+                range.insertNode(fragment);
+                const tailNode = pill.nextSibling;
+                if (tailNode && tailNode.nodeType === Node.TEXT_NODE) {
+                    range.setStart(tailNode, tailNode.textContent.length);
+                } else {
+                    range.setStartAfter(pill);
+                }
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } else {
+                el.appendChild(fragment);
+            }
+            el.focus();
+            handleRichInputChange(el);
         }
 
 	        function getActionOutputInfo(action) {
@@ -1754,17 +2040,18 @@
 	        }
 
 	        // ============ Actions Preview ============
-		        function renderActions(animateIds = null) {
-		            const container = document.getElementById('actions-container');
-		            const emptyState = document.getElementById('empty-state');
-		            currentActions = ensureActionUUIDs(currentActions);
-		            currentActions = normalizeControlFlowToNested(currentActions);
-		            if (currentProject) {
-		                currentProject.actions = currentActions;
-		                saveProjects();
-		            }
-		            pruneMissingOutputLinks();
-		            rebuildOutputNameIndex(currentActions);
+        function renderActions(animateIds = null) {
+            const container = document.getElementById('actions-container');
+            const emptyState = document.getElementById('empty-state');
+            currentActions = ensureActionUUIDs(currentActions);
+            currentActions = normalizeControlFlowToNested(currentActions);
+            if (currentProject) {
+                currentProject.actions = currentActions;
+                saveProjects();
+            }
+            pruneMissingOutputLinks();
+            rebuildOutputNameIndex(currentActions);
+            updateProgramExportCache();
 
 	            if (currentActions.length === 0) {
 	                container.classList.add('hidden');
@@ -2134,11 +2421,22 @@
 
             const strValue = String(value);
             const disabledAttr = readonly ? 'disabled' : '';
+            const isTextLikeField = paramKeySupportsInlineLinks(key);
+
+            if (isTextLikeField) {
+                if (readonly) {
+                    return `<div class="param-value param-mixed-content">${formatLinkedValue(strValue)}</div>`;
+                }
+                const placeholder = getRichInputPlaceholder(key, strValue);
+                const normalizedValue = STANDARD_PLACEHOLDER_RE.test(strValue.trim()) ? '' : strValue;
+                const richHtml = formatRichInputHtml(normalizedValue);
+                const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<div class="param-value param-rich-input" contenteditable="true" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleRichInputBlur(this)" ${contextMenuAttr}>${richHtml}</div>`;
+            }
             
             // Check for !ID: tokens first
             const trimmedValue = strValue.trim();
             const isPureLinkToken = isIdToken(trimmedValue) || /^!link:[^\s]+$/i.test(trimmedValue);
-            const isTextLikeField = paramKeySupportsInlineLinks(key);
             if (isPureLinkToken && !isTextLikeField) {
                 const linkLabel = normalizeIdLabel(trimmedValue);
                 const resolvedName =
@@ -3259,6 +3557,17 @@
         }
 
         // ============ Download ============
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
         function openDownloadModal() {
             document.getElementById('download-modal').classList.add('active');
         }
@@ -3280,61 +3589,31 @@
             statusText.textContent = 'Converting to shortcut format...';
 
             try {
-                const serializeActionForExport = (action) => {
-                    if (!action || typeof action !== 'object') return action;
-                    const out = {
-                        action: action.action || action.title || 'Unknown',
-                        params: clonePlainObject(action.params || {})
-                    };
-                    if (Array.isArray(action.then)) out.then = action.then.map(serializeActionForExport);
-                    if (Array.isArray(action.else)) out.else = action.else.map(serializeActionForExport);
-                    if (Array.isArray(action.do)) out.do = action.do.map(serializeActionForExport);
-                    return out;
-                };
-
-                const serializeTreeForExport = (nodes) => {
-                    if (!Array.isArray(nodes)) return [];
-                    const out = [];
-                    nodes.forEach((node) => {
-                        if (!node) return;
-                        if (node.type === 'if') {
-                            const base = serializeActionForExport(node.action);
-                            if (base?.params && base.params.WFControlFlowMode !== undefined) {
-                                delete base.params.WFControlFlowMode;
-                            }
-                            base.then = serializeTreeForExport(node.children || []);
-                            if (Array.isArray(node.elseChildren) && node.elseChildren.length) {
-                                base.else = serializeTreeForExport(node.elseChildren);
-                            }
-                            out.push(base);
-                            return;
-                        }
-                        if (node.type === 'repeat') {
-                            const base = serializeActionForExport(node.action);
-                            base.do = serializeTreeForExport(node.children || []);
-                            out.push(base);
-                            return;
-                        }
-                        out.push(serializeActionForExport(node.action));
-                    });
-                    return out;
-                };
-
-                // Build program object
-                const programObj = {
-                    name: currentProject?.name || 'My Shortcut',
-                    actions: serializeTreeForExport(buildActionTree(currentActions || []))
-                };
+                const exportCache = getProgramExportCache();
+                const programObj = exportCache.programObj;
+                const programJson = exportCache.programJson;
+                const baseName = String(programObj?.name || currentProject?.name || 'My Shortcut').replace(/[^a-z0-9]/gi, '_') || 'My_Shortcut';
 
                 // Convert to plist
                 statusText.textContent = 'Generating plist...';
                 const convertRes = await fetch(`${API_BASE}/convert`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(programObj)
+                    body: programJson
                 });
                 const convertData = await convertRes.json();
                 if (!convertData.ok) throw new Error(convertData.message || 'Conversion failed');
+
+                if (type === 'raw') {
+                    statusText.textContent = 'Preparing raw outputs...';
+                    const jsonBlob = new Blob([programJson], { type: 'application/json' });
+                    const plistBlob = new Blob([convertData.plist], { type: 'application/xml' });
+                    downloadBlob(jsonBlob, `${baseName}.json`);
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    downloadBlob(plistBlob, `${baseName}.plist`);
+                    closeDownloadModal();
+                    return;
+                }
 
                 // Sign the shortcut
                 statusText.textContent = 'Signing shortcut...';
@@ -3352,14 +3631,7 @@
                 // Download
                 statusText.textContent = 'Downloading...';
                 const blob = await signRes.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${programObj.name.replace(/[^a-z0-9]/gi, '_')}.shortcut`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                downloadBlob(blob, `${baseName}.shortcut`);
 
                 closeDownloadModal();
             } catch (err) {
@@ -3564,6 +3836,9 @@
 	        function showVariableMenu(event, inputEl) {
             event.preventDefault();
             contextMenuTarget = inputEl;
+            if (isRichInputElement(inputEl)) {
+                saveRichInputSelection(inputEl);
+            }
             const menu = document.getElementById('variable-context-menu');
 
             // Build dynamic menu with linkable actions
@@ -3629,17 +3904,78 @@
             });
         }
 
+        function initRichInputHandlers() {
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.variable-pill-remove');
+                if (!btn) return;
+                const pill = btn.closest('.variable-pill');
+                const input = btn.closest('.param-rich-input');
+                if (!pill || !input) return;
+                pill.remove();
+                handleRichInputChange(input);
+                normalizeRichInputDisplay(input);
+                input.focus();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                const input = e.target;
+                if (!isRichInputElement(input)) return;
+                if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+                const selection = window.getSelection();
+                if (!selection || selection.rangeCount === 0) return;
+                const range = selection.getRangeAt(0);
+                if (!range.collapsed) return;
+
+                let node = range.startContainer;
+                let offset = range.startOffset;
+                if (node.nodeType === Node.TEXT_NODE) {
+                    if (e.key === 'Backspace' && offset > 0) return;
+                    if (e.key === 'Delete' && offset < (node.textContent || '').length) return;
+                    node = e.key === 'Backspace' ? node.previousSibling : node.nextSibling;
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const childNodes = node.childNodes;
+                    if (e.key === 'Backspace') {
+                        node = offset > 0 ? childNodes[offset - 1] : node.previousSibling;
+                    } else {
+                        node = childNodes[offset] || node.nextSibling;
+                    }
+                }
+
+                if (!node || node.nodeType !== Node.ELEMENT_NODE) return;
+                if (!node.classList.contains('variable-pill')) return;
+
+                e.preventDefault();
+                const nextFocus = e.key === 'Backspace' ? node.previousSibling : node.nextSibling;
+                node.remove();
+                handleRichInputChange(input);
+                normalizeRichInputDisplay(input);
+                input.focus();
+                if (nextFocus && nextFocus.nodeType === Node.TEXT_NODE) {
+                    const newRange = document.createRange();
+                    newRange.setStart(nextFocus, e.key === 'Backspace' ? nextFocus.textContent.length : 0);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                }
+            });
+        }
+
         function insertVariable(varName) {
             if (!contextMenuTarget) return;
-            const start = contextMenuTarget.selectionStart || contextMenuTarget.value.length;
-            const end = contextMenuTarget.selectionEnd || contextMenuTarget.value.length;
-            const text = contextMenuTarget.value;
             const varText = formatIdToken(varName);
             if (!varText) return;
-            contextMenuTarget.value = text.slice(0, start) + varText + text.slice(end);
-            contextMenuTarget.focus();
-            contextMenuTarget.setSelectionRange(start + varText.length, start + varText.length);
-            contextMenuTarget.dispatchEvent(new Event('change'));
+            if (isRichInputElement(contextMenuTarget)) {
+                insertTokenIntoRichInput(contextMenuTarget, varText);
+                normalizeRichInputDisplay(contextMenuTarget);
+            } else {
+                const start = contextMenuTarget.selectionStart || contextMenuTarget.value.length;
+                const end = contextMenuTarget.selectionEnd || contextMenuTarget.value.length;
+                const text = contextMenuTarget.value;
+                contextMenuTarget.value = text.slice(0, start) + varText + text.slice(end);
+                contextMenuTarget.focus();
+                contextMenuTarget.setSelectionRange(start + varText.length, start + varText.length);
+                contextMenuTarget.dispatchEvent(new Event('change'));
+            }
             document.getElementById('variable-context-menu')?.classList.remove('active');
         }
 
@@ -3650,43 +3986,52 @@
 	            const source = sourceInfo?.action;
 	            if (!target || !source) return;
 
+	            currentActions = ensureActionUUIDs(currentActions);
+	            rebuildOutputNameIndex();
 	            const sourceOutput = getActionOutputInfo(source);
-	            const outputUUID = sourceUuid ? String(sourceUuid) : sourceOutput?.outputUUID;
-	            const outputName = sourceLabel || sourceOutput?.outputName || 'Previous Output';
+	            const outputUUID = sourceUuid ? String(sourceUuid) : (sourceOutput?.outputUUID || source?.params?.UUID || '');
+	            const outputName = sourceLabel || sourceOutput?.outputName || source?.title || source?.action || 'Previous Output';
 
 	            // Only allow linking when the source exposes an output
 	            const availableOutputs = collectAvailableOutputs();
-	            if (!outputUUID || !availableOutputs.has(String(outputUUID))) {
+	            if (!outputUUID) {
 	                console.warn('Link aborted: source action has no output to link.');
 	                clearLinkedParam(targetId, paramKey);
 	                return;
 	            }
+	            if (!availableOutputs.has(String(outputUUID))) {
+	                console.warn('Link warning: source output not indexed yet; linking anyway.');
+	            }
 
 	            // Text-like fields should allow mixing text + links, so insert an inline link token.
-	            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget && typeof contextMenuTarget.value === 'string') {
+	            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget) {
 	                const base = sourceOutput?.outputId || outputUUID;
 	                const token = formatIdToken(base);
 	                if (!token) return;
+                    if (isRichInputElement(contextMenuTarget)) {
+                        insertTokenIntoRichInput(contextMenuTarget, token);
+                        normalizeRichInputDisplay(contextMenuTarget);
+                    } else if (typeof contextMenuTarget.value === 'string') {
+                        const start = contextMenuTarget.selectionStart ?? contextMenuTarget.value.length;
+                        const end = contextMenuTarget.selectionEnd ?? contextMenuTarget.value.length;
+                        const currentText = contextMenuTarget.value;
+                        const left = currentText.slice(0, start);
+                        const right = currentText.slice(end);
+                        const needsLeadingSpace = left.length > 0 && !/\s$/.test(left);
+                        const needsTrailingSpace = right.length > 0 && !/^\s/.test(right);
+                        const insertText =
+                            (needsLeadingSpace ? ' ' : '') +
+                            token +
+                            (needsTrailingSpace ? ' ' : '');
 
-	                const start = contextMenuTarget.selectionStart ?? contextMenuTarget.value.length;
-	                const end = contextMenuTarget.selectionEnd ?? contextMenuTarget.value.length;
-	                const currentText = contextMenuTarget.value;
-	                const left = currentText.slice(0, start);
-	                const right = currentText.slice(end);
-	                const needsLeadingSpace = left.length > 0 && !/\s$/.test(left);
-	                const needsTrailingSpace = right.length > 0 && !/^\s/.test(right);
-	                const insertText =
-	                    (needsLeadingSpace ? ' ' : '') +
-	                    token +
-	                    (needsTrailingSpace ? ' ' : '');
-
-	                contextMenuTarget.value = left + insertText + right;
-	                const nextCursor = (left + insertText).length;
-	                contextMenuTarget.focus();
-	                try { contextMenuTarget.setSelectionRange(nextCursor, nextCursor); } catch { }
-	                contextMenuTarget.dispatchEvent(new Event('change'));
-	                document.getElementById('variable-context-menu')?.classList.remove('active');
-	                return;
+                        contextMenuTarget.value = left + insertText + right;
+                        const nextCursor = (left + insertText).length;
+                        contextMenuTarget.focus();
+                        try { contextMenuTarget.setSelectionRange(nextCursor, nextCursor); } catch { }
+                        contextMenuTarget.dispatchEvent(new Event('change'));
+                    }
+                    document.getElementById('variable-context-menu')?.classList.remove('active');
+                    return;
 	            }
 
 	            if (!target.params) target.params = {};
@@ -3866,6 +4211,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initAnimations();
             initContextMenu();
+            initRichInputHandlers();
             updateModeIndicators();
             renderForcedActions();
         });

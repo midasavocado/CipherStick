@@ -1477,6 +1477,26 @@
     transition: all 0.2s ease;
 }
 
+.param-rich-input {
+    min-height: 34px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: text;
+}
+
+.param-rich-input:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.if-header .param-rich-input,
+.repeat-header .param-rich-input {
+    min-width: 140px;
+    max-width: 260px;
+}
+
 .node-param .param-value::placeholder,
 .if-header .param-value::placeholder,
 .repeat-header .param-value::placeholder {
@@ -1513,7 +1533,47 @@
     margin: 0 0.2rem;
 }
 
+.variable-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.45rem;
+    margin: 0 0.15rem;
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.1));
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.variable-pill::before {
+    content: '🔗';
+    font-size: 0.65rem;
+}
+
+.variable-pill-remove {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.variable-pill-remove:hover {
+    opacity: 0.8;
+}
+
 .node-param .param-value:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.param-rich-input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
