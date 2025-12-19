@@ -1484,6 +1484,43 @@
     cursor: text;
 }
 
+.list-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+}
+
+.list-editor-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.list-editor-index {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    width: 1.4rem;
+    text-align: right;
+    padding-top: 0.35rem;
+    flex-shrink: 0;
+}
+
+.list-item-input {
+    flex: 1;
+}
+
+.list-item-add {
+    align-self: flex-start;
+    margin-left: 1.6rem;
+}
+
+.list-editor-empty {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
+}
+
 .param-rich-input:empty::before {
     content: attr(data-placeholder);
     color: var(--text-muted);

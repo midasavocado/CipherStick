@@ -20,6 +20,7 @@
   "Control.Comment.json",
   "Correctspelling.json",
   "Count.json",
+  "List.json",
   "Data.Base64.Encode.json",
   "Date.Now.json",
   "Delay.json",
@@ -107,7 +108,6 @@
   "Variable.Append.json",
   "Vibrate.json",
   "Waittoreturn.json",
-  "CreateListFromString.json",
   "Weather.Currentconditions.json",
   "Weather.Forecast.json",
   "Savetocameraroll.json"

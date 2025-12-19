@@ -395,6 +395,11 @@
             return actions.map(a => {
                 if (!a.id) a.id = Date.now() + Math.floor(Math.random() * 100000);
                 if (!a.params) a.params = {};
+                const normalizedAction = normalizeActionKey(a.action || a.title);
+                if (normalizedAction === 'createlistfromstring' || normalizedAction === 'makelistfromtext') {
+                    a.action = 'list';
+                    a.title = 'list';
+                }
                 const currentUuid = typeof a.params.UUID === 'string' ? a.params.UUID.trim() : '';
                 const explicitIdRaw = a.params.ID ?? a.params.Id ?? a.params.id ?? null;
                 const explicitIdLabel = isExplicitIdLabel(String(explicitIdRaw ?? '')) ? normalizeIdLabel(explicitIdRaw) : '';
@@ -883,9 +888,168 @@
 
         const INLINE_TOKEN_RE = /!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|\{\{[^}]+?\}\}/gi;
         const STANDARD_PLACEHOLDER_RE = /^\{\{(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)\}\}$/i;
+        const LIST_ITEM_SEPARATOR = ',';
+        const LEGACY_LIST_ITEM_SEPARATOR = '__AI_LIST_ITEM_DELIM_7b9e5c__';
 
         function isStandardPlaceholderToken(token) {
             return STANDARD_PLACEHOLDER_RE.test(String(token || '').trim());
+        }
+
+        function isListEditorAction(action) {
+            const normalized = normalizeActionKey(action?.action || action?.title || '');
+            return normalized === 'list' || normalized === 'makelistfromtext' || normalized === 'createlistfromstring';
+        }
+
+        function isListEditorParam(paramKey) {
+            return String(paramKey || '').trim().toLowerCase() === 'text';
+        }
+
+        function splitCommaSeparatedList(text) {
+            const items = [];
+            let current = '';
+            for (let i = 0; i < text.length; i += 1) {
+                const ch = text[i];
+                if (ch === '\\\\') {
+                    const next = text[i + 1];
+                    if (next === ',' || next === '\\\\') {
+                        current += next;
+                        i += 1;
+                        continue;
+                    }
+                    current += ch;
+                    continue;
+                }
+                if (ch === LIST_ITEM_SEPARATOR) {
+                    items.push(current);
+                    current = '';
+                    continue;
+                }
+                current += ch;
+            }
+            items.push(current);
+            return items;
+        }
+
+        function parseListParamValue(rawValue, { allowEmpty = false } = {}) {
+            if (rawValue == null) return allowEmpty ? [''] : [];
+            if (Array.isArray(rawValue)) {
+                const items = rawValue.map((item) => String(item ?? '').trim());
+                if (!allowEmpty) return items.filter(Boolean);
+                return items.length ? items : [''];
+            }
+            if (rawValue && typeof rawValue === 'object') {
+                const outputUUID = rawValue?.Value?.OutputUUID || rawValue?.OutputUUID || '';
+                const token = formatIdToken(outputUUID);
+                if (token) return [token];
+            }
+            const text = String(rawValue ?? '');
+            const trimmed = text.trim();
+            if (!text) return allowEmpty ? [''] : [];
+            if (STANDARD_PLACEHOLDER_RE.test(trimmed)) return allowEmpty ? [''] : [];
+
+            let parts = [];
+            if (text.includes(LEGACY_LIST_ITEM_SEPARATOR)) {
+                parts = text.split(LEGACY_LIST_ITEM_SEPARATOR);
+            } else if (text.includes(LIST_ITEM_SEPARATOR)) {
+                parts = splitCommaSeparatedList(text);
+            } else if (/\r?\n/.test(text)) {
+                parts = text.split(/\r?\n/);
+            } else {
+                parts = [text];
+            }
+
+            const normalized = parts.map((part) => String(part ?? '').trim());
+            if (!allowEmpty) return normalized.filter(Boolean);
+            return normalized.length ? normalized : [''];
+        }
+
+        function escapeListItemValue(value) {
+            const raw = String(value ?? '');
+            if (!raw) return '';
+            return raw.replace(/\\\\/g, '\\\\\\\\').replace(/,/g, '\\\\,');
+        }
+
+        function serializeListParamValue(items) {
+            if (!Array.isArray(items) || !items.length) return '';
+            const normalized = items.map((item) => String(item ?? '').trim());
+            if (normalized.length === 1 && normalized[0] === '') return '';
+            return normalized.map(escapeListItemValue).join(LIST_ITEM_SEPARATOR);
+        }
+
+        function updateListParamFromEditor(el) {
+            if (!el) return;
+            const container = el.closest('.list-editor');
+            const actionId = Number(container?.dataset?.actionId || el.dataset.actionId);
+            const paramKey = container?.dataset?.param || el.dataset.listParam;
+            if (!Number.isFinite(actionId) || !paramKey) return;
+            const inputs = Array.from(container?.querySelectorAll('.list-item-input') || []);
+            const items = inputs.map((input) => extractRichInputValue(input));
+            const serialized = serializeListParamValue(items);
+            const action = findActionLocation(actionId)?.action;
+            const currentValue = action?.params?.[paramKey] ?? '';
+            if (String(currentValue ?? '') === String(serialized ?? '')) return;
+            updateActionParam(actionId, paramKey, serialized);
+        }
+
+        function handleListItemBlur(el) {
+            updateListParamFromEditor(el);
+            normalizeRichInputDisplay(el);
+        }
+
+        function addListItem(actionId, paramKey) {
+            const action = findActionLocation(actionId)?.action;
+            if (!action) return;
+            if (!action.params) action.params = {};
+            const currentValue = action.params[paramKey] ?? '';
+            const items = parseListParamValue(currentValue, { allowEmpty: true });
+            items.push('');
+            updateActionParam(actionId, paramKey, serializeListParamValue(items));
+        }
+
+        function removeListItem(actionId, paramKey, index) {
+            const action = findActionLocation(actionId)?.action;
+            if (!action) return;
+            if (!action.params) action.params = {};
+            const currentValue = action.params[paramKey] ?? '';
+            const items = parseListParamValue(currentValue, { allowEmpty: true });
+            if (index < 0 || index >= items.length) return;
+            items.splice(index, 1);
+            updateActionParam(actionId, paramKey, serializeListParamValue(items));
+        }
+
+        function renderListEditor(actionId, paramKey, rawValue, readonly = false) {
+            const items = parseListParamValue(rawValue, { allowEmpty: !readonly });
+            const displayItems = items.length ? items : (readonly ? [] : ['']);
+            const safeParam = escapeHtml(paramKey).replace(/'/g, "\\'");
+            if (readonly && displayItems.length === 0) {
+                return `<div class="list-editor list-editor-empty">No items</div>`;
+            }
+            const rows = displayItems.map((item, idx) => {
+                const placeholder = 'List item';
+                const richHtml = formatRichInputHtml(item);
+                const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
+                const removeBtn = readonly
+                    ? ''
+                    : `<button type="button" class="node-action-btn list-item-remove" onclick="removeListItem(${actionId}, '${safeParam}', ${idx})" title="Remove">-</button>`;
+                return `
+                    <div class="list-editor-row" data-list-index="${idx}">
+                        <span class="list-editor-index">${idx + 1}.</span>
+                        <div class="param-value param-rich-input list-item-input" contenteditable="${readonly ? 'false' : 'true'}" data-action-id="${actionId}" data-param="${escapeHtml(paramKey)}" data-list-param="${escapeHtml(paramKey)}" data-list-index="${idx}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleListItemBlur(this)" ${contextMenuAttr}>${richHtml}</div>
+                        ${removeBtn}
+                    </div>
+                `;
+            }).join('');
+
+            const addBtn = readonly
+                ? ''
+                : `<button type="button" class="node-action-btn list-item-add" onclick="addListItem(${actionId}, '${safeParam}')">+ Add item</button>`;
+
+            return `
+                <div class="list-editor" data-action-id="${actionId}" data-param="${escapeHtml(paramKey)}">
+                    ${rows}
+                    ${addBtn}
+                </div>
+            `;
         }
 
         function getRichInputPlaceholder(key, rawValue) {
@@ -986,6 +1150,10 @@
 
         function handleRichInputChange(el) {
             if (!el) return;
+            if (el.dataset?.listParam) {
+                updateListParamFromEditor(el);
+                return;
+            }
             const actionId = parseInt(el.dataset.actionId);
             const paramKey = el.dataset.param;
             if (!Number.isFinite(actionId) || !paramKey) return;
@@ -1003,6 +1171,10 @@
         }
 
         function handleRichInputBlur(el) {
+            if (el?.dataset?.listParam) {
+                handleListItemBlur(el);
+                return;
+            }
             handleRichInputChange(el);
             normalizeRichInputDisplay(el);
         }
@@ -1376,6 +1548,8 @@
 	            ['selectemailadresses', 'Select Email Addresses'],
 	            ['runjavascriptonwebpage', 'Run JavaScript on Web Page'],
 	            ['generateqrcodefromtext', 'Generate QR Code'],
+                ['createlistfromstring', 'List'],
+                ['makelistfromtext', 'List'],
 	        ]);
 
 	        const ACTION_LABEL_DROP_PREFIX = new Set([
@@ -2399,12 +2573,17 @@
 	            if (String(key).toLowerCase() === 'uuid') {
 	                return '';
 	            }
+            const action = findActionLocation(actionId)?.action;
+            if (action && isListEditorAction(action) && isListEditorParam(key)) {
+                return renderListEditor(actionId, key, value, readonly);
+            }
             if (key === 'Condition' || key === 'WFCondition') {
                 const { optionsString, options, selected } = getConditionOptionsById(actionId, value);
                 const selectedValue = options.includes(selected) ? selected : (options[0] || selected);
                 const optionsHtml = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
                 const fullOptionsString = optionsString || DEFAULT_CONDITION_OPTIONS;
-                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">${optionsHtml}</select>`;
+                const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>${optionsHtml}</select>`;
             }
 	            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
 	            if (isObjectVal) {
@@ -2473,13 +2652,13 @@
             const placeholderMatch = strValue.match(/^\{\{(\w+)\}\}$/);
             if (placeholderMatch && !readonly) {
                 const placeholderType = placeholderMatch[1].toLowerCase();
+                const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
                 if (placeholderType === 'number' || placeholderType === 'integer' || placeholderType === 'decimal') {
-                    return `<input type="number" class="param-value param-number" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter number" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">`;
+                    return `<input type="number" class="param-value param-number" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter number" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
                 } else if (placeholderType === 'boolean') {
-                    return `<input type="checkbox" class="param-checkbox" data-action-id="${actionId}" data-param="${escapeHtml(key)}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.checked)">`;
+                    return `<input type="checkbox" class="param-checkbox" data-action-id="${actionId}" data-param="${escapeHtml(key)}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.checked)" ${contextMenuAttr}>`;
                 } else {
                     // Default to text input for STRING, VARIABLE, etc.
-                    const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
                     return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter ${placeholderType.toLowerCase()}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
                 }
             }
@@ -2489,12 +2668,14 @@
             // Boolean detection
             if (lowerVal === 'true' || lowerVal === 'false' || strValue === '{{BOOLEAN}}') {
                 const checked = lowerVal === 'true' ? 'checked' : '';
-                return `<input type="checkbox" class="param-checkbox" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${checked} ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.checked)">`;
+                const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<input type="checkbox" class="param-checkbox" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${checked} ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.checked)" ${contextMenuAttr}>`;
             }
 
             // Number detection
             if (!isNaN(strValue) && strValue !== '' && !readonly) {
-                return `<input type="number" class="param-value param-number" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)">`;
+                const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<input type="number" class="param-value param-number" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
             }
 
 	            // Option-style placeholders (e.g. "Small/Medium/Large" or "{{Small/Medium/Large}}")
@@ -3988,20 +4169,21 @@
 
 	            currentActions = ensureActionUUIDs(currentActions);
 	            rebuildOutputNameIndex();
-	            const sourceOutput = getActionOutputInfo(source);
-	            const outputUUID = sourceUuid ? String(sourceUuid) : (sourceOutput?.outputUUID || source?.params?.UUID || '');
-	            const outputName = sourceLabel || sourceOutput?.outputName || source?.title || source?.action || 'Previous Output';
+            const sourceOutput = getActionOutputInfo(source);
+            let outputUUID = sourceUuid ? String(sourceUuid) : (sourceOutput?.outputUUID || source?.params?.UUID || '');
+            const outputName = sourceLabel || sourceOutput?.outputName || source?.title || source?.action || 'Previous Output';
 
-	            // Only allow linking when the source exposes an output
-	            const availableOutputs = collectAvailableOutputs();
-	            if (!outputUUID) {
-	                console.warn('Link aborted: source action has no output to link.');
-	                clearLinkedParam(targetId, paramKey);
-	                return;
-	            }
-	            if (!availableOutputs.has(String(outputUUID))) {
-	                console.warn('Link warning: source output not indexed yet; linking anyway.');
-	            }
+            // Only allow linking when the source exposes an output
+            const availableOutputs = collectAvailableOutputs();
+            if (!outputUUID) {
+                if (!source.params) source.params = {};
+                source.params.UUID = genUUID();
+                outputUUID = source.params.UUID;
+            }
+            if (outputUUID && !availableOutputs.has(String(outputUUID))) {
+                availableOutputs.add(String(outputUUID));
+                if (sourceOutput?.outputId) availableOutputs.add(String(sourceOutput.outputId));
+            }
 
 	            // Text-like fields should allow mixing text + links, so insert an inline link token.
 	            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget) {
