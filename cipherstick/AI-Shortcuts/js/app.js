@@ -3568,10 +3568,8 @@
 
             // Build dynamic menu with linkable actions
             let menuHtml = '<div class="context-menu-header">Insert Variable</div>';
-            menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Shortcut Input\')">📥 Shortcut Input</div>';
-            menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Clipboard\')">📋 Clipboard</div>';
-            menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Current Date\')">📅 Current Date</div>';
-            menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Device Name\')">📱 Device Name</div>';
+            currentActions = ensureActionUUIDs(currentActions);
+            rebuildOutputNameIndex();
 
             // Add linkable actions (outputs from previous actions in order)
             const currentActionId = parseInt(inputEl.dataset.actionId);
