@@ -314,10 +314,23 @@
                 if (!a.id) a.id = Date.now() + Math.floor(Math.random() * 100000);
                 if (!a.params) a.params = {};
                 const currentUuid = typeof a.params.UUID === 'string' ? a.params.UUID.trim() : '';
-                if (!currentUuid) {
-                    const fromOutputUUID = typeof a.params.OutputUUID === 'string' ? a.params.OutputUUID.trim() : '';
+                const explicitIdRaw = a.params.ID ?? a.params.Id ?? a.params.id ?? null;
+                const explicitIdLabel = isExplicitIdLabel(String(explicitIdRaw ?? '')) ? normalizeIdLabel(explicitIdRaw) : '';
+                const uuidIsToken = isIdToken(currentUuid) || currentUuid.toLowerCase().startsWith('!link:');
+                const outputUuidRaw = typeof a.params.OutputUUID === 'string' ? a.params.OutputUUID.trim() : '';
+                const outputUuidIsToken = isIdToken(outputUuidRaw) || outputUuidRaw.toLowerCase().startsWith('!link:');
+                if (!currentUuid || uuidIsToken) {
+                    if (!explicitIdLabel && uuidIsToken) {
+                        const derivedLabel = normalizeIdLabel(currentUuid);
+                        if (derivedLabel) a.params.ID = `{{${derivedLabel}}}`;
+                    }
+                    if (!explicitIdLabel && outputUuidIsToken) {
+                        const derivedLabel = normalizeIdLabel(outputUuidRaw);
+                        if (derivedLabel) a.params.ID = `{{${derivedLabel}}}`;
+                    }
+                    const fromOutputUUID = outputUuidRaw;
                     const fromProvided = typeof a.params.ProvidedOutputUUID === 'string' ? a.params.ProvidedOutputUUID.trim() : '';
-                    a.params.UUID = fromOutputUUID || fromProvided || genUUID();
+                    a.params.UUID = fromOutputUUID && !isIdToken(fromOutputUUID) ? fromOutputUUID : (fromProvided || genUUID());
                 } else {
                     a.params.UUID = currentUuid;
                 }
@@ -572,6 +585,7 @@
             const baseId = Date.now();
             let idCounter = 0;
             const uuidMap = new Map(); // old -> new
+            const idLabelMap = new Map(); // old label -> new label
             const usedLinkLabels = new Set();
 
             const makeCopyLinkLabel = (label) => {
@@ -593,16 +607,25 @@
                     act.params.GroupingIdentifier = genUUID();
                 }
 
+                const rawIdValue = act.params.ID ?? act.params.Id ?? act.params.id ?? null;
+                if (isExplicitIdLabel(String(rawIdValue ?? ''))) {
+                    const oldLabel = normalizeIdLabel(rawIdValue);
+                    if (oldLabel && !idLabelMap.has(oldLabel)) {
+                        const newLabel = makeCopyLinkLabel(oldLabel);
+                        idLabelMap.set(oldLabel, newLabel);
+                    }
+                }
+
                 const oldUuidRaw =
                     (typeof act.params.UUID === 'string' && act.params.UUID.trim()) ? act.params.UUID.trim()
                         : (typeof act.params.OutputUUID === 'string' && act.params.OutputUUID.trim()) ? act.params.OutputUUID.trim()
                             : null;
                 if (!oldUuidRaw || uuidMap.has(oldUuidRaw)) return;
 
-                if (oldUuidRaw.toLowerCase().startsWith('!link:')) {
-                    const oldLabel = oldUuidRaw.slice(6).trim();
+                if (isIdToken(oldUuidRaw) || oldUuidRaw.toLowerCase().startsWith('!link:')) {
+                    const oldLabel = normalizeIdLabel(oldUuidRaw);
                     const newLabel = makeCopyLinkLabel(oldLabel);
-                    uuidMap.set(oldUuidRaw, `!link:${newLabel}`);
+                    uuidMap.set(oldUuidRaw, formatIdToken(newLabel));
                 } else {
                     uuidMap.set(oldUuidRaw, genUUID());
                 }
@@ -611,7 +634,11 @@
             const remapStringValue = (value) => {
                 const str = String(value);
                 // Replace embedded tokens first (for mixed strings).
-                const withTokens = str.replace(/!link:[^\s]+/gi, (token) => uuidMap.get(token.trim()) || token);
+                const withTokens = str.replace(/!id:(?:\{\{[^}]+?\}\}|[^\s]+)/gi, (token) => {
+                    const label = normalizeIdLabel(token);
+                    const mapped = label && idLabelMap.has(label) ? idLabelMap.get(label) : null;
+                    return mapped ? formatIdToken(mapped) : (uuidMap.get(token.trim()) || token);
+                }).replace(/!link:[^\s]+/gi, (token) => uuidMap.get(token.trim()) || token);
                 const trimmed = withTokens.trim();
                 return uuidMap.get(trimmed) || withTokens;
             };
@@ -636,6 +663,15 @@
                     act.params.UUID = act.params.ProvidedOutputUUID;
                 }
                 if (act.params.ProvidedOutputUUID) delete act.params.ProvidedOutputUUID;
+
+                const rawIdValue = act.params.ID ?? act.params.Id ?? act.params.id ?? null;
+                if (isExplicitIdLabel(String(rawIdValue ?? ''))) {
+                    const oldLabel = normalizeIdLabel(rawIdValue);
+                    const newLabel = oldLabel && idLabelMap.has(oldLabel) ? idLabelMap.get(oldLabel) : null;
+                    if (newLabel) {
+                        act.params.ID = `{{${newLabel}}}`;
+                    }
+                }
 
                 const uuidBefore =
                     (typeof act.params.UUID === 'string' && act.params.UUID.trim()) ? act.params.UUID.trim()
@@ -709,6 +745,39 @@
             return '';
         }
 
+        const SIMPLE_ID_LABEL_RE = /^[A-Za-z0-9_.\-|#@]+$/;
+
+        function normalizeIdLabel(raw) {
+            if (raw == null) return '';
+            let label = String(raw).trim();
+            if (!label) return '';
+            label = label.replace(/^!(?:id|link|out):/i, '').trim();
+            if (label.startsWith('{{') && label.endsWith('}}')) {
+                label = label.slice(2, -2).trim();
+            }
+            return label;
+        }
+
+        function isExplicitIdLabel(raw) {
+            if (typeof raw !== 'string') return false;
+            const trimmed = raw.trim();
+            if (!trimmed) return false;
+            if (/^!id:/i.test(trimmed)) return true;
+            return trimmed.startsWith('{{') && trimmed.endsWith('}}');
+        }
+
+        function formatIdToken(label) {
+            const cleaned = normalizeIdLabel(label);
+            if (!cleaned) return '';
+            if (SIMPLE_ID_LABEL_RE.test(cleaned)) return `!ID:${cleaned}`;
+            return `!ID:{{${cleaned}}}`;
+        }
+
+        function isIdToken(raw) {
+            if (typeof raw !== 'string') return false;
+            return /^!id:(\{\{[^}]+?\}\}|[^\s]+)$/i.test(raw.trim());
+        }
+
         function paramKeySupportsInlineLinks(paramKey) {
             const key = String(paramKey || '').trim().toLowerCase();
             if (!key) return false;
@@ -736,16 +805,19 @@
 	            const outputUUID = action.params.UUID;
 	            if (!outputUUID) return null;
 	            const rawUUID = String(outputUUID).trim();
+                const rawIdValue = action.params.ID ?? action.params.Id ?? action.params.id ?? null;
+                const idLabel = normalizeIdLabel(rawIdValue);
+                const hasExplicitId = isExplicitIdLabel(String(rawIdValue ?? ''));
 	            const rawNameCandidate =
 	                (action.params.CustomOutputNameEnabled && typeof action.params.CustomOutputName === 'string' && action.params.CustomOutputName.trim())
                     ? action.params.CustomOutputName.trim()
                     : (typeof action.params.OutputName === 'string' && action.params.OutputName.trim())
                         ? action.params.OutputName.trim()
-                        : (rawUUID.toLowerCase().startsWith('!link:') ? rawUUID.slice(6).trim() : '')
+                        : (hasExplicitId && idLabel ? idLabel : (isIdToken(rawUUID) ? normalizeIdLabel(rawUUID) : ''))
                             || action.title || action.action || 'Action Output';
 
 	            const outputName = String(rawNameCandidate || '').trim() || 'Action Output';
-	            return { outputUUID: rawUUID, outputName };
+	            return { outputUUID: rawUUID, outputName, outputId: hasExplicitId ? idLabel : null };
 	        }
 
 	        let outputNameIndexByUUID = new Map();
@@ -756,6 +828,11 @@
 	            flat.forEach(action => {
 	                const info = getActionOutputInfo(action);
 	                if (info?.outputUUID) next.set(String(info.outputUUID), String(info.outputName || '').trim() || 'Action Output');
+                    if (info?.outputId) next.set(String(info.outputId), String(info.outputName || '').trim() || 'Action Output');
+                    if (info?.outputUUID && isIdToken(String(info.outputUUID))) {
+                        const normalized = normalizeIdLabel(String(info.outputUUID));
+                        if (normalized) next.set(normalized, String(info.outputName || '').trim() || 'Action Output');
+                    }
 	            });
 	            outputNameIndexByUUID = next;
 	            return outputNameIndexByUUID;
@@ -764,14 +841,20 @@
 	        function resolveOutputNameByUUID(outputUUID, fallbackName = null) {
 	            const key = typeof outputUUID === 'string' ? outputUUID.trim() : String(outputUUID || '').trim();
 	            if (!key) return fallbackName;
-	            return outputNameIndexByUUID.get(key) || fallbackName;
+                const normalized = normalizeIdLabel(key);
+	            return outputNameIndexByUUID.get(normalized || key) || fallbackName;
 	        }
 
 	        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
 	            if (!Array.isArray(actions)) return set;
 	            actions.forEach(action => {
 	                const info = getActionOutputInfo(action);
-                if (info) set.add(info.outputUUID);
+                if (info?.outputUUID) set.add(String(info.outputUUID));
+                if (info?.outputId) set.add(String(info.outputId));
+                if (info?.outputUUID && isIdToken(String(info.outputUUID))) {
+                    const normalized = normalizeIdLabel(String(info.outputUUID));
+                    if (normalized) set.add(normalized);
+                }
                 if (isConditionalAction(action)) {
                     collectAvailableOutputs(action.then || [], set);
                     collectAvailableOutputs(action.else || [], set);
@@ -793,7 +876,15 @@
 	                if (info?.outputUUID) {
 	                    const key = String(info.outputUUID);
 	                    if (!outputIndexByUuid.has(key)) outputIndexByUuid.set(key, idx);
+                        if (isIdToken(key)) {
+                            const normalized = normalizeIdLabel(key);
+                            if (normalized && !outputIndexByUuid.has(normalized)) outputIndexByUuid.set(normalized, idx);
+                        }
 	                }
+                    if (info?.outputId) {
+                        const key = String(info.outputId);
+                        if (!outputIndexByUuid.has(key)) outputIndexByUuid.set(key, idx);
+                    }
 	            });
 	            const validOutputs = new Set(outputIndexByUuid.keys());
 	            const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -804,7 +895,7 @@
 	                const t = String(token || '').trim();
 	                if (!t) return false;
 	                if (t.startsWith('{{') && t.endsWith('}}')) return false;
-	                if (t.toLowerCase().startsWith('!link:')) return true;
+	                if (t.toLowerCase().startsWith('!id:') || t.toLowerCase().startsWith('!link:')) return true;
 	                if (uuidLike.test(t)) return true;
 	                return false;
 	            };
@@ -813,17 +904,15 @@
 	                const t = String(token || '').trim();
 	                if (!tokenIsLinkish(t)) return true;
 	                let lookupKey = t;
+	                if (isIdToken(lookupKey) || lookupKey.toLowerCase().startsWith('!link:')) {
+	                    const normalized = normalizeIdLabel(lookupKey);
+	                    if (normalized) lookupKey = normalized;
+	                }
 	                let sourceIndex = outputIndexByUuid.get(lookupKey);
 	                if (!validOutputs.has(lookupKey)) {
-	                    // Allow "!link:<uuid>" tokens to refer to a literal UUID output.
-	                    if (lookupKey.toLowerCase().startsWith('!link:')) {
-	                        const label = lookupKey.slice(6).trim();
-	                        if (label && uuidLike.test(label) && validOutputs.has(label)) {
-	                            lookupKey = label;
-	                            sourceIndex = outputIndexByUuid.get(label);
-	                        } else {
-	                            return false;
-	                        }
+	                    // Allow "!ID:<uuid>" tokens to refer to a literal UUID output.
+	                    if (uuidLike.test(lookupKey) && validOutputs.has(lookupKey)) {
+	                        sourceIndex = outputIndexByUuid.get(lookupKey);
 	                    } else {
 	                        return false;
 	                    }
@@ -857,8 +946,14 @@
 	                }
 
 	                // Mixed text: replace only invalid tokens.
-	                if (!str.toLowerCase().includes('!link:')) return rawValue;
-	                const replaced = str.replace(/!link:[^\s]+/gi, (token) => {
+	                if (!str.toLowerCase().includes('!id:') && !str.toLowerCase().includes('!link:')) return rawValue;
+	                const replaced = str.replace(/!id:(?:\{\{[^}]+?\}\}|[^\s]+)/gi, (token) => {
+	                    if (!tokenIsValidLink(token, currentIndex)) {
+	                        mutated = true;
+	                        return '';
+	                    }
+	                    return token;
+	                }).replace(/!link:[^\s]+/gi, (token) => {
 	                    if (!tokenIsValidLink(token, currentIndex)) {
 	                        mutated = true;
 	                        return '';
@@ -884,9 +979,12 @@
 	                        if (!linkedKey) return;
 	                        let lookupKey = linkedKey;
 	                        let sourceIndex = outputIndexByUuid.get(lookupKey);
-	                        if (!validOutputs.has(lookupKey) && lookupKey.toLowerCase().startsWith('!link:')) {
-	                            const label = lookupKey.slice(6).trim();
-	                            if (label && uuidLike.test(label) && validOutputs.has(label)) {
+	                        if (!validOutputs.has(lookupKey) && (isIdToken(lookupKey) || lookupKey.toLowerCase().startsWith('!link:'))) {
+	                            const label = normalizeIdLabel(lookupKey);
+	                            if (label && validOutputs.has(label)) {
+	                                lookupKey = label;
+	                                sourceIndex = outputIndexByUuid.get(label);
+	                            } else if (label && uuidLike.test(label) && validOutputs.has(label)) {
 	                                lookupKey = label;
 	                                sourceIndex = outputIndexByUuid.get(label);
 	                            }
@@ -1160,24 +1258,9 @@
 	            return formatActionNameForUI(action?.action || action?.title || '');
 	        }
 
-	        function actionHasLinkableOutput(action) {
-	            const key = normalizeActionKey(action?.action || action?.title);
-	            if (!key) return true;
-	            if (NON_LINKABLE_OUTPUT_ACTION_KEYS.has(key)) return false;
-
-	            // Heuristics for “no output” actions not in the explicit list.
-	            // Keep this conservative: we only hide output when it's very likely to have none.
-	            if (key.startsWith('set') || key.includes('.set')) return false;
-	            if (key.startsWith('open')) return false;
-	            if (key.startsWith('show') && !key.startsWith('showdefinition')) return false;
-	            if (key.includes('notification') || key.includes('alert')) return false;
-	            if (key.includes('vibrate') || key.includes('dismiss') || key.includes('returntohomescreen')) return false;
-	            if (key.endsWith('.send') || key.includes('sendmessage') || key.includes('message.send')) return false;
-	            if (key.endsWith('.delete') || key.includes('file.delete')) return false;
-	            if (key.includes('speak') || key.includes('playsound') || key.includes('pausemusic')) return false;
-
-	            return true;
-	        }
+        function actionHasLinkableOutput(action) {
+            return Boolean(action);
+        }
 
         function isConditionalAction(action) {
             const id = (action.action || action.title || '').toLowerCase();
@@ -2052,12 +2135,12 @@
             const strValue = String(value);
             const disabledAttr = readonly ? 'disabled' : '';
             
-            // Check for !link: tokens first
+            // Check for !ID: tokens first
             const trimmedValue = strValue.trim();
-            const isPureLinkToken = /^!link:[^\s]+$/i.test(trimmedValue);
+            const isPureLinkToken = isIdToken(trimmedValue) || /^!link:[^\s]+$/i.test(trimmedValue);
             const isTextLikeField = paramKeySupportsInlineLinks(key);
             if (isPureLinkToken && !isTextLikeField) {
-                const linkLabel = trimmedValue.replace(/^!link:/i, '').trim();
+                const linkLabel = normalizeIdLabel(trimmedValue);
                 const resolvedName =
                     resolveOutputNameByUUID(trimmedValue, null) ||
                     resolveOutputNameByUUID(linkLabel, null) ||
@@ -2134,8 +2217,8 @@
 	            }
 
             // Check if this is a text field that can contain mixed content with links
-            // (like LLMPrompt in Askllm which can have text mixed with !link: tokens)
-            const canHaveMixedLinks = strValue.includes('!link:') && strValue.length > strValue.indexOf('!link:') + 6;
+            // (like LLMPrompt in Askllm which can have text mixed with !ID: tokens)
+            const canHaveMixedLinks = (strValue.toLowerCase().includes('!id:') || strValue.toLowerCase().includes('!link:')) && strValue.length > 4;
             
             if (canHaveMixedLinks && !readonly) {
                 // Use textarea for mixed content fields
@@ -2151,23 +2234,23 @@
 	            return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
 	        }
 
-	        function humanizeOutputName(name) {
-	            if (!name) return 'Output';
-	            return String(name).replace(/^!link:/i, '').trim() || 'Output';
-	        }
+        function humanizeOutputName(name) {
+            if (!name) return 'Output';
+            return String(name).replace(/^!id:/i, '').replace(/^!link:/i, '').trim() || 'Output';
+        }
 
-	        function formatLinkedValue(value) {
-	            if (!value) return '';
-	            if (value && typeof value === 'object' && !Array.isArray(value)) {
-	                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
-	                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
-	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || storedOutputName || 'Linked Output';
-	                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(outputName))}</span>`;
-	            }
+        function formatLinkedValue(value) {
+            if (!value) return '';
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
+                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || storedOutputName || 'Linked Output';
+                return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(outputName))}</span>`;
+            }
             const strVal = String(value);
             const trimmedVal = strVal.trim();
-            if (/^!link:[^\s]+$/i.test(trimmedVal)) {
-                const linkLabel = trimmedVal.replace(/^!link:/i, '').trim();
+            if (isIdToken(trimmedVal) || /^!link:[^\s]+$/i.test(trimmedVal)) {
+                const linkLabel = normalizeIdLabel(trimmedVal);
                 const resolvedName =
                     resolveOutputNameByUUID(trimmedVal, null) ||
                     resolveOutputNameByUUID(linkLabel, null) ||
@@ -2180,14 +2263,18 @@
                 const varName = variableMatch[1].trim();
                 return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
             }
-            // Check if value contains !link: tokens mixed with text
-            if (strVal.includes('!link:')) {
+            // Check if value contains !ID: tokens mixed with text
+            if (strVal.toLowerCase().includes('!id:') || strVal.toLowerCase().includes('!link:')) {
                 // Parse mixed content
-                const parts = strVal.split(/(!link:[^\s]+)/gi);
+                const parts = strVal.split(/(!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+)/gi);
                 return parts.map(part => {
-                    if (part.toLowerCase().startsWith('!link:')) {
-                        const linkLabel = part.replace(/^!link:/i, '').trim();
-                        return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(linkLabel))}</span>`;
+                    if (part.toLowerCase().startsWith('!id:') || part.toLowerCase().startsWith('!link:')) {
+                        const linkLabel = normalizeIdLabel(part);
+                        const resolvedName =
+                            resolveOutputNameByUUID(part, null) ||
+                            resolveOutputNameByUUID(linkLabel, null) ||
+                            linkLabel;
+                        return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(resolvedName))}</span>`;
                     }
                     // Also check for {{variable}} patterns in mixed content
                     const varMatch = part.match(/\{\{([^}]+)\}\}/g);
@@ -2213,8 +2300,12 @@
 
         function formatParamValue(value) {
             if (typeof value === 'string') {
-                // Highlight variables like {{input}} or {{Clipboard}}
-                return value.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-tag">$1</span>');
+                // Highlight variables like !ID:Label or {{Clipboard}}
+                const withIdTokens = value.replace(/!id:(?:\{\{[^}]+?\}\}|[^\s]+)/gi, (token) => {
+                    const label = normalizeIdLabel(token);
+                    return `<span class="variable-tag">${escapeHtml(label || token)}</span>`;
+                });
+                return withIdTokens.replace(/\{\{([^}]+)\}\}/g, '<span class="variable-tag">$1</span>');
             }
             return String(value);
         }
@@ -3481,7 +3572,6 @@
             menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Clipboard\')">📋 Clipboard</div>';
             menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Current Date\')">📅 Current Date</div>';
             menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Device Name\')">📱 Device Name</div>';
-            menuHtml += '<div class="context-menu-item" onclick="insertVariable(\'Ask Each Time\')">❓ Ask Each Time</div>';
 
             // Add linkable actions (outputs from previous actions in order)
             const currentActionId = parseInt(inputEl.dataset.actionId);
@@ -3500,6 +3590,9 @@
                     const safeLabel = escapeHtml(label).replace(/\"/g, '&quot;');
                     menuHtml += `<div class="context-menu-item" data-source-id="${a.id}" data-source-uuid="${uuid || ''}" data-source-label="${safeLabel}">🔗 ${escapeHtml(label)}</div>`;
                 });
+            } else {
+                menuHtml += '<div class="context-menu-divider"></div>';
+                menuHtml += '<div class="context-menu-item context-menu-item-empty">No variables</div>';
             }
 
             menu.innerHTML = menuHtml;
@@ -3543,7 +3636,8 @@
             const start = contextMenuTarget.selectionStart || contextMenuTarget.value.length;
             const end = contextMenuTarget.selectionEnd || contextMenuTarget.value.length;
             const text = contextMenuTarget.value;
-            const varText = `{{${varName}}}`;
+            const varText = formatIdToken(varName);
+            if (!varText) return;
             contextMenuTarget.value = text.slice(0, start) + varText + text.slice(end);
             contextMenuTarget.focus();
             contextMenuTarget.setSelectionRange(start + varText.length, start + varText.length);
@@ -3572,8 +3666,9 @@
 
 	            // Text-like fields should allow mixing text + links, so insert an inline link token.
 	            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget && typeof contextMenuTarget.value === 'string') {
-	                const base = String(outputUUID).trim();
-	                const token = base.toLowerCase().startsWith('!link:') ? base : `!link:${base}`;
+	                const base = sourceOutput?.outputId || outputUUID;
+	                const token = formatIdToken(base);
+	                if (!token) return;
 
 	                const start = contextMenuTarget.selectionStart ?? contextMenuTarget.value.length;
 	                const end = contextMenuTarget.selectionEnd ?? contextMenuTarget.value.length;

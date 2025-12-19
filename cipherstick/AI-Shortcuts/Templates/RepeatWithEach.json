@@ -3,7 +3,7 @@
   "params": {
     "ItemsIn": "{{VARIABLE}}"
   },
-  "notes": "Inside the loop body (do), you can reference the current item with !link:repeatItem and the index/count with !link:repeatIndex / !link:repeatCount.",
+  "notes": "Inside the loop body (do), you can reference the current item with !ID:repeatItem and the index/count with !ID:repeatIndex / !ID:repeatCount.",
   "do": [
     {
       "params": {}

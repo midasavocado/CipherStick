@@ -2370,6 +2370,16 @@ body.mode-dark .theme-toggle-thumb {
     background: var(--surface-hover);
 }
 
+.context-menu-item.context-menu-item-empty {
+    cursor: default;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.context-menu-item.context-menu-item-empty:hover {
+    background: transparent;
+}
+
 /* --- Tutorial Overlay --- */
 .tutorial-overlay {
     position: fixed;
