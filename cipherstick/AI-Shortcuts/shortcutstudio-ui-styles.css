@@ -1,5 +1,5 @@
 /* --- Custom Modal & Alert System --- */
-.flux-modal-overlay {
+.shortcutstudio-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -16,12 +16,12 @@
     transition: opacity 0.2s;
 }
 
-.flux-modal-overlay.active {
+.shortcutstudio-modal-overlay.active {
     opacity: 1;
     pointer-events: all;
 }
 
-.flux-modal-card {
+.shortcutstudio-modal-card {
     background: var(--surface-color);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
@@ -33,22 +33,22 @@
     transition: transform 0.2s;
 }
 
-.flux-modal-overlay.active .flux-modal-card {
+.shortcutstudio-modal-overlay.active .shortcutstudio-modal-card {
     transform: scale(1);
 }
 
-.flux-modal-card h3 {
+.shortcutstudio-modal-card h3 {
     margin: 0 0 1rem 0;
     font-size: 1.25rem;
 }
 
-.flux-modal-card p {
+.shortcutstudio-modal-card p {
     margin: 0 0 0.5rem 0;
     color: var(--text-muted);
 }
 
 /* --- Tutorial System --- */
-.flux-tutorial {
+.shortcutstudio-tutorial {
     position: fixed;
     top: 0;
     left: 0;
@@ -58,7 +58,7 @@
     pointer-events: none;
 }
 
-.flux-tutorial-overlay {
+.shortcutstudio-tutorial-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -68,7 +68,7 @@
     pointer-events: all;
 }
 
-.flux-tutorial-highlight {
+.shortcutstudio-tutorial-highlight {
     position: absolute;
     border: 3px solid var(--primary-color);
     border-radius: var(--radius-md);
@@ -90,7 +90,7 @@
     }
 }
 
-.flux-tutorial-box {
+.shortcutstudio-tutorial-box {
     position: absolute;
     max-width: 320px;
     background: var(--surface-color);
@@ -102,12 +102,12 @@
     pointer-events: all;
 }
 
-.flux-tutorial-box h4 {
+.shortcutstudio-tutorial-box h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.1rem;
 }
 
-.flux-tutorial-box p {
+.shortcutstudio-tutorial-box p {
     margin: 0;
     color: var(--text-muted);
     font-size: 0.95rem;

@@ -1,5 +1,5 @@
 // Custom Alert System
-const FluxUI = {
+const ShortcutStudioUI = {
     // Show custom alert
     alert(message, title = 'Alert') {
         this.showModal({
@@ -24,25 +24,25 @@ const FluxUI = {
     // Show custom prompt
     prompt(message, title = 'Input', defaultValue = '', onSubmit) {
         const modalHtml = `
-            <div id="flux-modal" class="flux-modal-overlay active">
-                <div class="flux-modal-card">
+            <div id="shortcutstudio-modal" class="shortcutstudio-modal-overlay active">
+                <div class="shortcutstudio-modal-card">
                     <h3>${title}</h3>
                     <p>${message}</p>
-                    <input type="text" id="flux-prompt-input" class="input-glass" value="${defaultValue}" style="margin: 1rem 0; width: 100%;">
+                    <input type="text" id="shortcutstudio-prompt-input" class="input-glass" value="${defaultValue}" style="margin: 1rem 0; width: 100%;">
                     <div class="flex gap-2 justify-end" style="margin-top: 1.5rem;">
-                        <button class="btn btn-secondary" onclick="FluxUI.closeModal()">Cancel</button>
-                        <button class="btn btn-primary" onclick="FluxUI.submitPrompt()">OK</button>
+                        <button class="btn btn-secondary" onclick="ShortcutStudioUI.closeModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="ShortcutStudioUI.submitPrompt()">OK</button>
                     </div>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         this._promptCallback = onSubmit;
-        document.getElementById('flux-prompt-input').focus();
+        document.getElementById('shortcutstudio-prompt-input').focus();
     },
 
     submitPrompt() {
-        const value = document.getElementById('flux-prompt-input').value;
+        const value = document.getElementById('shortcutstudio-prompt-input').value;
         this.closeModal();
         if (this._promptCallback) this._promptCallback(value);
     },
@@ -50,11 +50,11 @@ const FluxUI = {
     // Generic modal system
     showModal({ title, message, buttons = [] }) {
         const overlay = document.createElement('div');
-        overlay.id = 'flux-modal';
-        overlay.className = 'flux-modal-overlay active';
+        overlay.id = 'shortcutstudio-modal';
+        overlay.className = 'shortcutstudio-modal-overlay active';
 
         const card = document.createElement('div');
-        card.className = 'flux-modal-card';
+        card.className = 'shortcutstudio-modal-card';
 
         const h3 = document.createElement('h3');
         h3.textContent = title;
@@ -82,7 +82,7 @@ const FluxUI = {
     },
 
     closeModal() {
-        const modal = document.getElementById('flux-modal');
+        const modal = document.getElementById('shortcutstudio-modal');
         if (modal) modal.remove();
     },
 
@@ -111,7 +111,7 @@ const FluxUI = {
             }
 
             // Remove existing tutorial
-            const existing = document.getElementById('flux-tutorial');
+            const existing = document.getElementById('shortcutstudio-tutorial');
             if (existing) existing.remove();
 
             // Get target position
@@ -119,15 +119,15 @@ const FluxUI = {
 
             // Create tutorial box
             const tutorialHtml = `
-                <div id="flux-tutorial" class="flux-tutorial">
-                    <div class="flux-tutorial-overlay"></div>
-                    <div class="flux-tutorial-highlight" style="
+                <div id="shortcutstudio-tutorial" class="shortcutstudio-tutorial">
+                    <div class="shortcutstudio-tutorial-overlay"></div>
+                    <div class="shortcutstudio-tutorial-highlight" style="
                         top: ${rect.top - 8}px;
                         left: ${rect.left - 8}px;
                         width: ${rect.width + 16}px;
                         height: ${rect.height + 16}px;
                     "></div>
-                    <div class="flux-tutorial-box" style="
+                    <div class="shortcutstudio-tutorial-box" style="
                         top: ${rect.bottom + 16}px;
                         left: ${Math.max(20, Math.min(window.innerWidth - 320, rect.left))}px;
                     ">
@@ -136,8 +136,8 @@ const FluxUI = {
                         <div class="flex justify-between items-center" style="margin-top: 1rem;">
                             <span style="font-size: 0.85rem; color: var(--text-muted);">${this.currentStep + 1} / ${this.steps.length}</span>
                             <div class="flex gap-2">
-                                ${this.currentStep > 0 ? '<button class="btn btn-secondary btn-sm" onclick="FluxUI.tutorial.prev()">Back</button>' : ''}
-                                <button class="btn btn-primary btn-sm" onclick="FluxUI.tutorial.next()">${this.currentStep < this.steps.length - 1 ? 'Next' : 'Finish'}</button>
+                                ${this.currentStep > 0 ? '<button class="btn btn-secondary btn-sm" onclick="ShortcutStudioUI.tutorial.prev()">Back</button>' : ''}
+                                <button class="btn btn-primary btn-sm" onclick="ShortcutStudioUI.tutorial.next()">${this.currentStep < this.steps.length - 1 ? 'Next' : 'Finish'}</button>
                             </div>
                         </div>
                     </div>
@@ -159,14 +159,14 @@ const FluxUI = {
         },
 
         end() {
-            const tutorial = document.getElementById('flux-tutorial');
+            const tutorial = document.getElementById('shortcutstudio-tutorial');
             if (tutorial) tutorial.remove();
-            localStorage.setItem('flux_tutorial_complete', 'true');
+            localStorage.setItem('shortcutstudio_tutorial_complete', 'true');
         }
     }
 };
 
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = FluxUI;
+    module.exports = ShortcutStudioUI;
 }

@@ -1,7 +1,7 @@
 // --- State ---
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 let currentProject = null;
-let projects = JSON.parse(localStorage.getItem('flux_projects')) || [];
+let projects = JSON.parse(localStorage.getItem('shortcutstudio_projects')) || [];
 let lastGeneratedPlist = null;
 
 // --- DOM Elements ---
@@ -48,8 +48,8 @@ function initApp() {
     const isNew = urlParams.get('new'); // Keep isNew for potential welcome messages
 
     // Check if first login for tutorial
-    const isFirstLogin = localStorage.getItem('flux_first_login') === 'true';
-    const tutorialComplete = localStorage.getItem('flux_tutorial_complete') === 'true';
+    const isFirstLogin = localStorage.getItem('shortcutstudio_first_login') === 'true';
+    const tutorialComplete = localStorage.getItem('shortcutstudio_tutorial_complete') === 'true';
 
     if (id) {
         loadProject(id);
@@ -63,7 +63,7 @@ function initApp() {
 
     // Show tutorial if first login and not complete
     if (isFirstLogin && !tutorialComplete) {
-        localStorage.removeItem('flux_first_login');
+        localStorage.removeItem('shortcutstudio_first_login');
         setTimeout(() => {
             startTutorial();
         }, 1000);
@@ -83,19 +83,19 @@ function initApp() {
 // --- Free Tier Logic ---
 function checkDownloadLimit() {
     const today = new Date().toDateString();
-    let usage = JSON.parse(localStorage.getItem('flux_daily_usage')) || { date: today, count: 0 };
+    let usage = JSON.parse(localStorage.getItem('shortcutstudio_daily_usage')) || { date: today, count: 0 };
 
     if (usage.date !== today) {
         usage = { date: today, count: 0 };
     }
 
     if (usage.count >= 5) {
-        FluxUI.alert('You have reached your daily limit of 5 downloads. Please upgrade to Pro for unlimited access.', 'Limit Reached');
+        ShortcutStudioUI.alert('You have reached your daily limit of 5 downloads. Please upgrade to Pro for unlimited access.', 'Limit Reached');
         return false;
     }
 
     usage.count++;
-    localStorage.setItem('flux_daily_usage', JSON.stringify(usage));
+    localStorage.setItem('shortcutstudio_daily_usage', JSON.stringify(usage));
     return true;
 }
 
@@ -221,7 +221,7 @@ function loadProject(id) {
 }
 
 function saveProjects() {
-    localStorage.setItem('flux_projects', JSON.stringify(projects));
+    localStorage.setItem('shortcutstudio_projects', JSON.stringify(projects));
 }
 
 function updateProject(id, updates) {
@@ -239,9 +239,9 @@ function updateProject(id, updates) {
 
 function deleteCurrentProject() {
     if (!currentProject) return;
-    FluxUI.confirm('Are you sure you want to delete this project?', 'Delete Project', () => {
+    ShortcutStudioUI.confirm('Are you sure you want to delete this project?', 'Delete Project', () => {
         projects = projects.filter(p => p.id !== projectId);
-        localStorage.setItem('flux_projects', JSON.stringify(projects));
+        localStorage.setItem('shortcutstudio_projects', JSON.stringify(projects));
         renderProjectsGrid();
     });
     return;
@@ -294,10 +294,10 @@ function renderProjectsGrid() {
 
 function deleteProjectFromGrid(e, id) {
     e.stopPropagation();
-    FluxUI.confirm('Delete this project and all its data?', 'Delete Project', () => {
+    ShortcutStudioUI.confirm('Delete this project and all its data?', 'Delete Project', () => {
         const projectId = currentProject.id;
         projects = projects.filter(p => p.id !== projectId);
-        localStorage.setItem('flux_projects', JSON.stringify(projects));
+        localStorage.setItem('shortcutstudio_projects', JSON.stringify(projects));
         showProjectsView();
     });
     return;
@@ -562,7 +562,7 @@ async function handleDownloadPrivate() {
     toggleDownload();
 
     if (!currentProject || !currentActions.length) {
-        FluxUI.alert('Please add some actions to your shortcut first.', 'No Actions');
+        ShortcutStudioUI.alert('Please add some actions to your shortcut first.', 'No Actions');
         return;
     }
 
@@ -572,17 +572,17 @@ async function handleDownloadPrivate() {
     }
 
     // Show generating status
-    FluxUI.alert('Generating your shortcut...', 'Download');
+    ShortcutStudioUI.alert('Generating your shortcut...', 'Download');
 
     try {
         const result = await generateShortcut(false);
         if (result.success) {
             downloadFile(result.data, `${currentProject.name || 'Shortcut'}.shortcut`);
-            FluxUI.alert('Shortcut downloaded successfully!', 'Success');
+            ShortcutStudioUI.alert('Shortcut downloaded successfully!', 'Success');
         }
     } catch (error) {
         if (isDev) console.error('Download error:', error);
-        FluxUI.alert('Failed to generate shortcut. Please try again.', 'Error');
+        ShortcutStudioUI.alert('Failed to generate shortcut. Please try again.', 'Error');
     }
 }
 
@@ -590,7 +590,7 @@ async function handleDownloadPublish() {
     toggleDownload();
 
     if (!currentProject || !currentActions.length) {
-        FluxUI.alert('Please add some actions to your shortcut first.', 'No Actions');
+        ShortcutStudioUI.alert('Please add some actions to your shortcut first.', 'No Actions');
         return;
     }
 
@@ -609,7 +609,7 @@ async function handleDownloadPublish() {
     generateAIDescription().then(desc => {
         if (desc) descInput.value = desc;
     }).catch(() => {
-        descInput.value = 'A useful shortcut created with Flux AI.';
+        descInput.value = 'A useful shortcut created with ShortcutStudio AI.';
     });
 }
 
@@ -624,7 +624,7 @@ async function submitPublish() {
     const description = descInput.value.trim();
 
     if (!title || !description) {
-        FluxUI.alert('Please provide both title and description.', 'Missing Info');
+        ShortcutStudioUI.alert('Please provide both title and description.', 'Missing Info');
         return;
     }
 
@@ -647,11 +647,11 @@ async function submitPublish() {
             await publishToMarketplace({ title, description, shortcut: result.data });
 
             closePublishModal();
-            FluxUI.alert('Shortcut published successfully!', 'Success');
+            ShortcutStudioUI.alert('Shortcut published successfully!', 'Success');
         }
     } catch (error) {
         if (isDev) console.error('Publish error:', error);
-        FluxUI.alert('Failed to publish shortcut. Please try again.', 'Error');
+        ShortcutStudioUI.alert('Failed to publish shortcut. Please try again.', 'Error');
     } finally {
         status.style.display = 'none';
         submitBtn.disabled = false;
@@ -737,7 +737,7 @@ function downloadFile(data, filename) {
 
 // --- Onboarding ---
 function checkOnboarding() {
-    if (!localStorage.getItem('flux_onboarding_complete')) {
+    if (!localStorage.getItem('shortcutstudio_onboarding_complete')) {
         const modal = document.getElementById('welcome-modal');
         if (modal) {
             modal.classList.remove('hidden');
@@ -749,7 +749,7 @@ function checkOnboarding() {
 function startOnboarding() {
     const modal = document.getElementById('welcome-modal');
     modal.classList.remove('active'); // Use active class
-    localStorage.setItem('flux_onboarding_complete', 'true');
+    localStorage.setItem('shortcutstudio_onboarding_complete', 'true');
 
     // Create first project and open settings
     createNewProject();
@@ -775,7 +775,7 @@ function startOnboarding() {
 function skipOnboarding() {
     const modal = document.getElementById('welcome-modal');
     modal.classList.remove('active');
-    localStorage.setItem('flux_onboarding_complete', 'true');
+    localStorage.setItem('shortcutstudio_onboarding_complete', 'true');
 }
 
 function showTutorial() {
@@ -830,7 +830,7 @@ function setChatMode(mode) {
             mode === 'force' ? '#EF4444' : 'var(--border-color)';
     }
 
-    FluxUI.alert(`Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`, 'Mode Changed');
+    ShortcutStudioUI.alert(`Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`, 'Mode Changed');
 }
 
 function toggleReasoning() {
@@ -860,7 +860,7 @@ function toggleChatMenu() {
 
 function setChatMode(mode) {
     toggleChatMenu();
-    FluxUI.alert(`Switched to ${mode} mode.`, 'Mode Changed');
+    ShortcutStudioUI.alert(`Switched to ${mode} mode.`, 'Mode Changed');
     // Implement actual mode logic here if needed
 }
 
@@ -958,25 +958,25 @@ function editAction(id) {
             `;
         }).join('');
 
-        FluxUI.modal(`
+        ShortcutStudioUI.modal(`
             <div class="edit-action-form">
                 ${fieldsHtml}
                 <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button class="btn" onclick="FluxUI.closeModal()">Cancel</button>
+                    <button class="btn" onclick="ShortcutStudioUI.closeModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="saveAction(${action.id}, ['${paramKeys.join("','")}'])">Save Changes</button>
                 </div>
             </div>
         `, `Edit ${action.title}`);
     } else {
         // Simple text editing fallback
-        FluxUI.modal(`
+        ShortcutStudioUI.modal(`
             <div class="edit-action-form">
                 <div class="param-field">
                     <label>Metadata</label>
                     <input type="text" id="action-meta" value="${action.meta || ''}" class="input-glass">
                 </div>
                 <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button class="btn" onclick="FluxUI.closeModal()">Cancel</button>
+                    <button class="btn" onclick="ShortcutStudioUI.closeModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="saveAction(${action.id})">Save Changes</button>
                 </div>
             </div>
@@ -1003,12 +1003,12 @@ function saveAction(id, keys = []) {
     }
 
     renderVisualizer();
-    FluxUI.closeModal();
-    FluxUI.alert('Action updated successfully', 'Saved');
+    ShortcutStudioUI.closeModal();
+    ShortcutStudioUI.alert('Action updated successfully', 'Saved');
 }
 
 function deleteAction(id) {
-    FluxUI.confirm('Remove this action from the blueprint?', 'Delete Action', () => {
+    ShortcutStudioUI.confirm('Remove this action from the blueprint?', 'Delete Action', () => {
         currentActions = currentActions.filter(a => a.id !== id);
         renderVisualizer();
     });
@@ -1115,7 +1115,7 @@ function getAvailableActions() {
 
 // --- Tutorial System ---
 function startTutorial() {
-    FluxUI.tutorial.start([
+    ShortcutStudioUI.tutorial.start([
         {
             target: '#chat-input',
             title: 'Chat Input',
@@ -1144,10 +1144,10 @@ function startTutorial() {
 function toggleDiscuss() {
     if (chatMode === 'discussion') {
         setChatMode('normal');
-        FluxUI.toast('Exited Discussion Mode');
+        ShortcutStudioUI.toast('Exited Discussion Mode');
     } else {
         setChatMode('discussion');
-        FluxUI.toast('Entered Discussion Mode');
+        ShortcutStudioUI.toast('Entered Discussion Mode');
         // Add a system message to welcome user to discussion
         addMessage('system', "I'm here to discuss your shortcut. What questions do you have or what ideas would you like to brainstorm?");
     }
@@ -1196,7 +1196,7 @@ function closeForceMenuOutside(e) {
 }
 
 function showProUpgrade(featureName) {
-    FluxUI.alert(`${featureName} is a Pro feature.Upgrade to unlock manual action control and advanced AI reasoning.`, 'Upgrade to Pro');
+    ShortcutStudioUI.alert(`${featureName} is a Pro feature.Upgrade to unlock manual action control and advanced AI reasoning.`, 'Upgrade to Pro');
     toggleForceMenu();
 }
 

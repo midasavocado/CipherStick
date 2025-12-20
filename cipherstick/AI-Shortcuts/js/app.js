@@ -4,9 +4,46 @@
         const APP_VERSION = '2025-12-14-6';
         console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
-	        // ============ State ============
+        const STORAGE_PREFIX = 'shortcutstudio';
+        const LEGACY_STORAGE_PREFIX = String.fromCharCode(102, 108, 117, 120);
+
+        function storageKey(suffix) {
+            return `${STORAGE_PREFIX}_${suffix}`;
+        }
+
+        function legacyStorageKey(suffix) {
+            return `${LEGACY_STORAGE_PREFIX}_${suffix}`;
+        }
+
+        function getStoredValue(suffix) {
+            const key = storageKey(suffix);
+            const cached = localStorage.getItem(key);
+            if (cached !== null) return cached;
+            const legacyValue = localStorage.getItem(legacyStorageKey(suffix));
+            if (legacyValue !== null) {
+                localStorage.setItem(key, legacyValue);
+                return legacyValue;
+            }
+            return null;
+        }
+
+        function setStoredValue(suffix, value) {
+            localStorage.setItem(storageKey(suffix), value);
+        }
+
+        function parseStoredJson(suffix, fallback) {
+            const raw = getStoredValue(suffix);
+            if (raw == null) return fallback;
+            try {
+                return JSON.parse(raw);
+            } catch {
+                return fallback;
+            }
+        }
+
+        // ============ State ============
 	        let currentProject = null;
-	        let projects = JSON.parse(localStorage.getItem('flux_projects')) || [];
+	        let projects = parseStoredJson('projects', []);
 	        let chatMode = 'standard'; // 'standard', 'discussion'
 	        let availableTemplates = [];
 	        let currentActions = [];
@@ -21,11 +58,11 @@
 	        const MAX_HISTORY_STATES = 80;
 		let reorderState = null;
 		let reorderListenersAttached = false;
-		let animationsEnabled = localStorage.getItem('flux_animations') !== 'disabled';
+		let animationsEnabled = getStoredValue('animations') !== 'disabled';
 		        let contextMenuTarget = null;
                 let richInputSelection = null;
 		        let tutorialStep = 0;
-	        let hasCompletedTutorial = localStorage.getItem('flux_tutorial_done') === 'true';
+	        let hasCompletedTutorial = getStoredValue('tutorial_done') === 'true';
 	        const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
 
         // ============ Init ============
@@ -107,11 +144,11 @@
 	        }
 
         function initTheme() {
-            if (!localStorage.getItem('flux_theme')) {
+            if (!getStoredValue('theme')) {
                 document.body.classList.add('mode-dark');
-                localStorage.setItem('flux_theme', 'dark');
+                setStoredValue('theme', 'dark');
             } else {
-                const theme = localStorage.getItem('flux_theme');
+                const theme = getStoredValue('theme');
                 document.body.classList.toggle('mode-dark', theme === 'dark');
             }
             updateThemeIcon();
@@ -119,7 +156,7 @@
 
         function toggleTheme() {
             document.body.classList.toggle('mode-dark');
-            localStorage.setItem('flux_theme', document.body.classList.contains('mode-dark') ? 'dark' : 'light');
+            setStoredValue('theme', document.body.classList.contains('mode-dark') ? 'dark' : 'light');
             updateThemeIcon();
         }
 
@@ -217,7 +254,7 @@
 	        }
 
 	        function saveProjects() {
-	            localStorage.setItem('flux_projects', JSON.stringify(projects));
+	            setStoredValue('projects', JSON.stringify(projects));
 	        }
 
         function clonePlainObject(value) {
@@ -903,6 +940,21 @@
             updateActionIdParam(actionId, el.value, { render: true });
         }
 
+        function handleIdInputKeydown(event, el) {
+            if (!event || !el) return;
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            el.blur();
+        }
+
+        function handleIdInputInput(el) {
+            if (!el) return;
+            const valueLen = (el.value || '').length;
+            const placeholderLen = (el.getAttribute('placeholder') || '').length;
+            const size = Math.max(valueLen, placeholderLen, 6);
+            el.style.width = `${size}ch`;
+        }
+
         function paramKeySupportsInlineLinks(paramKey) {
             const key = String(paramKey || '').trim().toLowerCase();
             if (!key) return false;
@@ -1055,6 +1107,42 @@
             updateActionParam(actionId, paramKey, serializeListParamValue(items), { suppressAnimations: true });
         }
 
+        const LIST_ITEM_CONFIRM_PREF_KEY = 'shortcutstudio_list_item_confirm_disabled';
+        let pendingListItemRemoval = null;
+
+        function shouldConfirmListItemRemoval() {
+            return localStorage.getItem(LIST_ITEM_CONFIRM_PREF_KEY) !== 'true';
+        }
+
+        function requestListItemRemoval(actionId, paramKey, index) {
+            if (!shouldConfirmListItemRemoval()) {
+                removeListItem(actionId, paramKey, index);
+                return;
+            }
+            pendingListItemRemoval = { actionId, paramKey, index };
+            document.getElementById('list-item-remove-modal')?.classList.add('active');
+        }
+
+        function closeListItemRemoveModal() {
+            pendingListItemRemoval = null;
+            document.getElementById('list-item-remove-modal')?.classList.remove('active');
+        }
+
+        function confirmListItemRemoval() {
+            if (!pendingListItemRemoval) {
+                closeListItemRemoveModal();
+                return;
+            }
+            const { actionId, paramKey, index } = pendingListItemRemoval;
+            closeListItemRemoveModal();
+            removeListItem(actionId, paramKey, index);
+        }
+
+        function disableListItemRemovalConfirm() {
+            localStorage.setItem(LIST_ITEM_CONFIRM_PREF_KEY, 'true');
+            confirmListItemRemoval();
+        }
+
         function renderListEditor(actionId, paramKey, rawValue, readonly = false) {
             const items = parseListParamValue(rawValue, { allowEmpty: !readonly });
             const displayItems = items.length ? items : (readonly ? [] : ['']);
@@ -1068,11 +1156,17 @@
                 const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
                 const removeBtn = readonly
                     ? ''
-                    : `<button type="button" class="node-action-btn list-item-remove" onclick="removeListItem(${actionId}, '${safeParam}', ${idx})" title="Remove">-</button>`;
+                    : `<button type="button" class="node-action-btn list-item-remove" onclick="requestListItemRemoval(${actionId}, '${safeParam}', ${idx})" title="Remove">-</button>`;
+                const inputHtml = `
+                    <div class="param-with-insert">
+                        <div class="param-value param-rich-input list-item-input" contenteditable="${readonly ? 'false' : 'true'}" data-action-id="${actionId}" data-param="${escapeHtml(paramKey)}" data-list-param="${escapeHtml(paramKey)}" data-list-index="${idx}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleListItemBlur(this)" ${contextMenuAttr}>${richHtml}</div>
+                        ${readonly ? '' : '<button type="button" class="var-insert-btn" onclick="openVariableMenuFromButton(this)">+</button>'}
+                    </div>
+                `;
                 return `
                     <div class="list-editor-row" data-list-index="${idx}">
                         <span class="list-editor-index">${idx + 1}.</span>
-                        <div class="param-value param-rich-input list-item-input" contenteditable="${readonly ? 'false' : 'true'}" data-action-id="${actionId}" data-param="${escapeHtml(paramKey)}" data-list-param="${escapeHtml(paramKey)}" data-list-index="${idx}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleListItemBlur(this)" ${contextMenuAttr}>${richHtml}</div>
+                        ${inputHtml}
                         ${removeBtn}
                     </div>
                 `;
@@ -1097,6 +1191,29 @@
             `;
         }
 
+        function wrapWithVariableInsert(inputHtml, readonly = false) {
+            if (readonly) return inputHtml;
+            return `
+                <div class="param-with-insert">
+                    ${inputHtml}
+                    <button type="button" class="var-insert-btn" onclick="openVariableMenuFromButton(this)">+</button>
+                </div>
+            `;
+        }
+
+        function openVariableMenuFromButton(btn) {
+            const wrapper = btn?.closest('.param-with-insert');
+            const target = wrapper?.querySelector('.param-value');
+            if (!target) return;
+            const rect = btn.getBoundingClientRect();
+            const syntheticEvent = {
+                preventDefault: () => { },
+                pageX: rect.right + window.scrollX,
+                pageY: rect.bottom + window.scrollY
+            };
+            showVariableMenu(syntheticEvent, target);
+        }
+
         function getRichInputPlaceholder(key, rawValue) {
             const trimmed = String(rawValue || '').trim();
             if (STANDARD_PLACEHOLDER_RE.test(trimmed)) {
@@ -1114,6 +1231,68 @@
             if (lowerKey.includes('body')) return 'Enter body';
             if (lowerKey.includes('text')) return 'Enter text';
             return lowerKey ? `Enter ${lowerKey}` : 'Enter text';
+        }
+
+        function shouldUseVariableDropdown(value) {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+                const variableName = value?.Value?.VariableName || value?.VariableName || '';
+                if (outputUUID || variableName) return true;
+            }
+            const strValue = typeof value === 'string' ? value.trim() : '';
+            if (!strValue) return false;
+            const placeholderMatch = strValue.match(/^\{\{(\w+)\}\}$/);
+            if (placeholderMatch && placeholderMatch[1].toLowerCase() === 'variable') return true;
+            return isIdToken(strValue) || /^!link:/i.test(strValue);
+        }
+
+        function getVariableDropdownOptions(actionId) {
+            const flatActions = flattenActions();
+            const currentIndex = flatActions.findIndex(a => a.id === actionId);
+            const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
+            const options = [];
+            const seen = new Set();
+            previousActions
+                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
+                .filter(entry => entry.output && actionHasLinkableOutput(entry.action))
+                .forEach(({ action, output }) => {
+                    const base = output.outputId || output.outputUUID;
+                    const token = formatIdToken(base);
+                    if (!token || seen.has(token)) return;
+                    seen.add(token);
+                    const label = output.outputName || action.title || action.action || 'Action';
+                    options.push({ value: token, label });
+                });
+            return options;
+        }
+
+        function resolveVariableSelectValue(value) {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
+                if (outputUUID) return formatIdToken(outputUUID);
+                const variableName = value?.Value?.VariableName || value?.VariableName || '';
+                if (variableName) return `!var:${variableName}`;
+            }
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (isIdToken(trimmed) || /^!link:/i.test(trimmed)) return trimmed;
+                if (/^!var:/i.test(trimmed)) return trimmed;
+            }
+            return '';
+        }
+
+        function handleVariableSelectChange(el) {
+            if (!el) return;
+            const actionId = parseInt(el.dataset.actionId);
+            const paramKey = el.dataset.param;
+            if (!Number.isFinite(actionId) || !paramKey) return;
+            const rawValue = el.value;
+            const value = rawValue === '__none__' ? '{{VARIABLE}}' : rawValue;
+            if (rawValue === '__none__') {
+                el.value = '';
+            }
+            el.classList.toggle('selected', rawValue !== '__none__' && Boolean(rawValue));
+            updateActionParam(actionId, paramKey, value);
         }
 
         function tokenizeRichText(raw) {
@@ -1330,7 +1509,44 @@
 	            return { outputUUID: rawUUID, outputName, outputId: hasExplicitId ? idLabel : null };
 	        }
 
-	        let outputNameIndexByUUID = new Map();
+        let outputNameIndexByUUID = new Map();
+        let suggestedIdByActionId = new Map();
+
+        function getSuggestedIdLabel(action) {
+            const key = normalizeActionKey(action?.action || action?.title || '');
+            const base = key ? key.replace(/\./g, '') : 'action';
+            return base || 'action';
+        }
+
+        function buildSuggestedIdIndex(actions = currentActions) {
+            const counts = new Map();
+            const next = new Map();
+            const flat = flattenActions(actions, []);
+            flat.forEach(action => {
+                const base = getSuggestedIdLabel(action);
+                const count = (counts.get(base) || 0) + 1;
+                counts.set(base, count);
+                const suffix = count === 1 ? '' : String(count);
+                next.set(action.id, `${base}${suffix}`);
+            });
+            suggestedIdByActionId = next;
+            return suggestedIdByActionId;
+        }
+
+        function buildIdPillHtml(actionId) {
+            if (!editMode) return '';
+            const action = findActionLocation(actionId)?.action;
+            const idValue = action?.params?.ID ?? action?.params?.Id ?? action?.params?.id ?? '';
+            const idLabel = getIdLabelForDisplay(idValue);
+            const placeholder = suggestedIdByActionId.get(actionId) || getSuggestedIdLabel(action) || 'action1';
+            const initialSize = Math.max((idLabel || '').length, placeholder.length, 6);
+            return `
+                <div class="node-id-pill" title="Output ID">
+                    <span class="node-id-icon">↗</span>
+                    <input type="text" class="node-id-input" data-action-id="${actionId}" value="${escapeAttr(idLabel)}" placeholder="${escapeAttr(placeholder)}" style="width:${initialSize}ch" oninput="handleIdInputInput(this)" onblur="handleIdInputBlur(this)" onkeydown="handleIdInputKeydown(event, this)">
+                </div>
+            `;
+        }
 
 	        function rebuildOutputNameIndex(actions = currentActions) {
 	            const next = new Map();
@@ -1818,7 +2034,7 @@
             div.className = `message ${role}`;
             const avatar = role === 'user'
                 ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'
-                : 'F';
+                : 'S';
             div.innerHTML = `<div class="message-avatar">${avatar}</div><div class="message-bubble">${formatMessage(text)}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
@@ -1963,7 +2179,7 @@
             const div = document.createElement('div');
             div.className = 'message assistant';
             div.id = 'typing-indicator';
-            div.innerHTML = `<div class="message-avatar">F</div><div class="message-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+            div.innerHTML = `<div class="message-avatar">S</div><div class="message-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
@@ -2010,10 +2226,10 @@
 	            showTypingIndicator();
 
 	            try {
-	                const plan = (localStorage.getItem('flux_plan') || 'free') === 'paid' ? 'paid' : 'free';
+	                const plan = (getStoredValue('plan') || 'free') === 'paid' ? 'paid' : 'free';
 	                // Default back to your preferred model; backend will fall back if it's unavailable.
-	                const model = localStorage.getItem('flux_model') || 'openai/gpt-oss-120b:free';
-                console.log(`[Flux] Using model: ${model} (plan: ${plan})`);
+	                const model = getStoredValue('model') || 'openai/gpt-oss-120b:free';
+                console.log(`[ShortcutStudio] Using model: ${model} (plan: ${plan})`);
 
 	                const forceInstruction = forcedActions.length
 	                    ? `You MUST include these actions somewhere in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}. This is a minimum requirement; you may include other actions too.`
@@ -2281,6 +2497,7 @@
             }
             pruneMissingOutputLinks();
             rebuildOutputNameIndex(currentActions);
+            buildSuggestedIdIndex(currentActions);
             updateProgramExportCache();
 
             if (currentActions.length === 0) {
@@ -2419,13 +2636,11 @@
                         : `<span class="condition-value">${escapeHtml(conditionMeta.selected)}</span>`;
                     const inputInputHtml = editMode ? getInputForType(node.action.id, 'Input', input, false) : `<span class="condition-value">${formatLinkedValue(input)}</span>`;
                     const compareToInputHtml = unaryCondition ? '' : (editMode ? getInputForType(node.action.id, 'CompareTo', compareTo, false) : `<span class="condition-value">${formatLinkedValue(compareTo)}</span>`);
-                    const idValue = node.action.params?.ID ?? node.action.params?.Id ?? node.action.params?.id ?? '';
-                    const idLabel = getIdLabelForDisplay(idValue);
-                    const idInputHtml = (editMode || idLabel) ? getInputForType(node.action.id, 'ID', idValue, !editMode) : '';
-                    const idLine = idInputHtml ? `<div class="control-id-line"><span class="param-label">ID</span>${idInputHtml}</div>` : '';
+                    const idPillHtml = buildIdPillHtml(node.action.id);
                     
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
+                            ${idPillHtml}
                             <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                             <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
@@ -2448,7 +2663,6 @@
                                 ${compareToInputHtml}
                                 <span class="if-then-label">Then</span>
                             </div>
-                            ${idLine}
                             ${actionsHtml}
                         </div>
                         <div class="if-then ${thenEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="if-then" data-action-id="${node.action.id}">
@@ -2488,13 +2702,11 @@
 	                    const isRepeatWithEach = actionName.includes('witheach') || actionName.includes('with each');
                     const repeatCount = node.action.params?.Count || node.action.params?.WFRepeatCount || '';
                     const repeatItems = node.action.params?.Items || node.action.params?.RepeatItemVariableName || node.action.params?.WFRepeatItemVariableName || '';
-                    const repeatIdValue = node.action.params?.ID ?? node.action.params?.Id ?? node.action.params?.id ?? '';
-                    const repeatIdLabel = getIdLabelForDisplay(repeatIdValue);
-                    const repeatIdInputHtml = (editMode || repeatIdLabel) ? getInputForType(node.action.id, 'ID', repeatIdValue, !editMode) : '';
-                    const repeatIdLine = repeatIdInputHtml ? `<div class="control-id-line"><span class="param-label">ID</span>${repeatIdInputHtml}</div>` : '';
+                    const repeatIdPillHtml = buildIdPillHtml(node.action.id);
                     
                     const actionsHtml = editMode ? `
                         <div class="control-actions">
+                            ${repeatIdPillHtml}
                             <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                             <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
@@ -2538,8 +2750,7 @@
 	                        <div class="repeat-header">
 	                            ${dragHandle}
 	                            ${repeatHeaderHtml}
-                                ${repeatIdLine}
-	                            ${actionsHtml}
+                                ${actionsHtml}
 	                        </div>
                         <div class="repeat-body ${emptyBodyClass} ${dropZoneClass}" data-drop-zone="repeat" data-action-id="${node.action.id}">
                             ${emptyBodyClass ? '' : '<div class="control-section-content"></div>'}
@@ -2593,25 +2804,16 @@
                 let hasVisibleParams = false;
                 let innerHtml = '<div class="node-params">';
                 const paramsObj = action.params || {};
-                const idValue = paramsObj.ID ?? paramsObj.Id ?? paramsObj.id ?? '';
-                const shouldIncludeId = editMode || Boolean(getIdLabelForDisplay(idValue));
-                const orderedParams = [];
-                if (shouldIncludeId) orderedParams.push(['ID', idValue]);
                 for (const [key, value] of Object.entries(paramsObj)) {
-                    if (String(key).toLowerCase() === 'id') continue;
-                    orderedParams.push([key, value]);
-                }
-                for (const [key, value] of orderedParams) {
                     // Skip UUID/OutputUUID/GroupingIdentifier as they're internal
                     const lowerKey = String(key).toLowerCase();
-                    if (lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier' || lowerKey === 'providedoutputuuid') {
+                    if (lowerKey === 'id' || lowerKey === 'uuid' || lowerKey === 'outputuuid' || lowerKey === 'groupingidentifier' || lowerKey === 'providedoutputuuid') {
                         continue;
                     }
                     // Always show params in edit mode, or if they have a non-placeholder value in view mode
                     const strVal = String(value ?? '');
-                    const isIdField = lowerKey === 'id';
-                    const isPlaceholder = !isIdField && strVal.startsWith('{{') && strVal.endsWith('}}');
-                    const displayValue = isIdField ? getIdLabelForDisplay(value) : strVal;
+                    const isPlaceholder = strVal.startsWith('{{') && strVal.endsWith('}}');
+                    const displayValue = strVal;
                     // Show if edit mode OR (has value AND not a placeholder)
                     if (editMode || (displayValue && !isPlaceholder)) {
                         hasVisibleParams = true;
@@ -2631,9 +2833,12 @@
             }
 
             const actionsHtml = editMode ? `
-                <div class="node-actions">
-                    <button class="node-action-btn" onclick="duplicateAction(${action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-                    <button class="node-action-btn delete" onclick="deleteAction(${action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                <div class="node-header-right">
+                    ${buildIdPillHtml(action.id)}
+                    <div class="node-actions">
+                        <button class="node-action-btn" onclick="duplicateAction(${action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                        <button class="node-action-btn delete" onclick="deleteAction(${action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    </div>
                 </div>
             ` : '';
 
@@ -2670,6 +2875,31 @@
             if (action && isListEditorAction(action) && isListEditorParam(key)) {
                 return renderListEditor(actionId, key, value, readonly);
             }
+            if (!paramKeySupportsInlineLinks(key) && shouldUseVariableDropdown(value)) {
+                if (readonly) {
+                    const display = resolveVariableSelectValue(value);
+                    return display ? `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(normalizeIdLabel(display) || display))}</span>` : '';
+                }
+                const selectedValue = resolveVariableSelectValue(value);
+                const options = getVariableDropdownOptions(actionId);
+                const optionValues = new Set(options.map(opt => opt.value));
+                if (selectedValue && !optionValues.has(selectedValue)) {
+                    const isVarToken = /^!var:/i.test(selectedValue);
+                    const resolvedLabel =
+                        (isVarToken ? selectedValue.slice(5) : null) ||
+                        resolveOutputNameByUUID(selectedValue, null) ||
+                        resolveOutputNameByUUID(normalizeIdLabel(selectedValue), null) ||
+                        normalizeIdLabel(selectedValue) ||
+                        selectedValue;
+                    options.unshift({ value: selectedValue, label: humanizeOutputName(resolvedLabel) });
+                }
+                const placeholderOption = `<option value="" disabled ${selectedValue ? '' : 'selected'}>Enter variable</option>`;
+                const noneOption = `<option value="__none__">(none)</option>`;
+                const optionHtml = options.map(opt => `<option value="${escapeAttr(opt.value)}" ${opt.value === selectedValue ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`).join('');
+                const selectClass = `param-value param-select param-variable-select${selectedValue ? ' selected' : ''}`;
+                const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                return `<select class="${selectClass}" data-action-id="${actionId}" data-param="${escapeHtml(key)}" onchange="handleVariableSelectChange(this)" ${contextMenuAttr}>${placeholderOption}${noneOption}${optionHtml}</select>`;
+            }
             if (key === 'Condition' || key === 'WFCondition') {
                 const { optionsString, options, selected } = getConditionOptionsById(actionId, value);
                 const selectedValue = options.includes(selected) ? selected : (options[0] || selected);
@@ -2678,8 +2908,8 @@
                 const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
                 return `<select class="param-value param-select" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-full-options="${escapeHtml(fullOptionsString)}" ${readonly ? 'disabled' : ''} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>${optionsHtml}</select>`;
             }
-	            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
-	            if (isObjectVal) {
+            const isObjectVal = value && typeof value === 'object' && !Array.isArray(value);
+            if (isObjectVal) {
 	                const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
 	                const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
 	                const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || 'Linked Output';
@@ -2703,7 +2933,8 @@
                 const normalizedValue = STANDARD_PLACEHOLDER_RE.test(strValue.trim()) ? '' : strValue;
                 const richHtml = formatRichInputHtml(normalizedValue);
                 const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
-                return `<div class="param-value param-rich-input" contenteditable="true" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleRichInputBlur(this)" ${contextMenuAttr}>${richHtml}</div>`;
+                const inputHtml = `<div class="param-value param-rich-input" contenteditable="true" data-action-id="${actionId}" data-param="${escapeHtml(key)}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleRichInputBlur(this)" ${contextMenuAttr}>${richHtml}</div>`;
+                return wrapWithVariableInsert(inputHtml, readonly);
             }
             
             // Check for !ID: tokens first
@@ -2729,16 +2960,17 @@
                 const varName = variableMatch[1].trim();
                 // Check if it's a standard placeholder (STRING, VARIABLE, NUMBER, etc.)
                 const isStandardPlaceholder = /^(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)$/i.test(varName);
-                if (!isStandardPlaceholder) {
-                    // It's a named variable like "Ask Each Time" - show as blue box
-                    if (readonly) {
-                        return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
-                    } else {
-                        // In edit mode, show as styled input that looks like blue box
-                        const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
-                        return `<input type="text" class="param-value param-variable-input" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} placeholder="Enter variable">`;
+                    if (!isStandardPlaceholder) {
+                        // It's a named variable like "Ask Each Time" - show as blue box
+                        if (readonly) {
+                            return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
+                        } else {
+                            // In edit mode, show as styled input that looks like blue box
+                            const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                            const inputHtml = `<input type="text" class="param-value param-variable-input" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} placeholder="Enter variable">`;
+                            return wrapWithVariableInsert(inputHtml, readonly);
+                        }
                     }
-                }
             }
             
             // Check for placeholders like {{STRING}}, {{VARIABLE}}, {{NUMBER}}, etc.
@@ -2752,7 +2984,8 @@
                     return `<input type="checkbox" class="param-checkbox" data-action-id="${actionId}" data-param="${escapeHtml(key)}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.checked)" ${contextMenuAttr}>`;
                 } else {
                     // Default to text input for STRING, VARIABLE, etc.
-                    return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter ${placeholderType.toLowerCase()}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+                    const inputHtml = `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" placeholder="Enter ${placeholderType.toLowerCase()}" onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+                    return wrapWithVariableInsert(inputHtml, readonly);
                 }
             }
             
@@ -2781,11 +3014,12 @@
 	                const looksLikePath = trimmedOptions.startsWith('/') || looksLikeDrivePath;
 	                const hasLetters = /[a-zA-Z]/.test(trimmedOptions);
 	                const options = trimmedOptions.split('/').map(o => o.trim()).filter(Boolean);
-	                if (hasLetters && !looksLikeUrl && !looksLikePath && options.length >= 2) {
-	                    const placeholderText = options.join('/');
-	                    const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
-	                    return `<input type="text" class="param-value param-option-placeholder" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="" placeholder="${escapeHtml(placeholderText)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
-	                }
+                    if (hasLetters && !looksLikeUrl && !looksLikePath && options.length >= 2) {
+                        const placeholderText = options.join('/');
+                        const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
+                        const inputHtml = `<input type="text" class="param-value param-option-placeholder" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="" placeholder="${escapeHtml(placeholderText)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+                        return wrapWithVariableInsert(inputHtml, readonly);
+                    }
 	            }
 
             // Check if this is a text field that can contain mixed content with links
@@ -2795,16 +3029,18 @@
             if (canHaveMixedLinks && !readonly) {
                 // Use textarea for mixed content fields
                 const contextMenuAttr = 'oncontextmenu="showVariableMenu(event, this)"';
-                return `<textarea class="param-value param-textarea" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} rows="3">${escapeHtml(strValue)}</textarea>`;
+                const inputHtml = `<textarea class="param-value param-textarea" data-action-id="${actionId}" data-param="${escapeHtml(key)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr} rows="3">${escapeHtml(strValue)}</textarea>`;
+                return wrapWithVariableInsert(inputHtml, readonly);
             } else if (canHaveMixedLinks && readonly) {
                 // Display mixed content with proper formatting
                 return `<div class="param-value param-mixed-content">${formatLinkedValue(strValue)}</div>`;
             }
             
             // Default text input
-	            const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
-	            return `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
-	        }
+            const contextMenuAttr = readonly ? '' : 'oncontextmenu="showVariableMenu(event, this)"';
+            const inputHtml = `<input type="text" class="param-value" data-action-id="${actionId}" data-param="${escapeHtml(key)}" value="${escapeHtml(strValue)}" ${disabledAttr} onchange="updateActionParam(${actionId}, '${escapeHtml(key)}', this.value)" ${contextMenuAttr}>`;
+            return wrapWithVariableInsert(inputHtml, readonly);
+        }
 
         function humanizeOutputName(name) {
             if (!name) return 'Output';
@@ -3852,6 +4088,30 @@
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
+        async function uploadShortcutForInstall(blob, filename) {
+            const res = await fetch(`${API_BASE}/shortcut`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                    'X-Filename': filename
+                },
+                body: blob
+            });
+            const data = await res.json();
+            if (!data?.ok || !data?.url) {
+                throw new Error(data?.message || 'Upload failed');
+            }
+            return data.url;
+        }
+
+        function openShortcutImport(shortcutUrl) {
+            const shortcutsAppURL = `shortcuts://import-shortcut?url=${encodeURIComponent(shortcutUrl)}`;
+            window.location.href = shortcutsAppURL;
+            setTimeout(() => {
+                window.location.href = shortcutUrl;
+            }, 1200);
+        }
+
         function openDownloadModal() {
             document.getElementById('download-modal').classList.add('active');
         }
@@ -3912,11 +4172,12 @@
                     throw new Error('Signing failed');
                 }
 
-                // Download
                 statusText.textContent = 'Downloading...';
-                const blob = await signRes.blob();
-                downloadBlob(blob, `${baseName}.shortcut`);
-
+                const signedBlob = await signRes.blob();
+                downloadBlob(signedBlob, `${baseName}.shortcut`);
+                // Shortcuts app import disabled; keep download-only behavior.
+                // const hostedUrl = await uploadShortcutForInstall(signedBlob, `${baseName}.shortcut`);
+                // openShortcutImport(hostedUrl);
                 closeDownloadModal();
             } catch (err) {
                 console.error('Download error:', err);
@@ -4106,7 +4367,7 @@
         // ============ Animations Toggle ============
         function toggleAnimations() {
             animationsEnabled = !animationsEnabled;
-            localStorage.setItem('flux_animations', animationsEnabled ? 'enabled' : 'disabled');
+            setStoredValue('animations', animationsEnabled ? 'enabled' : 'disabled');
             document.body.classList.toggle('no-animations', !animationsEnabled);
             const text = document.getElementById('animations-toggle-text');
             if (text) text.textContent = animationsEnabled ? 'Disable Animations' : 'Enable Animations';
@@ -4159,12 +4420,28 @@
 
             menu.innerHTML = menuHtml;
 
-            // Position menu - ensure it doesn't go off screen
-            let x = event.pageX;
-            let y = event.pageY;
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
+            // Position menu - ensure it doesn't go off screen on first open
+            const margin = 8;
+            const x = event.pageX;
+            const y = event.pageY;
+            menu.style.left = '0px';
+            menu.style.top = '0px';
+            menu.style.visibility = 'hidden';
             menu.classList.add('active');
+            const rect = menu.getBoundingClientRect();
+            let left = x;
+            let top = y;
+            if (left + rect.width > window.innerWidth - margin) {
+                left = window.innerWidth - rect.width - margin;
+            }
+            if (top + rect.height > window.innerHeight - margin) {
+                top = window.innerHeight - rect.height - margin;
+            }
+            left = Math.max(margin, left);
+            top = Math.max(margin, top);
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
+            menu.style.visibility = 'visible';
 
             // Wire link clicks
             const linkItems = menu.querySelectorAll('[data-source-id]');
@@ -4175,16 +4452,7 @@
                 });
             });
 
-            // Adjust if going off bottom
-            setTimeout(() => {
-                const rect = menu.getBoundingClientRect();
-                if (rect.bottom > window.innerHeight) {
-                    menu.style.top = (y - rect.height) + 'px';
-                }
-                if (rect.right > window.innerWidth) {
-                    menu.style.left = (x - rect.width) + 'px';
-                }
-            }, 0);
+            // Position already clamped; no further adjustment needed.
         }
 
         function initContextMenu() {
@@ -4293,11 +4561,11 @@
                 if (sourceOutput?.outputId) availableOutputs.add(String(sourceOutput.outputId));
             }
 
-	            // Text-like fields should allow mixing text + links, so insert an inline link token.
-	            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget) {
-	                const base = sourceOutput?.outputId || outputUUID;
-	                const token = formatIdToken(base);
-	                if (!token) return;
+            // Text-like fields should allow mixing text + links, so insert an inline link token.
+            if (paramKeySupportsInlineLinks(paramKey) && contextMenuTarget) {
+                const base = sourceOutput?.outputId || outputUUID;
+                const token = formatIdToken(base);
+                if (!token) return;
                     if (isRichInputElement(contextMenuTarget)) {
                         insertTokenIntoRichInput(contextMenuTarget, token);
                         normalizeRichInputDisplay(contextMenuTarget);
@@ -4322,7 +4590,17 @@
                     }
                     document.getElementById('variable-context-menu')?.classList.remove('active');
                     return;
-	            }
+            }
+
+            if (contextMenuTarget && contextMenuTarget.classList?.contains('param-variable-select')) {
+                const base = sourceOutput?.outputId || outputUUID;
+                const token = formatIdToken(base);
+                if (!token) return;
+                contextMenuTarget.value = token;
+                handleVariableSelectChange(contextMenuTarget);
+                document.getElementById('variable-context-menu')?.classList.remove('active');
+                return;
+            }
 
 	            if (!target.params) target.params = {};
 	            const existing = target.params[paramKey];
@@ -4345,7 +4623,9 @@
 	        function clearLinkedParam(actionId, paramKey) {
 	            const action = findActionLocation(actionId)?.action;
 	            if (!action) return;
-	            const fallback = buildParamPlaceholder(paramKey);
+                const currentValue = action.params?.[paramKey];
+                const useDropdown = !paramKeySupportsInlineLinks(paramKey) && shouldUseVariableDropdown(currentValue);
+	            const fallback = useDropdown ? '{{VARIABLE}}' : buildParamPlaceholder(paramKey);
 	            if (!action.params) action.params = {};
 	            if (action.params[paramKey] === fallback) return;
 	            pushUndoState();
@@ -4457,14 +4737,14 @@
 
         function skipTutorial() {
             document.getElementById('tutorial-overlay').classList.remove('active');
-            localStorage.setItem('flux_tutorial_done', 'true');
+            setStoredValue('tutorial_done', 'true');
             hasCompletedTutorial = true;
         }
 
         function checkFirstTimeTutorial() {
             if (!hasCompletedTutorial && currentProject) {
                 // Check if this is their first ever project
-                const allProjects = JSON.parse(localStorage.getItem('flux_projects')) || [];
+                const allProjects = parseStoredJson('projects', []);
                 if (allProjects.length === 1) {
                     setTimeout(() => startTutorial(), 500);
                 }

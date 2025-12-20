@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flux - Shortcut Details</title>
-    <meta name="description" content="Download this Apple Shortcut for free on Flux.">
+    <title>ShortcutStudio - Shortcut Details</title>
+    <meta name="description" content="Download this Apple Shortcut for free on ShortcutStudio.">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
     <link rel="stylesheet" href="css/variables.css">
@@ -77,8 +77,8 @@
     <!-- Navigation -->
     <nav class="top-bar">
         <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
-            <div class="logo-icon">F</div>
-            <span>Flux</span>
+            <div class="logo-icon">S</div>
+            <span>ShortcutStudio</span>
         </a>
         <div class="nav-links flex items-center gap-4">
             <a href="index.html#how-it-works">How it Works</a>
@@ -108,7 +108,7 @@
             <div class="detail-info">
                 <h1 id="item-title">Loading...</h1>
                 <div class="detail-meta">
-                    <span id="item-author">@flux</span>
+                    <span id="item-author">@shortcutstudio</span>
                     <span>•</span>
                     <span id="item-uses">0 uses</span>
                 </div>
@@ -147,7 +147,7 @@
     </div>
 
     <script src="theme.js"></script>
-    <script src="flux-ui.js"></script>
+    <script src="shortcutstudio-ui.js"></script>
     <script>
         // Mock Data
         const items = {
@@ -192,19 +192,34 @@
             document.getElementById('item-author').textContent = item.author;
             document.getElementById('item-uses').textContent = item.uses;
             document.getElementById('item-desc').textContent = item.desc;
-            document.title = `Flux - ${item.title}`;
+            document.title = `ShortcutStudio - ${item.title}`;
         } else {
             document.getElementById('item-title').textContent = 'Shortcut Not Found';
             document.getElementById('item-desc').textContent = 'The requested shortcut could not be found.';
         }
 
         // Actions
+        const legacyStoragePrefix = String.fromCharCode(102, 108, 117, 120);
+
+        function getStoredValue(suffix) {
+            const key = `shortcutstudio_${suffix}`;
+            const cached = localStorage.getItem(key);
+            if (cached !== null) return cached;
+            const legacyKey = `${legacyStoragePrefix}_${suffix}`;
+            const legacyValue = localStorage.getItem(legacyKey);
+            if (legacyValue !== null) {
+                localStorage.setItem(key, legacyValue);
+                return legacyValue;
+            }
+            return null;
+        }
+
         function handleGet() {
-            const isLoggedIn = localStorage.getItem('flux_logged_in');
+            const isLoggedIn = getStoredValue('logged_in');
             if (!isLoggedIn) {
-                // Use FluxUI if available, else alert
-                if (typeof FluxUI !== 'undefined') {
-                    FluxUI.confirm('You need to be signed in to download shortcuts.', 'Sign In Required', () => {
+                // Use ShortcutStudioUI if available, else alert
+                if (typeof ShortcutStudioUI !== 'undefined') {
+                    ShortcutStudioUI.confirm('You need to be signed in to download shortcuts.', 'Sign In Required', () => {
                         window.location.href = 'login.html';
                     });
                 } else {
@@ -226,8 +241,8 @@
                         btn.disabled = false;
                     }, 2000);
 
-                    if (typeof FluxUI !== 'undefined') {
-                        FluxUI.alert('Shortcut downloaded to your device.', 'Success');
+                    if (typeof ShortcutStudioUI !== 'undefined') {
+                        ShortcutStudioUI.alert('Shortcut downloaded to your device.', 'Success');
                     } else {
                         alert('Shortcut downloaded!');
                     }

@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flux - Login</title>
-    <meta name="description" content="Login to Flux to build and manage your Apple Shortcuts.">
-    <meta property="og:title" content="Flux - Login">
+    <title>ShortcutStudio - Login</title>
+    <meta name="description" content="Login to ShortcutStudio to build and manage your Apple Shortcuts.">
+    <meta property="og:title" content="ShortcutStudio - Login">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
     <link rel="stylesheet" href="css/variables.css">
@@ -95,10 +95,10 @@
 
         <div class="login-card">
             <div class="text-center" style="margin-bottom: 2rem;">
-                <div class="logo-icon" style="width: 48px; height: 48px; margin: 0 auto 1rem auto; font-size: 1.5rem;">F
+                <div class="logo-icon" style="width: 48px; height: 48px; margin: 0 auto 1rem auto; font-size: 1.5rem;">S
                 </div>
                 <h2 id="auth-title">Welcome back</h2>
-                <p id="auth-subtitle" style="color: var(--text-muted);">Sign in to continue to Flux</p>
+                <p id="auth-subtitle" style="color: var(--text-muted);">Sign in to continue to ShortcutStudio</p>
             </div>
 
             <button class="social-btn" onclick="handleLogin()">
@@ -157,6 +157,8 @@
     </div>
     <script src="theme.js"></script>
     <script>
+        const legacyStoragePrefix = String.fromCharCode(102, 108, 117, 120);
+
         function handleLogin(e) {
             if (e) e.preventDefault();
             // Fake login
@@ -166,8 +168,9 @@
             btn.disabled = true;
 
             setTimeout(() => {
-                // Set logged in state in localStorage
-                localStorage.setItem('flux_logged_in', 'true');
+                // Set logged in state in localStorage (with legacy fallback)
+                localStorage.setItem('shortcutstudio_logged_in', 'true');
+                localStorage.setItem(`${legacyStoragePrefix}_logged_in`, 'true');
                 window.location.href = 'app.html';
             }, 1000);
         }
@@ -190,7 +193,7 @@
             } else {
                 // Switch to Sign In
                 title.innerText = 'Welcome back';
-                subtitle.innerText = 'Sign in to continue to Flux';
+                subtitle.innerText = 'Sign in to continue to ShortcutStudio';
                 switchText.innerText = "Don't have an account?";
                 switchBtn.innerText = 'Sign up';
                 submitBtn.innerText = 'Sign In';

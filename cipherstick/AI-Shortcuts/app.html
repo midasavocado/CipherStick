@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flux - AI Shortcut Generator</title>
+    <title>ShortcutStudio - AI Shortcut Generator</title>
     <meta name="description"
-        content="Build Apple Shortcuts with AI. Flux turns natural language into powerful automation workflows.">
+        content="Build Apple Shortcuts with AI. ShortcutStudio turns natural language into powerful automation workflows.">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
     <link rel="stylesheet" href="css/variables.css">
@@ -25,8 +25,8 @@
         <!-- Top Navigation Bar -->
         <nav class="top-bar" style="padding: 0 1.5rem;">
             <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
-                <div class="logo-icon">F</div>
-                <span>Flux</span>
+                <div class="logo-icon">S</div>
+                <span>ShortcutStudio</span>
             </a>
             <div class="nav-actions flex items-center gap-4">
                 <button class="toolbar-btn primary" id="top-download-btn" onclick="openDownloadModal()">
@@ -272,6 +272,28 @@
         </div>
     </div>
 
+    <!-- List Item Remove Confirmation Modal -->
+    <div id="list-item-remove-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Remove List Item?</h3>
+                <button class="modal-close" onclick="closeListItemRemoveModal()"><svg width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove this list item?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeListItemRemoveModal()">Cancel</button>
+                <button class="btn secondary" onclick="disableListItemRemovalConfirm()">Don't show again</button>
+                <button class="btn danger" onclick="confirmListItemRemoval()">Remove</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Download Modal -->
     <div id="download-modal" class="modal-overlay">
         <div class="modal-card">
@@ -333,21 +355,14 @@
     </div>
 
     <!-- Variable Context Menu -->
-    <div id="variable-context-menu" class="context-menu">
-        <div class="context-menu-header">Insert Variable</div>
-        <div class="context-menu-item" onclick="insertVariable('Shortcut Input')">📥 Shortcut Input</div>
-        <div class="context-menu-item" onclick="insertVariable('Clipboard')">📋 Clipboard</div>
-        <div class="context-menu-item" onclick="insertVariable('Current Date')">📅 Current Date</div>
-        <div class="context-menu-item" onclick="insertVariable('Device Name')">📱 Device Name</div>
-        <div class="context-menu-item" onclick="insertVariable('Ask Each Time')">❓ Ask Each Time</div>
-    </div>
+    <div id="variable-context-menu" class="context-menu"></div>
 
     <!-- Tutorial Overlay -->
     <div id="tutorial-overlay" class="tutorial-overlay">
         <div class="tutorial-spotlight" id="tutorial-spotlight"></div>
         <div class="tutorial-popup" id="tutorial-popup">
             <div class="tutorial-step-indicator" id="tutorial-indicator"></div>
-            <h3 id="tutorial-title">Welcome to Flux!</h3>
+            <h3 id="tutorial-title">Welcome to ShortcutStudio!</h3>
             <p id="tutorial-text">Let's take a quick tour of how to build shortcuts with AI.</p>
             <div class="tutorial-actions">
                 <button class="tutorial-skip" onclick="skipTutorial()">Skip Tutorial</button>
@@ -357,7 +372,7 @@
     </div>
 
     <script src="theme.js"></script>
-    <script src="flux-ui.js"></script>
+    <script src="shortcutstudio-ui.js"></script>
     <script src="js/app.js?v=2025-12-14-6"></script>
 </body>
 
