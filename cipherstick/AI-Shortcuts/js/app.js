@@ -3144,7 +3144,7 @@
             // Check if value contains !ID: tokens mixed with text
             if (strVal.toLowerCase().includes('!id:') || strVal.toLowerCase().includes('!link:') || strVal.toLowerCase().includes('!var:')) {
                 // Parse mixed content
-                const parts = strVal.split(/(!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|!var:(?:\{\{[^}]+?\}\}|[^\s]+)/gi);
+                const parts = strVal.split(/(!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|!var:(?:\{\{[^}]+?\}\}|[^\s]+))/gi);
                 return parts.map(part => {
                     if (part.toLowerCase().startsWith('!id:') || part.toLowerCase().startsWith('!link:')) {
                         const linkLabel = normalizeIdLabel(part);
