@@ -882,6 +882,17 @@
             return label;
         }
 
+        function normalizeVarLabel(raw) {
+            if (raw == null) return '';
+            let label = String(raw).trim();
+            if (!label) return '';
+            label = label.replace(/^!var:/i, '').trim();
+            if (label.startsWith('{{') && label.endsWith('}}')) {
+                label = label.slice(2, -2).trim();
+            }
+            return label;
+        }
+
         function isExplicitIdLabel(raw) {
             if (typeof raw !== 'string') return false;
             const trimmed = raw.trim();
@@ -976,7 +987,7 @@
             );
         }
 
-        const INLINE_TOKEN_RE = /!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|\{\{[^}]+?\}\}/gi;
+        const INLINE_TOKEN_RE = /!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|!var:(?:\{\{[^}]+?\}\}|[^\s]+)|\{\{[^}]+?\}\}/gi;
         const STANDARD_PLACEHOLDER_RE = /^\{\{(STRING|VARIABLE|NUMBER|INTEGER|DECIMAL|BOOLEAN)\}\}$/i;
         const LIST_ITEM_SEPARATOR = ',';
         const LEGACY_LIST_ITEM_SEPARATOR = '__AI_LIST_ITEM_DELIM_7b9e5c__';
@@ -1243,7 +1254,28 @@
             if (!strValue) return false;
             const placeholderMatch = strValue.match(/^\{\{(\w+)\}\}$/);
             if (placeholderMatch && placeholderMatch[1].toLowerCase() === 'variable') return true;
-            return isIdToken(strValue) || /^!link:/i.test(strValue);
+            return isIdToken(strValue) || /^!link:/i.test(strValue) || /^!var:/i.test(strValue);
+        }
+
+        function isActionInRepeatBody(actionId) {
+            if (!Number.isFinite(actionId)) return false;
+            let loc = findActionLocation(actionId);
+            while (loc?.parentAction) {
+                if (isRepeatAction(loc.parentAction) && loc.section === 'do') return true;
+                const parentId = loc.parentAction.id;
+                if (!Number.isFinite(parentId)) break;
+                loc = findActionLocation(parentId);
+            }
+            return false;
+        }
+
+        function getRepeatVariableOptions(actionId) {
+            if (!isActionInRepeatBody(actionId)) return [];
+            return [
+                { value: formatIdToken('repeatItem'), label: 'Repeat Item' },
+                { value: formatIdToken('repeatIndex'), label: 'Repeat Index' },
+                { value: formatIdToken('repeatCount'), label: 'Repeat Count' },
+            ].filter(opt => opt.value);
         }
 
         function getVariableDropdownOptions(actionId) {
@@ -1252,6 +1284,12 @@
             const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
             const options = [];
             const seen = new Set();
+            const repeatOptions = getRepeatVariableOptions(actionId);
+            repeatOptions.forEach(opt => {
+                if (!opt.value || seen.has(opt.value)) return;
+                seen.add(opt.value);
+                options.push({ value: opt.value, label: opt.label });
+            });
             previousActions
                 .map(a => ({ action: a, output: getActionOutputInfo(a) }))
                 .filter(entry => entry.output && actionHasLinkableOutput(entry.action))
@@ -1318,6 +1356,7 @@
         function getTokenDisplayLabel(token) {
             const trimmed = String(token || '').trim();
             if (isIdToken(trimmed) || /^!link:/i.test(trimmed)) return normalizeIdLabel(trimmed);
+            if (/^!var:/i.test(trimmed)) return normalizeVarLabel(trimmed);
             if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) {
                 return trimmed.slice(2, -2).trim();
             }
@@ -1564,12 +1603,13 @@
 	            return outputNameIndexByUUID;
 	        }
 
-	        function resolveOutputNameByUUID(outputUUID, fallbackName = null) {
-	            const key = typeof outputUUID === 'string' ? outputUUID.trim() : String(outputUUID || '').trim();
-	            if (!key) return fallbackName;
-                const normalized = normalizeIdLabel(key);
-	            return outputNameIndexByUUID.get(normalized || key) || fallbackName;
-	        }
+        function resolveOutputNameByUUID(outputUUID, fallbackName = null) {
+            const key = typeof outputUUID === 'string' ? outputUUID.trim() : String(outputUUID || '').trim();
+            if (!key) return fallbackName;
+            const normalized = normalizeIdLabel(key);
+            const builtinLabel = resolveBuiltinOutputLabel(normalized || key);
+            return builtinLabel || outputNameIndexByUUID.get(normalized || key) || fallbackName;
+        }
 
 	        function collectAvailableOutputs(actions = currentActions, set = new Set()) {
 	            if (!Array.isArray(actions)) return set;
@@ -1813,6 +1853,7 @@
 	            ['returntohomescreen', 'Return to Home Screen'],
 	            ['waittoreturn', 'Wait to Return'],
 	            ['savetocameraroll', 'Save to Camera Roll'],
+	            ['addnewreminder', 'Add New Reminder'],
 	            ['selectemailadresses', 'Select Email Addresses'],
 	            ['runjavascriptonwebpage', 'Run JavaScript on Web Page'],
 	            ['generateqrcodefromtext', 'Generate QR Code'],
@@ -1859,8 +1900,9 @@
 	            'file', 'files', 'flip', 'focus', 'folder', 'forecast', 'frame', 'from', 'gif', 'hash', 'home', 'image',
 	            'in', 'input', 'item', 'items', 'javascript', 'key', 'list', 'message', 'month', 'new', 'notification',
 	            'number', 'numbers', 'of', 'on', 'orientation', 'or', 'output', 'page', 'phone', 'phonenumber', 'photo',
-	            'priority', 'qrcode', 'qr', 'roll', 'screen', 'setting', 'settings', 'shortcuts', 'sound', 'spell', 'store',
-	            'string', 'text', 'timer', 'to', 'transcribe', 'url', 'variable', 'video', 'volume', 'weather', 'web',
+	            'priority', 'qrcode', 'qr', 'reminder', 'reminders', 'roll', 'screen', 'setting', 'settings', 'shortcuts',
+	            'sound', 'spell', 'store', 'string', 'text', 'timer', 'to', 'transcribe', 'url', 'variable', 'video',
+	            'volume', 'weather', 'web',
 	            'website', 'with', 'zip',
 	            'content', 'contents',
 	        ];
@@ -2166,6 +2208,10 @@
 
         function escapeAttr(str) {
             return escapeHtml(String(str || '')).replace(/`/g, '&#96;');
+        }
+
+        function escapeJsString(str) {
+            return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         }
 
         function escapeHtml(str) {
@@ -2627,8 +2673,8 @@
 	                    block.dataset.parentSection = parentMeta?.parentSection || 'root';
 	                    
 	                    // Get IF condition parameters
-	                    const input = node.action.params?.Input || node.action.params?.WFInput || '{{VARIABLE}}';
-                    const compareTo = node.action.params?.CompareTo || node.action.params?.WFConditionalActionString || '{{STRING}}';
+	                    const input = node.action.params?.Input ?? node.action.params?.WFInput ?? (editMode ? '{{VARIABLE}}' : '');
+                    const compareTo = node.action.params?.CompareTo ?? node.action.params?.WFConditionalActionString ?? (editMode ? '{{STRING}}' : '');
                     const conditionMeta = resolveConditionOptions(node.action, node.action.params?.Condition || node.action.params?.WFCondition || DEFAULT_CONDITION_OPTIONS);
                     const unaryCondition = isUnaryCondition(conditionMeta.selected);
                     const conditionInputHtml = editMode
@@ -2719,7 +2765,8 @@
                     
                     let repeatHeaderHtml = '';
                     if (isRepeatWithEach || repeatItems) {
-                        const itemsInputHtml = editMode ? getInputForType(node.action.id, 'Items', repeatItems || '{{VARIABLE}}', false) : `<span class="repeat-value">${formatLinkedValue(repeatItems || '')}</span>`;
+                        const itemsValue = editMode ? (repeatItems || '{{VARIABLE}}') : repeatItems;
+                        const itemsInputHtml = editMode ? getInputForType(node.action.id, 'Items', itemsValue, false) : `<span class="repeat-value">${formatLinkedValue(itemsValue || '')}</span>`;
                         repeatHeaderHtml = `
                             <div class="repeat-condition-line">
                                 <span class="repeat-label">Repeat with each item in</span>
@@ -2727,7 +2774,8 @@
                             </div>
                         `;
                     } else if (repeatCount) {
-                        const countInputHtml = editMode ? getInputForType(node.action.id, 'Count', repeatCount, false) : `<span class="repeat-value">${formatLinkedValue(repeatCount)}</span>`;
+                        const countValue = editMode ? repeatCount : repeatCount;
+                        const countInputHtml = editMode ? getInputForType(node.action.id, 'Count', countValue, false) : `<span class="repeat-value">${formatLinkedValue(countValue)}</span>`;
                         repeatHeaderHtml = `
                             <div class="repeat-condition-line">
                                 <span class="repeat-label">Repeat</span>
@@ -2736,7 +2784,8 @@
                             </div>
                         `;
                     } else {
-                        const countInputHtml = editMode ? getInputForType(node.action.id, 'Count', '{{NUMBER}}', false) : '<span class="repeat-value">(configure)</span>';
+                        const countValue = editMode ? '{{NUMBER}}' : '';
+                        const countInputHtml = editMode ? getInputForType(node.action.id, 'Count', countValue, false) : `<span class="repeat-value">${formatLinkedValue(countValue)}</span>`;
                         repeatHeaderHtml = `
                             <div class="repeat-condition-line">
                                 <span class="repeat-label">Repeat</span>
@@ -2812,7 +2861,7 @@
                     }
                     // Always show params in edit mode, or if they have a non-placeholder value in view mode
                     const strVal = String(value ?? '');
-                    const isPlaceholder = strVal.startsWith('{{') && strVal.endsWith('}}');
+                    const isPlaceholder = isStandardPlaceholderToken(strVal);
                     const displayValue = strVal;
                     // Show if edit mode OR (has value AND not a placeholder)
                     if (editMode || (displayValue && !isPlaceholder)) {
@@ -3047,6 +3096,19 @@
             return String(name).replace(/^!id:/i, '').replace(/^!link:/i, '').trim() || 'Output';
         }
 
+        const BUILTIN_OUTPUT_LABELS = new Map([
+            ['repeatitem', 'Repeat Item'],
+            ['repeatindex', 'Repeat Index'],
+            ['repeatcount', 'Repeat Count'],
+        ]);
+
+        function resolveBuiltinOutputLabel(raw) {
+            const normalized = normalizeIdLabel(raw);
+            if (!normalized) return '';
+            const key = normalized.replace(/\s+/g, '').toLowerCase();
+            return BUILTIN_OUTPUT_LABELS.get(key) || '';
+        }
+
         function formatLinkedValue(value) {
             if (!value) return '';
             if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -3057,6 +3119,9 @@
             }
             const strVal = String(value);
             const trimmedVal = strVal.trim();
+            if (isStandardPlaceholderToken(trimmedVal)) {
+                return '';
+            }
             if (isIdToken(trimmedVal) || /^!link:[^\s]+$/i.test(trimmedVal)) {
                 const linkLabel = normalizeIdLabel(trimmedVal);
                 const resolvedName =
@@ -3065,16 +3130,21 @@
                     linkLabel;
                 return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(resolvedName))}</span>`;
             }
+            if (/^!var:/i.test(trimmedVal)) {
+                const varLabel = normalizeVarLabel(trimmedVal);
+                return varLabel ? `<span class="linked-value-inline">${escapeHtml(varLabel)}</span>` : '';
+            }
             // Check for variables like {{Ask Each Time}}, {{Clipboard}}, etc.
             const variableMatch = strVal.match(/^\{\{([^}]+)\}\}$/);
             if (variableMatch) {
                 const varName = variableMatch[1].trim();
+                if (isStandardPlaceholderToken(`{{${varName}}}`)) return '';
                 return `<span class="linked-value-inline">${escapeHtml(varName)}</span>`;
             }
             // Check if value contains !ID: tokens mixed with text
-            if (strVal.toLowerCase().includes('!id:') || strVal.toLowerCase().includes('!link:')) {
+            if (strVal.toLowerCase().includes('!id:') || strVal.toLowerCase().includes('!link:') || strVal.toLowerCase().includes('!var:')) {
                 // Parse mixed content
-                const parts = strVal.split(/(!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+)/gi);
+                const parts = strVal.split(/(!id:(?:\{\{[^}]+?\}\}|[^\s]+)|!link:[^\s]+|!var:(?:\{\{[^}]+?\}\}|[^\s]+)/gi);
                 return parts.map(part => {
                     if (part.toLowerCase().startsWith('!id:') || part.toLowerCase().startsWith('!link:')) {
                         const linkLabel = normalizeIdLabel(part);
@@ -3084,13 +3154,21 @@
                             linkLabel;
                         return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(resolvedName))}</span>`;
                     }
+                    if (part.toLowerCase().startsWith('!var:')) {
+                        const varLabel = normalizeVarLabel(part);
+                        return varLabel ? `<span class="linked-value-inline">${escapeHtml(varLabel)}</span>` : '';
+                    }
                     // Also check for {{variable}} patterns in mixed content
                     const varMatch = part.match(/\{\{([^}]+)\}\}/g);
                     if (varMatch) {
                         let result = part;
                         varMatch.forEach(match => {
                             const varName = match.replace(/\{\{|\}\}/g, '').trim();
-                            result = result.replace(match, `<span class="linked-value-inline">${escapeHtml(varName)}</span>`);
+                            if (isStandardPlaceholderToken(match)) {
+                                result = result.replace(match, '');
+                            } else {
+                                result = result.replace(match, `<span class="linked-value-inline">${escapeHtml(varName)}</span>`);
+                            }
                         });
                         return result;
                     }
@@ -3100,6 +3178,7 @@
             // Check for {{variable}} patterns in the string
             if (strVal.includes('{{') && strVal.includes('}}')) {
                 return strVal.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
+                    if (isStandardPlaceholderToken(match)) return '';
                     return `<span class="linked-value-inline">${escapeHtml(varName.trim())}</span>`;
                 });
             }
@@ -4341,7 +4420,7 @@
             container.innerHTML = forcedActions.map(a => `
                 <div class="forced-action-pill">
                     <span title="${escapeHtml(a.action)}">${escapeHtml(formatActionNameForUI(a.action))}</span>
-                    <button onclick="removeForcedAction(${escapeHtml(JSON.stringify(String(a.action)) )})">&times;</button>
+                    <button onclick="removeForcedAction('${escapeJsString(a.action)}')">&times;</button>
                 </div>
             `).join('');
         }
@@ -4393,6 +4472,7 @@
 
             // Build dynamic menu with linkable actions
             let menuHtml = '<div class="context-menu-header">Insert Variable</div>';
+            let hasItems = false;
             currentActions = ensureActionUUIDs(currentActions);
             rebuildOutputNameIndex();
 
@@ -4401,10 +4481,20 @@
             const flatActions = flattenActions();
             const currentIndex = flatActions.findIndex(a => a.id === currentActionId);
             const previousActions = currentIndex > 0 ? flatActions.slice(0, currentIndex) : [];
+            const repeatOptions = getRepeatVariableOptions(currentActionId);
+            if (repeatOptions.length > 0) {
+                hasItems = true;
+                menuHtml += '<div class="context-menu-divider"></div>';
+                menuHtml += '<div class="context-menu-header">Repeat Variables</div>';
+                repeatOptions.forEach(opt => {
+                    menuHtml += `<div class="context-menu-item" data-token="${escapeAttr(opt.value)}">↻ ${escapeHtml(opt.label)}</div>`;
+                });
+            }
 	            const linkableActions = previousActions
 	                .map(a => ({ action: a, output: getActionOutputInfo(a) }))
 	                .filter(entry => entry.output && actionHasLinkableOutput(entry.action));
             if (linkableActions.length > 0) {
+                hasItems = true;
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-header">Link to Action</div>';
                 linkableActions.forEach(({ action: a, output }) => {
@@ -4413,7 +4503,7 @@
                     const safeLabel = escapeHtml(label).replace(/\"/g, '&quot;');
                     menuHtml += `<div class="context-menu-item" data-source-id="${a.id}" data-source-uuid="${uuid || ''}" data-source-label="${safeLabel}">🔗 ${escapeHtml(label)}</div>`;
                 });
-            } else {
+            } else if (!hasItems) {
                 menuHtml += '<div class="context-menu-divider"></div>';
                 menuHtml += '<div class="context-menu-item context-menu-item-empty">No variables</div>';
             }
@@ -4449,6 +4539,14 @@
                 item.addEventListener('click', () => {
                     const sourceId = parseInt(item.getAttribute('data-source-id'));
                     linkActionParam(currentActionId, inputEl.dataset.param, sourceId, item.getAttribute('data-source-uuid'), item.getAttribute('data-source-label'));
+                });
+            });
+
+            const tokenItems = menu.querySelectorAll('[data-token]');
+            tokenItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const token = item.getAttribute('data-token');
+                    applyTokenToContextTarget(token);
                 });
             });
 
@@ -4517,23 +4615,42 @@
             });
         }
 
-        function insertVariable(varName) {
-            if (!contextMenuTarget) return;
-            const varText = formatIdToken(varName);
-            if (!varText) return;
-            if (isRichInputElement(contextMenuTarget)) {
-                insertTokenIntoRichInput(contextMenuTarget, varText);
-                normalizeRichInputDisplay(contextMenuTarget);
-            } else {
-                const start = contextMenuTarget.selectionStart || contextMenuTarget.value.length;
-                const end = contextMenuTarget.selectionEnd || contextMenuTarget.value.length;
-                const text = contextMenuTarget.value;
-                contextMenuTarget.value = text.slice(0, start) + varText + text.slice(end);
-                contextMenuTarget.focus();
-                contextMenuTarget.setSelectionRange(start + varText.length, start + varText.length);
-                contextMenuTarget.dispatchEvent(new Event('change'));
+        function applyTokenToContextTarget(token) {
+            if (!contextMenuTarget || !token) return;
+            const actionId = parseInt(contextMenuTarget.dataset.actionId);
+            const paramKey = contextMenuTarget.dataset.param;
+            if (contextMenuTarget.classList?.contains('param-variable-select')) {
+                contextMenuTarget.value = token;
+                handleVariableSelectChange(contextMenuTarget);
+                document.getElementById('variable-context-menu')?.classList.remove('active');
+                return;
+            }
+            if (paramKeySupportsInlineLinks(paramKey)) {
+                if (isRichInputElement(contextMenuTarget)) {
+                    insertTokenIntoRichInput(contextMenuTarget, token);
+                    normalizeRichInputDisplay(contextMenuTarget);
+                } else if (typeof contextMenuTarget.value === 'string') {
+                    const start = contextMenuTarget.selectionStart || contextMenuTarget.value.length;
+                    const end = contextMenuTarget.selectionEnd || contextMenuTarget.value.length;
+                    const text = contextMenuTarget.value;
+                    contextMenuTarget.value = text.slice(0, start) + token + text.slice(end);
+                    contextMenuTarget.focus();
+                    contextMenuTarget.setSelectionRange(start + token.length, start + token.length);
+                    contextMenuTarget.dispatchEvent(new Event('change'));
+                }
+                document.getElementById('variable-context-menu')?.classList.remove('active');
+                return;
+            }
+            if (Number.isFinite(actionId) && paramKey) {
+                updateActionParam(actionId, paramKey, token);
             }
             document.getElementById('variable-context-menu')?.classList.remove('active');
+        }
+
+        function insertVariable(varName) {
+            const varText = formatIdToken(varName);
+            if (!varText) return;
+            applyTokenToContextTarget(varText);
         }
 
 	        function linkActionParam(targetId, paramKey, sourceId, sourceUuid, sourceLabel) {
