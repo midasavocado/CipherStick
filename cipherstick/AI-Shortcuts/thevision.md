@@ -33,3 +33,24 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Backend now sends incremental `partial_program` updates during generation.
 -   **Failed**: None.
 -   **Changes**: Updated `/secrets/src/index.js` to stream build content, throttle partial parsing, and fall back to non-streaming on failure.
+
+### 2025-12-27 05:04PM
+-   **Tried**: Removed the auto-injected “I'm building your shortcut now…” message.
+-   **Errors**: None observed during edits.
+-   **Worked**: No unsolicited intro message appears before streaming updates.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js` to remove the timed message injection during generation.
+
+### 2025-12-27 05:08PM
+-   **Tried**: Render streamed partial programs using real action nodes instead of placeholder cards.
+-   **Errors**: None observed during edits.
+-   **Worked**: Streaming preview now matches the actual visualization layout.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js` streaming renderer and added streaming styles for action nodes in `css/pages/app.css`.
+
+### 2025-12-27 05:18PM
+-   **Tried**: Added a top-level toggle to skip action selection and send the full template catalog to the model.
+-   **Errors**: None observed during edits.
+-   **Worked**: Planner step can be bypassed and all templates are included in the build payload.
+-   **Failed**: None.
+-   **Changes**: Updated `/secrets/src/index.js` with `USE_ALL_TEMPLATES` toggle and adjusted search hints for full-catalog mode.

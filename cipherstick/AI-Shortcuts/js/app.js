@@ -2456,15 +2456,7 @@ async function callGenerateAPI(userPrompt) {
     // Actually, let's just do it slightly after calling the API, or mock it locally.
     // User asked: "After the first animation orb action triggers... send 1-2 short paragraphs"
 
-    if (historyCount <= 1 && !isDiscussionMode) {
-        // Send a reassuring message immediately (or slight delay) *before* the actual code generation finishes?
-        // Or should it come from the model?
-        // "The AI should send... saying something like 'I'm building...'"
-        // If we want it to be separate from the big code block, we can fake it here.
-        setTimeout(() => {
-            addMessageToUI("I'm building your shortcut now. I understand you want to automate this task, so I'll structure the workflow to handle inputs efficiently and ensure compatibility with your device.", 'assistant');
-        }, 1500);
-    }
+    // Removed auto-intro message injection; rely on real stream updates instead.
 
     try {
         const rawPlan = getStoredValue('plan') || 'free';
@@ -2663,50 +2655,41 @@ function renderPartialProgram(actions, isComplete) {
     if (emptyState) emptyState.classList.add('hidden');
     container.classList.remove('hidden');
 
-    // Build temporary actions for preview
-    const tempActions = actions.map((act, i) => ({
-        id: `streaming_${i}`,
-        action: act.action || 'Unknown',
-        title: act.action || 'Action',
-        params: act.params || {},
-        then: act.then,
-        else: act.else,
-        do: act.do,
-        _streaming: !isComplete  // Mark as streaming for visual effect
-    }));
-
-    // Render with streaming visual indicator
-    renderStreamingActions(tempActions, isComplete);
+    const tempActions = cloneActionsForStreaming(actions);
+    const normalized = normalizeControlFlowToNested(ensureActionUUIDs(tempActions));
+    renderStreamingActionNodes(normalized, isComplete);
 }
 
-function renderStreamingActions(actions, isComplete) {
+function cloneActionsForStreaming(actions) {
+    if (!Array.isArray(actions)) return [];
+    if (typeof structuredClone === 'function') {
+        try {
+            return structuredClone(actions);
+        } catch { }
+    }
+    try {
+        return JSON.parse(JSON.stringify(actions));
+    } catch {
+        return actions.map(act => ({ ...act }));
+    }
+}
+
+function renderStreamingActionNodes(actions, isComplete) {
     const container = document.getElementById('actions-container');
     if (!container) return;
 
     // Clear and re-render
     container.innerHTML = '';
 
-    actions.forEach((action, index) => {
-        const card = document.createElement('div');
-        card.className = 'action-card' + (action._streaming ? ' streaming' : '');
-        card.id = `action-${action.id}`;
+    const tree = buildActionTree(actions);
+    renderNodeList(tree, container, true);
 
-        // Add streaming animation class for last item if not complete
-        if (!isComplete && index === actions.length - 1) {
-            card.classList.add('action-building');
-        }
+    const streamingNodes = container.querySelectorAll('.action-node, .if-block, .repeat-block');
+    streamingNodes.forEach(node => node.classList.add('streaming'));
 
-        const title = action.action || action.title || 'Unknown Action';
-        card.innerHTML = `
-                    <div class="action-header">
-                        <span class="action-icon">${getActionIcon(title)}</span>
-                        <span class="action-title">${escapeHtml(title)}</span>
-                        ${!isComplete ? '<span class="streaming-indicator"></span>' : ''}
-                    </div>
-                `;
-
-        container.appendChild(card);
-    });
+    if (!isComplete && container.lastElementChild) {
+        container.lastElementChild.classList.add('action-building');
+    }
 
     // Scroll to show latest action
     if (!isComplete && container.lastElementChild) {

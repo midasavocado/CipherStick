@@ -2817,13 +2817,19 @@ body.no-animations *::after {
 }
 
 /* --- Streaming Build Animation --- */
-.action-card.streaming {
+.action-card.streaming,
+.action-node.streaming,
+.if-block.streaming,
+.repeat-block.streaming {
     opacity: 0.85;
     border-color: var(--primary-color);
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
-.action-card.action-building {
+.action-card.action-building,
+.action-node.action-building,
+.if-block.action-building,
+.repeat-block.action-building {
     animation: actionBuildPulse 1.2s ease-in-out infinite;
     border-color: var(--primary-color);
     background: linear-gradient(135deg, var(--surface-color), rgba(59, 130, 246, 0.08));
