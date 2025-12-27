@@ -64,6 +64,12 @@ let richInputSelection = null;
 let tutorialStep = 0;
 let hasCompletedTutorial = getStoredValue('tutorial_done') === 'true';
 const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Value/Contains/Does Not Contain/Begins With/Ends With/Is Greater Than/Is Greater Than Or Equal To/Is Less Than/Is Less Than Or Equal To';
+let liveHintTimer = null;
+let liveHintIndex = 0;
+let liveHintLockUntil = 0;
+let liveBuildTimer = null;
+let liveBuildHasRealData = false;
+let liveBuildCount = 0;
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', () => {
@@ -2320,6 +2326,96 @@ function updateMarkdownPreview() {
     }
 }
 
+const LIVE_HINTS = [
+    'Reading your request...',
+    'Mapping actions to steps...',
+    'Drafting the workflow...',
+    'Linking inputs and outputs...',
+    'Validating the build...'
+];
+
+const LIVE_BUILD_PLACEHOLDERS = [
+    'Drafting first action...',
+    'Choosing inputs...',
+    'Adding logic...',
+    'Connecting outputs...',
+    'Tuning parameters...',
+    'Validating flow...',
+    'Optimizing steps...',
+    'Final pass...',
+    'Stitching actions...',
+    'Wrapping up...'
+];
+
+const LIVE_HINT_TICK_MS = 1200;
+const LIVE_BUILD_TICK_MS = 900;
+const LIVE_BUILD_MAX = 16;
+
+function setPipelineHint(text) {
+    const hintEl = document.getElementById('pipeline-orbs-hint');
+    if (hintEl && text) hintEl.textContent = text;
+}
+
+function setLiveHint(text, lockMs = 2500) {
+    if (!text) return;
+    setPipelineHint(text);
+    liveHintLockUntil = Date.now() + Math.max(0, lockMs);
+}
+
+function startLiveHintTicker() {
+    stopLiveHintTicker();
+    liveHintIndex = 0;
+    liveHintLockUntil = 0;
+    if (!LIVE_HINTS.length) return;
+    setPipelineHint(LIVE_HINTS[0]);
+    liveHintTimer = setInterval(() => {
+        if (Date.now() < liveHintLockUntil) return;
+        const hint = LIVE_HINTS[liveHintIndex % LIVE_HINTS.length];
+        setPipelineHint(hint);
+        liveHintIndex += 1;
+    }, LIVE_HINT_TICK_MS);
+}
+
+function stopLiveHintTicker() {
+    if (liveHintTimer) {
+        clearInterval(liveHintTimer);
+        liveHintTimer = null;
+    }
+    liveHintLockUntil = 0;
+}
+
+function startLiveBuildSkeleton() {
+    stopLiveBuildSkeleton();
+    liveBuildHasRealData = false;
+    liveBuildCount = 0;
+    liveBuildTimer = setInterval(() => {
+        if (liveBuildHasRealData) return;
+        liveBuildCount = Math.min(liveBuildCount + 1, LIVE_BUILD_MAX);
+        const actions = Array.from({ length: liveBuildCount }, (_, i) => ({
+            action: LIVE_BUILD_PLACEHOLDERS[i] || 'Building next step...'
+        }));
+        renderPartialProgram(actions, false);
+        if (liveBuildCount >= LIVE_BUILD_MAX) {
+            stopLiveBuildSkeleton();
+        }
+    }, LIVE_BUILD_TICK_MS);
+}
+
+function stopLiveBuildSkeleton() {
+    if (liveBuildTimer) {
+        clearInterval(liveBuildTimer);
+        liveBuildTimer = null;
+    }
+}
+
+function safeParseJson(text) {
+    try {
+        return JSON.parse(text);
+    } catch {
+        return null;
+    }
+}
+
 // ============ AI API ============
 function buildProgramPreviewActions(actions = currentActions) {
     if (!Array.isArray(actions)) return [];
@@ -2347,7 +2443,11 @@ async function callGenerateAPI(userPrompt) {
     isGenerating = true;
     document.body.classList.add('is-generating'); // Mobile override trigger
     const isDiscussionMode = chatMode === 'discussion';
-    if (!isDiscussionMode) showPipelineOrbs();
+    if (!isDiscussionMode) {
+        showPipelineOrbs();
+        startLiveHintTicker();
+        startLiveBuildSkeleton();
+    }
     showTypingIndicator();
 
     // Auto-Intro logic: if this is the very first generation for a new project
@@ -2424,6 +2524,7 @@ async function callGenerateAPI(userPrompt) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
+        let sseBuffer = '';
         let finalData = null;
 
         while (true) {
@@ -2434,15 +2535,37 @@ async function callGenerateAPI(userPrompt) {
             buffer = lines.pop() || '';
 
             for (const line of lines) {
-                if (!line.trim() || !line.trim().startsWith('{')) continue;
-                try {
-                    const packet = JSON.parse(line);
-                    console.log('[AI stream]', packet);
-                    handleStreamPacket(packet);
-                    if (packet.type === 'final' || packet.type === 'error') {
-                        finalData = packet;
+                const trimmed = line.trim();
+                if (!trimmed) {
+                    sseBuffer = '';
+                    continue;
+                }
+                if (trimmed.startsWith('event:') || trimmed.startsWith('id:')) continue;
+                if (trimmed.startsWith('data:')) {
+                    const chunk = trimmed.replace(/^data:\s*/, '');
+                    if (!chunk || chunk === '[DONE]') continue;
+                    const candidate = sseBuffer + chunk;
+                    const packet = safeParseJson(candidate);
+                    if (packet) {
+                        sseBuffer = '';
+                        console.log('[AI stream]', packet);
+                        handleStreamPacket(packet);
+                        if (packet.type === 'final' || packet.type === 'error') {
+                            finalData = packet;
+                        }
+                    } else {
+                        sseBuffer = candidate;
                     }
-                } catch (e) { console.warn('Parse error:', e); }
+                    continue;
+                }
+                if (!trimmed.startsWith('{')) continue;
+                const packet = safeParseJson(trimmed);
+                if (!packet) continue;
+                console.log('[AI stream]', packet);
+                handleStreamPacket(packet);
+                if (packet.type === 'final' || packet.type === 'error') {
+                    finalData = packet;
+                }
             }
         }
 
@@ -2465,13 +2588,24 @@ async function callGenerateAPI(userPrompt) {
 }
 
 function handleStreamPacket(packet) {
+    if (!packet || typeof packet !== 'object') return;
+    if (typeof packet.hint === 'string' && packet.hint.trim()) {
+        setLiveHint(packet.hint, 3500);
+    }
     // Ignore heartbeats - they're just for keeping connection alive
     if (packet.type === 'heartbeat') {
         return;
     }
 
+    if (packet.type === 'status' && typeof packet.message === 'string') {
+        setLiveHint(packet.message, 3000);
+    }
+
     if (packet.type === 'progress') {
         updatePipelineProgress(packet.step, packet.status, packet.hint);
+        if (typeof packet.hint === 'string' && packet.hint.trim()) {
+            setLiveHint(packet.hint, 4000);
+        }
 
         // Update progress percentage if available
         if (typeof packet.percent === 'number') {
@@ -2480,8 +2614,17 @@ function handleStreamPacket(packet) {
     }
 
     // Live build visualization - render partial program as it streams
-    if (packet.type === 'partial_program' && animationsEnabled) {
-        renderPartialProgram(packet.actions, packet.complete);
+    if (packet.type === 'partial_program') {
+        const actions = Array.isArray(packet.actions)
+            ? packet.actions
+            : Array.isArray(packet.program?.actions)
+                ? packet.program.actions
+                : null;
+        if (actions) {
+            liveBuildHasRealData = true;
+            stopLiveBuildSkeleton();
+            renderPartialProgram(actions, packet.complete);
+        }
     }
 
     // Handle cancellation
@@ -2509,7 +2652,6 @@ function updateProgressPercent(percent) {
  */
 function renderPartialProgram(actions, isComplete) {
     if (!actions || !Array.isArray(actions)) return;
-    if (!animationsEnabled) return;
 
     // Only update if we have more actions than before
     const container = document.getElementById('actions-container');
@@ -4591,10 +4733,9 @@ function updatePipelineOrb(step, status, hint = '') {
     if (status === 'started') orb.classList.add('active');
     else if (status === 'completed') orb.classList.add('completed');
 
-    const hintEl = document.getElementById('pipeline-orbs-hint');
-    if (hintEl && (status === 'started' || hint)) {
+    if (status === 'started' || hint) {
         const state = status === 'completed' ? 'completed' : status === 'started' ? 'active' : 'idle';
-        hintEl.textContent = hint || getDefaultHint(step, state);
+        setPipelineHint(hint || getDefaultHint(step, state));
     }
 }
 
@@ -4613,6 +4754,8 @@ function removePipelineOrbs() {
         pipelineStepCompleteTimers.forEach((t) => { try { clearTimeout(t); } catch (e) { } });
         pipelineStepCompleteTimers.clear();
     }
+    stopLiveHintTicker();
+    stopLiveBuildSkeleton();
     document.getElementById('pipeline-orbs')?.remove();
 }
 
