@@ -117,3 +117,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Mixed-text expressions beginning with `!ID:` no longer get blanked during final render.
 -   **Failed**: None.
 -   **Changes**: Updated `js/app.js` to tighten link-token detection in `pruneMissingOutputLinks`.
+
+### 2025-12-27 06:28PM
+-   **Tried**: Removed the example shortcut line in the clarification prompt.
+-   **Errors**: None observed during edits.
+-   **Worked**: Clarification prompt no longer includes the example shortcut string.
+-   **Failed**: None.
+-   **Changes**: Commented out the example line in `/secrets/src/index.js`.
