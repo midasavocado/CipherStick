@@ -88,4 +88,25 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Errors**: None observed during edits.
 -   **Worked**: Full-catalog mode now shows “Examining templates” and Choose From Menu renders like a control block with cases.
 -   **Failed**: None.
--   **Changes**: Updated `/secrets/src/index.js`, `js/app.js`, and `css/pages/app.css`.
+-   **Changes**: Updated `/secrets/src/index.js` and `js/app.js`.
+
+### 2025-12-27 05:49PM
+-   **Tried**: Ensured Add Action opens in edit mode so it behaves like “Add Action,” not “Force Action.”
+-   **Errors**: None observed during edits.
+-   **Worked**: Clicking Add Action now toggles edit mode first.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-27 06:01PM
+-   **Tried**: Tuned summary formatting, fixed action modal modes, and smoothed full-catalog orb sequencing.
+-   **Errors**: None observed during edits.
+-   **Worked**: Summaries prefer markdown bullets; Add Action now always adds to the end while Force Action always forces; full-catalog orbs no longer advance at the same instant.
+-   **Failed**: None.
+-   **Changes**: Updated `/secrets/src/index.js` and `js/app.js`.
+
+### 2025-12-27 06:02PM
+-   **Tried**: Clarified ChooseFromMenu vs List.ChooseFrom and refined action labels.
+-   **Errors**: None observed during edits.
+-   **Worked**: Menu vs list selection is disambiguated in prompts and UI labels.
+-   **Failed**: None.
+-   **Changes**: Updated `/secrets/src/index.js` and `js/app.js`.

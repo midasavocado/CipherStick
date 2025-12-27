@@ -132,7 +132,7 @@ function initEventListeners() {
     document.getElementById('send-btn')?.addEventListener('click', handleSend);
 
     // Preview Toolbar
-    document.getElementById('add-action-btn')?.addEventListener('click', openForceActionModal);
+    document.getElementById('add-action-btn')?.addEventListener('click', handleAddActionClick);
     document.getElementById('edit-btn')?.addEventListener('click', toggleEditMode);
 
     // Download Options
@@ -181,6 +181,13 @@ function initEventListeners() {
     });
 
     updateUndoRedoButtons();
+}
+
+function handleAddActionClick() {
+    if (!editMode) {
+        toggleEditMode();
+    }
+    openAddActionModal();
 }
 
 function initTheme() {
@@ -1926,6 +1933,8 @@ function normalizeActionKey(raw) {
 }
 
 const ACTION_LABEL_OVERRIDES = new Map([
+    ['choosefrommenu', 'Choose From Menu'],
+    ['list.choosefrom', 'Choose From List'],
     ['getcurrentapp', 'Get Current App'],
     ['getfoldercontents', 'Get Folder Contents'],
     ['file.getfoldercontents', 'Get Folder Contents'],
@@ -4336,17 +4345,26 @@ async function loadTemplates() {
     } catch (e) { console.error('Failed to load templates:', e); }
 }
 
-function openForceActionModal() {
+function openActionModal(mode = 'force') {
+    actionModalMode = mode === 'add' ? 'add' : 'force';
     document.getElementById('plus-menu')?.classList.remove('active');
     document.getElementById('plus-menu-btn')?.classList.remove('active');
     const titleEl = document.getElementById('force-action-modal-title');
-    if (titleEl) titleEl.textContent = editMode ? 'Add Action' : 'Force Action';
+    if (titleEl) titleEl.textContent = actionModalMode === 'add' ? 'Add Action' : 'Force Action';
     document.getElementById('force-action-modal').classList.add('active');
     renderActionsList();
     const searchInput = document.getElementById('action-search');
     searchInput.value = '';
     searchInput.focus();
     searchInput.oninput = () => renderActionsList(searchInput.value);
+}
+
+function openForceActionModal() {
+    openActionModal('force');
+}
+
+function openAddActionModal() {
+    openActionModal('add');
 }
 
 function closeForceActionModal() {
@@ -4366,7 +4384,7 @@ function renderActionsList(filter = '') {
         item.style.cssText = 'padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;';
         item.innerHTML = `<div class="node-icon" style="width:32px;height:32px;">${getActionIcon(t.action)}</div><span>${escapeHtml(t.label || t.action)}</span>`;
         item.onclick = () => {
-            if (editMode) {
+            if (actionModalMode === 'add') {
                 addActionDirectly(t);
             } else {
                 addForcedAction(t);
@@ -4376,6 +4394,7 @@ function renderActionsList(filter = '') {
     });
 }
 
+let actionModalMode = 'force';
 let placementMode = false;
 let pendingAction = null;
 let placementCursor = null;
