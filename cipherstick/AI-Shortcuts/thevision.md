@@ -54,3 +54,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Planner step can be bypassed and all templates are included in the build payload.
 -   **Failed**: None.
 -   **Changes**: Updated `/secrets/src/index.js` with `USE_ALL_TEMPLATES` toggle and adjusted search hints for full-catalog mode.
+
+### 2025-12-27 05:22PM
+-   **Tried**: Added a backend UI signal for full-catalog mode and a front-end pipeline animation variant.
+-   **Errors**: None observed during edits.
+-   **Worked**: Full-catalog runs can toggle enhanced orb animations on the client.
+-   **Failed**: None.
+-   **Changes**: Updated `/secrets/src/index.js` to emit `ui` packets and `js/app.js`/`css/pages/app.css` to apply the full-catalog orb style.

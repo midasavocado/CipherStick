@@ -70,6 +70,7 @@ let liveHintLockUntil = 0;
 let liveBuildTimer = null;
 let liveBuildHasRealData = false;
 let liveBuildCount = 0;
+let pipelineMode = 'default';
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', () => {
@@ -2326,6 +2327,14 @@ function updateMarkdownPreview() {
     }
 }
 
+function setPipelineMode(mode) {
+    pipelineMode = mode || 'default';
+    const orbs = document.getElementById('pipeline-orbs');
+    if (orbs) {
+        orbs.classList.toggle('full-catalog', pipelineMode === 'full_catalog');
+    }
+}
+
 const LIVE_HINTS = [
     'Reading your request...',
     'Mapping actions to steps...',
@@ -2581,6 +2590,9 @@ async function callGenerateAPI(userPrompt) {
 
 function handleStreamPacket(packet) {
     if (!packet || typeof packet !== 'object') return;
+    if (packet.type === 'ui' && typeof packet.pipelineMode === 'string') {
+        setPipelineMode(packet.pipelineMode);
+    }
     if (typeof packet.hint === 'string' && packet.hint.trim()) {
         setLiveHint(packet.hint, 3500);
     }
@@ -4692,6 +4704,9 @@ function showPipelineOrbs() {
     const orbsDiv = document.createElement('div');
     orbsDiv.id = 'pipeline-orbs';
     orbsDiv.className = 'pipeline-orbs';
+    if (pipelineMode === 'full_catalog') {
+        orbsDiv.classList.add('full-catalog');
+    }
     orbsDiv.innerHTML = `
 	                <div class="pipeline-orbs-row" role="group" aria-label="Generation progress">
 	                    ${PIPELINE_STEPS.map((step, idx) => `

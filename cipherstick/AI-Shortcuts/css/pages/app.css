@@ -320,6 +320,26 @@
     transition: all 0.3s ease;
 }
 
+.pipeline-orbs.full-catalog .orb-line {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.55), rgba(59, 130, 246, 0.2));
+    background-size: 200% 100%;
+    animation: orbLineFlow 1.4s linear infinite;
+    opacity: 0.6;
+}
+
+.pipeline-orbs.full-catalog .orb.active {
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.35), 0 0 70px rgba(59, 130, 246, 0.3);
+}
+
+@keyframes orbLineFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
 .orb.completed+.orb-line {
     opacity: 0.6;
 }
