@@ -75,3 +75,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Full-catalog mode now uses the bundled full template set without subrequests.
 -   **Failed**: None.
 -   **Changes**: Added `/secrets/src/AllTemplates.js`, removed `/secrets/src/templates.summary.js`, and updated `/secrets/src/index.js` to use the new bundle.
+
+### 2025-12-27 05:40PM
+-   **Tried**: Shortened summary outputs and removed fake streaming visuals in the preview.
+-   **Errors**: None observed during edits.
+-   **Worked**: Summaries are limited to short paragraphs and the preview only updates when real actions stream.
+-   **Failed**: None.
+-   **Changes**: Updated `/secrets/src/index.js` summary prompt/creativity rules, trimmed the AllTemplates bundle usage, and updated `js/app.js` to stop live hint/build tickers.
+
+### 2025-12-27 05:45PM
+-   **Tried**: Simplified full-catalog progress hints and added a menu-case visualizer layout.
+-   **Errors**: None observed during edits.
+-   **Worked**: Full-catalog mode now shows “Examining templates” and Choose From Menu renders like a control block with cases.
+-   **Failed**: None.
+-   **Changes**: Updated `/secrets/src/index.js`, `js/app.js`, and `css/pages/app.css`.

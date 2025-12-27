@@ -2454,8 +2454,6 @@ async function callGenerateAPI(userPrompt) {
     const isDiscussionMode = chatMode === 'discussion';
     if (!isDiscussionMode) {
         showPipelineOrbs();
-        startLiveHintTicker();
-        startLiveBuildSkeleton();
     }
     showTypingIndicator();
 
@@ -3174,6 +3172,75 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
                     renderNodeList(node.children, body, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: 'do' });
                 }
             }
+            container.appendChild(block);
+        } else if (node.type === 'menu') {
+            const block = document.createElement('div');
+            block.className = 'menu-block';
+            block.dataset.actionId = node.action.id;
+            block.dataset.id = node.action.id;
+            block.dataset.parentId = parentMeta?.parentActionId || '';
+            block.dataset.parentSection = parentMeta?.parentSection || 'root';
+
+            const promptRaw = node.action.params?.Prompt ?? node.action.params?.WFMenuPrompt ?? '';
+            const promptValue = editMode ? (promptRaw || '{{STRING}}') : promptRaw;
+            const promptHtml = promptValue
+                ? (editMode
+                    ? getInputForType(node.action.id, 'Prompt', promptValue, false)
+                    : `<span class="menu-value">${formatLinkedValue(promptValue)}</span>`)
+                : '';
+
+            const actionsHtml = editMode ? `
+                        <div class="control-actions">
+                            ${buildIdPillHtml(node.action.id)}
+                            <button class="node-action-btn" onclick="duplicateAction(${node.action.id})" title="Duplicate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                            <button class="node-action-btn delete" onclick="deleteAction(${node.action.id})" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        </div>
+                    ` : '';
+
+            const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
+
+            block.innerHTML = `
+	                        <div class="menu-header">
+	                            ${dragHandle}
+	                            <div class="menu-title-line">
+	                                <span class="menu-label">Choose From Menu</span>
+                                    ${promptHtml ? `<span class="menu-prompt">Prompt</span>${promptHtml}` : ''}
+	                            </div>
+                                ${actionsHtml}
+	                        </div>
+                            <div class="menu-cases"></div>
+                            <div class="menu-end">End Menu</div>
+                        `;
+
+            const casesWrap = block.querySelector('.menu-cases');
+            const cases = Array.isArray(node.cases) ? node.cases : [];
+            const dropZoneClass = editMode ? 'drop-zone' : '';
+
+            cases.forEach((menuCase, caseIndex) => {
+                const caseTitle = menuCase?.title || `Option ${caseIndex + 1}`;
+                const caseEmpty = (!menuCase?.children || menuCase.children.length === 0);
+                const emptyHint = caseEmpty && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
+                const caseEl = document.createElement('div');
+                caseEl.className = 'menu-case';
+                caseEl.innerHTML = `
+                            <div class="menu-case-title">
+                                <span class="menu-case-label">Option</span>
+                                <span class="menu-case-name">${escapeHtml(caseTitle)}</span>
+                            </div>
+                            <div class="menu-case-body ${caseEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="menu-case" data-action-id="${node.action.id}" data-case-index="${caseIndex}">
+                                ${caseEmpty ? '' : '<div class="control-section-content"></div>'}
+                                ${emptyHint}
+                            </div>
+                        `;
+                casesWrap?.appendChild(caseEl);
+                if (!caseEmpty) {
+                    const body = caseEl.querySelector('.menu-case-body .control-section-content');
+                    if (body) {
+                        renderNodeList(menuCase.children, body, animateIds, depth + 1, { parentActionId: node.action.id, parentSection: `case:${caseIndex}` });
+                    }
+                }
+            });
+
             container.appendChild(block);
         } else {
             const shouldAnimate = animateIds === true || (Array.isArray(animateIds) && animateIds.includes(node.action.id));

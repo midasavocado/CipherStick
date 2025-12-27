@@ -719,7 +719,8 @@
 }
 
 .if-block,
-.repeat-block {
+.repeat-block,
+.menu-block {
     border: 2px solid var(--border-color);
     border-radius: 12px;
     padding: 1rem;
@@ -729,7 +730,8 @@
 }
 
 .if-header,
-.repeat-header {
+.repeat-header,
+.menu-header {
     font-weight: 700;
     color: var(--heading-color);
     margin-bottom: 0.75rem;
@@ -758,6 +760,15 @@
     align-items: center;
 }
 
+.menu-title-line {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
 .control-id-line {
     display: flex;
     align-items: center;
@@ -773,7 +784,8 @@
 
 .if-label,
 .repeat-label,
-.if-then-label {
+.if-then-label,
+.menu-label {
     color: var(--primary-color);
     font-weight: 700;
     font-size: 0.95rem;
@@ -792,6 +804,67 @@
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-color);
+}
+
+.menu-prompt {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.menu-value {
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-color);
+}
+
+.menu-cases {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.menu-case {
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: rgba(59, 130, 246, 0.03);
+}
+
+.menu-case-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin-bottom: 0.5rem;
+}
+
+.menu-case-label {
+    color: var(--primary-color);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.menu-case-name {
+    font-size: 0.9rem;
+}
+
+.menu-case-body {
+    padding-left: 0.5rem;
+}
+
+.menu-end {
+    margin-top: 0.65rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .if-header .param-value,
@@ -2840,7 +2913,8 @@ body.no-animations *::after {
 .action-card.streaming,
 .action-node.streaming,
 .if-block.streaming,
-.repeat-block.streaming {
+.repeat-block.streaming,
+.menu-block.streaming {
     opacity: 0.85;
     border-color: var(--primary-color);
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
@@ -2849,7 +2923,8 @@ body.no-animations *::after {
 .action-card.action-building,
 .action-node.action-building,
 .if-block.action-building,
-.repeat-block.action-building {
+.repeat-block.action-building,
+.menu-block.action-building {
     animation: actionBuildPulse 1.2s ease-in-out infinite;
     border-color: var(--primary-color);
     background: linear-gradient(135deg, var(--surface-color), rgba(59, 130, 246, 0.08));
