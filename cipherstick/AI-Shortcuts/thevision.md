@@ -110,3 +110,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Menu vs list selection is disambiguated in prompts and UI labels.
 -   **Failed**: None.
 -   **Changes**: Updated `/secrets/src/index.js` and `js/app.js`.
+
+### 2025-12-27 06:24PM
+-   **Tried**: Stopped output-link pruning from treating any string starting with `!ID:` as a pure link token.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mixed-text expressions beginning with `!ID:` no longer get blanked during final render.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js` to tighten link-token detection in `pruneMissingOutputLinks`.

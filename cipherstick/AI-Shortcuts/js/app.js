@@ -67,9 +67,6 @@ const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Val
 let liveHintTimer = null;
 let liveHintIndex = 0;
 let liveHintLockUntil = 0;
-let liveBuildTimer = null;
-let liveBuildHasRealData = false;
-let liveBuildCount = 0;
 let pipelineMode = 'default';
 
 // ============ Init ============
@@ -1747,7 +1744,8 @@ function pruneMissingOutputLinks() {
         const t = String(token || '').trim();
         if (!t) return false;
         if (t.startsWith('{{') && t.endsWith('}}')) return false;
-        if (t.toLowerCase().startsWith('!id:') || t.toLowerCase().startsWith('!link:')) return true;
+        if (isIdToken(t)) return true;
+        if (/^!link:\S+$/i.test(t)) return true;
         if (uuidLike.test(t)) return true;
         return false;
     };
@@ -2352,22 +2350,7 @@ const LIVE_HINTS = [
     'Validating the build...'
 ];
 
-const LIVE_BUILD_PLACEHOLDERS = [
-    'Drafting first action...',
-    'Choosing inputs...',
-    'Adding logic...',
-    'Connecting outputs...',
-    'Tuning parameters...',
-    'Validating flow...',
-    'Optimizing steps...',
-    'Final pass...',
-    'Stitching actions...',
-    'Wrapping up...'
-];
-
 const LIVE_HINT_TICK_MS = 1200;
-const LIVE_BUILD_TICK_MS = 900;
-const LIVE_BUILD_MAX = 16;
 
 function setPipelineHint(text) {
     const hintEl = document.getElementById('pipeline-orbs-hint');
@@ -2400,30 +2383,6 @@ function stopLiveHintTicker() {
         liveHintTimer = null;
     }
     liveHintLockUntil = 0;
-}
-
-function startLiveBuildSkeleton() {
-    stopLiveBuildSkeleton();
-    liveBuildHasRealData = false;
-    liveBuildCount = 0;
-    liveBuildTimer = setInterval(() => {
-        if (liveBuildHasRealData) return;
-        liveBuildCount = Math.min(liveBuildCount + 1, LIVE_BUILD_MAX);
-        const actions = Array.from({ length: liveBuildCount }, (_, i) => ({
-            action: LIVE_BUILD_PLACEHOLDERS[i] || 'Building next step...'
-        }));
-        renderPartialProgram(actions, false);
-        if (liveBuildCount >= LIVE_BUILD_MAX) {
-            stopLiveBuildSkeleton();
-        }
-    }, LIVE_BUILD_TICK_MS);
-}
-
-function stopLiveBuildSkeleton() {
-    if (liveBuildTimer) {
-        clearInterval(liveBuildTimer);
-        liveBuildTimer = null;
-    }
 }
 
 function safeParseJson(text) {
@@ -2632,8 +2591,6 @@ function handleStreamPacket(packet) {
                 ? packet.program.actions
                 : null;
         if (actions) {
-            liveBuildHasRealData = true;
-            stopLiveBuildSkeleton();
             renderPartialProgram(actions, packet.complete);
         }
     }
@@ -4839,7 +4796,6 @@ function removePipelineOrbs() {
         pipelineStepCompleteTimers.clear();
     }
     stopLiveHintTicker();
-    stopLiveBuildSkeleton();
     document.getElementById('pipeline-orbs')?.remove();
 }
 
