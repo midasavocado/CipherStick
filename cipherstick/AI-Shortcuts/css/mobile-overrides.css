@@ -1,0 +1,129 @@
+/* --- Mobile "Gemini Canvas" Style Overrides --- */
+
+/* Only active on mobile screens */
+@media (max-width: 768px) {
+
+    /* 1. Hide Visualization Pane entirely */
+    #visual-preview-pane {
+        display: none !important;
+    }
+
+    /* 2. Chat Pane becomes full width - Force override inline styles if any */
+    #workspace-view {
+        grid-template-columns: 1fr !important;
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    #chat-pane {
+        border-right: none;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    /* 3. Hide Top Download Button */
+    #top-download-btn {
+        display: none !important;
+    }
+
+    /* 4. Generation Panel - Visible only when actively generating, or just static for now? 
+       User said: "Instead, show a 'Gemini Canvas-style' generation panel... It should say something like 'Generating your shortcut...'"
+       We will toggle this via JS or CSS. For now, let's style it.
+    */
+    #mobile-generation-status {
+        display: none;
+        /* Toggled by JS or .generating class */
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: var(--surface-hover);
+        border-radius: 12px;
+        margin: 1rem;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        z-index: 50;
+    }
+
+    /* If body has .generating class, show this panel and hide messages? */
+    body.is-generating #mobile-generation-status {
+        display: flex;
+    }
+
+    body.is-generating #messages {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    #mobile-generation-status h3 {
+        margin-top: 1rem;
+        color: var(--heading-color);
+        font-size: 1.1rem;
+    }
+
+
+    /* Ensure the chat area takes space */
+    #messages {
+        flex: 1;
+        padding-bottom: 200px;
+        /* Space for bottom buttons */
+    }
+
+    /* Bottom Mobile Toolbar (Download | Inspect) */
+    .mobile-bottom-toolbar {
+        display: flex !important;
+        /* Show only on mobile */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--surface-color);
+        border-top: 1px solid var(--border-color);
+        padding: 1rem;
+        gap: 1rem;
+        z-index: 9999;
+        backdrop-filter: blur(20px);
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .mobile-btn {
+        flex: 1;
+        padding: 0.9rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--surface-hover);
+        color: var(--text-color);
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .mobile-btn.primary {
+        background: var(--primary-color);
+        color: white;
+        border-color: transparent;
+    }
+
+    /* Hide Desktop/Tablet specific controls that clutter mobile */
+    .preview-toolbar,
+    #undo-redo-controls {
+        display: none !important;
+    }
+
+}
+
+/* Default hidden on desktop */
+.mobile-bottom-toolbar,
+#mobile-generation-status {
+    display: none;
+}

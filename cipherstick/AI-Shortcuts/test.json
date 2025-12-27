@@ -1,0 +1,224 @@
+[
+    {
+        "action": "Ask.ForInput",
+        "params": {
+            "Prompt": "Enter total bill amount without tip",
+            "InputType": "Number",
+            "DefaultAnswer": "0",
+            "AllowDecimalNumbers": true,
+            "ID": "5a630a94-39fb-46b8-9a5e-c6efca648bce"
+        }
+    },
+    {
+        "action": "Ask.ForInput",
+        "params": {
+            "Prompt": "Enter number of people sharing",
+            "InputType": "Number",
+            "DefaultAnswer": "1",
+            "AllowDecimalNumbers": false,
+            "ID": "8c0ffb51-16ce-4ad5-a368-8e5fb44ff412",
+            "OutputName": "peopleCount"
+        }
+    },
+    {
+        "action": "Ask.ForInput",
+        "params": {
+            "Prompt": "Enter tip percentage (optional)",
+            "InputType": "Number",
+            "DefaultAnswer": "0",
+            "AllowDecimalNumbers": true,
+            "ID": "54804444-30e1-485b-b2e1-82ae0cd43861"
+        }
+    },
+    {
+        "action": "If",
+        "params": {
+            "Input": "!id:5a630a94-39fb-46b8-9a5e-c6efca648bce",
+            "Condition": "Is Less Than Or Equal To",
+            "CompareTo": "0"
+        },
+        "then": [
+            {
+                "action": "Alert",
+                "params": {
+                    "AlertActionTitle": "Error",
+                    "AlertActionMessage": "Total amount must be greater than zero.",
+                    "ShowCancelButton": false
+                }
+            },
+            {
+                "action": "Exit",
+                "params": {}
+            }
+        ],
+        "else": []
+    },
+    {
+        "action": "If",
+        "params": {
+            "Input": "!id:peopleCount",
+            "Condition": "Is Less Than Or Equal To",
+            "CompareTo": "0"
+        },
+        "then": [
+            {
+                "action": "Alert",
+                "params": {
+                    "AlertActionTitle": "Error",
+                    "AlertActionMessage": "Number of people must be greater than zero.",
+                    "ShowCancelButton": false
+                }
+            },
+            {
+                "action": "Exit",
+                "params": {}
+            }
+        ],
+        "else": []
+    },
+    {
+        "action": "If",
+        "params": {
+            "Input": "!id:54804444-30e1-485b-b2e1-82ae0cd43861",
+            "Condition": "Is Greater Than",
+            "CompareTo": "0"
+        },
+        "then": [
+            {
+                "action": "Math.CalculateExpression",
+                "params": {
+                    "Expression": "!id:5a630a94-39fb-46b8-9a5e-c6efca648bce * 1.!id:54804444-30e1-485b-b2e1-82ae0cd43861",
+                    "ID": "4de118e9-6dbc-4442-93a8-051e93f74d54",
+                    "CustomOutputName": "Calculation Result"
+                }
+            },
+            {
+                "action": "Setvariable",
+                "params": {
+                    "VariableName": "TotalAmount",
+                    "Value": "!id:4de118e9-6dbc-4442-93a8-051e93f74d54"
+                }
+            },
+            {
+                "action": "Math.CalculateExpression",
+                "params": {
+                    "Expression": "!id:5a630a94-39fb-46b8-9a5e-c6efca648bce * 0.!id:54804444-30e1-485b-b2e1-82ae0cd43861",
+                    "ID": "59958163-67DD-4276-9378-EAE6E73C6201",
+                    "CustomOutputName": "Calculation Result"
+                }
+            },
+            {
+                "action": "Setvariable",
+                "params": {
+                    "VariableName": "TipAmount",
+                    "Value": "!id:59958163-67DD-4276-9378-EAE6E73C6201"
+                }
+            }
+        ],
+        "else": [
+            {
+                "action": "Setvariable",
+                "params": {
+                    "VariableName": "TotalAmount",
+                    "Value": "!id:5a630a94-39fb-46b8-9a5e-c6efca648bce"
+                }
+            }
+        ]
+    },
+    {
+        "action": "Math.CalculateExpression",
+        "params": {
+            "Expression": "!var:TotalAmount / !id:peopleCount",
+            "ID": "38c12507-eb21-4b64-b100-ccb86610a918"
+        }
+    },
+    {
+        "action": "Format.Number",
+        "params": {
+            "Number": "!id:38c12507-eb21-4b64-b100-ccb86610a918",
+            "FormatDecimalPlaces": 2,
+            "ID": "a4039b5c-1d47-4553-8692-65e5fb318f48"
+        }
+    },
+    {
+        "action": "Format.Number",
+        "params": {
+            "Number": "!var:TipAmount",
+            "FormatDecimalPlaces": 2,
+            "ID": "8FF80924-2E11-4643-85A4-D0A9EBBB43DC"
+        }
+    },
+    {
+        "action": "Text",
+        "params": {
+            "Text": "Each person pays $!id:a4039b5c-1d47-4553-8692-65e5fb318f48 (including $!var:TipAmount tip). Total with tip: $!var:TotalAmount",
+            "ID": "0F79FBA3-1D4A-4EB4-866F-FE4D6EF9E33E",
+            "CustomOutputName": "Text"
+        }
+    },
+    {
+        "action": "Showresult",
+        "params": {
+            "Text": "!id:0F79FBA3-1D4A-4EB4-866F-FE4D6EF9E33E"
+        }
+    },
+    {
+        "action": "list",
+        "params": {
+            "text": [
+                "Messages",
+                "Email",
+                "Copy to Clipboard"
+            ],
+            "ID": "8439D929-ADE9-4714-98EF-AB0725E8BD95"
+        }
+    },
+    {
+        "action": "ChooseFromMenu",
+        "params": {
+            "Prompt": "Send result via?",
+            "Items": [
+                "Messages",
+                "Email",
+                "Copy to clipboard"
+            ]
+        },
+        "Cases": [
+            {
+                "Title": "Messages",
+                "Actions": [
+                    {
+                        "action": "Message.Send",
+                        "params": {
+                            "WFSendMessageContent": "!id:0F79FBA3-1D4A-4EB4-866F-FE4D6EF9E33E",
+                            "ShowWhenRun": true
+                        }
+                    }
+                ]
+            },
+            {
+                "Title": "Email",
+                "Actions": [
+                    {
+                        "action": "Email.Send",
+                        "params": {
+                            "Subject": "Our split bill",
+                            "Content": "!id:0F79FBA3-1D4A-4EB4-866F-FE4D6EF9E33E"
+                        }
+                    }
+                ]
+            },
+            {
+                "Title": "Copy to clipboard",
+                "Actions": [
+                    {
+                        "action": "Clipboard.Set",
+                        "params": {
+                            "Input": "!id:0F79FBA3-1D4A-4EB4-866F-FE4D6EF9E33E"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/pages/landing.css">
+  <link rel="stylesheet" href="css/pages/landing.css?v=2025-12-27-2">
   <link rel="stylesheet" href="css/pages/app.css?v=2025-12-14-6">
   <link rel="stylesheet" href="css/pages/marketplace.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -67,11 +67,15 @@
   <!-- Landing View -->
   <div id="landing-view">
     <!-- Hero Section -->
-    <section class="hero">
-      <div class="hero-container">
+    <!-- Hero Section -->
+    <section class="hero" id="hero-section">
+      <!-- Background Effect Container -->
+      <div class="hero-bg-effect"></div>
+
+      <div class="hero-container centered-hero">
         <div class="hero-content reveal-on-scroll">
 
-          <h1>Build Apple Shortcuts <br> <span class="flashy-text">Turn ideas into Actions.</span></h1>
+          <h1>Build Apple Shortcuts <br> <span class="flashy-text">in minutes.</span></h1>
           <p class="hero-sub">Describe what you want, and ShortcutStudio builds it instantly. No coding required.</p>
 
           <!-- Mock Chat Interface for Hero -->
@@ -90,56 +94,6 @@
             <button class="pill" data-prompt="Split the bill and request via Apple Pay">Split Bill</button>
           </div>
         </div>
-
-        <!-- Right Side: Interactive Visuals -->
-        <div class="hero-visuals">
-          <div class="floating-grid" id="parallax-grid">
-            <!-- Floating Card 1: Shortcut Block -->
-            <div class="float-card card-1 hover-lift" data-speed="0.05">
-              <div class="card-icon" style="background: #FF5E5E;">▶️</div>
-              <div class="card-text">
-                <div class="card-title">YouTube Downloader</div>
-                <div class="card-sub">Run JavaScript on Webpage</div>
-              </div>
-            </div>
-
-            <!-- Floating Card 2: Success Notification -->
-            <div class="float-card card-2 hover-lift" data-speed="0.08">
-              <div class="card-icon" style="background: #34C759;">✓</div>
-              <div class="card-text">
-                <div class="card-title">Success</div>
-                <div class="card-sub">Saved to Camera Roll</div>
-              </div>
-            </div>
-
-            <!-- Floating Card 3: Input -->
-            <div class="float-card card-3 hover-lift" data-speed="0.03">
-              <div class="card-icon" style="background: #007AFF;">✉️</div>
-              <div class="card-text">
-                <div class="card-title">Send Message</div>
-                <div class="card-sub">"On my way!"</div>
-              </div>
-            </div>
-
-            <!-- Floating Card 4: Analytics (Abstract) -->
-            <div class="float-card card-4 hover-lift" data-speed="0.06">
-              <div class="graph-c">
-                <div class="bar" style="height: 40%"></div>
-                <div class="bar" style="height: 70%"></div>
-                <div class="bar" style="height: 50%"></div>
-                <div class="bar" style="height: 90%"></div>
-              </div>
-              <div class="card-text">
-                <div class="card-title">Efficiency</div>
-                <div class="card-sub">+400% Time Saved</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Background Glows -->
-          <div class="hero-glow glow-1"></div>
-          <div class="hero-glow glow-2"></div>
-        </div>
       </div>
     </section>
 
@@ -157,9 +111,10 @@
           <p>Tell ShortcutStudio what you want to do in plain English. Our advanced AI understands the nuance of your
             request.</p>
         </div>
-        <div class="feature-visual hover-lift">
-          <!-- Placeholder for visual -->
-          <div class="visual-placeholder">Chat Interface Visual</div>
+        <div class="feature-visual-wrapper">
+          <div class="circular-visual hover-lift">
+            <div class="visual-placeholder">Chat Logic</div>
+          </div>
         </div>
       </div>
 
@@ -170,8 +125,10 @@
           <h3>Refine</h3>
           <p>Use the visual editor to tweak actions, adjust parameters, and perfect your workflow logic.</p>
         </div>
-        <div class="feature-visual hover-lift">
-          <div class="visual-placeholder">Visual Editor Blocks</div>
+        <div class="feature-visual-wrapper">
+          <div class="circular-visual hover-lift">
+            <div class="visual-placeholder">Visual Editor</div>
+          </div>
         </div>
       </div>
 
@@ -182,8 +139,10 @@
           <h3>Export</h3>
           <p>Download the signed .shortcut file and install it directly to your iPhone, iPad, or Mac.</p>
         </div>
-        <div class="feature-visual hover-lift">
-          <div class="visual-placeholder">Export to iPhone</div>
+        <div class="feature-visual-wrapper">
+          <div class="circular-visual hover-lift">
+            <div class="visual-placeholder">Export</div>
+          </div>
         </div>
       </div>
     </section>

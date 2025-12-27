@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/pages/app.css?v=2025-12-14-6">
+    <link rel="stylesheet" href="css/mobile-overrides.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -377,6 +378,18 @@
                 <button class="tutorial-next" id="tutorial-next" onclick="nextTutorialStep()">Next</button>
             </div>
         </div>
+    </div>
+
+    <!-- Mobile Generation Status Panel -->
+    <div id="mobile-generation-status">
+        <div class="spinner"></div>
+        <h3>Generating your shortcut...</h3>
+    </div>
+
+    <!-- Mobile Bottom Toolbar -->
+    <div class="mobile-bottom-toolbar">
+        <button class="mobile-btn" onclick="toggleEditMode()">Inspect</button>
+        <button class="mobile-btn primary" onclick="executeDownload('raw')">Download</button>
     </div>
 
     <script src="theme.js"></script>

@@ -2646,6 +2646,57 @@ button,
   color: var(--text-muted);
 }
 
+/* --- Menu Action Styling --- */
+.menu-block {
+  margin: 1rem 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-color);
+  overflow: hidden;
+}
+
+.menu-header {
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.menu-label {
+  font-weight: 700;
+  color: #a855f7;
+  /* Purple for menus */
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.menu-case-divider {
+  padding: 0.5rem 1rem;
+  background: var(--bg-color);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.menu-case-content {
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--border-color);
+  margin: 0.5rem 0.5rem 0.5rem 1rem;
+}
+
+.menu-end {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 /* --- Light Mode Contrast Audit Fixes --- */
 [data-theme="light"] {
   --text-color: #1a1a1a;

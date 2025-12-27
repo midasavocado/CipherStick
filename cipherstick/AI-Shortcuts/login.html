@@ -163,15 +163,26 @@
             if (e) e.preventDefault();
             // Fake login
             const btn = e ? e.target.querySelector('button') : document.activeElement;
-            const originalText = btn.innerText;
-            btn.innerText = 'Authenticating...';
-            btn.disabled = true;
+            if (btn) {
+                const originalText = btn.innerText;
+                btn.innerText = 'Authenticating...';
+                btn.disabled = true;
+            }
 
             setTimeout(() => {
                 // Set logged in state in localStorage (with legacy fallback)
                 localStorage.setItem('shortcutstudio_logged_in', 'true');
                 localStorage.setItem(`${legacyStoragePrefix}_logged_in`, 'true');
-                window.location.href = 'app.html';
+
+                // Get prompt from URL if present
+                const urlParams = new URLSearchParams(window.location.search);
+                const prompt = urlParams.get('prompt');
+
+                if (prompt) {
+                    window.location.href = `app.html?prompt=${encodeURIComponent(prompt)}`;
+                } else {
+                    window.location.href = 'app.html';
+                }
             }, 1000);
         }
 

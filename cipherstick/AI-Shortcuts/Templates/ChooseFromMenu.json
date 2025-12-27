@@ -1,0 +1,13 @@
+{
+    "action": "ChooseFromMenu",
+    "params": {
+        "Prompt": "{{STRING}}",
+        "Items": "{{ARRAY}}"
+    },
+    "Cases": [
+        {
+            "Title": "{{STRING}}",
+            "Actions": []
+        }
+    ]
+}

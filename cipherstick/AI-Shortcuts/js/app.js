@@ -307,13 +307,8 @@ function loadProject(id) {
         currentProject.history.forEach(msg => addMessageToUI(msg.content, msg.role));
     } else {
         const messagesEl = document.getElementById('messages');
-        messagesEl.innerHTML = `
-            <div class="chat-empty-state">
-                <div class="empty-icon">✨</div>
-                <h3>Start Building</h3>
-                <p>Describe the shortcut you'd like to create.</p>
-            </div>
-        `;
+        messagesEl.innerHTML = ''; // Start clean
+        // addMessageToUI("👋 Ready to build! Describe your shortcut below.", 'assistant'); // Reverted to nothing or simple
     }
     renderActions();
     updateUndoRedoButtons();
@@ -723,7 +718,15 @@ function findActionLocation(actionId, actions = currentActions, parentAction = n
             const inDo = findActionLocation(actionId, action.do || [], action, action.do || [], 'do');
             if (inDo) return inDo;
         }
+        if (isMenuAction(action)) {
+            const cases = action.Cases || [];
+            for (let j = 0; j < cases.length; j++) {
+                const inCase = findActionLocation(actionId, cases[j].Actions || [], action, cases[j].Actions || [], `case:${j}`);
+                if (inCase) return inCase;
+            }
+        }
     }
+
     return null;
 }
 
@@ -768,8 +771,11 @@ function cloneActionDeep(action) {
             (act.else || []).forEach(collect);
         } else if (isRepeatAction(act)) {
             (act.do || []).forEach(collect);
+        } else if (isMenuAction(act)) {
+            (act.Cases || []).forEach(c => (c.Actions || []).forEach(collect));
         }
     };
+
     collect(cloned);
 
     const baseId = Date.now();
@@ -2108,6 +2114,12 @@ function isRepeatAction(action) {
     return id.includes('repeat') || id === 'repeatwitheach' || id === 'repeatwith each';
 }
 
+function isMenuAction(action) {
+    const id = (action.action || action.title || '').toLowerCase();
+    return id.includes('choosefrommenu') || id === 'choose from menu';
+}
+
+
 function isControlAction(action) {
     return isConditionalAction(action) || isRepeatAction(action);
 }
@@ -2333,15 +2345,39 @@ function getCurrentProgramPreviewText() {
 
 async function callGenerateAPI(userPrompt) {
     isGenerating = true;
+    document.body.classList.add('is-generating'); // Mobile override trigger
     const isDiscussionMode = chatMode === 'discussion';
     if (!isDiscussionMode) showPipelineOrbs();
     showTypingIndicator();
 
+    // Auto-Intro logic: if this is the very first generation for a new project
+    const historyCount = (currentProject?.history || []).length;
+    // user just sent one (so 1 user message). If <= 2 total messages (User + maybe 1 old sys), trigger intro.
+    // Actually, let's just do it slightly after calling the API, or mock it locally.
+    // User asked: "After the first animation orb action triggers... send 1-2 short paragraphs"
+
+    if (historyCount <= 1 && !isDiscussionMode) {
+        // Send a reassuring message immediately (or slight delay) *before* the actual code generation finishes?
+        // Or should it come from the model?
+        // "The AI should send... saying something like 'I'm building...'"
+        // If we want it to be separate from the big code block, we can fake it here.
+        setTimeout(() => {
+            addMessageToUI("I'm building your shortcut now. I understand you want to automate this task, so I'll structure the workflow to handle inputs efficiently and ensure compatibility with your device.", 'assistant');
+        }, 1500);
+    }
+
     try {
-        const plan = (getStoredValue('plan') || 'free') === 'paid' ? 'paid' : 'free';
+        const rawPlan = getStoredValue('plan') || 'free';
+        const plan = (rawPlan === 'paid' || rawPlan === 'pro') ? 'paid' : 'free';
         // Default back to your preferred model; backend will fall back if it's unavailable.
-        const model = getStoredValue('model') || 'openai/gpt-oss-120b:free';
+        // Default back to your preferred model; backend will fall back if it's unavailable.
+        // User requested ONLY gpt-oss-120b, NOT free.
+        const model = getStoredValue('model') || 'openai/gpt-oss-120b';
         console.log(`[ShortcutStudio] Using model: ${model} (plan: ${plan})`);
+
+        // Explicit instruction to ask for clarifications
+        const followUpInstruction = `CRITICAL: If the user's request is vague or lacks specific details (e.g. "make a reminder"), you MUST ask clarifying questions before generating any code. Do not guess. Ask what specific details they need.`;
+
 
         const forceInstruction = forcedActions.length
             ? `You MUST include these actions somewhere in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}. This is a minimum requirement; you may include other actions too.`
@@ -2352,7 +2388,9 @@ async function callGenerateAPI(userPrompt) {
         const mode = isDiscussionMode ? 'clarify' : (isFollowUp ? 'update' : 'plan');
         const basePrompt = userTurns[0]?.content || userPrompt;
         let programText = getCurrentProgramPreviewText();
-        const recentHistory = currentProject?.history?.slice(-10) || [];
+
+        const historyLimit = plan === 'paid' ? 10 : 3;
+        const recentHistory = currentProject?.history?.slice(-historyLimit) || [];
         const context = {
             basePrompt,
             programText,
@@ -2408,6 +2446,8 @@ async function callGenerateAPI(userPrompt) {
             }
         }
 
+        isGenerating = false;
+        document.body.classList.remove('is-generating');
         removeTypingIndicator();
 
         if (finalData) {
@@ -2823,6 +2863,20 @@ function buildActionTree(actions) {
             }
             return;
         }
+
+        if (isMenuAction(action) && Array.isArray(action.Cases)) {
+            const node = {
+                type: 'menu',
+                action,
+                cases: action.Cases.map(c => ({
+                    title: c.Title,
+                    children: buildActionTree(c.Actions || [])
+                }))
+            };
+            stack[stack.length - 1].target.push(node);
+            return;
+        }
+
 
         stack[stack.length - 1].target.push({ type: 'action', action });
     });

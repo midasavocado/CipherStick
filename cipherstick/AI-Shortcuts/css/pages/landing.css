@@ -13,42 +13,49 @@
     /* Reduced from 80px to move content up */
 }
 
+.hero-bg-effect {
+    position: fixed;
+    /* Fixed to cover entire scrollable area if needed, or absolute to hero */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    /* Let clicks pass through */
+    z-index: 0;
+    transition: background 0.1s ease;
+    /* smooth out rapid movements */
+    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.25) 0%, rgba(168, 85, 247, 0.15) 30%, transparent 70%);
+}
+
 /* Layout Container */
 .hero-container {
-    max-width: 1200px;
+    max-width: 1000px;
     width: 100%;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    padding: 2rem;
+    margin: 0 auto !important;
+    /* Force centering */
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
     z-index: 2;
+    min-height: 80vh;
+    /* Ensure it takes up vertical space */
 }
 
 @media (max-width: 900px) {
     .hero-container {
-        grid-template-columns: 1fr;
-        text-align: center;
-        padding-top: 2rem;
-        gap: 2rem;
-    }
-
-    .hero-content {
-        margin: 0 auto;
-        order: 1;
-    }
-
-    .hero-visuals {
-        order: 2;
-        min-height: 400px;
-        /* Ensure space for visuals */
+        padding-top: 4rem;
     }
 }
 
 /* Hero Content - Left Side */
 .hero-content {
     max-width: 600px;
+    z-index: 2;
+    /* Ensure above background */
 }
 
 .hero h1 {
@@ -495,17 +502,7 @@ body:not(.mode-dark) .flashy-text {
 }
 
 /* Layout Container */
-.hero-container {
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    padding: 2rem;
-    align-items: center;
-    z-index: 2;
-}
+/* Layout Container Duplicate Removed */
 
 @media (max-width: 900px) {
     .hero-container {
