@@ -2815,3 +2815,98 @@ body.no-animations *::after {
     transform: scale(1.02);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
+
+/* --- Streaming Build Animation --- */
+.action-card.streaming {
+    opacity: 0.85;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.action-card.action-building {
+    animation: actionBuildPulse 1.2s ease-in-out infinite;
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--surface-color), rgba(59, 130, 246, 0.08));
+}
+
+@keyframes actionBuildPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        opacity: 0.85;
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+        opacity: 1;
+    }
+}
+
+.streaming-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    margin-left: 0.5rem;
+    animation: streamingPulse 1s ease-in-out infinite;
+}
+
+@keyframes streamingPulse {
+    0%, 100% {
+        opacity: 0.4;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+/* --- Progress Percentage Bar --- */
+#pipeline-progress-percent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transition: width 0.3s ease;
+    border-radius: 0 3px 3px 0;
+}
+
+/* Chat Empty State */
+.chat-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    height: 100%;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.chat-empty-state .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: var(--surface-hover);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+}
+
+.chat-empty-state h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--heading-color);
+}
+
+.chat-empty-state p {
+    font-size: 0.95rem;
+    max-width: 200px;
+    line-height: 1.5;
+}

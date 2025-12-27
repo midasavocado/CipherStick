@@ -7,6 +7,11 @@
     <title>ShortcutStudio - AI Shortcut Generator</title>
     <meta name="description"
         content="Build Apple Shortcuts with AI. ShortcutStudio turns natural language into powerful automation workflows.">
+    <meta property="og:title" content="ShortcutStudio - AI Shortcut Generator">
+    <meta property="og:description"
+        content="Build Apple Shortcuts with AI. ShortcutStudio turns natural language into powerful automation workflows.">
+    <meta property="og:image" content="icon.png">
+    <meta property="og:type" content="website">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
     <link rel="stylesheet" href="css/variables.css">
@@ -23,13 +28,13 @@
 <body class="mode-dark">
     <div class="app-container">
         <!-- Top Navigation Bar -->
-        <nav class="top-bar" style="padding: 0 1.5rem;">
+        <nav class="top-bar px-6">
             <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
                 <div class="logo-icon">S</div>
                 <span>ShortcutStudio</span>
             </a>
             <div class="nav-actions flex items-center gap-4">
-                <button class="toolbar-btn primary" id="top-download-btn" onclick="openDownloadModal()">
+                <button class="toolbar-btn primary" id="top-download-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -38,7 +43,7 @@
                     Download
                 </button>
                 <div class="dropdown" id="profile-dropdown">
-                    <button class="user-profile-btn" onclick="toggleProfileMenu()">
+                    <button class="user-profile-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -46,32 +51,32 @@
                         </svg>
                     </button>
                     <div class="dropdown-menu" id="profile-menu">
-                        <div class="dropdown-item" onclick="window.location.href='settings.html'"><svg width="16"
+                        <div class="dropdown-item" id="menu-item-settings" role="button" tabindex="0"><svg width="16"
                                 height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path
                                     d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
                                 </path>
                             </svg>Settings</div>
-                        <div class="dropdown-item" onclick="window.location.href='pricing.html'"><svg width="16"
+                        <div class="dropdown-item" id="menu-item-pricing" role="button" tabindex="0"><svg width="16"
                                 height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
                                 </polygon>
                             </svg>Upgrade to Pro</div>
                         <div class="dropdown-divider"></div>
-                        <div class="dropdown-item" onclick="toggleTheme()"><svg width="16" height="16"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <div class="dropdown-item" id="menu-item-theme" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                             </svg>Toggle Theme</div>
-                        <div class="dropdown-item" onclick="toggleAnimations()"><svg width="16" height="16"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <div class="dropdown-item" id="menu-item-animations" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <path d="M8 12l2 2 4-4"></path>
                             </svg><span id="animations-toggle-text">Disable Animations</span></div>
                         <div class="dropdown-divider"></div>
-                        <div class="dropdown-item" onclick="startTutorial()"><svg width="16" height="16"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <div class="dropdown-item" id="menu-item-tutorial" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -90,7 +95,7 @@
                     <p>Build and manage your Apple Shortcuts</p>
                 </div>
                 <div id="projects-grid" class="projects-grid">
-                    <div class="project-card new-project-card" onclick="createNewProject()">
+                    <div class="project-card new-project-card" id="create-project-card" role="button" tabindex="0">
                         <div class="plus-icon">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -108,7 +113,7 @@
                 <!-- Chat Pane -->
                 <aside class="chat-pane" id="chat-pane">
                     <div class="chat-header">
-                        <button class="back-btn" onclick="showProjectsView()" title="Back to Projects">
+                        <button class="back-btn" id="back-to-projects-btn" title="Back to Projects">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M19 12H5"></path>
@@ -123,37 +128,37 @@
                     <div class="messages-container" id="messages"></div>
 
                     <!-- Chat Input Area -->
-    <div class="chat-input-area">
-        <div class="plus-menu" id="plus-menu">
-            <div class="plus-menu-item" onclick="event.stopPropagation(); openForceActionModal();">
-                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                    </svg></div>
-                <div class="item-content">
-                    <div class="item-title">Force Action <span class="pro-badge">PRO</span></div>
-                    <div class="item-desc">Add a specific action to your shortcut</div>
-                </div>
-            </div>
-            <div class="plus-menu-item" id="discussion-mode-toggle"
-                onclick="event.stopPropagation(); toggleMode('discussion');">
-                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg></div>
-                <div class="item-content">
-                    <div class="item-title">Discussion Mode</div>
-                    <div class="item-desc">Chat without modifying shortcut</div>
-                </div>
-            </div>
-        </div>
+                    <div class="chat-input-area">
+                        <div class="plus-menu" id="plus-menu">
+                            <div class="plus-menu-item" onclick="event.stopPropagation(); openForceActionModal();"
+                                role="button" tabindex="0">
+                                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg></div>
+                                <div class="item-content">
+                                    <div class="item-title">Force Action <span class="pro-badge">PRO</span></div>
+                                    <div class="item-desc">Add a specific action to your shortcut</div>
+                                </div>
+                            </div>
+                            <div class="plus-menu-item" id="discussion-mode-toggle"
+                                onclick="event.stopPropagation(); toggleMode('discussion');" role="button" tabindex="0">
+                                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg></div>
+                                <div class="item-content">
+                                    <div class="item-title">Discussion Mode</div>
+                                    <div class="item-desc">Chat without modifying shortcut</div>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Forced Actions Display -->
                         <div class="forced-actions" id="forced-actions"></div>
                         <div class="chat-input-wrapper">
-                            <button class="plus-menu-btn" id="plus-menu-btn"
-                                onclick="event.stopPropagation(); togglePlusMenu();">
+                            <button class="plus-menu-btn" id="plus-menu-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -162,11 +167,11 @@
                             </button>
                             <textarea id="chat-input" class="chat-input" placeholder="Describe your shortcut..."
                                 rows="1"></textarea>
-                            <button class="send-btn" id="send-btn" onclick="handleSend()">
+                            <button class="send-btn" id="send-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                 </svg>
                             </button>
                         </div>
@@ -182,29 +187,32 @@
                     <div class="preview-toolbar">
                         <input type="text" id="project-name-input" class="project-name-input"
                             placeholder="Untitled Project" value="Untitled Project">
-	                        <div class="toolbar-actions">
-	                            <button class="toolbar-btn icon-only" id="undo-btn" onclick="undoWorkspace()" title="Undo (⌘Z)" disabled style="display:none;">
-	                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <polyline points="1 4 1 10 7 10"></polyline>
-	                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-	                                </svg>
-	                            </button>
-	                            <button class="toolbar-btn icon-only" id="redo-btn" onclick="redoWorkspace()" title="Redo (⇧⌘Z)" disabled style="display:none;">
-	                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <polyline points="23 4 23 10 17 10"></polyline>
-	                                    <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
-	                                </svg>
-	                            </button>
-	                            <button class="toolbar-btn" id="add-action-btn" onclick="openForceActionModal()"
-	                                style="display: none;">
-	                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-	                                    stroke-width="2">
-	                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <div class="toolbar-actions">
+                            <button class="toolbar-btn icon-only" id="undo-btn" onclick="undoWorkspace()"
+                                title="Undo (⌘Z)" disabled style="display:none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10"></polyline>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                </svg>
+                            </button>
+                            <button class="toolbar-btn icon-only" id="redo-btn" onclick="redoWorkspace()"
+                                title="Redo (⇧⌘Z)" disabled style="display:none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                            <button class="toolbar-btn" id="add-action-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
                                 Add Action
                             </button>
-                            <button class="toolbar-btn" id="edit-btn" onclick="toggleEditMode()">
+                            <button class="toolbar-btn" id="edit-btn">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -233,14 +241,14 @@
     </div>
 
     <!-- Force Action Modal -->
-	    <div id="force-action-modal" class="modal-overlay">
-	        <div class="modal-card" style="max-width: 600px; max-height: 80vh;">
-	            <div class="modal-header">
-	                <h3 id="force-action-modal-title">Force Action</h3>
-	                <button class="modal-close" onclick="closeForceActionModal()"><svg width="16" height="16"
-	                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                        <line x1="18" y1="6" x2="6" y2="18"></line>
-	                        <line x1="6" y1="6" x2="18" y2="18"></line>
+    <div id="force-action-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 600px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3 id="force-action-modal-title">Force Action</h3>
+                <button class="modal-close" onclick="closeForceActionModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg></button>
             </div>
             <input type="text" id="action-search" class="input-glass" placeholder="Search actions..."
@@ -250,7 +258,7 @@
         </div>
     </div>
 
-    <!-- Download Modal -->
+
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-card">
@@ -277,8 +285,8 @@
         <div class="modal-card">
             <div class="modal-header">
                 <h3>Remove List Item?</h3>
-                <button class="modal-close" onclick="closeListItemRemoveModal()"><svg width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2">
+                <button class="modal-close" onclick="closeListItemRemoveModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg></button>
@@ -314,7 +322,7 @@
             </div>
             <div class="download-options">
                 <div class="download-option disabled" id="download-private-option"
-                    style="opacity: 0.5; cursor: not-allowed;">
+                    style="opacity: 0.5; cursor: not-allowed;" aria-disabled="true">
                     <div class="option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -324,7 +332,7 @@
                         <p>Download for personal use. Chat history stays private.</p>
                     </div>
                 </div>
-                <div class="download-option" onclick="executeDownload('publish')">
+                <div class="download-option" id="download-publish-btn" role="button" tabindex="0">
                     <div class="option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -338,7 +346,7 @@
                         <p>Share with the community. Shortcut only, no chat.</p>
                     </div>
                 </div>
-                <div class="download-option" onclick="executeDownload('raw')">
+                <div class="download-option" id="download-raw-btn" role="button" tabindex="0">
                     <div class="option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <polyline points="16 16 21 11 16 6"></polyline>

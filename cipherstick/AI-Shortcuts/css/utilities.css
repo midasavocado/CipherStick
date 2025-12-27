@@ -55,6 +55,47 @@
     margin-bottom: 1rem;
 }
 
+.mb-8 {
+    margin-bottom: 2rem;
+}
+
+.pt-8 {
+    padding-top: 2rem;
+}
+
+.pb-8 {
+    padding-bottom: 2rem;
+}
+
+.px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
 .full-width {
     width: 100%;
+}
+
+.h-screen {
+    height: 100vh;
+}
+
+.overflow-y-auto {
+    overflow-y: auto;
+}
+
+.decorate-none {
+    text-decoration: none;
+}
+
+.color-inherit {
+    color: inherit;
+}
+
+.text-heading {
+    color: var(--heading-color);
+}
+
+.text-muted {
+    color: var(--text-muted);
 }
