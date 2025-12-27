@@ -61,3 +61,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Full-catalog runs can toggle enhanced orb animations on the client.
 -   **Failed**: None.
 -   **Changes**: Updated `/secrets/src/index.js` to emit `ui` packets and `js/app.js`/`css/pages/app.css` to apply the full-catalog orb style.
+
+### 2025-12-27 05:30PM
+-   **Tried**: Eliminated subrequest overload by bundling a template summary for full-catalog mode.
+-   **Errors**: None observed during edits.
+-   **Worked**: Full-catalog runs no longer fetch 100+ templates via subrequests.
+-   **Failed**: None.
+-   **Changes**: Added `/secrets/src/templates.summary.js` and updated `/secrets/src/index.js` to use it when `USE_ALL_TEMPLATES` is enabled.
+
+### 2025-12-27 05:34PM
+-   **Tried**: Replaced the template summary with a full bundled AllTemplates script.
+-   **Errors**: None observed during edits.
+-   **Worked**: Full-catalog mode now uses the bundled full template set without subrequests.
+-   **Failed**: None.
+-   **Changes**: Added `/secrets/src/AllTemplates.js`, removed `/secrets/src/templates.summary.js`, and updated `/secrets/src/index.js` to use the new bundle.
