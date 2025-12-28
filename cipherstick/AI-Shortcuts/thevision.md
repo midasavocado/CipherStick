@@ -222,3 +222,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Full-template mode now reads from `secrets/src/alltemplates.json`, keeps raw template text for the model, and derives action/param metadata from the raw content.
 -   **Failed**: None.
 -   **Changes**: Removed `scripts/build-all-templates.js` and `secrets/src/AllTemplates.js`, added `secrets/src/alltemplates.json`, and updated `secrets/src/index.js` and `agents.md`.
+
+### 2025-12-27 09:54PM
+-   **Tried**: Fixed final-response parsing to preserve nested menu cases and control-flow blocks.
+-   **Errors**: None observed during edits.
+-   **Worked**: Final program ingestion now keeps `Cases` and nested blocks, preventing Choose From Menu/If/Repeat contents from disappearing after streaming finishes.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.

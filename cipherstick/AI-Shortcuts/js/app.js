@@ -3125,23 +3125,18 @@ function handleFinalResponse(data) {
         currentProgramObj = data.program;
         if (currentProject) currentProject.programObj = currentProgramObj;
 
-        // Extract actions from program
+        // Extract actions from program (preserve nested cases/blocks)
         if (Array.isArray(data.program.actions)) {
-            currentActions = data.program.actions.map((act, i) => {
-                const actionObj = {
-                    id: Date.now() + i,
-                    action: act.action || 'Unknown',
-                    title: act.action || 'Action',
-                    params: act.params || {}
-                };
-                // Preserve nested structure (then/else/do arrays) if present
-                if (Array.isArray(act.then)) actionObj.then = act.then;
-                if (Array.isArray(act.else)) actionObj.else = act.else;
-                if (Array.isArray(act.do)) actionObj.do = act.do;
-                return actionObj;
+            const incoming = cloneActionsForStreaming(data.program.actions);
+            incoming.forEach((action) => {
+                if (!action || typeof action !== 'object') return;
+                if (!action.params || typeof action.params !== 'object') action.params = {};
+                if (Array.isArray(action.cases) && !Array.isArray(action.Cases)) {
+                    action.Cases = action.cases;
+                    delete action.cases;
+                }
             });
-            currentActions = ensureActionUUIDs(currentActions);
-            currentActions = normalizeControlFlowToNested(currentActions);
+            currentActions = normalizeControlFlowToNested(ensureActionUUIDs(incoming));
             if (currentProject) currentProject.actions = currentActions;
         }
     }
