@@ -187,3 +187,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Prompt now clarifies that ChooseFromMenu creates branch bodies per option, while List.ChooseFrom only returns a picked item.
 -   **Failed**: None.
 -   **Changes**: Updated `secrets/src/index.js`.
+
+### 2025-12-27 09:05PM
+-   **Tried**: Fixed variable output labeling and object-linked display for If/Repeat inputs.
+-   **Errors**: None observed during edits.
+-   **Worked**: Get/Set Variable links now show variable names, and If/Repeat inputs display linked outputs/variables from plist-style objects.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-27 09:14PM
+-   **Tried**: Added conversion support for plist-style ActionOutput objects and normalized Get Variable output labels to variable names.
+-   **Errors**: None observed during edits.
+-   **Worked**: If/Repeat inputs now wrap ActionOutput objects correctly in the plist, and variable outputs no longer show “Get …” in OutputName.
+-   **Failed**: None.
+-   **Changes**: Updated `secrets/src/lib/conversions.js`.

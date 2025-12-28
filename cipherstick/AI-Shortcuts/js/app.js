@@ -1888,6 +1888,8 @@ function insertTokenIntoRichInput(el, token) {
 function getActionOutputInfo(action) {
     if (!action?.params) return null;
     if (!actionHasLinkableOutput(action)) return null;
+    const normalized = normalizeActionKey(action.action || action.title || '');
+    const variableName = getVariableNameFromAction(action);
     const outputUUID = action.params.UUID;
     if (!outputUUID) return null;
     const rawUUID = String(outputUUID).trim();
@@ -1895,15 +1897,36 @@ function getActionOutputInfo(action) {
     const idLabel = normalizeIdLabel(rawIdValue);
     const hasExplicitId = isExplicitIdLabel(String(rawIdValue ?? ''));
     const rawNameCandidate =
-        (action.params.CustomOutputNameEnabled && typeof action.params.CustomOutputName === 'string' && action.params.CustomOutputName.trim())
-            ? action.params.CustomOutputName.trim()
-            : (typeof action.params.OutputName === 'string' && action.params.OutputName.trim())
-                ? action.params.OutputName.trim()
-                : (hasExplicitId && idLabel ? idLabel : (isIdToken(rawUUID) ? normalizeIdLabel(rawUUID) : ''))
-                || action.title || action.action || 'Action Output';
+        (variableName && (normalized === 'setvariable' || normalized === 'getvariable' || normalized === 'variable.append' || normalized === 'appendvariable'))
+            ? variableName
+            : (action.params.CustomOutputNameEnabled && typeof action.params.CustomOutputName === 'string' && action.params.CustomOutputName.trim())
+                ? action.params.CustomOutputName.trim()
+                : (typeof action.params.OutputName === 'string' && action.params.OutputName.trim())
+                    ? action.params.OutputName.trim()
+                    : (hasExplicitId && idLabel ? idLabel : (isIdToken(rawUUID) ? normalizeIdLabel(rawUUID) : ''))
+                    || action.title || action.action || 'Action Output';
 
     const outputName = String(rawNameCandidate || '').trim() || 'Action Output';
     return { outputUUID: rawUUID, outputName, outputId: hasExplicitId ? idLabel : null };
+}
+
+function getVariableNameFromAction(action) {
+    if (!action?.params) return '';
+    const normalized = normalizeActionKey(action.action || action.title || '');
+    if (normalized === 'setvariable' || normalized === 'variable.set' || normalized === 'variable.append' || normalized === 'appendvariable') {
+        return String(action.params.WFVariableName ?? action.params.VariableName ?? action.params.Variable ?? '').trim();
+    }
+    if (normalized === 'getvariable' || normalized === 'variable.get') {
+        const wfVar = action.params.WFVariable ?? action.params.Variable ?? null;
+        const nestedName =
+            wfVar?.Value?.VariableName ??
+            wfVar?.VariableName ??
+            action.params.VariableName ??
+            action.params.WFVariableName ??
+            '';
+        return String(nestedName || '').trim();
+    }
+    return '';
 }
 
 let outputNameIndexByUUID = new Map();
@@ -3867,9 +3890,52 @@ function resolveBuiltinOutputLabel(raw) {
     return BUILTIN_OUTPUT_LABELS.get(key) || '';
 }
 
+function extractLinkedLabelFromObject(value) {
+    if (!value || typeof value !== 'object') return null;
+    const directType = value.Type || value?.Value?.Type || null;
+    const directVarName =
+        value.VariableName ||
+        value?.Value?.VariableName ||
+        value?.Variable?.VariableName ||
+        value?.Variable?.Value?.VariableName ||
+        null;
+    if ((directType === 'Variable' || value?.Type === 'Variable') && directVarName) {
+        return { kind: 'variable', label: String(directVarName).trim() };
+    }
+    const variablePayload = value.Variable || value?.Value?.Variable || null;
+    const nestedVarName =
+        variablePayload?.VariableName ||
+        variablePayload?.Value?.VariableName ||
+        null;
+    if (nestedVarName) {
+        return { kind: 'variable', label: String(nestedVarName).trim() };
+    }
+    const outputUUID =
+        value?.Value?.OutputUUID ||
+        value?.OutputUUID ||
+        value?.Variable?.Value?.OutputUUID ||
+        value?.Value?.Value?.OutputUUID ||
+        null;
+    const outputName =
+        value?.Value?.OutputName ||
+        value?.OutputName ||
+        value?.Variable?.Value?.OutputName ||
+        value?.Value?.Value?.OutputName ||
+        null;
+    if (outputUUID || outputName) {
+        const resolved = resolveOutputNameByUUID(outputUUID, outputName) || outputName || 'Linked Output';
+        return { kind: 'output', label: String(resolved).trim() };
+    }
+    return null;
+}
+
 function formatLinkedValue(value) {
     if (!value) return '';
     if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const labelInfo = extractLinkedLabelFromObject(value);
+        if (labelInfo?.label) {
+            return `<span class="linked-value-inline">${escapeHtml(humanizeOutputName(labelInfo.label))}</span>`;
+        }
         const outputUUID = value?.Value?.OutputUUID || value?.OutputUUID || '';
         const storedOutputName = value?.Value?.OutputName || value?.OutputName || null;
         const outputName = resolveOutputNameByUUID(outputUUID, storedOutputName) || storedOutputName || 'Linked Output';
