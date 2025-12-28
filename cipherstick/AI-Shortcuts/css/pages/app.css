@@ -101,7 +101,7 @@
 .project-select-toggle {
     position: absolute;
     top: 1rem;
-    left: 1rem;
+    right: 1rem;
     width: 28px;
     height: 28px;
     border-radius: 8px;

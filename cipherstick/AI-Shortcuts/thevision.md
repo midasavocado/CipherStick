@@ -201,3 +201,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: If/Repeat inputs now wrap ActionOutput objects correctly in the plist, and variable outputs no longer show “Get …” in OutputName.
 -   **Failed**: None.
 -   **Changes**: Updated `secrets/src/lib/conversions.js`.
+
+### 2025-12-27 09:22PM
+-   **Tried**: Moved project selection toggle to the right side of project cards.
+-   **Errors**: None observed during edits.
+-   **Worked**: Selection checkbox now appears on the right in selection mode.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/app.css`.
