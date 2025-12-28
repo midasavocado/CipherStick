@@ -161,8 +161,88 @@
 
 .project-card h3 {
     font-size: 1.1rem;
-    margin-bottom: 0.5rem;
+    margin: 0;
     color: var(--heading-color);
+}
+
+.project-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.project-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.project-card-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.project-card .project-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.project-settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.project-settings-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-muted);
+}
+
+.project-settings-input {
+    width: 100%;
+}
+
+.project-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 0.25rem;
+}
+
+.project-icon-option {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-hover);
+    color: var(--text-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.project-icon-option svg {
+    width: 17px;
+    height: 17px;
+}
+
+.project-icon-option.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
 }
 
 .project-card .project-meta {
@@ -1555,6 +1635,48 @@
     flex: 1;
     max-width: 360px;
     width: 100%;
+    cursor: text;
+}
+
+.project-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 220px;
+}
+
+.project-edit-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(148, 163, 184, 0.08));
+    color: var(--heading-color);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.project-title-wrap:hover .project-edit-btn,
+.project-title-wrap:focus-within .project-edit-btn {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-1px);
+}
+
+.project-title-wrap .project-name-input {
+    cursor: text;
+}
+
+.project-edit-btn:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(148, 163, 184, 0.1));
 }
 
 .project-name-input:hover {
@@ -2933,6 +3055,17 @@ body.mode-dark .theme-toggle-thumb {
 
 .btn.danger:hover {
     background: #dc2626;
+}
+
+.btn.primary {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.btn.primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 
 /* --- Mode Button --- */

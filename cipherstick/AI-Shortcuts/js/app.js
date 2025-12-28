@@ -41,6 +41,32 @@ function parseStoredJson(suffix, fallback) {
     }
 }
 
+function getMarketplaceItems() {
+    return parseStoredJson('marketplaceItems', []);
+}
+
+function saveMarketplaceItems(items) {
+    setStoredValue('marketplaceItems', JSON.stringify(items));
+}
+
+function upsertMarketplaceItemFromProject(project) {
+    if (!project || !project.id) return;
+    const items = Array.isArray(getMarketplaceItems()) ? getMarketplaceItems() : [];
+    const next = {
+        id: project.id,
+        name: getProjectDisplayName(project),
+        description: project.description || project.summary || '',
+        icon: project.icon || DEFAULT_PROJECT_ICON,
+        downloads: Number(project.downloads || 0),
+        upvotes: Number(project.upvotes || 0),
+        updated: project.updated || Date.now(),
+    };
+    const idx = items.findIndex((item) => item.id === project.id);
+    if (idx >= 0) items[idx] = { ...items[idx], ...next };
+    else items.unshift(next);
+    saveMarketplaceItems(items);
+}
+
 // ============ State ============
 let currentProject = null;
 let projects = parseStoredJson('projects', []);
@@ -71,6 +97,81 @@ let pipelineMode = 'default';
 let projectSelectionMode = false;
 let selectedProjectIds = new Set();
 let lastPartialProgramActions = null;
+
+const DEFAULT_PROJECT_ICON = 'bolt';
+const PROJECT_NAME_MAX = 48;
+const PROJECT_DESCRIPTION_MAX = 180;
+const PROJECT_ICON_IDS = [
+    'bolt', 'star', 'wand', 'doc', 'music', 'photo', 'video', 'mic',
+    'calendar', 'clock', 'check', 'chat', 'gear', 'map', 'bell', 'spark',
+    'folder', 'link', 'globe', 'home', 'camera', 'list', 'shield',
+    'heart', 'bookmark', 'repeat', 'wifi', 'sun', 'moon', 'lock', 'key',
+    'tag', 'mail', 'phone', 'clipboard',
+];
+
+const PROJECT_ICON_SVGS = {
+    bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+    wand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l8-8"></path><path d="M14 7l4-4 4 4-4 4z"></path><path d="M16 2v2"></path><path d="M22 6h-2"></path><path d="M12 2l1.5 1.5"></path></svg>',
+    doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>',
+    music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
+    photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>',
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="15" height="12" rx="2"></rect><path d="M21 8l-4 3 4 3V8z"></path></svg>',
+    mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>',
+    calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M2 12l5 5L17 7"></path></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>',
+    map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"></polygon><line x1="8" y1="3" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="21"></line></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>',
+    spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5z"></path><path d="M19 13l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"></path></svg>',
+    folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L10 5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L14 19"></path></svg>',
+    globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20z"></path></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7"></path><path d="M9 22V12h6v10"></path></svg>',
+    camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-2h6l2 2h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
+    list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="4" cy="6" r="1"></circle><circle cx="4" cy="12" r="1"></circle><circle cx="4" cy="18" r="1"></circle></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>',
+    bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>',
+    repeat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>',
+    wifi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M8.5 16.05a6 6 0 0 1 7 0"></path><circle cx="12" cy="20" r="1"></circle></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>',
+    moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+    key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="3"></circle><path d="M10.5 15.5h11"></path><line x1="17" y1="15.5" x2="17" y2="18"></line><line x1="20" y1="15.5" x2="20" y2="17"></line></svg>',
+    tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10V4a2 2 0 0 0-2-2h-6L2 12l10 10 10-10z"></path><circle cx="17" cy="7" r="1"></circle></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M22 6l-10 7L2 6"></path></svg>',
+    phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.09 2h3a2 2 0 0 1 2 1.72l.5 3a2 2 0 0 1-.57 1.8L7.9 9.6a16 16 0 0 0 6 6l1.08-1.12a2 2 0 0 1 1.8-.57l3 .5a2 2 0 0 1 1.72 2z"></path></svg>',
+    clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="4" rx="1"></rect><path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"></path></svg>',
+};
+
+function getProjectIconSvg(iconId) {
+    return PROJECT_ICON_SVGS[iconId] || PROJECT_ICON_SVGS[DEFAULT_PROJECT_ICON];
+}
+
+function isValidProjectIcon(iconId) {
+    return Boolean(PROJECT_ICON_SVGS[iconId]);
+}
+
+function normalizeProjectMetadata(project) {
+    if (!project || typeof project !== 'object') return;
+    if (typeof project.name !== 'string') project.name = '';
+    if (project.description == null && typeof project.summary === 'string') {
+        project.description = project.summary;
+    }
+    if (typeof project.description !== 'string') project.description = String(project.description || '');
+    if (!project.icon) project.icon = DEFAULT_PROJECT_ICON;
+    if (typeof project.nameFrozen !== 'boolean') project.nameFrozen = false;
+    if (typeof project.descriptionFrozen !== 'boolean') project.descriptionFrozen = false;
+    if (typeof project.iconFrozen !== 'boolean') project.iconFrozen = false;
+}
+
+function getProjectDisplayName(project) {
+    const name = String(project?.name || '').trim();
+    return name || 'Untitled Project';
+}
 
 function getPageMode() {
     return document.body?.dataset?.page || '';
@@ -153,18 +254,30 @@ function initEventListeners() {
     // Preview Toolbar
     document.getElementById('add-action-btn')?.addEventListener('click', handleAddActionClick);
     document.getElementById('edit-btn')?.addEventListener('click', toggleEditMode);
+    document.getElementById('project-edit-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openProjectSettingsModal();
+    });
+    document.getElementById('project-settings-save-btn')?.addEventListener('click', saveProjectSettings);
+    renderProjectIconOptions();
 
     // Download Options
     document.getElementById('download-publish-btn')?.addEventListener('click', () => executeDownload('publish'));
     document.getElementById('download-raw-btn')?.addEventListener('click', () => executeDownload('raw'));
     document.getElementById('project-name-input')?.addEventListener('blur', function () {
         if (!currentProject) return;
-        const nextName = this.value.trim();
-        if (!nextName) return;
-        if (nextName !== currentProject.name) {
+        normalizeProjectMetadata(currentProject);
+        const nextName = this.value.trim().slice(0, PROJECT_NAME_MAX);
+        const previousName = currentProject.name || '';
+        this.value = nextName;
+        if (nextName !== previousName) {
             pushUndoState();
             currentProject.name = nextName;
+            if (!currentProject.nameFrozen) currentProject.nameFrozen = true;
+            currentProject.updated = Date.now();
+            upsertMarketplaceItemFromProject(currentProject);
             saveProjects();
+            updateMobileShortcutCard();
         }
     });
     document.addEventListener('click', (e) => {
@@ -356,6 +469,7 @@ function renderProjectsGrid() {
     updateProjectSelectionUI();
 
     projects.forEach(p => {
+        normalizeProjectMetadata(p);
         const card = document.createElement('div');
         const isSelected = selectedProjectIds.has(p.id);
         card.className = `project-card${isSelected ? ' selected' : ''}`;
@@ -368,6 +482,12 @@ function renderProjectsGrid() {
         };
         const date = new Date(p.updated).toLocaleDateString();
         const actionCount = p.actions ? p.actions.length : 0;
+        const descriptionText = typeof p.description === 'string' ? p.description.trim() : '';
+        const descriptionHtml = descriptionText
+            ? `<div class="project-description">${escapeHtml(descriptionText)}</div>`
+            : '';
+        const displayName = getProjectDisplayName(p);
+        const iconSvg = getProjectIconSvg(p.icon);
         const selectionBtn = `
                     <button class="project-select-toggle${isSelected ? ' selected' : ''}" onclick="event.stopPropagation(); toggleProjectSelection('${p.id}')" title="Select project">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -377,7 +497,11 @@ function renderProjectsGrid() {
                 `;
         card.innerHTML = `
                     ${selectionBtn}
-                    <h3>${escapeHtml(p.name)}</h3>
+                    <div class="project-card-header">
+                        <div class="project-card-icon">${iconSvg}</div>
+                        <h3>${escapeHtml(displayName)}</h3>
+                    </div>
+                    ${descriptionHtml}
                     <div class="project-meta"><span>${date}</span><span>${actionCount} actions</span></div>
                     <div class="project-actions">
                         <button class="node-action-btn delete" onclick="event.stopPropagation(); deleteProject('${p.id}')" title="Delete">
@@ -389,13 +513,99 @@ function renderProjectsGrid() {
     });
 }
 
+function renderProjectIconOptions() {
+    const container = document.getElementById('project-icon-grid');
+    if (!container) return;
+    container.innerHTML = '';
+    PROJECT_ICON_IDS.forEach((iconId) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'project-icon-option';
+        button.dataset.icon = iconId;
+        button.innerHTML = getProjectIconSvg(iconId);
+        button.addEventListener('click', () => setProjectIconSelection(iconId));
+        container.appendChild(button);
+    });
+}
+
+function setProjectIconSelection(iconId) {
+    const container = document.getElementById('project-icon-grid');
+    if (!container) return;
+    const safeIcon = PROJECT_ICON_SVGS[iconId] ? iconId : DEFAULT_PROJECT_ICON;
+    container.querySelectorAll('.project-icon-option').forEach((button) => {
+        button.classList.toggle('active', button.dataset.icon === safeIcon);
+    });
+    container.dataset.selectedIcon = safeIcon;
+}
+
+function openProjectSettingsModal() {
+    if (!currentProject) return;
+    const modal = document.getElementById('project-settings-modal');
+    if (!modal) return;
+    normalizeProjectMetadata(currentProject);
+    const nameInput = document.getElementById('project-settings-name');
+    const descriptionInput = document.getElementById('project-settings-description');
+    if (nameInput) nameInput.value = currentProject.name || '';
+    if (descriptionInput) descriptionInput.value = currentProject.description || '';
+    setProjectIconSelection(currentProject.icon || DEFAULT_PROJECT_ICON);
+    modal.classList.add('active');
+}
+
+function closeProjectSettingsModal() {
+    document.getElementById('project-settings-modal')?.classList.remove('active');
+}
+
+function saveProjectSettings() {
+    if (!currentProject) return;
+    normalizeProjectMetadata(currentProject);
+    const nameInput = document.getElementById('project-settings-name');
+    const descriptionInput = document.getElementById('project-settings-description');
+    const iconGrid = document.getElementById('project-icon-grid');
+    const nextName = String(nameInput?.value || '').trim().slice(0, PROJECT_NAME_MAX);
+    const nextDescription = String(descriptionInput?.value || '').trim().slice(0, PROJECT_DESCRIPTION_MAX);
+    const rawIcon = iconGrid?.dataset?.selectedIcon || DEFAULT_PROJECT_ICON;
+    const nextIcon = isValidProjectIcon(rawIcon) ? rawIcon : DEFAULT_PROJECT_ICON;
+    const previousName = currentProject.name || '';
+    const previousDescription = currentProject.description || '';
+    const previousIcon = currentProject.icon || DEFAULT_PROJECT_ICON;
+    const nameChanged = nextName !== previousName;
+    const descriptionChanged = nextDescription !== previousDescription;
+    const iconChanged = nextIcon !== previousIcon;
+    if (nameChanged || descriptionChanged || iconChanged) {
+        pushUndoState();
+        currentProject.name = nextName;
+        currentProject.description = nextDescription;
+        currentProject.icon = nextIcon;
+        if (nameChanged && !currentProject.nameFrozen) currentProject.nameFrozen = true;
+        if (descriptionChanged && !currentProject.descriptionFrozen) currentProject.descriptionFrozen = true;
+        if (iconChanged && !currentProject.iconFrozen) currentProject.iconFrozen = true;
+        currentProject.updated = Date.now();
+    }
+    const titleInput = document.getElementById('project-name-input');
+    if (titleInput) titleInput.value = nextName;
+    if (nameChanged || descriptionChanged || iconChanged) {
+        upsertMarketplaceItemFromProject(currentProject);
+        saveProjects();
+        updateMobileShortcutCard();
+        if (isProjectsPage()) renderProjectsGrid();
+    }
+    closeProjectSettingsModal();
+}
+
 function createNewProject(initialPrompt = null) {
     const id = 'proj_' + Date.now();
     const newProject = {
         id,
-        name: 'New Shortcut',
+        name: '',
         created: Date.now(),
         updated: Date.now(),
+        description: '',
+        icon: DEFAULT_PROJECT_ICON,
+        downloads: 0,
+        upvotes: 0,
+        nameFrozen: false,
+        descriptionFrozen: false,
+        iconFrozen: false,
         history: [],
         actions: [],
         programObj: null
@@ -421,6 +631,7 @@ function loadProject(id) {
     }
     currentProject = projects.find(p => p.id === id);
     if (!currentProject) { showProjectsView(); return; }
+    normalizeProjectMetadata(currentProject);
     currentExportCache = null;
     currentActions = ensureActionUUIDs(currentProject.actions || []);
     currentActions = normalizeControlFlowToNested(currentActions);
@@ -429,7 +640,7 @@ function loadProject(id) {
     currentProgramObj = currentProject.programObj || null;
     resetUndoRedoHistory();
     showWorkspaceView();
-    document.getElementById('project-name-input').value = currentProject.name;
+    document.getElementById('project-name-input').value = currentProject.name || '';
     window.history.replaceState({}, '', `app.html?id=${encodeURIComponent(id)}`);
     const messagesEl = document.getElementById('messages');
     messagesEl.innerHTML = '';
@@ -573,7 +784,7 @@ function applyWorkspaceState(state) {
     currentActions = ensureActionUUIDs(clonePlainObject(state.actions || []));
     currentActions = normalizeControlFlowToNested(currentActions);
     if (currentProject) {
-        if (typeof state.name === 'string' && state.name.trim()) {
+        if (typeof state.name === 'string') {
             currentProject.name = state.name.trim();
             const nameInput = document.getElementById('project-name-input');
             if (nameInput) nameInput.value = currentProject.name;
@@ -3308,9 +3519,15 @@ function handleFinalResponse(data) {
         return;
     }
     const isDiscussionMode = chatMode === 'discussion';
+    if (currentProject) normalizeProjectMetadata(currentProject);
     const nextName = typeof data.finalName === 'string' ? data.finalName.trim() : '';
     const willApplyProgram = !!data.program && !isDiscussionMode;
-    const willApplyName = !!(nextName && currentProject && !isDiscussionMode && nextName !== currentProject.name);
+    const canUpdateName = !!(currentProject && !currentProject.nameFrozen);
+    const canUpdateDescription = !!(currentProject && !currentProject.descriptionFrozen);
+    const canUpdateIcon = !!(currentProject && !currentProject.iconFrozen);
+    const willApplyName = !!(nextName && currentProject && !isDiscussionMode && canUpdateName && nextName !== currentProject.name);
+    const shortSummary = typeof data.shortSummary === 'string' ? data.shortSummary.trim() : '';
+    const iconChoice = typeof data.iconChoice === 'string' ? data.iconChoice.trim() : '';
     if (willApplyProgram || willApplyName) {
         pushUndoState();
     }
@@ -3320,6 +3537,26 @@ function handleFinalResponse(data) {
     if (willApplyName) {
         currentProject.name = nextName;
         document.getElementById('project-name-input').value = nextName;
+        currentProject.updated = Date.now();
+        upsertMarketplaceItemFromProject(currentProject);
+        updateMobileShortcutCard();
+    }
+
+    if (shortSummary && currentProject && !isDiscussionMode && canUpdateDescription) {
+        if (shortSummary !== currentProject.description) {
+            currentProject.description = shortSummary;
+            currentProject.updated = Date.now();
+            upsertMarketplaceItemFromProject(currentProject);
+        }
+    }
+
+    if (iconChoice && currentProject && !isDiscussionMode && canUpdateIcon) {
+        const normalizedIcon = isValidProjectIcon(iconChoice) ? iconChoice : null;
+        if (normalizedIcon && normalizedIcon !== currentProject.icon) {
+            currentProject.icon = normalizedIcon;
+            currentProject.updated = Date.now();
+            upsertMarketplaceItemFromProject(currentProject);
+        }
     }
 
     // Store program object
@@ -3435,7 +3672,7 @@ function updateMobileShortcutCard() {
     card.classList.remove('hidden');
     const titleEl = document.getElementById('mobile-shortcut-title');
     const subEl = document.getElementById('mobile-shortcut-sub');
-    const name = String(currentProject?.name || 'Untitled Shortcut');
+    const name = getProjectDisplayName(currentProject);
     const actionCount = Array.isArray(currentActions) ? currentActions.length : 0;
     const updatedAt = currentProject?.updated || currentProject?.created || Date.now();
     const dateLabel = new Date(updatedAt).toLocaleString(undefined, {

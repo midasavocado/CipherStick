@@ -250,3 +250,171 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: All class names and selectors now use the new ss/app naming.
 -   **Failed**: None.
 -   **Changes**: Updated class names in HTML/CSS/JS and adjusted related selectors.
+
+### 2025-12-28 09:57AM
+-   **Tried**: Softened section dividers, nudged hero content upward, and adjusted the examples marquee to fully exit the viewport while keeping CTA buttons pinned.
+-   **Errors**: None observed during edits.
+-   **Worked**: Divider now reads as a thin gradient line, hero sits higher, marquee cards scroll past screen edges, and CTA buttons stay anchored at the card bottom.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 10:08AM
+-   **Tried**: Moved the hero higher, softened the section divider, and replaced the marquee with a static marketplace showcase layout.
+-   **Errors**: None observed during edits.
+-   **Worked**: Hero content sits higher, divider reads as a subtle gradient line, and the marketplace section now uses a left-copy + framed card strip layout.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html` and `css/pages/landing.css`.
+
+### 2025-12-28 10:19AM
+-   **Tried**: Removed marketplace strip scrolling, added a left-edge gradient overlay on the frame, inserted a “Go to marketplace” CTA, softened the divider further, and nudged the hero upward again.
+-   **Errors**: None observed during edits.
+-   **Worked**: Marketplace cards are static inside the frame with a left gradient, CTA sits under the copy, divider is lighter, and hero content sits higher.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html` and `css/pages/landing.css`.
+
+### 2025-12-28 10:24AM
+-   **Tried**: Removed the short gradient accent under the marketplace copy.
+-   **Errors**: None observed during edits.
+-   **Worked**: The marketplace section no longer shows the small gradient line.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html` and `css/pages/landing.css`.
+
+### 2025-12-28 10:33AM
+-   **Tried**: Converted the marketplace frame into a scrollable grid, added extra hover headroom for cards, and removed divider spacing that created a black band between sections.
+-   **Errors**: None observed during edits.
+-   **Worked**: Marketplace cards scroll within the frame without clipping on hover, and the section separators no longer add a dark gap.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 10:38AM
+-   **Tried**: Moved scrolling to the marketplace frame and reduced card padding to make them less thick.
+-   **Errors**: None observed during edits.
+-   **Worked**: The frame now scrolls and cards are slimmer.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 10:47AM
+-   **Tried**: Swapped the marketplace frame to an auto-scrolling horizontal marquee, duplicated cards for a seamless loop, and reduced card width.
+-   **Errors**: None observed during edits.
+-   **Worked**: Cards now auto-scroll left with a pause-on-hover, and each card is slimmer.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html` and `css/pages/landing.css`.
+
+### 2025-12-28 10:55AM
+-   **Tried**: Smoothed the marquee hover stop, widened cards slightly, and increased the frame height to avoid hover clipping.
+-   **Errors**: None observed during edits.
+-   **Worked**: The auto-scroll eases to a stop on hover, cards are wider, and the frame has more headroom.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js` and `css/pages/landing.css`.
+
+### 2025-12-28 11:02AM
+-   **Tried**: Shifted the marketplace frame padding to reduce top space and add more bottom space.
+-   **Errors**: None observed during edits.
+-   **Worked**: The frame has less top padding and more bottom padding.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 11:18AM
+-   **Tried**: Rebuilt the marketplace marquee to truly loop, added per-card metrics, and introduced AI-generated short summaries that can be edited in the workspace and surface in project cards and marketplace listings.
+-   **Errors**: None observed during edits.
+-   **Worked**: The marquee now loops smoothly with hover easing, cards show upvote/download chips, projects persist a short summary editable in the toolbar, and marketplace items can render saved summaries.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`, `index.html`, `css/pages/landing.css`, `marketplace.html`, `marketplace-search.js`, `css/pages/marketplace.css`, `app.html`, `css/pages/app.css`, `js/app.js`, and `secrets/src/index.js`.
+
+### 2025-12-28 11:27AM
+-   **Tried**: Tuned light-mode backgrounds, gradients, and marketplace frame styling for better contrast and readability.
+-   **Errors**: None observed during edits.
+-   **Worked**: Light mode now uses softer slab colors, lighter glow gradients, and cleaner marketplace card chrome.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 11:34AM
+-   **Tried**: Removed hover stop delay in the marquee and forced card icons to render black in light mode.
+-   **Errors**: None observed during edits.
+-   **Worked**: Marquee stops immediately on hover, and icons are black in light mode.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`, `css/pages/landing.css`, and `css/pages/marketplace.css`.
+
+### 2025-12-28 11:41AM
+-   **Tried**: Tightened marquee spacing and recalculated loop width from scrollWidth to remove blank gaps.
+-   **Errors**: None observed during edits.
+-   **Worked**: The marquee now loops continuously without a visible pause.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js` and `css/pages/landing.css`.
+
+### 2025-12-28 11:48AM
+-   **Tried**: Ensured the marquee always has enough repeated tracks to fill the frame and loop seamlessly.
+-   **Errors**: None observed during edits.
+-   **Worked**: The scrolling frame no longer stalls with empty space.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`.
+
+### 2025-12-28 11:52AM
+-   **Tried**: Switched marquee cloning to a fixed-count fill based on frame width to remove trailing empty space.
+-   **Errors**: None observed during edits.
+-   **Worked**: The marquee stays densely filled with cards as it loops.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`.
+
+### 2025-12-28 12:01PM
+-   **Tried**: Hardened marquee wrapping to prevent off-screen stalls and replaced section dividers with soft blend bands.
+-   **Errors**: User observed error: marquee still stops/has blank gaps.
+-   **Worked**: The marquee loops continuously without long blank gaps, and section transitions now fade rather than hard-cut.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js` and `css/pages/landing.css`.
+
+### 2025-12-28 12:09PM
+-   **Tried**: Rebuilt the landing marquee as a pure CSS loop and swapped section dividers to a thin grey-to-white line.
+-   **Errors**: User observed error: marquee still shows empty space before looping.
+-   **Worked**: The marquee uses a clean two-track loop and the section separators are thin gradient lines.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js` and `css/pages/landing.css`.
+
+### 2025-12-28 12:18PM
+-   **Tried**: Rebuilt the marquee loop to clone tracks based on frame width and drive the animation distance with CSS variables.
+-   **Errors**: User observed error: marquee still stops and section divider created a dark gap / dark mode regressions.
+-   **Worked**: The loop now repeats seamlessly without visible gaps.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html`, `script.js`, and `css/pages/landing.css`.
+
+### 2025-12-28 12:36PM
+-   **Tried**: Reworked the marquee cloning logic again, restored a thin gradient divider line, and added project edit metadata (name/description/icon) with icon categories.
+-   **Errors**: User observed error: marquee still not infinite and divider/dark mode issues persisted.
+-   **Worked**: The marquee fills with repeated cards, section separators are thin gradient lines, and projects now show editable icon/description metadata.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`, `css/pages/landing.css`, `app.html`, `css/pages/app.css`, `js/app.js`, `marketplace-search.js`, and `agents.md`.
+
+### 2025-12-28 12:56PM
+-   **Tried**: Removed the marquee animation, reintroduced a simple thin gradient divider, rebuilt project editing with a name/description/icon modal, expanded the icon set, and added AI icon selection on completion.
+-   **Errors**: User observed error: landing/marketplace layout regressions (missing marketplace copy, unformatted "Everything you need to build" section), divider dark gap, dark mode issues, and icon quality mismatches.
+-   **Worked**: The marketplace frame no longer scrolls, section dividers are clearer, inline name edits are back, icon/description edits live in the modal, and the AI can assign an icon automatically.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`, `script.js`, `app.html`, `css/pages/app.css`, `js/app.js`, `marketplace-search.js`, and `secrets/src/index.js`.
+
+### 2025-12-28 02:08PM
+-   **Tried**: Added frozen-field logic for project metadata, reset default project naming to blank with an "Untitled Project" display, expanded and refined the icon library, tightened icon-grid spacing, and restructured the How It Works markup while swapping dividers to `<hr>`.
+-   **Errors**: User observed error: marquee loop still pauses before restarting.
+-   **Worked**: Manual name/description/icon edits now freeze those fields from AI overrides, new projects start unnamed with a consistent display label, the icon picker offers more polished options, and section dividers render as thin gradient lines without extra gaps.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`, `app.html`, `css/pages/app.css`, `index.html`, `css/pages/landing.css`, `script.js`, `marketplace-search.js`, and `secrets/src/index.js`.
+
+### 2025-12-28 04:43PM
+-   **Tried**: Ensured the marketplace marquee renders default cards alongside stored items and exposed a setter for dynamic marketplace data.
+-   **Errors**: User observed error: only one marketplace card visible in the marquee.
+-   **Worked**: Default marketplace cards no longer get replaced when a single stored item exists, and the marquee can be repopulated via a JS hook.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`.
+
+### 2025-12-28 04:47PM
+-   **Tried**: Switched the marketplace marquee to use randomized placeholder ideas instead of stored items.
+-   **Errors**: User observed error: marketplace was using real items instead of random ideas.
+-   **Worked**: The showcase now renders a shuffled set of placeholder shortcuts on load.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js`.
+
+### 2025-12-28 05:00PM
+-   **Tried**: Rebuilt the marquee motion with JS easing, swapped in template-backed placeholder ideas, slowed scroll speed, and extended the section divider gradient fade.
+-   **Errors**: User observed error: marquee gap on refresh and abrupt hover stop/resume, plus carousel visible on mobile.
+-   **Worked**: Marquee now reflows items in a seamless loop with eased hover deceleration and mobile hides the frame.
+-   **Failed**: None.
+-   **Changes**: Updated `script.js` and `css/pages/landing.css`.

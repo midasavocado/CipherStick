@@ -9,7 +9,7 @@
     overflow: hidden;
     padding: 0;
     /* Reset padding to allow full control */
-    padding-top: 40px;
+    padding-top: 0;
     /* Reduced from 80px to move content up */
 }
 
@@ -25,10 +25,36 @@
 }
 
 .section-divider {
+    border: 0;
     height: 1px;
-    width: min(1120px, 92%);
-    margin: 2rem auto 0;
-    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.35), transparent);
+    width: min(1200px, 94%);
+    margin: 0 auto;
+    background: linear-gradient(90deg,
+            rgba(148, 163, 184, 0.42) 0%,
+            rgba(148, 163, 184, 0.3) 24%,
+            rgba(210, 218, 228, 0.55) 38%,
+            rgba(248, 250, 252, 0.95) 50%,
+            rgba(210, 218, 228, 0.55) 62%,
+            rgba(148, 163, 184, 0.3) 76%,
+            rgba(148, 163, 184, 0.42) 100%);
+    opacity: 1;
+    display: block;
+}
+
+.section-divider::before {
+    content: none;
+}
+
+body.mode-dark .section-divider {
+    background: linear-gradient(90deg,
+            rgba(148, 163, 184, 0.38) 0%,
+            rgba(148, 163, 184, 0.26) 24%,
+            rgba(210, 218, 228, 0.45) 38%,
+            rgba(255, 255, 255, 0.8) 50%,
+            rgba(210, 218, 228, 0.45) 62%,
+            rgba(148, 163, 184, 0.26) 76%,
+            rgba(148, 163, 184, 0.38) 100%);
+    opacity: 0.95;
 }
 
 .section.section-slab {
@@ -121,13 +147,15 @@
     text-align: center;
     padding: 2rem;
     z-index: 2;
-    min-height: 80vh;
+    min-height: 58vh;
     /* Ensure it takes up vertical space */
+    transform: translateY(-24px);
 }
 
 @media (max-width: 900px) {
     .hero-container {
-        padding-top: 4rem;
+        padding-top: 2rem;
+        transform: translateY(-12px);
     }
 }
 
@@ -597,62 +625,160 @@ body:not(.mode-dark) .float-card {
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
 }
 
-.examples-marquee {
+.marketplace-showcase {
+    display: grid;
+    grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+    gap: 3rem;
+    align-items: center;
+}
+
+.marketplace-copy h2 {
+    margin-bottom: 1rem;
+}
+
+.marketplace-copy p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.marketplace-cta {
+    margin-top: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    color: rgba(148, 163, 184, 0.7);
+    margin-bottom: 0.75rem;
+}
+
+.marketplace-frame {
+    background: rgba(6, 10, 18, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 24px;
+    padding: 2rem 1.5rem 2.4rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     overflow: hidden;
     position: relative;
-    margin-top: 2.5rem;
-    padding-bottom: 1.5rem;
+    max-height: none;
 }
 
-.examples-marquee::before,
-.examples-marquee::after {
-    content: '';
+.marketplace-frame::before {
+    content: "";
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 80px;
-    z-index: 2;
+    inset: 0 auto 0 0;
+    width: 160px;
+    background: linear-gradient(90deg, rgba(8, 12, 20, 0.95), rgba(8, 12, 20, 0));
     pointer-events: none;
+    z-index: 2;
 }
 
-.examples-marquee::before {
-    left: 0;
-    background: linear-gradient(90deg, rgba(15, 20, 26, 0.9), rgba(15, 20, 26, 0));
-}
-
-.examples-marquee::after {
-    right: 0;
-    background: linear-gradient(270deg, rgba(15, 20, 26, 0.9), rgba(15, 20, 26, 0));
-}
-
-.marquee-track {
+.marketplace-strip {
+    --marquee-gap: 0.5rem;
+    --marquee-duration: 32.2s;
     display: flex;
-    width: max-content;
-    gap: 1.5rem;
-    animation: marqueeScroll 38s linear infinite;
-    will-change: transform;
+    width: 100%;
+    padding: 0.5rem 0 0.75rem;
+    position: relative;
+    z-index: 1;
+    gap: var(--marquee-gap);
+    overflow: hidden;
+    user-select: none;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
-.examples-marquee:hover .marquee-track {
+.marketplace-track {
+    flex-shrink: 0;
+    display: flex;
+    gap: var(--marquee-gap);
+    min-width: 100%;
+    width: max-content;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    animation: marketplaceMarquee var(--marquee-duration, 28s) linear infinite;
+}
+
+.marketplace-strip.marquee-js .marketplace-track {
+    animation: none;
+    transform: translate3d(0, 0, 0);
+}
+
+.marketplace-strip .example-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.1rem;
+    position: relative;
+    width: 260px;
+    min-width: 260px;
+    flex: 0 0 auto;
+}
+
+.marketplace-strip .card-metrics {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.01em;
+}
+
+.marketplace-strip .card-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.marketplace-strip .card-metric svg {
+    width: 12px;
+    height: 12px;
+}
+
+.marketplace-strip .example-card .btn {
+    margin-top: auto !important;
+}
+
+.marketplace-frame:hover .marketplace-track {
     animation-play-state: paused;
 }
 
-.marquee-group {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.example-card {
-    flex: 0 0 280px;
-}
-
-@keyframes marqueeScroll {
+@keyframes marketplaceMarquee {
     from {
         transform: translateX(0);
     }
-
     to {
-        transform: translateX(-50%);
+        transform: translateX(calc(-100% - var(--marquee-gap)));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marketplace-track {
+        animation-play-state: paused !important;
+    }
+}
+
+
+@media (max-width: 900px) {
+    .marketplace-showcase {
+        grid-template-columns: 1fr;
+    }
+
+    .marketplace-frame {
+        width: 100%;
+        display: none;
     }
 }
 
@@ -669,6 +795,77 @@ body:not(.mode-dark) .flashy-text {
     /* Fix lint */
     -webkit-text-fill-color: transparent;
 }
+
+body:not(.mode-dark) .hero-bg-effect {
+    background: radial-gradient(circle at 50% 45%, rgba(59, 130, 246, 0.18) 0%, rgba(14, 165, 233, 0.08) 35%, transparent 70%);
+}
+
+body:not(.mode-dark) .section-slab-1 {
+    background-color: #f6f7fb;
+}
+
+body:not(.mode-dark) .section-slab-2 {
+    background-color: #f2f6fc;
+}
+
+body:not(.mode-dark) .section-slab-3 {
+    background-color: #f4f9f7;
+}
+
+body:not(.mode-dark) .section-slab-4 {
+    background-color: #f8f6fb;
+}
+
+body:not(.mode-dark) .section-slab-5 {
+    background-color: #f4f7fb;
+}
+
+body:not(.mode-dark) .section-bg-1 {
+    background-image: radial-gradient(circle at 18% 20%, rgba(59, 130, 246, 0.18), transparent 55%),
+        radial-gradient(circle at 82% 35%, rgba(168, 85, 247, 0.12), transparent 60%);
+}
+
+body:not(.mode-dark) .section-bg-2 {
+    background-image: radial-gradient(circle at 15% 20%, rgba(14, 165, 233, 0.16), transparent 55%),
+        radial-gradient(circle at 75% 35%, rgba(56, 189, 248, 0.12), transparent 60%);
+}
+
+body:not(.mode-dark) .section-bg-3 {
+    background-image: radial-gradient(circle at 20% 25%, rgba(34, 197, 94, 0.14), transparent 55%),
+        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.14), transparent 60%);
+}
+
+body:not(.mode-dark) .section-bg-4 {
+    background-image: radial-gradient(circle at 20% 20%, rgba(251, 146, 60, 0.12), transparent 55%),
+        radial-gradient(circle at 75% 35%, rgba(168, 85, 247, 0.1), transparent 60%);
+}
+
+body:not(.mode-dark) .section-bg-5 {
+    background-image: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.14), transparent 55%),
+        radial-gradient(circle at 80% 40%, rgba(14, 165, 233, 0.14), transparent 60%);
+}
+
+body:not(.mode-dark) .marketplace-frame {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(148, 163, 184, 0.25);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+body:not(.mode-dark) .marketplace-frame::before {
+    background: linear-gradient(90deg, rgba(248, 250, 252, 0.95), rgba(248, 250, 252, 0));
+}
+
+body:not(.mode-dark) .marketplace-strip .card-metrics {
+    background: rgba(248, 250, 252, 0.9);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #475569;
+}
+
+body:not(.mode-dark) .marketplace-strip .card-icon {
+    color: #0f172a;
+}
+
+
 
 /* Layout Container */
 /* Layout Container Duplicate Removed */

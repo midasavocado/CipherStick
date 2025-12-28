@@ -112,7 +112,7 @@
                             </svg>
                         </div>
                         <div class="mobile-shortcut-meta">
-                            <div class="mobile-shortcut-title" id="mobile-shortcut-title">Untitled Shortcut</div>
+                            <div class="mobile-shortcut-title" id="mobile-shortcut-title">Untitled Project</div>
                             <div class="mobile-shortcut-sub" id="mobile-shortcut-sub">0 actions</div>
                         </div>
                         <div class="mobile-shortcut-actions">
@@ -183,8 +183,17 @@
                 <!-- Preview Pane -->
                 <section class="preview-pane">
                     <div class="preview-toolbar">
-                        <input type="text" id="project-name-input" class="project-name-input"
-                            placeholder="Untitled Project" value="Untitled Project">
+                        <div class="project-title-wrap" id="project-title-wrap">
+                            <input type="text" id="project-name-input" class="project-name-input"
+                                placeholder="Untitled Project" value="" maxlength="48">
+                            <button class="icon-btn-sm project-edit-btn" id="project-edit-btn" title="Edit project">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </div>
                         <div class="toolbar-actions">
                             <button class="toolbar-btn icon-only" id="undo-btn" onclick="undoWorkspace()"
                                 title="Undo (⌘Z)" disabled style="display:none;">
@@ -356,6 +365,36 @@
                         <p>Get the JSON and PLIST exactly as generated.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Settings Modal -->
+    <div id="project-settings-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>Edit Project</h3>
+                <button class="modal-close" onclick="closeProjectSettingsModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <div class="modal-body project-settings-body">
+                <label class="project-settings-label" for="project-settings-name">Name</label>
+                <input type="text" id="project-settings-name" class="input-glass project-settings-input"
+                    placeholder="Project name" maxlength="48">
+
+                <label class="project-settings-label" for="project-settings-description">Description</label>
+                <textarea id="project-settings-description" class="input-glass project-settings-input" rows="3"
+                    placeholder="Short description for your project" maxlength="180"></textarea>
+
+                <div class="project-settings-label">Icon</div>
+                <div id="project-icon-grid" class="project-icon-grid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeProjectSettingsModal()">Cancel</button>
+                <button class="btn primary" id="project-settings-save-btn">Save</button>
             </div>
         </div>
     </div>

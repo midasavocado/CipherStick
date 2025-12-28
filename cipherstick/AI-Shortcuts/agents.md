@@ -103,6 +103,8 @@ Read "thevision.md" which is located in the same folder that this file is in. Th
 3. What worked, what failed
 4. What changes you made
 
+If the user reports an error, update the most recent log entry in `thevision.md` by replacing "Errors: None observed during edits." with "Errors: User observed error: <brief error>".
+
 ## Template Coverage (MANDATORY)
 
 Whenever a new template is added or an existing template is changed, you MUST cross-check every relevant surface and keep them in sync. At minimum verify and update:
