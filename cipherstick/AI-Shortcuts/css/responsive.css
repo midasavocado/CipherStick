@@ -67,11 +67,22 @@
     }
 
     .top-bar {
-        padding: 0 1rem;
+        padding: 0.75rem 1rem;
+        height: auto;
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
     }
 
     .nav-actions {
         gap: 0.5rem;
+    }
+
+    .nav-links-mobile {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        gap: 0.75rem;
+        padding-bottom: 0.25rem;
     }
 
     .logo-area {

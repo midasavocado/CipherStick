@@ -6,6 +6,9 @@ console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
 const STORAGE_PREFIX = 'shortcutstudio';
 const LEGACY_STORAGE_PREFIX = String.fromCharCode(102, 108, 117, 120);
+const DOWNLOAD_LIMIT_FREE = 3;
+const DOWNLOAD_LIMIT_PRO = 20;
+const DOWNLOAD_QUOTA_STORAGE_KEY = 'download_quota';
 
 function storageKey(suffix) {
     return `${STORAGE_PREFIX}_${suffix}`;
@@ -39,6 +42,51 @@ function parseStoredJson(suffix, fallback) {
     } catch {
         return fallback;
     }
+}
+
+function getTodayKey() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function getDownloadQuotaState() {
+    const limit = IS_PRO_USER ? DOWNLOAD_LIMIT_PRO : DOWNLOAD_LIMIT_FREE;
+    const stored = parseStoredJson(DOWNLOAD_QUOTA_STORAGE_KEY, null);
+    const today = getTodayKey();
+    if (!stored || stored.date !== today || typeof stored.remaining !== 'number') {
+        const fresh = { date: today, remaining: limit, limit };
+        setStoredValue(DOWNLOAD_QUOTA_STORAGE_KEY, JSON.stringify(fresh));
+        return fresh;
+    }
+    const remaining = Math.max(0, Math.min(limit, Number(stored.remaining)));
+    if (remaining !== stored.remaining || stored.limit !== limit || stored.date !== today) {
+        const next = { date: today, remaining, limit };
+        setStoredValue(DOWNLOAD_QUOTA_STORAGE_KEY, JSON.stringify(next));
+        return next;
+    }
+    return { date: today, remaining, limit };
+}
+
+function setDownloadQuotaRemaining(remaining) {
+    const limit = IS_PRO_USER ? DOWNLOAD_LIMIT_PRO : DOWNLOAD_LIMIT_FREE;
+    const next = { date: getTodayKey(), remaining: Math.max(0, Math.min(limit, remaining)), limit };
+    setStoredValue(DOWNLOAD_QUOTA_STORAGE_KEY, JSON.stringify(next));
+    updateDownloadQuotaUI();
+}
+
+function updateDownloadQuotaUI() {
+    const pill = document.getElementById('download-quota-pill');
+    if (!pill) return;
+    const { remaining, limit } = getDownloadQuotaState();
+    pill.textContent = `${remaining} / ${limit} downloads left`;
+}
+
+function consumeDownloadQuota() {
+    const { remaining } = getDownloadQuotaState();
+    if (remaining <= 0) {
+        updateDownloadQuotaUI();
+        return;
+    }
+    setDownloadQuotaRemaining(remaining - 1);
 }
 
 function getMarketplaceItems() {
@@ -101,6 +149,8 @@ let lastPartialProgramActions = null;
 const DEFAULT_PROJECT_ICON = 'bolt';
 const PROJECT_NAME_MAX = 48;
 const PROJECT_DESCRIPTION_MAX = 180;
+const PROMPT_CHAR_LIMIT = 500;
+const FORCED_ACTION_LIMIT = 10;
 const PROJECT_ICON_IDS = [
     'bolt', 'star', 'wand', 'doc', 'music', 'photo', 'video', 'mic',
     'calendar', 'clock', 'check', 'chat', 'gear', 'map', 'bell', 'spark',
@@ -216,6 +266,9 @@ function initApp() {
 
 function initEventListeners() {
     document.getElementById('chat-input')?.addEventListener('input', function () {
+        if (this.value.length > PROMPT_CHAR_LIMIT) {
+            this.value = this.value.slice(0, PROMPT_CHAR_LIMIT);
+        }
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
@@ -258,12 +311,19 @@ function initEventListeners() {
         e.stopPropagation();
         openProjectSettingsModal();
     });
+    document.getElementById('mobile-project-edit-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openProjectSettingsModal();
+    });
     document.getElementById('project-settings-save-btn')?.addEventListener('click', saveProjectSettings);
     renderProjectIconOptions();
 
     // Download Options
     document.getElementById('download-publish-btn')?.addEventListener('click', () => executeDownload('publish'));
     document.getElementById('download-raw-btn')?.addEventListener('click', () => executeDownload('raw'));
+    document.getElementById('mobile-card-inspect-btn')?.addEventListener('click', openMobilePreview);
+    document.getElementById('mobile-card-download-btn')?.addEventListener('click', openDownloadModal);
+    document.getElementById('mobile-preview-close-btn')?.addEventListener('click', closeMobilePreview);
     document.getElementById('project-name-input')?.addEventListener('blur', function () {
         if (!currentProject) return;
         normalizeProjectMetadata(currentProject);
@@ -278,6 +338,29 @@ function initEventListeners() {
             upsertMarketplaceItemFromProject(currentProject);
             saveProjects();
             updateMobileShortcutCard();
+        }
+    });
+    document.getElementById('mobile-project-name-input')?.addEventListener('blur', function () {
+        if (!currentProject) return;
+        normalizeProjectMetadata(currentProject);
+        const nextName = this.value.trim().slice(0, PROJECT_NAME_MAX);
+        const previousName = currentProject.name || '';
+        this.value = nextName;
+        if (nextName !== previousName) {
+            pushUndoState();
+            currentProject.name = nextName;
+            if (!currentProject.nameFrozen) currentProject.nameFrozen = true;
+            currentProject.updated = Date.now();
+            upsertMarketplaceItemFromProject(currentProject);
+            saveProjects();
+            document.getElementById('project-name-input').value = nextName;
+            updateMobileShortcutCard();
+        }
+    });
+    document.getElementById('mobile-project-name-input')?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.blur();
         }
     });
     document.addEventListener('click', (e) => {
@@ -313,6 +396,7 @@ function initEventListeners() {
     });
 
     updateUndoRedoButtons();
+    updateDownloadQuotaUI();
 }
 
 function handleAddActionClick() {
@@ -615,7 +699,7 @@ function createNewProject(initialPrompt = null) {
     loadProject(id);
     if (initialPrompt) {
         setTimeout(() => {
-            document.getElementById('chat-input').value = initialPrompt;
+            document.getElementById('chat-input').value = String(initialPrompt || '').slice(0, PROMPT_CHAR_LIMIT);
             handleSend();
         }, 300);
     }
@@ -2710,6 +2794,10 @@ async function handleSend() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text) return;
+    if (text.length > PROMPT_CHAR_LIMIT) {
+        addMessageToUI(`Prompt too long. Limit is ${PROMPT_CHAR_LIMIT} characters.`, 'assistant');
+        return;
+    }
 
     addMessageToUI(text, 'user');
     input.value = '';
@@ -3020,8 +3108,9 @@ async function callGenerateAPI(userPrompt) {
         const followUpInstruction = `CRITICAL: If the user's request is vague or lacks specific details (e.g. "make a reminder"), you MUST ask clarifying questions before generating any code. Do not guess. Ask what specific details they need.`;
 
 
-        const forceInstruction = forcedActions.length
-            ? `You MUST include these actions somewhere in the next response and any generated shortcut: ${forcedActions.map(f => f.action).join(', ')}. This is a minimum requirement; you may include other actions too.`
+        const forcedActionsPayload = forcedActions.slice(0, FORCED_ACTION_LIMIT);
+        const forceInstruction = forcedActionsPayload.length
+            ? `You MUST include these actions somewhere in the next response and any generated shortcut: ${forcedActionsPayload.map(f => f.action).join(', ')}. This is a minimum requirement; you may include other actions too.`
             : '';
 
         const userTurns = (currentProject?.history || []).filter(m => m.role === 'user');
@@ -3046,7 +3135,7 @@ async function callGenerateAPI(userPrompt) {
             history: recentHistory,
             model,
             plan,
-            forcedActions,
+            forcedActions: forcedActionsPayload,
             forceInstruction,
             style: 'concise'
         };
@@ -3120,6 +3209,7 @@ async function callGenerateAPI(userPrompt) {
         removePipelineOrbs();
     } catch (err) {
         console.error('API Error:', err);
+        document.body.classList.remove('is-generating');
         removeTypingIndicator();
         removePipelineOrbs();
         addMessageToUI('Failed to connect to the AI service. Please try again.', 'assistant');
@@ -3428,6 +3518,7 @@ function resetPipelineSteps() {
         pipelineStepCompleteTimers.clear();
     }
     pipelineStepStartedAt?.clear?.();
+    pipelineStepMinActiveMs.clear();
 
     PIPELINE_STEPS.forEach(({ id }) => {
         const el = document.getElementById(`step-${id}`);
@@ -3471,8 +3562,9 @@ function updatePipelineProgress(step, status, hint = '') {
         const prevStep = idx > 0 ? order[idx - 1] : null;
         const prevStartedAt = prevStep ? pipelineStepStartedAt.get(prevStep) : null;
         const prevElapsed = (prevStep && typeof prevStartedAt === 'number') ? (now - prevStartedAt) : null;
-        const delayMs = (prevStep && prevStep === currentPipelineStep && prevElapsed != null && prevElapsed < MIN_PIPELINE_ACTIVE_MS)
-            ? (MIN_PIPELINE_ACTIVE_MS - prevElapsed)
+        const prevMinMs = prevStep ? getPipelineMinActiveMs(prevStep) : MIN_PIPELINE_ACTIVE_MS;
+        const delayMs = (prevStep && prevStep === currentPipelineStep && prevElapsed != null && prevElapsed < prevMinMs)
+            ? (prevMinMs - prevElapsed)
             : 0;
 
         if (delayMs > 0) {
@@ -3488,8 +3580,9 @@ function updatePipelineProgress(step, status, hint = '') {
     if (status === 'completed') {
         const startedAt = pipelineStepStartedAt.get(frontendStep);
         const elapsed = typeof startedAt === 'number' ? (now - startedAt) : null;
-        const remaining = (elapsed != null && elapsed < MIN_PIPELINE_ACTIVE_MS)
-            ? (MIN_PIPELINE_ACTIVE_MS - elapsed)
+        const stepMinMs = getPipelineMinActiveMs(frontendStep);
+        const remaining = (elapsed != null && elapsed < stepMinMs)
+            ? (stepMinMs - elapsed)
             : 0;
 
         clearPipelineStepTimer(frontendStep);
@@ -3649,29 +3742,20 @@ function renderActions(animateIds = null, options = {}) {
 function updateMobileShortcutCard() {
     const card = document.getElementById('mobile-shortcut-card');
     if (!card) return;
-    const container = document.getElementById('messages');
-    const chatPane = document.getElementById('chat-pane');
-    const resetCardPlacement = () => {
-        if (container && card.parentElement === container && chatPane) {
-            chatPane.insertBefore(card, container);
-        } else if (card.parentElement === container) {
-            card.remove();
-        }
-    };
     if (!currentProject || !isWorkspacePage()) {
         card.classList.add('hidden');
-        resetCardPlacement();
         return;
     }
-    const hasAssistant = !!container?.querySelector('.message.assistant');
-    if (!hasAssistant) {
-        card.classList.add('hidden');
-        resetCardPlacement();
-        return;
+    const container = document.getElementById('messages');
+    const chatPane = document.getElementById('chat-pane');
+    if (chatPane && container && card.parentElement !== chatPane) {
+        chatPane.insertBefore(card, container);
     }
     card.classList.remove('hidden');
+    card.classList.remove('in-chat');
     const titleEl = document.getElementById('mobile-shortcut-title');
     const subEl = document.getElementById('mobile-shortcut-sub');
+    const headerTitleInput = document.getElementById('mobile-project-name-input');
     const name = getProjectDisplayName(currentProject);
     const actionCount = Array.isArray(currentActions) ? currentActions.length : 0;
     const updatedAt = currentProject?.updated || currentProject?.created || Date.now();
@@ -3682,11 +3766,18 @@ function updateMobileShortcutCard() {
         minute: '2-digit'
     });
     if (titleEl) titleEl.textContent = name;
-    if (subEl) subEl.textContent = `${actionCount} action${actionCount === 1 ? '' : 's'} - ${dateLabel}`;
-    if (container) {
-        container.appendChild(card);
+    if (headerTitleInput && document.activeElement !== headerTitleInput) {
+        headerTitleInput.value = name;
     }
-    card.classList.add('in-chat');
+    if (subEl) subEl.textContent = `${actionCount} action${actionCount === 1 ? '' : 's'} - ${dateLabel}`;
+}
+
+function openMobilePreview() {
+    document.body.classList.add('mobile-preview-open');
+}
+
+function closeMobilePreview() {
+    document.body.classList.remove('mobile-preview-open');
 }
 
 function buildActionTree(actions) {
@@ -5333,6 +5424,10 @@ function openActionModal(mode = 'force') {
 }
 
 function openForceActionModal() {
+    if (forcedActions.length >= FORCED_ACTION_LIMIT) {
+        addMessageToUI(`Forced action limit reached (${FORCED_ACTION_LIMIT}). Remove one to add another.`, 'assistant');
+        return;
+    }
     openActionModal('force');
 }
 
@@ -5679,6 +5774,7 @@ async function executeDownload(type) {
         statusText.textContent = 'Downloading...';
         const signedBlob = await signRes.blob();
         downloadBlob(signedBlob, `${baseName}.shortcut`);
+        consumeDownloadQuota();
         // Shortcuts app import disabled; keep download-only behavior.
         // const hostedUrl = await uploadShortcutForInstall(signedBlob, `${baseName}.shortcut`);
         // openShortcutImport(hostedUrl);
@@ -5742,10 +5838,29 @@ const PIPELINE_STEPS = [
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
+const FULL_CATALOG_ORB_MIN_MS = 3000;
+const FULL_CATALOG_ORB_MAX_MS = 5000;
+const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();
 let currentPipelineStep = null;
 let pipelinePendingStartTimer = null;
+
+function getRandomMs(minMs, maxMs) {
+    const min = Math.min(minMs, maxMs);
+    const max = Math.max(minMs, maxMs);
+    return Math.floor(min + Math.random() * (max - min + 1));
+}
+
+function getPipelineMinActiveMs(step) {
+    if (pipelineMode === 'full_catalog' && (step === 'plan' || step === 'catalog')) {
+        if (!pipelineStepMinActiveMs.has(step)) {
+            pipelineStepMinActiveMs.set(step, getRandomMs(FULL_CATALOG_ORB_MIN_MS, FULL_CATALOG_ORB_MAX_MS));
+        }
+        return pipelineStepMinActiveMs.get(step) || MIN_PIPELINE_ACTIVE_MS;
+    }
+    return MIN_PIPELINE_ACTIVE_MS;
+}
 
 function clearPipelinePendingStart() {
     if (pipelinePendingStartTimer) {
@@ -5826,6 +5941,10 @@ function removePipelineOrbs() {
 async function addForcedAction(template) {
     closeForceActionModal();
     if (forcedActions.find(a => a.action === template.action)) return; // Already forced
+    if (forcedActions.length >= FORCED_ACTION_LIMIT) {
+        addMessageToUI(`Forced action limit reached (${FORCED_ACTION_LIMIT}). Remove one to add another.`, 'assistant');
+        return;
+    }
     forcedActions.push({ action: template.action, file: template.file });
     renderForcedActions();
     addMessageToUI(`Will use **${formatActionNameForUI(template.action)}** in next response`, 'assistant');
@@ -6195,13 +6314,28 @@ function addVariableInsertButton(inputEl) {
 }
 
 // ============ Tutorial System ============
-const tutorialSteps = [
+const tutorialStepsDesktop = [
     { target: '#chat-input', title: 'Chat Input', text: 'Describe the shortcut you want to build. The AI will create it for you!' },
     { target: '#plus-menu-btn', title: 'Quick Actions', text: 'Click here to access Force Action and Discussion Mode. Modes turn blue when active.' },
     { target: '#preview-canvas', title: 'Shortcut Preview', text: 'Your shortcut actions will appear here. Click Edit to drag and reorder them!' },
     { target: '#edit-btn', title: 'Edit Mode', text: 'Click Edit to modify, add, or remove actions. You can also right-click inputs to insert variables.' },
     { target: '#top-download-btn', title: 'Download', text: 'When you\'re done, download your shortcut to use in the Shortcuts app!' }
 ];
+
+const tutorialStepsMobile = [
+    { target: '#chat-input', title: 'Chat Input', text: 'Describe the shortcut you want to build. The AI will create it for you!' },
+    { target: '#mobile-project-edit-btn', title: 'Edit Project', text: 'Tap here to edit the project name, description, or icon.' },
+    { target: '#mobile-shortcut-card', title: 'Shortcut Card', text: 'Your shortcut summary lives here with quick actions at a glance.' },
+    { target: '#mobile-card-inspect-btn', title: 'Inspect Actions', text: 'Open the action preview to review or edit your shortcut.' },
+    { target: '#mobile-card-download-btn', title: 'Download', text: 'Grab the finished shortcut for the Shortcuts app.' }
+];
+
+function getTutorialSteps() {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+        return tutorialStepsDesktop;
+    }
+    return window.matchMedia('(max-width: 1024px)').matches ? tutorialStepsMobile : tutorialStepsDesktop;
+}
 
 function startTutorial() {
     tutorialStep = 0;
@@ -6218,19 +6352,20 @@ function showTutorialStep() {
     const indicator = document.getElementById('tutorial-indicator');
     const nextBtn = document.getElementById('tutorial-next');
 
-    if (tutorialStep >= tutorialSteps.length) {
+    const steps = getTutorialSteps();
+    if (tutorialStep >= steps.length) {
         skipTutorial();
         return;
     }
 
-    const step = tutorialSteps[tutorialStep];
+    const step = steps[tutorialStep];
     const targetEl = document.querySelector(step.target);
 
     overlay.classList.add('active');
     title.textContent = step.title;
     text.textContent = step.text;
-    indicator.innerHTML = tutorialSteps.map((_, i) => `<span class="${i === tutorialStep ? 'active' : ''}"></span>`).join('');
-    nextBtn.textContent = tutorialStep === tutorialSteps.length - 1 ? 'Done' : 'Next';
+    indicator.innerHTML = steps.map((_, i) => `<span class="${i === tutorialStep ? 'active' : ''}"></span>`).join('');
+    nextBtn.textContent = tutorialStep === steps.length - 1 ? 'Done' : 'Next';
 
     if (targetEl) {
         const rect = targetEl.getBoundingClientRect();

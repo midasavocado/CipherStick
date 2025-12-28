@@ -47,6 +47,12 @@ body.mode-dark .top-bar {
     gap: 2rem;
 }
 
+.nav-links-mobile {
+    display: none;
+    gap: 0.75rem;
+    align-items: center;
+}
+
 .nav-links a {
     font-size: 0.9rem;
     color: var(--text-muted);

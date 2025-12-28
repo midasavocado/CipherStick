@@ -1,5 +1,15 @@
 /* --- Landing Page Styles --- */
 
+body.app-theme {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.app-theme::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
 .hero {
     position: relative;
     min-height: 100vh;
@@ -27,17 +37,17 @@
 .section-divider {
     border: 0;
     height: 1px;
-    width: min(1200px, 94%);
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     background: linear-gradient(90deg,
-            rgba(148, 163, 184, 0.42) 0%,
-            rgba(148, 163, 184, 0.3) 24%,
-            rgba(210, 218, 228, 0.55) 38%,
-            rgba(248, 250, 252, 0.95) 50%,
-            rgba(210, 218, 228, 0.55) 62%,
-            rgba(148, 163, 184, 0.3) 76%,
-            rgba(148, 163, 184, 0.42) 100%);
-    opacity: 1;
+            rgba(248, 250, 252, 0.95) 0%,
+            rgba(248, 250, 252, 0.95) 36%,
+            rgba(210, 218, 228, 0.55) 46%,
+            rgba(120, 132, 150, 0.5) 50%,
+            rgba(210, 218, 228, 0.55) 54%,
+            rgba(248, 250, 252, 0.95) 64%,
+            rgba(248, 250, 252, 0.95) 100%);
+    opacity: 0;
     display: block;
 }
 
@@ -46,15 +56,19 @@
 }
 
 body.mode-dark .section-divider {
+    border: 0;
+    height: 1px;
+    width: 100%;
+    margin: 0 auto;
     background: linear-gradient(90deg,
-            rgba(148, 163, 184, 0.38) 0%,
-            rgba(148, 163, 184, 0.26) 24%,
-            rgba(210, 218, 228, 0.45) 38%,
-            rgba(255, 255, 255, 0.8) 50%,
-            rgba(210, 218, 228, 0.45) 62%,
-            rgba(148, 163, 184, 0.26) 76%,
-            rgba(148, 163, 184, 0.38) 100%);
-    opacity: 0.95;
+            rgba(148, 163, 184, 0.26) 0%,
+            rgba(148, 163, 184, 0.38) 26%,
+            rgba(221, 224, 228, 0.5) 40%,
+            rgba(255, 255, 255, 0.85) 50%,
+            rgba(221, 224, 228, 0.5) 60%,
+            rgba(148, 163, 184, 0.38) 74%,
+            rgba(148, 163, 184, 0.26) 100%);
+    opacity: 1;
 }
 
 .section.section-slab {

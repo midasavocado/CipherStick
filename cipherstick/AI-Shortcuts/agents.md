@@ -7,6 +7,9 @@ This file defines mandatory agent behavior.
 You must not stop at “good enough.”  
 You must aggressively critique and refine its own output until no valid criticism remains.
 
+## Testing (MANDATORY)
+You MUST always run tests relevant to your changes before responding, unless the user explicitly says not to. If tests fail, report the failure and why.
+
 ---
 
 ## Core Rule: Self-Critique Loop (MANDATORY)

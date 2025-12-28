@@ -1,7 +1,12 @@
 @media (max-width: 1024px) {
+  body[data-page="workspace"] .app-container {
+    height: 100dvh;
+  }
+
   body[data-page="workspace"] .workspace {
     flex-direction: column;
     gap: 0;
+    min-height: 0;
   }
 
   body[data-page="workspace"] .chat-pane {
@@ -10,6 +15,7 @@
     min-width: 0;
     border-right: none;
     border-bottom: none;
+    min-height: 0;
   }
 
   body[data-page="workspace"] .preview-pane {
@@ -30,15 +36,81 @@
 
   body[data-page="workspace"] .messages-container {
     max-height: none;
-    padding-top: 0.75rem;
+    padding-top: 0.35rem;
+    padding-bottom: calc(15rem + env(safe-area-inset-bottom));
+    min-height: 0;
   }
 
   body[data-page="workspace"] .chat-input-area {
-    position: sticky;
+    position: fixed;
+    left: 0;
+    right: 0;
     bottom: 0;
+    z-index: 40;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
   }
 
   body[data-page="workspace"] .resize-handle {
+    display: none;
+  }
+
+  body[data-page="workspace"] .chat-header {
+    padding: 0 0.75rem;
+    height: 56px;
+    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 36px 1fr 36px;
+    align-items: center;
+  }
+
+  body[data-page="workspace"] #chat-header-title {
+    display: none;
+  }
+
+  body[data-page="workspace"] #mobile-project-name-input {
+    display: block;
+    width: 100%;
+  }
+
+  body[data-page="workspace"] #mobile-project-edit-btn {
+    display: inline-flex;
+    justify-self: end;
+  }
+
+  body[data-page="workspace"] .chat-header-titles {
+    justify-content: center;
+    text-align: center;
+  }
+
+  body[data-page="workspace"] .mobile-shortcut-card {
+    position: fixed;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: calc(4.8rem + env(safe-area-inset-bottom));
+    margin: 0;
+    z-index: 45;
+  }
+
+  body[data-page="workspace"] .mobile-shortcut-card.hidden {
+    display: none;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .preview-pane {
+    display: flex;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 70;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .mobile-preview-close-btn {
+    display: inline-flex;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .chat-input-area {
     display: none;
   }
 }

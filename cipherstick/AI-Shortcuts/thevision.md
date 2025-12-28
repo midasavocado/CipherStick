@@ -418,3 +418,73 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Marquee now reflows items in a seamless loop with eased hover deceleration and mobile hides the frame.
 -   **Failed**: None.
 -   **Changes**: Updated `script.js` and `css/pages/landing.css`.
+
+### 2025-12-28 05:07PM
+-   **Tried**: Slowed the first two pipeline orbs in full-catalog mode with per-run randomized durations.
+-   **Errors**: None observed during edits.
+-   **Worked**: Plan and catalog orbs now hold 3-5s each when action search is bypassed.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-28 05:22PM
+-   **Tried**: Added client/server limits for prompt length and forced actions.
+-   **Errors**: None observed during edits.
+-   **Worked**: Prompts cap at 2000 chars and forced actions cap at 10, with UI and API enforcement.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html`, `js/app.js`, and `secrets/src/index.js`.
+
+### 2025-12-28 05:34PM
+-   **Tried**: Shortened AI project descriptions to a single 15-word sentence focused on the overall idea.
+-   **Errors**: None observed during edits.
+-   **Worked**: Short summaries now enforce one sentence and 15-word max, including fallback behavior.
+-   **Failed**: None.
+-   **Changes**: Updated `secrets/src/index.js`.
+
+### 2025-12-28 05:53PM
+-   **Tried**: Reworked mobile workspace layout with a top project title/edit control, a persistent shortcut card with a generation loader, a mobile preview overlay, and updated tutorial steps.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile header now shows the project name and edit button, the shortcut card stays visible with a loading indicator during generation, and the card buttons are wired to inspect/download flows.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html`, `js/app.js`, `css/pages/app.css`, and `css/mobile-overrides.css`.
+
+### 2025-12-28 06:29PM
+-   **Tried**: Added a mandatory testing rule to the agent instructions.
+-   **Errors**: None observed during edits.
+-   **Worked**: Agent guidance now requires tests on every change unless the user opts out.
+-   **Failed**: None.
+-   **Changes**: Updated `agents.md`.
+
+### 2025-12-28 06:43PM
+-   **Tried**: Fixed mobile workspace header/card layout, added a daily download quota pill, and restored mobile marketplace/pricing links on the landing nav.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile header now uses a centered editable project name with a visible edit button, the shortcut card is fixed above the input, download quota displays and updates after downloads, and mobile nav shows Marketplace/Pricing buttons.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html`, `js/app.js`, `css/pages/app.css`, `css/mobile-overrides.css`, `styles.css`, `css/layout.css`, `css/responsive.css`, and `index.html`.
+
+### 2025-12-28 06:52PM
+-   **Tried**: Inverted light-mode section divider gradients and stretched the white transition, while restoring a brighter dark-mode center.
+-   **Errors**: None observed during edits.
+-   **Worked**: Light mode now uses inverted divider tones with a slower fade to the center; dark mode keeps the original direction with a slightly brighter midpoint.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 06:53PM
+-   **Tried**: Darkened the light-mode divider center and slowed the gradient transition by extending the edge color.
+-   **Errors**: None observed during edits.
+-   **Worked**: Light-mode dividers now hold the bright edge longer and drop to a darker center.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 06:55PM
+-   **Tried**: Tuned divider colors to be lighter in light mode and darker in dark mode.
+-   **Errors**: None observed during edits.
+-   **Worked**: Light-mode dividers now use brighter edges with a softer center; dark mode uses deeper slate tones.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 06:58PM
+-   **Tried**: Hid the vertical scrollbar on the landing page while keeping scroll behavior.
+-   **Errors**: None observed during edits.
+-   **Worked**: Landing now scrolls without showing the vertical scrollbar.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/landing.css`.

@@ -1182,6 +1182,20 @@ pre code {
   align-items: center;
 }
 
+.download-quota-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* --- Buttons & Interactions --- */
 .btn-primary-sm,
 .btn-primary-lg {
