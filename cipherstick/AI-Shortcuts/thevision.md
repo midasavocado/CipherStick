@@ -180,3 +180,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Menu prompt now shows the grey “Prompt” placeholder instead of the default text.
 -   **Failed**: None.
 -   **Changes**: Updated `js/app.js`.
+
+### 2025-12-27 08:53PM
+-   **Tried**: Strengthened the model prompt to distinguish ChooseFromMenu from List.ChooseFrom and emphasize per-option branching.
+-   **Errors**: None observed during edits.
+-   **Worked**: Prompt now clarifies that ChooseFromMenu creates branch bodies per option, while List.ChooseFrom only returns a picked item.
+-   **Failed**: None.
+-   **Changes**: Updated `secrets/src/index.js`.
