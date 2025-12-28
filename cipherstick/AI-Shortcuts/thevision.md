@@ -138,3 +138,45 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Menu cases display as If-style blocks and PLIST-style menu markers now round-trip into nested Cases; exports include menu cases and conversion stays compatible with the plist structure.
 -   **Failed**: None.
 -   **Changes**: Updated `js/app.js`, `css/pages/app.css`, and `secrets/src/lib/conversions.js`.
+
+### 2025-12-27 08:10PM
+-   **Tried**: Added project batch selection/delete UI, hid Add Action outside edit mode, fixed variable-insert “+” buttons, and expanded Choose From Menu editing with add/remove/rename controls. Also tightened ChooseFromMenu guidance in prompts and inserted Text actions before string compares in If conversion.
+-   **Errors**: None observed during edits.
+-   **Worked**: Projects can be multi-selected for deletion, Add Action stays hidden outside edit mode, variable insert menu opens reliably, Choose From Menu cases are editable, prompts clarify menu branches, and If comparisons wrap inputs in Text when comparing to literal strings.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html`, `js/app.js`, `css/pages/app.css`, `secrets/src/index.js`, and `secrets/src/lib/conversions.js`.
+
+### 2025-12-27 08:25PM
+-   **Tried**: Added a menu-items list UI for Choose From Menu and aligned option sections to the Shortcuts-style layout.
+-   **Errors**: None observed during edits.
+-   **Worked**: Choose From Menu now shows an editable list of items with a + control, and each item maps to its own action branch block in the visualization.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js` and `css/pages/app.css`.
+
+### 2025-12-27 08:30PM
+-   **Tried**: Made Choose From Menu render as a menu block even when only WFMenuItems/Items are present (no Cases yet).
+-   **Errors**: None observed during edits.
+-   **Worked**: Choose From Menu no longer falls back to the generic params UI when Cases are missing.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-27 08:34PM
+-   **Tried**: Rendered the Choose From Menu prompt as a standard text-box row.
+-   **Errors**: None observed during edits.
+-   **Worked**: Prompt now uses the same text input styling as other params.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js` and `css/pages/app.css`.
+
+### 2025-12-27 08:36PM
+-   **Tried**: Adjusted Choose From Menu prompt defaults to use a placeholder instead of a filled value.
+-   **Errors**: None observed during edits.
+-   **Worked**: The prompt field now shows a grey placeholder labeled “Prompt.”
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-27 08:40PM
+-   **Tried**: Treated “Select an option” as a default menu prompt and cleared it for display.
+-   **Errors**: None observed during edits.
+-   **Worked**: Menu prompt now shows the grey “Prompt” placeholder instead of the default text.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.

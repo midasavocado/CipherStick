@@ -92,8 +92,16 @@
             <!-- Projects Dashboard View -->
             <div id="projects-view" class="projects-dashboard">
                 <div class="dashboard-header">
-                    <h1>Your Projects</h1>
-                    <p>Build and manage your Apple Shortcuts</p>
+                    <div class="dashboard-title">
+                        <h1>Your Projects</h1>
+                        <p>Build and manage your Apple Shortcuts</p>
+                    </div>
+                    <div class="dashboard-actions">
+                        <span class="selection-count" id="projects-selection-count"></span>
+                        <button class="toolbar-btn" id="projects-select-toggle">Select</button>
+                        <button class="toolbar-btn" id="projects-select-all" disabled>Select All</button>
+                        <button class="toolbar-btn danger" id="projects-delete-selected" disabled>Delete Selected</button>
+                    </div>
                 </div>
                 <div id="projects-grid" class="projects-grid">
                     <div class="project-card new-project-card" id="create-project-card" role="button" tabindex="0">
@@ -205,7 +213,7 @@
                                     <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
                                 </svg>
                             </button>
-                            <button class="toolbar-btn" id="add-action-btn">
+                            <button class="toolbar-btn" id="add-action-btn" style="display:none;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>

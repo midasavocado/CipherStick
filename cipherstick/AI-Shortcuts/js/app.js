@@ -68,6 +68,8 @@ let liveHintTimer = null;
 let liveHintIndex = 0;
 let liveHintLockUntil = 0;
 let pipelineMode = 'default';
+let projectSelectionMode = false;
+let selectedProjectIds = new Set();
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', () => {
@@ -119,6 +121,9 @@ function initEventListeners() {
 
     // Project Grid
     document.getElementById('create-project-card')?.addEventListener('click', () => createNewProject());
+    document.getElementById('projects-select-toggle')?.addEventListener('click', toggleProjectSelectionMode);
+    document.getElementById('projects-select-all')?.addEventListener('click', selectAllProjects);
+    document.getElementById('projects-delete-selected')?.addEventListener('click', deleteSelectedProjects);
 
     // Workspace Actions
     document.getElementById('back-to-projects-btn')?.addEventListener('click', showProjectsView);
@@ -246,6 +251,70 @@ function showWorkspaceView() {
     transitionView('projects-view', 'workspace-view');
 }
 
+function updateProjectSelectionUI() {
+    const projectsView = document.getElementById('projects-view');
+    if (projectsView) {
+        projectsView.classList.toggle('selection-mode', projectSelectionMode);
+    }
+    const selectedIds = Array.from(selectedProjectIds);
+    const validIds = new Set(projects.map(p => p.id));
+    selectedProjectIds = new Set(selectedIds.filter(id => validIds.has(id)));
+    const selectedCount = selectedProjectIds.size;
+    const selectBtn = document.getElementById('projects-select-toggle');
+    const selectAllBtn = document.getElementById('projects-select-all');
+    const deleteBtn = document.getElementById('projects-delete-selected');
+    const countEl = document.getElementById('projects-selection-count');
+    if (selectBtn) selectBtn.textContent = projectSelectionMode ? 'Cancel' : 'Select';
+    if (countEl) countEl.textContent = projectSelectionMode ? `${selectedCount} selected` : '';
+    if (selectAllBtn) {
+        selectAllBtn.disabled = !projectSelectionMode || projects.length === 0 || selectedCount === projects.length;
+    }
+    if (deleteBtn) {
+        deleteBtn.disabled = !projectSelectionMode || selectedCount === 0;
+        deleteBtn.textContent = projectSelectionMode
+            ? `Delete Selected${selectedCount ? ` (${selectedCount})` : ''}`
+            : 'Delete Selected';
+    }
+}
+
+function setProjectSelectionMode(enabled) {
+    projectSelectionMode = Boolean(enabled);
+    if (!projectSelectionMode) {
+        selectedProjectIds.clear();
+    }
+    updateProjectSelectionUI();
+    renderProjectsGrid();
+}
+
+function toggleProjectSelectionMode() {
+    setProjectSelectionMode(!projectSelectionMode);
+}
+
+function toggleProjectSelection(id) {
+    if (!projectSelectionMode) return;
+    if (selectedProjectIds.has(id)) {
+        selectedProjectIds.delete(id);
+    } else {
+        selectedProjectIds.add(id);
+    }
+    updateProjectSelectionUI();
+    renderProjectsGrid();
+}
+
+function selectAllProjects() {
+    if (!projectSelectionMode) return;
+    selectedProjectIds = new Set(projects.map(p => p.id));
+    updateProjectSelectionUI();
+    renderProjectsGrid();
+}
+
+function deleteSelectedProjects() {
+    if (!projectSelectionMode) return;
+    const ids = Array.from(selectedProjectIds);
+    if (!ids.length) return;
+    showDeleteModal('project-batch', ids);
+}
+
 // ============ Projects ============
 function renderProjectsGrid() {
     const grid = document.getElementById('projects-grid');
@@ -254,13 +323,30 @@ function renderProjectsGrid() {
     grid.innerHTML = '';
     if (newCard) grid.appendChild(newCard);
 
+    updateProjectSelectionUI();
+
     projects.forEach(p => {
         const card = document.createElement('div');
-        card.className = 'project-card';
-        card.onclick = () => loadProject(p.id);
+        const isSelected = selectedProjectIds.has(p.id);
+        card.className = `project-card${isSelected ? ' selected' : ''}`;
+        card.onclick = () => {
+            if (projectSelectionMode) {
+                toggleProjectSelection(p.id);
+            } else {
+                loadProject(p.id);
+            }
+        };
         const date = new Date(p.updated).toLocaleDateString();
         const actionCount = p.actions ? p.actions.length : 0;
+        const selectionBtn = `
+                    <button class="project-select-toggle${isSelected ? ' selected' : ''}" onclick="event.stopPropagation(); toggleProjectSelection('${p.id}')" title="Select project">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                `;
         card.innerHTML = `
+                    ${selectionBtn}
                     <h3>${escapeHtml(p.name)}</h3>
                     <div class="project-meta"><span>${date}</span><span>${actionCount} actions</span></div>
                     <div class="project-actions">
@@ -474,6 +560,7 @@ function resetUndoRedoHistory() {
 function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undo-btn');
     const redoBtn = document.getElementById('redo-btn');
+    const addBtn = document.getElementById('add-action-btn');
     const shouldShow = !!currentProject && !!editMode;
     if (undoBtn) {
         undoBtn.disabled = !currentProject || undoStack.length === 0;
@@ -482,6 +569,9 @@ function updateUndoRedoButtons() {
     if (redoBtn) {
         redoBtn.disabled = !currentProject || redoStack.length === 0;
         redoBtn.style.display = shouldShow ? 'inline-flex' : 'none';
+    }
+    if (addBtn) {
+        addBtn.style.display = shouldShow ? 'flex' : 'none';
     }
 }
 
@@ -586,17 +676,6 @@ function normalizeControlFlowToNested(actions) {
     const root = [];
     const stack = [{ kind: 'root', id: null, node: null, target: root }];
 
-    const normalizeMenuItems = (params) => {
-        const raw = params?.WFMenuItems ?? params?.MenuItems ?? params?.Items ?? null;
-        if (Array.isArray(raw)) {
-            return raw.map((item) => String(item ?? '').trim()).filter(Boolean);
-        }
-        if (typeof raw === 'string') {
-            return raw.split(',').map((item) => item.trim()).filter(Boolean);
-        }
-        return [];
-    };
-
     const ensureMenuCaseTarget = (frame) => {
         if (!frame || frame.kind !== 'menu') return;
         if (frame.target) return;
@@ -697,18 +776,35 @@ function normalizeControlFlowToNested(actions) {
             currentTarget().push(action);
             return;
         }
-        if (isMenuAction(action) && Array.isArray(action.Cases)) {
-            action.Cases = action.Cases.map((entry) => {
-                if (!entry || typeof entry !== 'object') {
-                    const fallbackTitle = String(entry ?? '').trim();
-                    return { Title: fallbackTitle, Actions: [] };
+        if (isMenuAction(action)) {
+            if (!Array.isArray(action.Cases) || action.Cases.length === 0) {
+                const menuItems = getMenuItemsFromParams(action.params);
+                if (menuItems.length) {
+                    action.Cases = menuItems.map(title => ({ Title: title, Actions: [] }));
+                } else if (!Array.isArray(action.Cases)) {
+                    action.Cases = [];
                 }
-                const caseActions = Array.isArray(entry.Actions) ? entry.Actions : [];
-                return {
-                    ...entry,
-                    Actions: normalizeControlFlowToNested(caseActions)
-                };
-            });
+            }
+            if (action.params && typeof action.params === 'object') {
+                const promptValue = action.params.Prompt ?? action.params.WFMenuPrompt ?? null;
+                if (isDefaultMenuPrompt(promptValue)) {
+                    if (action.params.Prompt !== undefined) action.params.Prompt = '';
+                    if (action.params.WFMenuPrompt !== undefined) action.params.WFMenuPrompt = '';
+                }
+            }
+            if (Array.isArray(action.Cases)) {
+                action.Cases = action.Cases.map((entry) => {
+                    if (!entry || typeof entry !== 'object') {
+                        const fallbackTitle = String(entry ?? '').trim();
+                        return { Title: fallbackTitle, Actions: [] };
+                    }
+                    const caseActions = Array.isArray(entry.Actions) ? entry.Actions : [];
+                    return {
+                        ...entry,
+                        Actions: normalizeControlFlowToNested(caseActions)
+                    };
+                });
+            }
             if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
             currentTarget().push(action);
             return;
@@ -786,7 +882,7 @@ function normalizeControlFlowToNested(actions) {
                     if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
                     if (action.params.WFMenuItemTitle !== undefined) delete action.params.WFMenuItemTitle;
                     if (!Array.isArray(action.Cases)) action.Cases = [];
-                    const menuItems = normalizeMenuItems(action.params);
+                    const menuItems = getMenuItemsFromParams(action.params);
                     currentTarget().push(action);
                     stack.push({
                         kind: 'menu',
@@ -1429,7 +1525,7 @@ function renderListEditor(actionId, paramKey, rawValue, readonly = false) {
         const inputHtml = `
                     <div class="param-with-insert">
                         <div class="param-value param-rich-input list-item-input" contenteditable="${readonly ? 'false' : 'true'}" data-action-id="${actionId}" data-param="${escapeHtml(paramKey)}" data-list-param="${escapeHtml(paramKey)}" data-list-index="${idx}" data-placeholder="${escapeAttr(placeholder)}" onblur="handleListItemBlur(this)" ${contextMenuAttr}>${richHtml}</div>
-                        ${readonly ? '' : '<button type="button" class="var-insert-btn" onclick="openVariableMenuFromButton(this)">+</button>'}
+                        ${readonly ? '' : '<button type="button" class="var-insert-btn" onclick="openVariableMenuFromButton(event, this)">+</button>'}
                     </div>
                 `;
         return `
@@ -1465,12 +1561,16 @@ function wrapWithVariableInsert(inputHtml, readonly = false) {
     return `
                 <div class="param-with-insert">
                     ${inputHtml}
-                    <button type="button" class="var-insert-btn" onclick="openVariableMenuFromButton(this)">+</button>
+                    <button type="button" class="var-insert-btn" onclick="openVariableMenuFromButton(event, this)">+</button>
                 </div>
             `;
 }
 
-function openVariableMenuFromButton(btn) {
+function openVariableMenuFromButton(event, btn) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     const wrapper = btn?.closest('.param-with-insert');
     const target = wrapper?.querySelector('.param-value');
     if (!target) return;
@@ -1493,7 +1593,7 @@ function getRichInputPlaceholder(key, rawValue) {
         return 'Enter text';
     }
     const lowerKey = String(key || '').trim().toLowerCase();
-    if (lowerKey.includes('prompt')) return 'Enter prompt';
+    if (lowerKey.includes('prompt')) return 'Prompt';
     if (lowerKey.includes('title')) return 'Enter title';
     if (lowerKey.includes('message')) return 'Enter message';
     if (lowerKey.includes('subject')) return 'Enter subject';
@@ -2308,6 +2408,25 @@ function isMenuAction(action) {
     return id.includes('choosefrommenu') || id === 'choose from menu';
 }
 
+function getMenuItemsFromParams(params) {
+    if (!params || typeof params !== 'object') return [];
+    const raw = params.WFMenuItems ?? params.MenuItems ?? params.Items ?? null;
+    if (Array.isArray(raw)) {
+        return raw.map(item => String(item ?? '').trim()).filter(Boolean);
+    }
+    if (typeof raw === 'string') {
+        return raw.split(',').map(item => item.trim()).filter(Boolean);
+    }
+    return [];
+}
+
+function isDefaultMenuPrompt(value) {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return false;
+    if (isStandardPlaceholderToken(trimmed)) return true;
+    const lower = trimmed.toLowerCase();
+    return lower === 'select an option' || lower === 'choose an option' || lower === 'choose from menu';
+}
 
 function isControlAction(action) {
     return isConditionalAction(action) || isRepeatAction(action);
@@ -3149,11 +3268,14 @@ function buildActionTree(actions) {
             return;
         }
 
-        if (isMenuAction(action) && Array.isArray(action.Cases)) {
+        if (isMenuAction(action)) {
+            const casesSource = Array.isArray(action.Cases) && action.Cases.length
+                ? action.Cases
+                : getMenuItemsFromParams(action.params || {}).map(title => ({ Title: title, Actions: [] }));
             const node = {
                 type: 'menu',
                 action,
-                cases: action.Cases.map(c => ({
+                cases: casesSource.map(c => ({
                     title: c.Title,
                     children: buildActionTree(c.Actions || [])
                 }))
@@ -3332,8 +3454,9 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
             block.dataset.parentSection = parentMeta?.parentSection || 'root';
 
             const promptRaw = node.action.params?.Prompt ?? node.action.params?.WFMenuPrompt ?? '';
-            const promptValue = editMode ? (promptRaw || '{{STRING}}') : promptRaw;
-            const promptHtml = promptValue
+            const promptValue = isDefaultMenuPrompt(promptRaw) ? '' : (promptRaw || '');
+            const shouldShowPrompt = editMode || String(promptValue || '').trim().length > 0;
+            const promptHtml = shouldShowPrompt
                 ? (editMode
                     ? getInputForType(node.action.id, 'Prompt', promptValue, false)
                     : `<span class="menu-value">${formatLinkedValue(promptValue)}</span>`)
@@ -3349,24 +3472,84 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
 
             const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
 
+            const cases = Array.isArray(node.cases) ? node.cases : [];
+            const caseTitles = cases.map((menuCase, idx) => menuCase?.title || `Option ${idx + 1}`);
+            let displayItems = caseTitles.length ? caseTitles : getMenuItemsFromParams(node.action.params || {});
+            if (!displayItems.length && editMode) displayItems = ['Option 1'];
+
+            const menuItemsRows = displayItems.map((title, idx) => {
+                const rowTitle = escapeAttr(title);
+                const canRemove = editMode && displayItems.length > 1;
+                const titleHtml = editMode
+                    ? `<input type="text" class="menu-item-input" value="${rowTitle}" onchange="updateMenuCaseTitle(${node.action.id}, ${idx}, this.value)" onblur="updateMenuCaseTitle(${node.action.id}, ${idx}, this.value)">`
+                    : `<span class="menu-item-label">${escapeHtml(title)}</span>`;
+                const removeBtn = canRemove
+                    ? `<button class="node-action-btn menu-item-remove" onclick="removeMenuCase(${node.action.id}, ${idx})" title="Remove item">-</button>`
+                    : '';
+                return `
+                            <div class="menu-item-row">
+                                ${titleHtml}
+                                ${removeBtn}
+                            </div>
+                        `;
+            }).join('');
+
+            const menuItemsFooter = editMode
+                ? `
+                        <div class="menu-items-footer">
+                            <button class="node-action-btn menu-item-add" onclick="addMenuCase(${node.action.id})" title="Add item">+</button>
+                            <span class="menu-items-count">${displayItems.length} items</span>
+                        </div>
+                    `
+                : `
+                        <div class="menu-items-footer">
+                            <span class="menu-items-count">${displayItems.length} items</span>
+                        </div>
+                    `;
+
+            const menuItemsHtml = (displayItems.length || editMode)
+                ? `
+                        <div class="menu-items-panel">
+                            <div class="menu-items-list">
+                                ${menuItemsRows}
+                            </div>
+                            ${menuItemsFooter}
+                        </div>
+                    `
+                : '';
+
+            const promptRow = promptHtml
+                ? `
+                        <div class="node-params menu-params">
+                            <div class="node-param">
+                                <span class="param-label">Prompt</span>
+                                ${promptHtml}
+                            </div>
+                        </div>
+                    `
+                : '';
+
             block.innerHTML = `
 	                        <div class="menu-header">
 	                            ${dragHandle}
 	                            <div class="menu-title-line">
 	                                <span class="menu-label">Choose From Menu</span>
-                                    ${promptHtml ? `<span class="menu-prompt">Prompt</span>${promptHtml}` : ''}
 	                            </div>
                                 ${actionsHtml}
 	                        </div>
+                            ${promptRow}
+                            ${menuItemsHtml}
                             <div class="menu-cases"></div>
                             <div class="menu-end">End Menu</div>
                         `;
 
             const casesWrap = block.querySelector('.menu-cases');
-            const cases = Array.isArray(node.cases) ? node.cases : [];
+            const casesToRender = caseTitles.length
+                ? cases
+                : displayItems.map((title) => ({ title, children: [] }));
             const dropZoneClass = editMode ? 'drop-zone' : '';
 
-            cases.forEach((menuCase, caseIndex) => {
+            casesToRender.forEach((menuCase, caseIndex) => {
                 const caseTitle = menuCase?.title || `Option ${caseIndex + 1}`;
                 const caseEmpty = (!menuCase?.children || menuCase.children.length === 0);
                 const emptyHint = caseEmpty && editMode ? '<div class="empty-section-hint">place actions here</div>' : '';
@@ -3374,15 +3557,12 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
                 caseEl.className = 'menu-case';
                 caseEl.innerHTML = `
                             <div class="menu-case-title">
-                                <span class="menu-case-label">If</span>
                                 <span class="menu-case-name">${escapeHtml(caseTitle)}</span>
-                                <span class="menu-case-then">Then</span>
                             </div>
                             <div class="menu-case-body ${caseEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="menu-case" data-action-id="${node.action.id}" data-case-index="${caseIndex}">
                                 ${caseEmpty ? '' : '<div class="control-section-content"></div>'}
                                 ${emptyHint}
                             </div>
-                            <div class="menu-case-end">End</div>
                         `;
                 casesWrap?.appendChild(caseEl);
                 if (!caseEmpty) {
@@ -3821,17 +4001,89 @@ function updateActionParam(actionId, paramKey, value, options = {}) {
     commitActionChanges(null, { render, suppressAnimations });
 }
 
+function addMenuCase(actionId) {
+    const loc = findActionLocation(actionId);
+    const action = loc?.action;
+    if (!action) return;
+    if (!Array.isArray(action.Cases) || action.Cases.length === 0) {
+        const menuItems = getMenuItemsFromParams(action.params);
+        action.Cases = menuItems.length
+            ? menuItems.map(title => ({ Title: title, Actions: [] }))
+            : [];
+    }
+    pushUndoState();
+    action.Cases.push({ Title: `Option ${action.Cases.length + 1}`, Actions: [] });
+    commitActionChanges(null, { suppressAnimations: true });
+}
+
+function removeMenuCase(actionId, caseIndex) {
+    const loc = findActionLocation(actionId);
+    const action = loc?.action;
+    if (!action) return;
+    if (!Array.isArray(action.Cases) || action.Cases.length === 0) {
+        const menuItems = getMenuItemsFromParams(action.params);
+        if (menuItems.length) {
+            action.Cases = menuItems.map(title => ({ Title: title, Actions: [] }));
+        }
+    }
+    if (!Array.isArray(action.Cases)) return;
+    const idx = Number(caseIndex);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= action.Cases.length) return;
+    if (action.Cases.length <= 1) return;
+    pushUndoState();
+    action.Cases.splice(idx, 1);
+    commitActionChanges(null, { suppressAnimations: true });
+}
+
+function updateMenuCaseTitle(actionId, caseIndex, title) {
+    const loc = findActionLocation(actionId);
+    const action = loc?.action;
+    if (!action) return;
+    if (!Array.isArray(action.Cases) || action.Cases.length === 0) {
+        const menuItems = getMenuItemsFromParams(action.params);
+        action.Cases = menuItems.length
+            ? menuItems.map(itemTitle => ({ Title: itemTitle, Actions: [] }))
+            : [];
+    }
+    const idx = Number(caseIndex);
+    if (!Number.isFinite(idx) || idx < 0) return;
+    while (action.Cases.length <= idx) {
+        action.Cases.push({ Title: `Option ${action.Cases.length + 1}`, Actions: [] });
+    }
+    const nextTitle = String(title || '').trim() || `Option ${idx + 1}`;
+    const prevTitle = action.Cases[idx]?.Title ?? '';
+    if (prevTitle !== nextTitle) {
+        pushUndoState();
+        action.Cases[idx].Title = nextTitle;
+        commitActionChanges(null, { suppressAnimations: true });
+    }
+}
+
 let deleteTargetId = null;
-let deleteTargetType = null; // 'action' or 'project'
+let deleteTargetIds = null;
+let deleteTargetType = null; // 'action', 'project', 'project-batch'
 
 function showDeleteModal(type, id) {
+    deleteTargetId = null;
+    deleteTargetIds = null;
     deleteTargetType = type;
-    deleteTargetId = id;
+    if (Array.isArray(id)) {
+        deleteTargetIds = id.filter(Boolean);
+        deleteTargetType = type === 'project' ? 'project-batch' : type;
+    } else {
+        deleteTargetId = id;
+    }
 
     const titleEl = document.querySelector('#delete-modal h3');
     const textEl = document.querySelector('#delete-modal p');
 
-    if (type === 'project') {
+    if (deleteTargetType === 'project-batch') {
+        const count = deleteTargetIds?.length || 0;
+        const label = count === 1 ? 'Project' : 'Projects';
+        const pronoun = count === 1 ? 'this project' : 'these projects';
+        titleEl.textContent = `Delete ${count} ${label}?`;
+        textEl.textContent = `Are you sure you want to delete ${pronoun}? This cannot be undone.`;
+    } else if (type === 'project') {
         titleEl.textContent = 'Delete Project?';
         textEl.textContent = 'Are you sure you want to delete this project? This cannot be undone.';
     } else {
@@ -3845,13 +4097,27 @@ function showDeleteModal(type, id) {
 function closeDeleteModal() {
     document.getElementById('delete-modal').classList.remove('active');
     deleteTargetId = null;
+    deleteTargetIds = null;
     deleteTargetType = null;
 }
 
 function confirmDeleteAction() {
-    if (!deleteTargetId) return;
+    if (!deleteTargetId && (!deleteTargetIds || deleteTargetIds.length === 0)) return;
 
-    if (deleteTargetType === 'project') {
+    if (deleteTargetType === 'project-batch') {
+        const idsToDelete = new Set(deleteTargetIds || []);
+        projects = projects.filter(p => !idsToDelete.has(p.id));
+        saveProjects();
+        if (currentProject && idsToDelete.has(currentProject.id)) {
+            currentProject = null;
+            currentActions = [];
+            showProjectsView();
+        } else {
+            renderProjectsGrid();
+        }
+        selectedProjectIds = new Set();
+        updateProjectSelectionUI();
+    } else if (deleteTargetType === 'project') {
         projects = projects.filter(p => p.id !== deleteTargetId);
         saveProjects();
         if (currentProject && currentProject.id === deleteTargetId) {
@@ -3860,6 +4126,10 @@ function confirmDeleteAction() {
             showProjectsView();
         } else {
             renderProjectsGrid();
+        }
+        if (deleteTargetId) {
+            selectedProjectIds.delete(deleteTargetId);
+            updateProjectSelectionUI();
         }
     } else if (deleteTargetType === 'action') {
         pushUndoState();

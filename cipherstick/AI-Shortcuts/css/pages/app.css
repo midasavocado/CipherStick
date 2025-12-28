@@ -26,6 +26,17 @@
 
 .dashboard-header {
     margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .dashboard-header h1 {
@@ -39,6 +50,25 @@
 
 .dashboard-header p {
     color: var(--text-muted);
+}
+
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.selection-count {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.projects-dashboard:not(.selection-mode) .selection-count,
+.projects-dashboard:not(.selection-mode) #projects-select-all,
+.projects-dashboard:not(.selection-mode) #projects-delete-selected {
+    display: none;
 }
 
 .projects-grid {
@@ -57,6 +87,47 @@
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+}
+
+.project-card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 14px 40px rgba(59, 130, 246, 0.2);
+}
+
+.project-card.selected::before {
+    transform: scaleX(1);
+}
+
+.project-select-toggle {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-color);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.project-select-toggle svg {
+    width: 14px;
+    height: 14px;
+}
+
+.projects-dashboard.selection-mode .project-card .project-select-toggle {
+    display: inline-flex;
+}
+
+.project-select-toggle.selected {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
 }
 
 .project-card::before {
@@ -104,6 +175,12 @@
 
 .project-card:hover .project-actions {
     opacity: 1;
+}
+
+.projects-dashboard.selection-mode .project-card:hover .project-actions,
+.projects-dashboard.selection-mode .project-card .project-actions {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* New Project Card */
@@ -822,6 +899,71 @@
     color: var(--text-color);
 }
 
+.menu-items-panel {
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    background: rgba(15, 23, 42, 0.35);
+}
+
+.menu-params {
+    margin-bottom: 0.75rem;
+}
+
+.menu-items-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.2);
+}
+
+.menu-item-row:nth-child(odd) {
+    background: rgba(15, 23, 42, 0.32);
+}
+
+.menu-item-label {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.menu-item-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.menu-item-input:focus {
+    outline: none;
+}
+
+.menu-items-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.menu-items-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.menu-item-remove {
+    margin-left: auto;
+}
+
 .menu-cases {
     display: flex;
     flex-direction: column;
@@ -866,6 +1008,10 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-left: 0.15rem;
+}
+
+.menu-case-remove {
+    margin-left: auto;
 }
 
 .menu-case-body {
@@ -1374,6 +1520,17 @@
 
 .toolbar-btn.primary:hover {
     background: var(--primary-hover);
+}
+
+.toolbar-btn.danger {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+.toolbar-btn.danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
 }
 
 /* User Profile Button */
@@ -2347,6 +2504,13 @@ body.mode-dark .theme-toggle-thumb {
 
     .dashboard-header {
         margin-bottom: 1.25rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dashboard-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 
