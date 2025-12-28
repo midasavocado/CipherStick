@@ -16,7 +16,7 @@ function searchMarketplace(query) {
 
     // Show "no results" message if needed
     const visibleCards = Array.from(shortcutCards).filter(card => card.style.display !== 'none');
-    const grid = document.querySelector('.b44-grid'); // Fixed selector from .shortcuts-grid
+    const grid = document.querySelector('.ss-grid'); // Fixed selector from .shortcuts-grid
 
     let noResultsMsg = document.getElementById('no-results-message');
     if (visibleCards.length === 0) {
@@ -39,7 +39,7 @@ function filterMarketplace(filter) {
     // Dropdown handles active state automatically
 
     const cards = Array.from(document.querySelectorAll('.market-card'));
-    const grid = document.querySelector('.b44-grid');
+    const grid = document.querySelector('.ss-grid');
 
     // Mock sorting/filtering logic
     if (filter === 'popular') {

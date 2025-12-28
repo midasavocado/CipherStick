@@ -66,7 +66,7 @@ const scrollObserver = new IntersectionObserver((entries) => {
     rootMargin: "0px 0px -50px 0px"
 });
 
-document.querySelectorAll('.reveal-on-scroll, .section-header, .b44-card').forEach(el => {
+document.querySelectorAll('.reveal-on-scroll, .section-header, .ss-card').forEach(el => {
     el.classList.add('reveal-on-scroll'); // Ensure class is present
     scrollObserver.observe(el);
 });

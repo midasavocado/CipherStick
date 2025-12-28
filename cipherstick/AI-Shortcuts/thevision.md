@@ -236,3 +236,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Final program no longer drops nested actions/blank params when streaming completes; Choose From Menu conversion accepts lowercase cases/actions; mobile shows chat-only with Inspect/Download card.
 -   **Failed**: None.
 -   **Changes**: Updated `app.html`, `js/app.js`, `secrets/src/lib/conversions.js`, `css/variables.css`, and added `css/mobile-overrides.css`.
+
+### 2025-12-28 09:43AM
+-   **Tried**: Reworked mobile chat layout to collapse the preview space and insert the shortcut card into the chat stream; revamped landing scroll interactions with directional reveals, per-section backdrops, and a continuous examples marquee.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile view no longer reserves space for the preview pane, the shortcut card lives at the end of assistant responses, and the landing sections now animate with side reveals plus a smooth, pausable horizontal showcase.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`, `css/pages/app.css`, `js/app.js`, `index.html`, and `css/pages/landing.css`.
+
+### 2025-12-28 09:49AM
+-   **Tried**: Removed all remaining Base44/B44 references across markup, scripts, and styles.
+-   **Errors**: None observed during edits.
+-   **Worked**: All class names and selectors now use the new ss/app naming.
+-   **Failed**: None.
+-   **Changes**: Updated class names in HTML/CSS/JS and adjusted related selectors.

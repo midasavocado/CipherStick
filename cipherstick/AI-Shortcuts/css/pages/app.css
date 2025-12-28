@@ -290,6 +290,13 @@
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
 }
 
+.messages-container .mobile-shortcut-card,
+.mobile-shortcut-card.in-chat {
+    margin: 0;
+    width: 100%;
+    align-self: stretch;
+}
+
 .mobile-shortcut-icon {
     width: 42px;
     height: 42px;

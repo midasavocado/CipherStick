@@ -72,7 +72,7 @@ function setupScrollReveal() {
         });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.feature-card, .pricing-card, .market-card, .use-case-card, .testimonial-card, .b44-card, .section-header, .hero-content, .example-card, .reveal').forEach(el => {
+    document.querySelectorAll('.feature-card, .pricing-card, .market-card, .use-case-card, .testimonial-card, .ss-card, .section-header, .hero-content, .example-card, .reveal').forEach(el => {
         el.classList.add('reveal-on-scroll');
         observer.observe(el);
     });

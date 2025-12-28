@@ -2522,6 +2522,9 @@ function addMessageToUI(text, role) {
     div.innerHTML = `<div class="message-avatar">${avatar}</div><div class="message-bubble">${formatMessage(text)}</div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+    if (role === 'assistant') {
+        updateMobileShortcutCard();
+    }
 }
 
 function formatMessage(text) {
@@ -3409,8 +3412,24 @@ function renderActions(animateIds = null, options = {}) {
 function updateMobileShortcutCard() {
     const card = document.getElementById('mobile-shortcut-card');
     if (!card) return;
-    if (!currentProject) {
+    const container = document.getElementById('messages');
+    const chatPane = document.getElementById('chat-pane');
+    const resetCardPlacement = () => {
+        if (container && card.parentElement === container && chatPane) {
+            chatPane.insertBefore(card, container);
+        } else if (card.parentElement === container) {
+            card.remove();
+        }
+    };
+    if (!currentProject || !isWorkspacePage()) {
         card.classList.add('hidden');
+        resetCardPlacement();
+        return;
+    }
+    const hasAssistant = !!container?.querySelector('.message.assistant');
+    if (!hasAssistant) {
+        card.classList.add('hidden');
+        resetCardPlacement();
         return;
     }
     card.classList.remove('hidden');
@@ -3427,6 +3446,10 @@ function updateMobileShortcutCard() {
     });
     if (titleEl) titleEl.textContent = name;
     if (subEl) subEl.textContent = `${actionCount} action${actionCount === 1 ? '' : 's'} - ${dateLabel}`;
+    if (container) {
+        container.appendChild(card);
+    }
+    card.classList.add('in-chat');
 }
 
 function buildActionTree(actions) {

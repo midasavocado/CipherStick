@@ -34,32 +34,78 @@
 .section.section-slab {
     max-width: none;
     padding: 6rem 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .section.section-slab .section-inner {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
+    position: relative;
+    z-index: 1;
 }
 
 .section-slab-1 {
-    background: #0f111a;
+    background-color: #0f111a;
 }
 
 .section-slab-2 {
-    background: #101823;
+    background-color: #101823;
 }
 
 .section-slab-3 {
-    background: #0f1a1f;
+    background-color: #0f1a1f;
 }
 
 .section-slab-4 {
-    background: #121520;
+    background-color: #121520;
 }
 
 .section-slab-5 {
-    background: #0f141a;
+    background-color: #0f141a;
+}
+
+.section-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    opacity: 0.9;
+}
+
+.section-bg-1 {
+    background-image: radial-gradient(circle at 20% 15%, rgba(59, 130, 246, 0.35), transparent 55%),
+        radial-gradient(circle at 80% 40%, rgba(168, 85, 247, 0.28), transparent 60%);
+}
+
+.section-bg-2 {
+    background-image: radial-gradient(circle at 15% 20%, rgba(14, 165, 233, 0.28), transparent 55%),
+        radial-gradient(circle at 75% 35%, rgba(56, 189, 248, 0.18), transparent 60%);
+}
+
+.section-bg-3 {
+    background-image: radial-gradient(circle at 20% 25%, rgba(34, 197, 94, 0.22), transparent 55%),
+        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.22), transparent 60%);
+}
+
+.section-bg-4 {
+    background-image: radial-gradient(circle at 20% 20%, rgba(251, 146, 60, 0.18), transparent 55%),
+        radial-gradient(circle at 75% 35%, rgba(168, 85, 247, 0.16), transparent 60%);
+}
+
+.section-bg-5 {
+    background-image: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.2), transparent 55%),
+        radial-gradient(circle at 80% 40%, rgba(14, 165, 233, 0.22), transparent 60%);
+}
+
+@supports (-webkit-touch-callout: none) {
+    .section-bg {
+        background-attachment: scroll;
+    }
 }
 
 /* Layout Container */
@@ -404,6 +450,20 @@ body:not(.mode-dark) .float-card {
     transform: translateY(0);
 }
 
+/* Directional reveals for feature rows */
+.reveal-on-scroll.reveal-from-left {
+    transform: translateX(-60px);
+}
+
+.reveal-on-scroll.reveal-from-right {
+    transform: translateX(60px);
+}
+
+.reveal-on-scroll.reveal-from-left.is-visible,
+.reveal-on-scroll.reveal-from-right.is-visible {
+    transform: translateX(0);
+}
+
 /* --- Feature Rows (Zig-Zag) --- */
 .feature-row {
     display: flex;
@@ -486,6 +546,12 @@ body:not(.mode-dark) .float-card {
     border: 1px dashed var(--border-color);
 }
 
+.feature-row:hover .circular-visual {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
 
 /* --- Other Section Styles (FAQ, etc) --- */
 /* FAQ - Preserving existing styles */
@@ -519,6 +585,75 @@ body:not(.mode-dark) .float-card {
     color: var(--text-muted);
     font-size: 0.95rem;
     margin: 0;
+}
+
+.section-slab .ss-card {
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.section-slab .ss-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(148, 163, 184, 0.6);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+.examples-marquee {
+    overflow: hidden;
+    position: relative;
+    margin-top: 2.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.examples-marquee::before,
+.examples-marquee::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.examples-marquee::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(15, 20, 26, 0.9), rgba(15, 20, 26, 0));
+}
+
+.examples-marquee::after {
+    right: 0;
+    background: linear-gradient(270deg, rgba(15, 20, 26, 0.9), rgba(15, 20, 26, 0));
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 1.5rem;
+    animation: marqueeScroll 38s linear infinite;
+    will-change: transform;
+}
+
+.examples-marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+.marquee-group {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.example-card {
+    flex: 0 0 280px;
+}
+
+@keyframes marqueeScroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
 }
 
 /* Landing specific overrides */
@@ -878,15 +1013,15 @@ body:not(.mode-dark) .float-card {
 }
 
 /* Stagger delays for grid items if needed, handled by JS normally or children */
-.b44-card.reveal-on-scroll:nth-child(2) {
+.ss-card.reveal-on-scroll:nth-child(2) {
     transition-delay: 0.1s;
 }
 
-.b44-card.reveal-on-scroll:nth-child(3) {
+.ss-card.reveal-on-scroll:nth-child(3) {
     transition-delay: 0.2s;
 }
 
-.b44-card.reveal-on-scroll:nth-child(4) {
+.ss-card.reveal-on-scroll:nth-child(4) {
     transition-delay: 0.3s;
 }
 

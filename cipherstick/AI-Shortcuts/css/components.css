@@ -95,7 +95,7 @@
 }
 
 /* Cards */
-.b44-card {
+.ss-card {
     background: var(--surface-color);
     border: 1px solid var(--border-color);
     padding: 2rem;
@@ -103,7 +103,7 @@
     transition: all 0.3s;
 }
 
-.b44-card:hover {
+.ss-card:hover {
     transform: translateY(-5px);
     border-color: var(--text-muted);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);

@@ -184,7 +184,7 @@ a:hover {
   color: var(--text-color);
 }
 
-/* --- Visualizer (Base44 Vibe) --- */
+/* --- Visualizer (Studio Vibe) --- */
 .visualizer-container {
   position: relative;
   padding: 2rem;
@@ -1713,7 +1713,7 @@ body.mode-dark .top-bar {
 a,
 button,
 .btn-primary-sm,
-.b44-card,
+.ss-card,
 .nav-links a::after {
   transition-duration: 0.2s !important;
   /* Force faster transition */
@@ -2127,7 +2127,7 @@ button,
 }
 
 /* --- Landing Page Styles --- */
-.hero-base44 {
+.hero-ss {
   position: relative;
   min-height: 100vh;
   /* Fill entire viewport - only show hero initially */
@@ -2253,13 +2253,13 @@ button,
   margin-bottom: 4rem;
 }
 
-.b44-grid {
+.ss-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
 }
 
-.b44-card {
+.ss-card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   padding: 2rem;
@@ -2267,7 +2267,7 @@ button,
   transition: all 0.3s;
 }
 
-.b44-card:hover {
+.ss-card:hover {
   transform: translateY(-5px);
   border-color: var(--text-muted);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -2285,7 +2285,7 @@ button,
   background: var(--surface-hover);
 }
 
-.footer-base44 {
+.footer-ss {
   border-top: 1px solid var(--border-color);
   padding: 4rem 2rem;
   background: var(--bg-color);
@@ -2469,7 +2469,7 @@ button,
     grid-template-columns: 1fr;
   }
 
-  .hero-base44 {
+  .hero-ss {
     min-height: 80vh;
     padding: 1rem;
   }

@@ -131,7 +131,7 @@ body.mode-dark .top-bar {
     margin-bottom: 4rem;
 }
 
-.b44-grid {
+.ss-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;

@@ -1,6 +1,7 @@
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   body[data-page="workspace"] .workspace {
     flex-direction: column;
+    gap: 0;
   }
 
   body[data-page="workspace"] .chat-pane {
@@ -8,6 +9,7 @@
     max-width: none;
     min-width: 0;
     border-right: none;
+    border-bottom: none;
   }
 
   body[data-page="workspace"] .preview-pane {
