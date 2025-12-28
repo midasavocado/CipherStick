@@ -1,5 +1,12 @@
 /* ===== APP.CSS - AI Shortcut Generator ===== */
 
+:root {
+    --icon-link-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1'/%3E%3Cpath d='M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1'/%3E%3C/svg%3E");
+    --icon-upload-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='17 8 12 3 7 8'/%3E%3Cline x1='12' y1='3' x2='12' y2='15'/%3E%3C/svg%3E");
+    --icon-bolt-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2L3 14h7l-1 8 10-12h-7l1-8z'/%3E%3C/svg%3E");
+    --icon-check-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+}
+
 /* --- App Layout --- */
 .app-container {
     height: 100vh;
@@ -271,6 +278,80 @@
     border-color: var(--primary-color);
 }
 
+.mobile-shortcut-card {
+    display: none;
+    align-items: center;
+    gap: 0.9rem;
+    margin: 0.75rem 1rem 0;
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.85));
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.mobile-shortcut-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.16);
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.mobile-shortcut-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.mobile-shortcut-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-shortcut-title {
+    font-weight: 600;
+    color: var(--heading-color);
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-shortcut-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.mobile-shortcut-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.mobile-card-btn {
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-color);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mobile-card-btn.primary {
+    background: var(--primary-color);
+    border-color: transparent;
+    color: #fff;
+}
+
 /* --- Pipeline Orbs (in chat) --- */
 .pipeline-orbs {
     display: flex;
@@ -355,10 +436,13 @@
 }
 
 .orb.completed::after {
-    content: '✓';
+    content: '';
     position: absolute;
-    font-size: 1.2rem;
-    color: #22c55e;
+    width: 14px;
+    height: 14px;
+    background: #22c55e;
+    -webkit-mask: var(--icon-check-mask) no-repeat center / contain;
+    mask: var(--icon-check-mask) no-repeat center / contain;
 }
 
 .orb.completed span {
@@ -737,8 +821,13 @@
 }
 
 .linked-output-label::before {
-    content: '🔗';
-    font-size: 0.75rem;
+    content: '';
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    background: currentColor;
+    -webkit-mask: var(--icon-link-mask) no-repeat center / contain;
+    mask: var(--icon-link-mask) no-repeat center / contain;
 }
 
 .linked-output .node-action-btn {
@@ -791,8 +880,13 @@
 }
 
 .node-output .output-label::before {
-    content: '📤';
-    font-size: 0.75rem;
+    content: '';
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    background: currentColor;
+    -webkit-mask: var(--icon-upload-mask) no-repeat center / contain;
+    mask: var(--icon-upload-mask) no-repeat center / contain;
 }
 
 .if-block,
@@ -1989,8 +2083,13 @@
 }
 
 .variable-pill::before {
-    content: '🔗';
-    font-size: 0.65rem;
+    content: '';
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    background: currentColor;
+    -webkit-mask: var(--icon-link-mask) no-repeat center / contain;
+    mask: var(--icon-link-mask) no-repeat center / contain;
 }
 
 .variable-pill-remove {
@@ -2035,9 +2134,14 @@
 }
 
 .variable-tag::before {
-    content: '⚡';
+    content: '';
+    width: 10px;
+    height: 10px;
     margin-right: 0.25rem;
-    font-size: 0.65rem;
+    display: inline-block;
+    background: currentColor;
+    -webkit-mask: var(--icon-bolt-mask) no-repeat center / contain;
+    mask: var(--icon-bolt-mask) no-repeat center / contain;
 }
 
 /* Connection Line */
@@ -2881,6 +2985,9 @@ body.mode-dark .theme-toggle-thumb {
     cursor: pointer;
     font-size: 0.85rem;
     transition: background 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .context-menu-item:hover {
@@ -2895,6 +3002,16 @@ body.mode-dark .theme-toggle-thumb {
 
 .context-menu-item.context-menu-item-empty:hover {
     background: transparent;
+}
+
+.context-menu-icon {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    background: currentColor;
+    -webkit-mask: var(--icon-link-mask) no-repeat center / contain;
+    mask: var(--icon-link-mask) no-repeat center / contain;
+    opacity: 0.9;
 }
 
 /* --- Tutorial Overlay --- */

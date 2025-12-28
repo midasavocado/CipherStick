@@ -229,3 +229,10 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Final program ingestion now keeps `Cases` and nested blocks, preventing Choose From Menu/If/Repeat contents from disappearing after streaming finishes.
 -   **Failed**: None.
 -   **Changes**: Updated `js/app.js`.
+
+### 2025-12-27 11:16PM
+-   **Tried**: Preserved streamed action content on final apply, hardened menu-case conversions, and added mobile-only chat layout with a shortcut file card.
+-   **Errors**: None observed during edits.
+-   **Worked**: Final program no longer drops nested actions/blank params when streaming completes; Choose From Menu conversion accepts lowercase cases/actions; mobile shows chat-only with Inspect/Download card.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html`, `js/app.js`, `secrets/src/lib/conversions.js`, `css/variables.css`, and added `css/mobile-overrides.css`.

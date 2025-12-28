@@ -25,7 +25,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="mode-dark" data-page="workspace">
+<body class="mode-dark" data-page="projects">
     <div class="app-container">
         <!-- Top Navigation Bar -->
         <nav class="top-bar px-6">
@@ -88,153 +88,35 @@
 
         <!-- Main App Content -->
         <main class="app-main">
-            <!-- Workspace View -->
-            <div id="workspace-view" class="workspace hidden">
-                <!-- Chat Pane -->
-                <aside class="chat-pane" id="chat-pane">
-                    <div class="chat-header">
-                        <button class="back-btn" id="back-to-projects-btn" title="Back to Projects">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            <!-- Projects Dashboard View -->
+            <div id="projects-view" class="projects-dashboard">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <h1>Your Projects</h1>
+                        <p>Build and manage your Shortcuts</p>
+                    </div>
+                    <div class="dashboard-actions">
+                        <span class="selection-count" id="projects-selection-count"></span>
+                        <button class="toolbar-btn" id="projects-select-toggle">Select</button>
+                        <button class="toolbar-btn" id="projects-select-all" disabled>Select All</button>
+                        <button class="toolbar-btn danger" id="projects-delete-selected" disabled>Delete Selected</button>
+                    </div>
+                </div>
+                <div id="projects-grid" class="projects-grid">
+                    <div class="project-card new-project-card" id="create-project-card" role="button" tabindex="0">
+                        <div class="plus-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <path d="M19 12H5"></path>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
-                        <span style="font-weight: 600; color: var(--heading-color);">Builder</span>
-                    </div>
-
-                    <div class="mobile-shortcut-card hidden" id="mobile-shortcut-card">
-                        <div class="mobile-shortcut-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <path d="M14 2v6h6"></path>
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                         </div>
-                        <div class="mobile-shortcut-meta">
-                            <div class="mobile-shortcut-title" id="mobile-shortcut-title">Untitled Shortcut</div>
-                            <div class="mobile-shortcut-sub" id="mobile-shortcut-sub">0 actions</div>
-                        </div>
-                        <div class="mobile-shortcut-actions">
-                            <button class="mobile-card-btn" onclick="toggleEditMode()">Inspect</button>
-                            <button class="mobile-card-btn primary" onclick="openDownloadModal()">Download</button>
-                        </div>
+                        <span>New Project</span>
                     </div>
-
-                    <!-- Pipeline Orbs (inline in chat) -->
-
-                    <div class="messages-container" id="messages"></div>
-
-                    <!-- Chat Input Area -->
-                    <div class="chat-input-area">
-                        <div class="plus-menu" id="plus-menu">
-                            <div class="plus-menu-item" onclick="event.stopPropagation(); openForceActionModal();"
-                                role="button" tabindex="0">
-                                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                                    </svg></div>
-                                <div class="item-content">
-                                    <div class="item-title">Force Action <span class="pro-badge">PRO</span></div>
-                                    <div class="item-desc">Add a specific action to your shortcut</div>
-                                </div>
-                            </div>
-                            <div class="plus-menu-item" id="discussion-mode-toggle"
-                                onclick="event.stopPropagation(); toggleMode('discussion');" role="button" tabindex="0">
-                                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    </svg></div>
-                                <div class="item-content">
-                                    <div class="item-title">Discussion Mode</div>
-                                    <div class="item-desc">Chat without modifying shortcut</div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Forced Actions Display -->
-                        <div class="forced-actions" id="forced-actions"></div>
-                        <div class="chat-input-wrapper">
-                            <button class="plus-menu-btn" id="plus-menu-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                            </button>
-                            <textarea id="chat-input" class="chat-input" placeholder="Describe your shortcut..."
-                                rows="1"></textarea>
-                            <button class="send-btn" id="send-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="chat-extras" style="display:none;">
-                            <div class="markdown-preview" id="markdown-preview" style="display:none;"></div>
-                        </div>
-                    </div>
-                    <div class="resize-handle" id="resize-handle"></div>
-                </aside>
-
-                <!-- Preview Pane -->
-                <section class="preview-pane">
-                    <div class="preview-toolbar">
-                        <input type="text" id="project-name-input" class="project-name-input"
-                            placeholder="Untitled Project" value="Untitled Project">
-                        <div class="toolbar-actions">
-                            <button class="toolbar-btn icon-only" id="undo-btn" onclick="undoWorkspace()"
-                                title="Undo (⌘Z)" disabled style="display:none;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="1 4 1 10 7 10"></polyline>
-                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                                </svg>
-                            </button>
-                            <button class="toolbar-btn icon-only" id="redo-btn" onclick="redoWorkspace()"
-                                title="Redo (⇧⌘Z)" disabled style="display:none;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="23 4 23 10 17 10"></polyline>
-                                    <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
-                                </svg>
-                            </button>
-                            <button class="toolbar-btn" id="add-action-btn" style="display:none;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                Add Action
-                            </button>
-                            <button class="toolbar-btn" id="edit-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                                <span id="edit-btn-text">Edit</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="preview-canvas" id="preview-canvas">
-                        <div class="empty-state" id="empty-state">
-                            <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                                    <path d="M2 17l10 5 10-5"></path>
-                                    <path d="M2 12l10 5 10-5"></path>
-                                </svg></div>
-                            <h3>Start Building</h3>
-                            <p>Describe your shortcut in the chat and watch it come to life.</p>
-                        </div>
-                        <div id="actions-container" class="hidden"></div>
-                    </div>
-                </section>
+                </div>
             </div>
+
+            <!-- Workspace View removed on projects page -->
         </main>
     </div>
 
@@ -375,6 +257,18 @@
                 <button class="tutorial-next" id="tutorial-next" onclick="nextTutorialStep()">Next</button>
             </div>
         </div>
+    </div>
+
+    <!-- Mobile Generation Status Panel -->
+    <div id="mobile-generation-status">
+        <div class="spinner"></div>
+        <h3>Generating your shortcut...</h3>
+    </div>
+
+    <!-- Mobile Bottom Toolbar -->
+    <div class="mobile-bottom-toolbar">
+        <button class="mobile-btn" onclick="toggleEditMode()">Inspect</button>
+        <button class="mobile-btn primary" onclick="executeDownload('raw')">Download</button>
     </div>
 
     <script src="theme.js"></script>

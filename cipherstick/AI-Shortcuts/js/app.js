@@ -70,6 +70,19 @@ let liveHintLockUntil = 0;
 let pipelineMode = 'default';
 let projectSelectionMode = false;
 let selectedProjectIds = new Set();
+let lastPartialProgramActions = null;
+
+function getPageMode() {
+    return document.body?.dataset?.page || '';
+}
+
+function isProjectsPage() {
+    return getPageMode() === 'projects';
+}
+
+function isWorkspacePage() {
+    return getPageMode() === 'workspace';
+}
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', () => {
@@ -88,6 +101,10 @@ function initApp() {
         loadProject(projectId);
     } else if (initialPrompt) {
         createNewProject(initialPrompt);
+    } else if (isProjectsPage()) {
+        showProjectsView();
+    } else if (isWorkspacePage()) {
+        showProjectsView();
     } else {
         showProjectsView();
     }
@@ -242,13 +259,26 @@ async function transitionView(hideId, showId) {
 }
 
 function showProjectsView() {
-    transitionView('workspace-view', 'projects-view');
-    window.history.replaceState({}, '', 'app.html');
-    renderProjectsGrid();
+    if (isProjectsPage()) {
+        const projectsView = document.getElementById('projects-view');
+        const workspaceView = document.getElementById('workspace-view');
+        if (projectsView) projectsView.classList.remove('hidden');
+        if (workspaceView) workspaceView.classList.add('hidden');
+        window.history.replaceState({}, '', 'projects.html');
+        renderProjectsGrid();
+        updateViewButtons();
+        return;
+    }
+    window.location.href = 'projects.html';
 }
 
 function showWorkspaceView() {
-    transitionView('projects-view', 'workspace-view');
+    if (!isWorkspacePage()) return;
+    const projectsView = document.getElementById('projects-view');
+    const workspaceView = document.getElementById('workspace-view');
+    if (projectsView) projectsView.classList.add('hidden');
+    if (workspaceView) workspaceView.classList.remove('hidden');
+    updateViewButtons();
 }
 
 function updateProjectSelectionUI() {
@@ -385,6 +415,10 @@ function createNewProject(initialPrompt = null) {
 }
 
 function loadProject(id) {
+    if (!isWorkspacePage()) {
+        window.location.href = `app.html?id=${encodeURIComponent(id)}`;
+        return;
+    }
     currentProject = projects.find(p => p.id === id);
     if (!currentProject) { showProjectsView(); return; }
     currentExportCache = null;
@@ -396,7 +430,7 @@ function loadProject(id) {
     resetUndoRedoHistory();
     showWorkspaceView();
     document.getElementById('project-name-input').value = currentProject.name;
-    window.history.replaceState({}, '', `app.html?id=${id}`);
+    window.history.replaceState({}, '', `app.html?id=${encodeURIComponent(id)}`);
     const messagesEl = document.getElementById('messages');
     messagesEl.innerHTML = '';
     // No welcome message - show empty state instead
@@ -405,7 +439,6 @@ function loadProject(id) {
     } else {
         const messagesEl = document.getElementById('messages');
         messagesEl.innerHTML = ''; // Start clean
-        // addMessageToUI("👋 Ready to build! Describe your shortcut below.", 'assistant'); // Reverted to nothing or simple
     }
     renderActions();
     updateUndoRedoButtons();
@@ -2744,6 +2777,7 @@ function getCurrentProgramPreviewText() {
 
 async function callGenerateAPI(userPrompt) {
     isGenerating = true;
+    lastPartialProgramActions = null;
     document.body.classList.add('is-generating'); // Mobile override trigger
     const isDiscussionMode = chatMode === 'discussion';
     if (!isDiscussionMode) {
@@ -2874,7 +2908,7 @@ async function callGenerateAPI(userPrompt) {
         console.error('API Error:', err);
         removeTypingIndicator();
         removePipelineOrbs();
-        addMessageToUI('⚠️ Failed to connect to the AI service. Please try again.', 'assistant');
+        addMessageToUI('Failed to connect to the AI service. Please try again.', 'assistant');
     }
 
     isGenerating = false;
@@ -2925,7 +2959,7 @@ function handleStreamPacket(packet) {
     if (packet.type === 'cancelled') {
         removeTypingIndicator();
         removePipelineOrbs();
-        addMessageToUI('⚠️ Generation was cancelled.', 'assistant');
+        addMessageToUI('Generation was cancelled.', 'assistant');
     }
 }
 
@@ -2946,6 +2980,7 @@ function updateProgressPercent(percent) {
  */
 function renderPartialProgram(actions, isComplete) {
     if (!actions || !Array.isArray(actions)) return;
+    lastPartialProgramActions = cloneActionsForStreaming(actions);
 
     // Only update if we have more actions than before
     const container = document.getElementById('actions-container');
@@ -2997,6 +3032,170 @@ function renderStreamingActionNodes(actions, isComplete) {
     if (!isComplete && container.lastElementChild) {
         container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+}
+
+// Preserve streamed details if the final payload drops nested actions or param values.
+function isBlankValue(value) {
+    if (value == null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+}
+
+function isInternalParamKey(key) {
+    const normalized = String(key || '').replace(/[^a-z0-9]+/gi, '').toLowerCase();
+    if (!normalized) return false;
+    if (normalized === 'uuidstring' || normalized === 'groupingidentifier') return true;
+    return normalized.endsWith('uuid');
+}
+
+function mergeParamObjects(finalParams, partialParams) {
+    const finalObj = (finalParams && typeof finalParams === 'object' && !Array.isArray(finalParams))
+        ? { ...finalParams }
+        : {};
+    if (!partialParams || typeof partialParams !== 'object' || Array.isArray(partialParams)) return finalObj;
+    for (const [key, value] of Object.entries(partialParams)) {
+        if (isInternalParamKey(key)) continue;
+        if (isBlankValue(finalObj[key]) && !isBlankValue(value)) {
+            finalObj[key] = clonePlainObject(value);
+        }
+    }
+    return finalObj;
+}
+
+function findMatchingPartialAction(finalAction, partialList, used, index) {
+    if (!finalAction || !Array.isArray(partialList)) return null;
+    const finalKey = normalizeActionKey(finalAction.action || finalAction.title || finalAction);
+    if (!finalKey) return null;
+
+    const tryIndex = (idx) => {
+        if (idx < 0 || idx >= partialList.length) return null;
+        if (used.has(idx)) return null;
+        const candidate = partialList[idx];
+        const candidateKey = normalizeActionKey(candidate?.action || candidate?.title || candidate);
+        if (candidateKey && candidateKey === finalKey) {
+            used.add(idx);
+            return candidate;
+        }
+        return null;
+    };
+
+    let match = tryIndex(index);
+    if (match) return match;
+
+    for (let offset = 1; offset <= 3; offset++) {
+        match = tryIndex(index + offset);
+        if (match) return match;
+        match = tryIndex(index - offset);
+        if (match) return match;
+    }
+    return null;
+}
+
+function mergeNestedActionList(finalList, partialList) {
+    if (!Array.isArray(partialList) || partialList.length === 0) {
+        return Array.isArray(finalList) ? finalList : [];
+    }
+    if (!Array.isArray(finalList) || finalList.length === 0) {
+        return cloneActionsForStreaming(partialList);
+    }
+    return mergeActionList(finalList, partialList);
+}
+
+function mergeMenuCases(finalCases, partialCases) {
+    const partialList = Array.isArray(partialCases) ? partialCases : [];
+    if (partialList.length === 0) {
+        return Array.isArray(finalCases) ? finalCases : [];
+    }
+    if (!Array.isArray(finalCases) || finalCases.length === 0) {
+        return clonePlainObject(partialList);
+    }
+    const merged = finalCases.map((finalCase, idx) => {
+        const partialCase = partialList[idx];
+        if (!partialCase || typeof partialCase !== 'object') return finalCase;
+        const mergedCase = { ...finalCase };
+        const finalTitle = finalCase?.Title ?? finalCase?.title ?? '';
+        const partialTitle = partialCase?.Title ?? partialCase?.title ?? '';
+        if (isBlankValue(finalTitle) && !isBlankValue(partialTitle)) {
+            mergedCase.Title = partialTitle;
+        }
+        const finalActions = Array.isArray(finalCase?.Actions)
+            ? finalCase.Actions
+            : (Array.isArray(finalCase?.actions) ? finalCase.actions : []);
+        const partialActions = Array.isArray(partialCase?.Actions)
+            ? partialCase.Actions
+            : (Array.isArray(partialCase?.actions) ? partialCase.actions : []);
+        mergedCase.Actions = mergeNestedActionList(finalActions, partialActions);
+        return mergedCase;
+    });
+    if (partialList.length > finalCases.length) {
+        merged.push(...clonePlainObject(partialList.slice(finalCases.length)));
+    }
+    return merged;
+}
+
+function mergeActionEntry(finalAction, partialAction) {
+    if (finalAction == null) return finalAction;
+    if (!partialAction) return finalAction;
+
+    if (typeof finalAction === 'string') {
+        const finalKey = normalizeActionKey(finalAction);
+        const partialKey = normalizeActionKey(partialAction?.action || partialAction?.title || partialAction);
+        if (partialKey && partialKey === finalKey && typeof partialAction === 'object') {
+            return clonePlainObject(partialAction);
+        }
+        return finalAction;
+    }
+
+    if (typeof finalAction !== 'object') return finalAction;
+    if (typeof partialAction !== 'object') return finalAction;
+
+    const merged = clonePlainObject(finalAction);
+    const hasFinalParams = merged.params && typeof merged.params === 'object' && !Array.isArray(merged.params);
+    const hasPartialParams = partialAction.params && typeof partialAction.params === 'object' && !Array.isArray(partialAction.params);
+    if (hasFinalParams || hasPartialParams) {
+        merged.params = mergeParamObjects(merged.params, partialAction.params);
+    }
+
+    if (isConditionalAction(merged) || isConditionalAction(partialAction)) {
+        merged.then = mergeNestedActionList(merged.then, partialAction.then);
+        if (Object.prototype.hasOwnProperty.call(partialAction, 'else')) {
+            merged.else = mergeNestedActionList(merged.else, partialAction.else);
+        }
+    }
+
+    if (isRepeatAction(merged) || isRepeatAction(partialAction)) {
+        merged.do = mergeNestedActionList(merged.do, partialAction.do);
+    }
+
+    if (isMenuAction(merged) || isMenuAction(partialAction)) {
+        const partialCases = Array.isArray(partialAction.Cases)
+            ? partialAction.Cases
+            : (Array.isArray(partialAction.cases) ? partialAction.cases : []);
+        merged.Cases = mergeMenuCases(merged.Cases, partialCases);
+    }
+
+    return merged;
+}
+
+function mergeActionList(finalList, partialList) {
+    if (!Array.isArray(finalList) || finalList.length === 0) {
+        return Array.isArray(partialList) ? cloneActionsForStreaming(partialList) : [];
+    }
+    if (!Array.isArray(partialList) || partialList.length === 0) {
+        return finalList;
+    }
+    const used = new Set();
+    return finalList.map((finalAction, index) => {
+        const partialAction = findMatchingPartialAction(finalAction, partialList, used, index);
+        return mergeActionEntry(finalAction, partialAction);
+    });
+}
+
+function mergeFinalActionsWithPartial(finalActions, partialActions) {
+    if (!Array.isArray(finalActions) || !Array.isArray(partialActions)) return finalActions;
+    if (partialActions.length === 0) return finalActions;
+    return mergeActionList(finalActions, partialActions);
 }
 
 function updatePipelineStep(step, status) {
@@ -3102,7 +3301,7 @@ function updatePipelineProgress(step, status, hint = '') {
 
 function handleFinalResponse(data) {
     if (!data.ok) {
-        addMessageToUI(`⚠️ ${data.message || 'An error occurred'}`, 'assistant');
+        addMessageToUI(`${data.message || 'An error occurred'}`, 'assistant');
         return;
     }
     const isDiscussionMode = chatMode === 'discussion';
@@ -3122,6 +3321,9 @@ function handleFinalResponse(data) {
 
     // Store program object
     if (willApplyProgram) {
+        if (Array.isArray(data.program?.actions) && Array.isArray(lastPartialProgramActions)) {
+            data.program.actions = mergeFinalActionsWithPartial(data.program.actions, lastPartialProgramActions);
+        }
         currentProgramObj = data.program;
         if (currentProject) currentProject.programObj = currentProgramObj;
 
@@ -3140,6 +3342,8 @@ function handleFinalResponse(data) {
             if (currentProject) currentProject.actions = currentActions;
         }
     }
+
+    lastPartialProgramActions = null;
 
     // Add AI response to chat
     if (data.answer) {
@@ -3182,6 +3386,7 @@ function renderActions(animateIds = null, options = {}) {
         if (suppressAnimations && container) {
             container.classList.remove('suppress-anim');
         }
+        updateMobileShortcutCard();
         return;
     }
 
@@ -3198,6 +3403,30 @@ function renderActions(animateIds = null, options = {}) {
         });
     }
 
+    updateMobileShortcutCard();
+}
+
+function updateMobileShortcutCard() {
+    const card = document.getElementById('mobile-shortcut-card');
+    if (!card) return;
+    if (!currentProject) {
+        card.classList.add('hidden');
+        return;
+    }
+    card.classList.remove('hidden');
+    const titleEl = document.getElementById('mobile-shortcut-title');
+    const subEl = document.getElementById('mobile-shortcut-sub');
+    const name = String(currentProject?.name || 'Untitled Shortcut');
+    const actionCount = Array.isArray(currentActions) ? currentActions.length : 0;
+    const updatedAt = currentProject?.updated || currentProject?.created || Date.now();
+    const dateLabel = new Date(updatedAt).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+    if (titleEl) titleEl.textContent = name;
+    if (subEl) subEl.textContent = `${actionCount} action${actionCount === 1 ? '' : 's'} - ${dateLabel}`;
 }
 
 function buildActionTree(actions) {
@@ -4176,8 +4405,7 @@ function confirmDeleteAction() {
         } else {
             renderProjectsGrid();
         }
-        selectedProjectIds = new Set();
-        updateProjectSelectionUI();
+        setProjectSelectionMode(false);
     } else if (deleteTargetType === 'project') {
         projects = projects.filter(p => p.id !== deleteTargetId);
         saveProjects();
@@ -4190,8 +4418,8 @@ function confirmDeleteAction() {
         }
         if (deleteTargetId) {
             selectedProjectIds.delete(deleteTargetId);
-            updateProjectSelectionUI();
         }
+        setProjectSelectionMode(false);
     } else if (deleteTargetType === 'action') {
         pushUndoState();
         // Recursively collect all action IDs to delete (including nested ones)
@@ -5197,7 +5425,7 @@ async function executeDownload(type) {
         closeDownloadModal();
     } catch (err) {
         console.error('Download error:', err);
-        statusText.textContent = '⚠️ ' + (err.message || 'Download failed');
+        statusText.textContent = err.message ? `Error: ${err.message}` : 'Download failed';
         setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
     }
 }
@@ -5340,7 +5568,7 @@ async function addForcedAction(template) {
     if (forcedActions.find(a => a.action === template.action)) return; // Already forced
     forcedActions.push({ action: template.action, file: template.file });
     renderForcedActions();
-    addMessageToUI(`🎯 Will use **${formatActionNameForUI(template.action)}** in next response`, 'assistant');
+    addMessageToUI(`Will use **${formatActionNameForUI(template.action)}** in next response`, 'assistant');
 }
 
 function removeForcedAction(action) {
@@ -5441,7 +5669,7 @@ function showVariableMenu(event, inputEl) {
             const uuid = output.outputUUID;
             const label = output.outputName || a.title || a.action || 'Action';
             const safeLabel = escapeHtml(label).replace(/\"/g, '&quot;');
-            menuHtml += `<div class="context-menu-item" data-source-id="${a.id}" data-source-uuid="${uuid || ''}" data-source-label="${safeLabel}">🔗 ${escapeHtml(label)}</div>`;
+            menuHtml += `<div class="context-menu-item" data-source-id="${a.id}" data-source-uuid="${uuid || ''}" data-source-label="${safeLabel}"><span class="context-menu-icon" aria-hidden="true"></span>${escapeHtml(label)}</div>`;
         });
     } else if (!hasItems) {
         menuHtml += '<div class="context-menu-divider"></div>';
@@ -5811,28 +6039,12 @@ function checkFirstTimeTutorial() {
 // ============ View Updates ============
 function updateViewButtons() {
     const downloadBtn = document.getElementById('top-download-btn');
-    const inWorkspace = !document.getElementById('workspace-view').classList.contains('hidden');
+    const workspaceView = document.getElementById('workspace-view');
+    const inWorkspace = workspaceView ? !workspaceView.classList.contains('hidden') : isWorkspacePage();
     if (downloadBtn) {
         downloadBtn.style.display = inWorkspace ? 'flex' : 'none';
     }
 }
-
-// Update showProjectsView and showWorkspaceView
-const originalShowProjectsView = showProjectsView;
-showProjectsView = function () {
-    document.getElementById('projects-view').classList.remove('hidden');
-    document.getElementById('workspace-view').classList.add('hidden');
-    window.history.replaceState({}, '', 'app.html');
-    renderProjectsGrid();
-    updateViewButtons();
-};
-
-const originalShowWorkspaceView = showWorkspaceView;
-showWorkspaceView = function () {
-    document.getElementById('projects-view').classList.add('hidden');
-    document.getElementById('workspace-view').classList.remove('hidden');
-    updateViewButtons();
-};
 
 // Initialize new features
 document.addEventListener('DOMContentLoaded', () => {

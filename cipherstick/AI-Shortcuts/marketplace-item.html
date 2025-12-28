@@ -7,7 +7,7 @@
     <title>ShortcutStudio - Shortcut Details</title>
     <meta name="description" content="Download this Apple Shortcut for free on ShortcutStudio.">
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
+        href="icon.png">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/utilities.css">
@@ -104,7 +104,12 @@
         </a>
 
         <div class="detail-header">
-            <div class="detail-icon" id="item-icon">⚡️</div>
+            <div class="detail-icon" id="item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path>
+                </svg>
+            </div>
             <div class="detail-info">
                 <h1 id="item-title">Loading...</h1>
                 <div class="detail-meta">
@@ -153,33 +158,77 @@
         const items = {
             'spotify-to-apple-music': {
                 title: 'Spotify to Apple Music',
-                icon: '🎵',
+                icon: 'music',
                 author: '@alex',
                 uses: '1.2k uses',
                 desc: 'Instantly convert your Spotify playlists to Apple Music. Supports public and private playlists. Requires Apple Music subscription.'
             },
             'photo-resizer-pro': {
                 title: 'Photo Resizer Pro',
-                icon: '📸',
+                icon: 'photo',
                 author: '@sarah_design',
                 uses: '850 uses',
                 desc: 'Batch resize images for social media. Includes presets for Instagram, Twitter, and LinkedIn. Can also add custom watermarks.'
             },
             'meeting-summarizer': {
                 title: 'Meeting Summarizer',
-                icon: '📝',
+                icon: 'note',
                 author: '@tech_guru',
                 uses: '2.5k uses',
                 desc: 'Record audio during your meeting and get a concise bulleted summary using GPT-4. Automatically saves to Notes.'
             },
             'hydration-tracker': {
                 title: 'Hydration Tracker',
-                icon: '💧',
+                icon: 'water',
                 author: '@health_bot',
                 uses: '500 uses',
                 desc: 'Log your daily water intake with a single tap. Sends reminders every 2 hours. Syncs with Apple Health.'
             }
         };
+
+        const ICONS = {
+            music: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+            `,
+            photo: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <path d="M21 15l-5-5L5 21"></path>
+                </svg>
+            `,
+            note: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            `,
+            water: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 2.5C12 2.5 7 9 7 12.5a5 5 0 0 0 10 0C17 9 12 2.5 12 2.5z"></path>
+                </svg>
+            `,
+            default: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path>
+                </svg>
+            `
+        };
+
+        function getItemIconSvg(name) {
+            return ICONS[name] || ICONS.default;
+        }
 
         // Load Data
         const params = new URLSearchParams(window.location.search);
@@ -188,7 +237,7 @@
 
         if (item) {
             document.getElementById('item-title').textContent = item.title;
-            document.getElementById('item-icon').textContent = item.icon;
+            document.getElementById('item-icon').innerHTML = getItemIconSvg(item.icon);
             document.getElementById('item-author').textContent = item.author;
             document.getElementById('item-uses').textContent = item.uses;
             document.getElementById('item-desc').textContent = item.desc;
