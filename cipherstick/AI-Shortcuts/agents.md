@@ -103,4 +103,11 @@ Read "thevision.md" which is located in the same folder that this file is in. Th
 3. What worked, what failed
 4. What changes you made
 
+## Template Coverage (MANDATORY)
+
+Whenever a new template is added or an existing template is changed, you MUST cross-check every relevant surface and keep them in sync. At minimum verify and update:
+- `secrets/src/alltemplates.json`
+- `secrets/src/lib/conversions.js`
+- Any template indexes, action maps, or UI components that enumerate templates/actions
+
 Finally, **YOU MAY FAIL**. If you ever need more context, or just simply **don't know** how to do something- SAY IT. 

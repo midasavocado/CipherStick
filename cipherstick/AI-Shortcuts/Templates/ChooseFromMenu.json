@@ -2,9 +2,9 @@
     "action": "ChooseFromMenu",
     "params": {
         "Prompt": "{{STRING}}",
-        "Items": "{{ARRAY}}"
+        "Items": "{{ARRAY}}" #Seperated by commas
     },
-    "Cases": [
+    "Cases": [ # Each case corresponds to an item in the menu. 
         {
             "Title": "{{STRING}}",
             "Actions": []

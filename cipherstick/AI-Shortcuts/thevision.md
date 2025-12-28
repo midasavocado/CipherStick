@@ -208,3 +208,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Selection checkbox now appears on the right in selection mode.
 -   **Failed**: None.
 -   **Changes**: Updated `css/pages/app.css`.
+
+### 2025-12-27 09:33PM
+-   **Tried**: Generated the AllTemplates bundle directly from the real Templates directory to keep full-template mode in sync with actual files.
+-   **Errors**: Initial script run failed because one template had a leading `v{` typo and the script was ESM in a CJS project.
+-   **Worked**: Added a build script that strips inline `#` comments, fixes the `v{` prefix, and rewrites `secrets/src/AllTemplates.js` from the Templates directory.
+-   **Failed**: None.
+-   **Changes**: Added `scripts/build-all-templates.js` and regenerated `secrets/src/AllTemplates.js`.
+
+### 2025-12-27 09:45PM
+-   **Tried**: Replaced the AllTemplates JS bundle with a raw `alltemplates.json` file that preserves each template exactly, including `#` comments, and updated the worker to parse that bundle.
+-   **Errors**: None observed during edits.
+-   **Worked**: Full-template mode now reads from `secrets/src/alltemplates.json`, keeps raw template text for the model, and derives action/param metadata from the raw content.
+-   **Failed**: None.
+-   **Changes**: Removed `scripts/build-all-templates.js` and `secrets/src/AllTemplates.js`, added `secrets/src/alltemplates.json`, and updated `secrets/src/index.js` and `agents.md`.
