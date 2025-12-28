@@ -124,3 +124,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Clarification prompt no longer includes the example shortcut string.
 -   **Failed**: None.
 -   **Changes**: Commented out the example line in `/secrets/src/index.js`.
+
+### 2025-12-27 06:41PM
+-   **Tried**: Removed UUID-style fields from exported/preview JSON since IDs handle linking.
+-   **Errors**: None observed during edits.
+-   **Worked**: JSON export/preview no longer includes `UUID`/`OutputUUID`-style fields.
+-   **Failed**: None.
+-   **Changes**: Added param-key stripping in `js/app.js` export/preview helpers.
+
+### 2025-12-27 07:17PM
+-   **Tried**: Made Choose From Menu render like If blocks, parsed WFControlFlowMode menu markers into Cases, and ensured exports preserve menu Cases for plist output. Also forced SaveToCameraRoll/Clipboard.Set to route mixed text through a Text action so inputs link via action-output nodes instead of attachmentsByRange.
+-   **Errors**: None observed during edits.
+-   **Worked**: Menu cases display as If-style blocks and PLIST-style menu markers now round-trip into nested Cases; exports include menu cases and conversion stays compatible with the plist structure.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`, `css/pages/app.css`, and `secrets/src/lib/conversions.js`.

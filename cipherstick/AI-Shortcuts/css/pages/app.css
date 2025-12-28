@@ -829,34 +829,56 @@
 }
 
 .menu-case {
-    border: 1px dashed var(--border-color);
+    border: 1.5px solid var(--border-color);
     border-radius: 10px;
     padding: 0.75rem;
-    background: rgba(59, 130, 246, 0.03);
+    background: rgba(59, 130, 246, 0.04);
 }
 
 .menu-case-title {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-weight: 600;
+    gap: 0.5rem;
+    font-weight: 700;
     color: var(--heading-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+    flex-wrap: wrap;
 }
 
 .menu-case-label {
     color: var(--primary-color);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
 
 .menu-case-name {
     font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.menu-case-then {
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-left: 0.15rem;
 }
 
 .menu-case-body {
-    padding-left: 0.5rem;
+    padding-left: 0.6rem;
+}
+
+.menu-case-end {
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
 }
 
 .menu-end {

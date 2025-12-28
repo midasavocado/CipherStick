@@ -336,15 +336,33 @@ function clonePlainObject(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
+function stripInternalParamKeys(params) {
+    if (!params || typeof params !== 'object' || Array.isArray(params)) return params || {};
+    const out = {};
+    Object.entries(params).forEach(([key, value]) => {
+        const normalized = String(key || '').replace(/[^a-z0-9]+/gi, '').toLowerCase();
+        if (!normalized) return;
+        if (normalized === 'uuidstring' || normalized.endsWith('uuid')) return;
+        out[key] = value;
+    });
+    return out;
+}
+
 function serializeActionForExport(action) {
     if (!action || typeof action !== 'object') return action;
     const out = {
         action: action.action || action.title || 'Unknown',
-        params: clonePlainObject(action.params || {})
+        params: stripInternalParamKeys(clonePlainObject(action.params || {}))
     };
     if (Array.isArray(action.then)) out.then = action.then.map(serializeActionForExport);
     if (Array.isArray(action.else)) out.else = action.else.map(serializeActionForExport);
     if (Array.isArray(action.do)) out.do = action.do.map(serializeActionForExport);
+    if (Array.isArray(action.Cases)) {
+        out.Cases = action.Cases.map((entry) => ({
+            Title: entry?.Title ?? entry?.title ?? '',
+            Actions: Array.isArray(entry?.Actions) ? entry.Actions.map(serializeActionForExport) : []
+        }));
+    }
     return out;
 }
 
@@ -368,6 +386,15 @@ function serializeTreeForExport(nodes) {
         if (node.type === 'repeat') {
             const base = serializeActionForExport(node.action);
             base.do = serializeTreeForExport(node.children || []);
+            out.push(base);
+            return;
+        }
+        if (node.type === 'menu') {
+            const base = serializeActionForExport(node.action);
+            base.Cases = (node.cases || []).map((menuCase) => ({
+                Title: menuCase?.title ?? '',
+                Actions: serializeTreeForExport(menuCase?.children || [])
+            }));
             out.push(base);
             return;
         }
@@ -537,6 +564,16 @@ function ensureActionUUIDs(actions = []) {
         if (Array.isArray(a.then)) a.then = ensureActionUUIDs(a.then);
         if (Array.isArray(a.else)) a.else = ensureActionUUIDs(a.else);
         if (Array.isArray(a.do)) a.do = ensureActionUUIDs(a.do);
+        if (Array.isArray(a.Cases)) {
+            a.Cases = a.Cases.map((entry) => {
+                if (!entry || typeof entry !== 'object') return entry;
+                const actions = Array.isArray(entry.Actions)
+                    ? entry.Actions
+                    : (Array.isArray(entry.actions) ? entry.actions : []);
+                entry.Actions = ensureActionUUIDs(actions);
+                return entry;
+            });
+        }
         return a;
     });
 }
@@ -549,7 +586,42 @@ function normalizeControlFlowToNested(actions) {
     const root = [];
     const stack = [{ kind: 'root', id: null, node: null, target: root }];
 
-    const currentTarget = () => stack[stack.length - 1].target;
+    const normalizeMenuItems = (params) => {
+        const raw = params?.WFMenuItems ?? params?.MenuItems ?? params?.Items ?? null;
+        if (Array.isArray(raw)) {
+            return raw.map((item) => String(item ?? '').trim()).filter(Boolean);
+        }
+        if (typeof raw === 'string') {
+            return raw.split(',').map((item) => item.trim()).filter(Boolean);
+        }
+        return [];
+    };
+
+    const ensureMenuCaseTarget = (frame) => {
+        if (!frame || frame.kind !== 'menu') return;
+        if (frame.target) return;
+        const menuAction = frame.node;
+        if (!Array.isArray(menuAction.Cases)) menuAction.Cases = [];
+        let title = '';
+        if (Array.isArray(frame.menuItems)) {
+            const nextIndex = Number.isFinite(frame.menuItemIndex) ? frame.menuItemIndex : 0;
+            const nextItem = frame.menuItems[nextIndex];
+            if (nextItem != null) {
+                title = String(nextItem).trim();
+                frame.menuItemIndex = nextIndex + 1;
+            }
+        }
+        if (!title) title = `Option ${menuAction.Cases.length + 1}`;
+        const caseObj = { Title: title, Actions: [] };
+        menuAction.Cases.push(caseObj);
+        frame.target = caseObj.Actions;
+    };
+
+    const currentTarget = () => {
+        const frame = stack[stack.length - 1];
+        if (frame?.kind === 'menu') ensureMenuCaseTarget(frame);
+        return frame?.target || root;
+    };
 
     const parseMode = (raw) => {
         if (raw === undefined || raw === null || raw === '') return null;
@@ -573,6 +645,12 @@ function normalizeControlFlowToNested(actions) {
         if (mode != null) return mode;
         const key = actionKey(action);
         if (key === 'endrepeat') return 2;
+        return null;
+    };
+
+    const menuMarkerMode = (action) => {
+        const mode = parseMode(action?.params?.WFControlFlowMode);
+        if (mode != null) return mode;
         return null;
     };
 
@@ -615,6 +693,22 @@ function normalizeControlFlowToNested(actions) {
         }
         if (isRepeatAction(action) && Array.isArray(action.do)) {
             action.do = normalizeControlFlowToNested(action.do);
+            if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+            currentTarget().push(action);
+            return;
+        }
+        if (isMenuAction(action) && Array.isArray(action.Cases)) {
+            action.Cases = action.Cases.map((entry) => {
+                if (!entry || typeof entry !== 'object') {
+                    const fallbackTitle = String(entry ?? '').trim();
+                    return { Title: fallbackTitle, Actions: [] };
+                }
+                const caseActions = Array.isArray(entry.Actions) ? entry.Actions : [];
+                return {
+                    ...entry,
+                    Actions: normalizeControlFlowToNested(caseActions)
+                };
+            });
             if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
             currentTarget().push(action);
             return;
@@ -675,6 +769,69 @@ function normalizeControlFlowToNested(actions) {
                 if (mode === 2) {
                     popUntil('repeat', explicitGid);
                     return; // drop End Repeat marker
+                }
+            }
+        }
+
+        if (isMenuAction(action)) {
+            const mode = menuMarkerMode(action);
+            if (mode != null) {
+                const explicitGid = typeof action.params.GroupingIdentifier === 'string' && action.params.GroupingIdentifier.trim()
+                    ? action.params.GroupingIdentifier.trim()
+                    : null;
+
+                if (mode === 0) {
+                    const gid = explicitGid || genUUID();
+                    action.params.GroupingIdentifier = gid;
+                    if (action.params.WFControlFlowMode !== undefined) delete action.params.WFControlFlowMode;
+                    if (action.params.WFMenuItemTitle !== undefined) delete action.params.WFMenuItemTitle;
+                    if (!Array.isArray(action.Cases)) action.Cases = [];
+                    const menuItems = normalizeMenuItems(action.params);
+                    currentTarget().push(action);
+                    stack.push({
+                        kind: 'menu',
+                        id: gid,
+                        node: action,
+                        target: null,
+                        menuItems,
+                        menuItemIndex: 0
+                    });
+                    return;
+                }
+
+                if (mode === 1) {
+                    let idx = explicitGid ? findFrameIndex('menu', explicitGid) : -1;
+                    if (idx === -1) idx = findTopFrameIndex('menu');
+                    if (idx === -1) {
+                        currentTarget().push(action);
+                        return;
+                    }
+                    const frame = stack[idx];
+                    if (!Array.isArray(frame.node.Cases)) frame.node.Cases = [];
+                    const titleRaw =
+                        action.params.WFMenuItemTitle ??
+                        action.params.MenuItemTitle ??
+                        action.params.Title ??
+                        '';
+                    let title = String(titleRaw || '').trim();
+                    if (!title && Array.isArray(frame.menuItems)) {
+                        const nextIndex = Number.isFinite(frame.menuItemIndex) ? frame.menuItemIndex : frame.node.Cases.length;
+                        const nextItem = frame.menuItems[nextIndex];
+                        if (nextItem != null) {
+                            title = String(nextItem).trim();
+                            frame.menuItemIndex = nextIndex + 1;
+                        }
+                    }
+                    if (!title) title = `Option ${frame.node.Cases.length + 1}`;
+                    const caseObj = { Title: title, Actions: [] };
+                    frame.node.Cases.push(caseObj);
+                    frame.target = caseObj.Actions;
+                    return;
+                }
+
+                if (mode === 2) {
+                    popUntil('menu', explicitGid);
+                    return;
                 }
             }
         }
@@ -744,7 +901,12 @@ function findActionLocation(actionId, actions = currentActions, parentAction = n
 function actionContainsId(action, targetId) {
     if (!action) return false;
     const checkArray = (arr) => Array.isArray(arr) && arr.some(a => a?.id === targetId || actionContainsId(a, targetId));
-    return checkArray(action.then) || checkArray(action.else) || checkArray(action.do);
+    const hasControl = checkArray(action.then) || checkArray(action.else) || checkArray(action.do);
+    if (hasControl) return true;
+    if (isMenuAction(action)) {
+        return (action.Cases || []).some(c => checkArray(c?.Actions));
+    }
+    return false;
 }
 
 function removeActionById(actionId) {
@@ -767,6 +929,17 @@ function ensureSectionArray(action, sectionKey) {
     if (sectionKey === 'do') {
         if (!Array.isArray(action.do)) action.do = [];
         return action.do;
+    }
+    if (typeof sectionKey === 'string' && sectionKey.startsWith('case:')) {
+        const index = Number(sectionKey.split(':')[1]);
+        if (!Number.isFinite(index) || index < 0) return null;
+        if (!Array.isArray(action.Cases)) action.Cases = [];
+        while (action.Cases.length <= index) {
+            action.Cases.push({ Title: `Option ${action.Cases.length + 1}`, Actions: [] });
+        }
+        const entry = action.Cases[index];
+        if (!entry.Actions || !Array.isArray(entry.Actions)) entry.Actions = [];
+        return entry.Actions;
     }
     return currentActions;
 }
@@ -941,6 +1114,8 @@ function flattenActions(actions = currentActions, result = []) {
             flattenActions(action.else || [], result);
         } else if (isRepeatAction(action)) {
             flattenActions(action.do || [], result);
+        } else if (isMenuAction(action)) {
+            (action.Cases || []).forEach(c => flattenActions(c.Actions || [], result));
         }
     });
     return result;
@@ -2397,10 +2572,19 @@ function safeParseJson(text) {
 function buildProgramPreviewActions(actions = currentActions) {
     if (!Array.isArray(actions)) return [];
     return actions.map(a => {
-        const entry = { action: a.action || a.title || 'Unknown', params: a.params || {} };
+        const entry = {
+            action: a.action || a.title || 'Unknown',
+            params: stripInternalParamKeys(clonePlainObject(a.params || {}))
+        };
         if (Array.isArray(a.then)) entry.then = buildProgramPreviewActions(a.then);
         if (Array.isArray(a.else)) entry.else = buildProgramPreviewActions(a.else);
         if (Array.isArray(a.do)) entry.do = buildProgramPreviewActions(a.do);
+        if (Array.isArray(a.Cases)) {
+            entry.Cases = a.Cases.map((c) => ({
+                Title: c?.Title ?? c?.title ?? '',
+                Actions: buildProgramPreviewActions(c?.Actions || [])
+            }));
+        }
         return entry;
     });
 }
@@ -2660,7 +2844,7 @@ function renderStreamingActionNodes(actions, isComplete) {
     const tree = buildActionTree(actions);
     renderNodeList(tree, container, true);
 
-    const streamingNodes = container.querySelectorAll('.action-node, .if-block, .repeat-block');
+    const streamingNodes = container.querySelectorAll('.action-node, .if-block, .repeat-block, .menu-block');
     streamingNodes.forEach(node => node.classList.add('streaming'));
 
     if (!isComplete && container.lastElementChild) {
@@ -3190,13 +3374,15 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
                 caseEl.className = 'menu-case';
                 caseEl.innerHTML = `
                             <div class="menu-case-title">
-                                <span class="menu-case-label">Option</span>
+                                <span class="menu-case-label">If</span>
                                 <span class="menu-case-name">${escapeHtml(caseTitle)}</span>
+                                <span class="menu-case-then">Then</span>
                             </div>
                             <div class="menu-case-body ${caseEmpty ? 'empty-section' : ''} ${dropZoneClass}" data-drop-zone="menu-case" data-action-id="${node.action.id}" data-case-index="${caseIndex}">
                                 ${caseEmpty ? '' : '<div class="control-section-content"></div>'}
                                 ${emptyHint}
                             </div>
+                            <div class="menu-case-end">End</div>
                         `;
                 casesWrap?.appendChild(caseEl);
                 if (!caseEmpty) {
@@ -3797,7 +3983,10 @@ function insertActionIntoZone(controlAction, sectionKey, movedAction, zoneEl, cl
     const childNodes = Array.from(contentEl.children)
         .filter(n =>
             n?.dataset?.id &&
-            (n.classList?.contains('action-node') || n.classList?.contains('if-block') || n.classList?.contains('repeat-block'))
+            (n.classList?.contains('action-node') ||
+                n.classList?.contains('if-block') ||
+                n.classList?.contains('repeat-block') ||
+                n.classList?.contains('menu-block'))
         );
     for (const child of childNodes) {
         const childId = parseInt(child.dataset.id);
@@ -3818,7 +4007,7 @@ function insertIntoRootByPosition(moved, clientY) {
     let targetIndex = currentActions.length;
     const container = document.getElementById('actions-container');
     if (container) {
-        const rootNodes = Array.from(container.querySelectorAll('.action-node, .if-block, .repeat-block')).filter(n => !n.dataset.parentId && n.dataset.id);
+        const rootNodes = Array.from(container.querySelectorAll('.action-node, .if-block, .repeat-block, .menu-block')).filter(n => !n.dataset.parentId && n.dataset.id);
         for (let i = 0; i < rootNodes.length; i++) {
             const rect = rootNodes[i].getBoundingClientRect();
             if (clientY < rect.top + rect.height / 2) {
@@ -3858,7 +4047,7 @@ function reorderOnPointerDown(e) {
         return;
     }
 
-    const itemEl = e.target.closest('.action-node, .if-block, .repeat-block');
+    const itemEl = e.target.closest('.action-node, .if-block, .repeat-block, .menu-block');
     if (!itemEl?.dataset?.id) return;
 
     // On touch devices, dragging anywhere conflicts with scroll. Keep touch drag on the handle.
@@ -3942,7 +4131,7 @@ function reorderOnPointerUp(e) {
     const placeholderEl = state.placeholderEl;
     const listEl = placeholderEl.parentElement;
     const zone =
-        placeholderEl.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone') ||
+        placeholderEl.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone, .menu-case-body.drop-zone') ||
         document.getElementById('actions-container');
     const targetInfo = reorderGetTargetInfo(zone);
     const targetIndex = reorderGetPlaceholderIndex(listEl, placeholderEl);
@@ -4084,7 +4273,7 @@ function reorderGetZoneFromPoint(clientX, clientY) {
     const el = document.elementFromPoint(clientX, clientY);
     if (!el) return null;
 
-    const nestedZone = el.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone');
+    const nestedZone = el.closest('.if-then.drop-zone, .if-else.drop-zone, .repeat-body.drop-zone, .menu-case-body.drop-zone');
     if (nestedZone) return nestedZone;
 
     // Make it easy to drop into If/Repeat even when hovering the header/card.
@@ -4127,7 +4316,10 @@ function reorderGetZoneContent(zone) {
 function reorderIsItemElement(el) {
     return (
         !!el?.classList &&
-        (el.classList.contains('action-node') || el.classList.contains('if-block') || el.classList.contains('repeat-block'))
+        (el.classList.contains('action-node') ||
+            el.classList.contains('if-block') ||
+            el.classList.contains('repeat-block') ||
+            el.classList.contains('menu-block'))
     );
 }
 
@@ -4205,6 +4397,11 @@ function reorderGetTargetInfo(zone) {
             dropZone === 'if-else' ? 'else' :
                 dropZone === 'repeat' ? 'do' :
                     null;
+    if (dropZone === 'menu-case') {
+        const caseIndex = Number(zone.dataset?.caseIndex);
+        if (!Number.isFinite(caseIndex)) return null;
+        return { parentId, section: `case:${caseIndex}` };
+    }
     if (!section) return null;
 
     return { parentId, section };
@@ -4423,7 +4620,7 @@ function enterPlacementMode(action) {
 
         // Highlight drop zones - prioritize drop zones over action nodes
         const container = document.getElementById('actions-container');
-        let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, #actions-container, .root-drop-zone'));
+        let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, .menu-block, #actions-container, .root-drop-zone'));
         // Also include the preview canvas as a fallback
         const previewCanvas = document.getElementById('preview-canvas');
         if (previewCanvas) allZones.push(previewCanvas);
@@ -4463,7 +4660,7 @@ function enterPlacementMode(action) {
         pushUndoState();
 
         const container = document.getElementById('actions-container');
-        let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, #actions-container'));
+        let allZones = Array.from(container.querySelectorAll('.drop-zone, .action-node, .if-block, .repeat-block, .menu-block, #actions-container'));
         // Also include the preview canvas as a fallback
         const previewCanvas = document.getElementById('preview-canvas');
         if (previewCanvas) allZones.push(previewCanvas);
@@ -4491,11 +4688,18 @@ function enterPlacementMode(action) {
                 const dropZone = targetZone.dataset.dropZone;
                 const controlInfo = findActionLocation(actionId);
                 if (controlInfo?.action) {
-                    const sectionKey = dropZone === 'if-then' ? 'then' : dropZone === 'if-else' ? 'else' : 'do';
+                    const caseIndex = Number(targetZone.dataset.caseIndex);
+                    const sectionKey = (dropZone === 'menu-case' && Number.isFinite(caseIndex))
+                        ? `case:${caseIndex}`
+                        : dropZone === 'if-then'
+                            ? 'then'
+                            : dropZone === 'if-else'
+                                ? 'else'
+                                : 'do';
                     insertActionIntoZone(controlInfo.action, sectionKey, pendingAction, targetZone, e.clientY);
                     placed = true;
                 }
-            } else if (targetZone.classList.contains('action-node') || targetZone.classList.contains('if-block') || targetZone.classList.contains('repeat-block')) {
+            } else if (targetZone.classList.contains('action-node') || targetZone.classList.contains('if-block') || targetZone.classList.contains('repeat-block') || targetZone.classList.contains('menu-block')) {
                 // Place after the action node within same parent
                 const targetId = parseInt(targetZone.dataset.id || targetZone.dataset.actionId);
                 const targetInfo = findActionLocation(targetId);
