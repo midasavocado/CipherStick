@@ -42,7 +42,6 @@
                     </svg>
                     Download
                 </button>
-                <div class="download-quota-pill" id="download-quota-pill" aria-live="polite"></div>
                 <div class="dropdown" id="profile-dropdown">
                     <button class="user-profile-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -126,7 +125,7 @@
                         </div>
                         <div class="mobile-shortcut-meta">
                             <div class="mobile-shortcut-title-row">
-                                <div class="mobile-shortcut-title" id="mobile-shortcut-title">Untitled Project</div>
+                            <div class="mobile-shortcut-title" id="mobile-shortcut-title">Untitled Project</div>
                                 <div class="mobile-shortcut-loading" id="mobile-shortcut-loading" aria-hidden="true">
                                     <span></span>
                                     <span></span>
@@ -144,6 +143,18 @@
                     <!-- Pipeline Orbs (inline in chat) -->
 
                     <div class="messages-container" id="messages"></div>
+                    <div class="chat-empty-state hidden" id="chat-empty-state">
+                        <div class="empty-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <h3>Start Building</h3>
+                        <p>Describe your shortcut in the chat and watch it come to life.</p>
+                    </div>
 
                     <!-- Chat Input Area -->
                     <div class="chat-input-area">
@@ -184,7 +195,7 @@
                                 </svg>
                             </button>
                             <textarea id="chat-input" class="chat-input" placeholder="Describe your shortcut..."
-                                rows="1" maxlength="2000"></textarea>
+                                rows="1"></textarea>
                             <button class="send-btn" id="send-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -204,11 +215,11 @@
                 <section class="preview-pane">
                     <div class="preview-toolbar">
                         <button class="icon-btn-sm mobile-preview-close-btn" id="mobile-preview-close-btn"
-                            title="Close preview" aria-label="Close preview">
+                            title="Back to chat" aria-label="Back to chat">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                <path d="M19 12H5"></path>
+                                <polyline points="12 19 5 12 12 5"></polyline>
                             </svg>
                         </button>
                         <div class="project-title-wrap" id="project-title-wrap">

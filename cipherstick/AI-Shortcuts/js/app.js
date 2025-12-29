@@ -1,14 +1,10 @@
 // ============ Configuration ============
 const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
-const IS_PRO_USER = false; // Set to true for pro users
 const APP_VERSION = '2025-12-14-6';
 console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
 
 const STORAGE_PREFIX = 'shortcutstudio';
 const LEGACY_STORAGE_PREFIX = String.fromCharCode(102, 108, 117, 120);
-const DOWNLOAD_LIMIT_FREE = 3;
-const DOWNLOAD_LIMIT_PRO = 20;
-const DOWNLOAD_QUOTA_STORAGE_KEY = 'download_quota';
 
 function storageKey(suffix) {
     return `${STORAGE_PREFIX}_${suffix}`;
@@ -44,50 +40,6 @@ function parseStoredJson(suffix, fallback) {
     }
 }
 
-function getTodayKey() {
-    return new Date().toISOString().slice(0, 10);
-}
-
-function getDownloadQuotaState() {
-    const limit = IS_PRO_USER ? DOWNLOAD_LIMIT_PRO : DOWNLOAD_LIMIT_FREE;
-    const stored = parseStoredJson(DOWNLOAD_QUOTA_STORAGE_KEY, null);
-    const today = getTodayKey();
-    if (!stored || stored.date !== today || typeof stored.remaining !== 'number') {
-        const fresh = { date: today, remaining: limit, limit };
-        setStoredValue(DOWNLOAD_QUOTA_STORAGE_KEY, JSON.stringify(fresh));
-        return fresh;
-    }
-    const remaining = Math.max(0, Math.min(limit, Number(stored.remaining)));
-    if (remaining !== stored.remaining || stored.limit !== limit || stored.date !== today) {
-        const next = { date: today, remaining, limit };
-        setStoredValue(DOWNLOAD_QUOTA_STORAGE_KEY, JSON.stringify(next));
-        return next;
-    }
-    return { date: today, remaining, limit };
-}
-
-function setDownloadQuotaRemaining(remaining) {
-    const limit = IS_PRO_USER ? DOWNLOAD_LIMIT_PRO : DOWNLOAD_LIMIT_FREE;
-    const next = { date: getTodayKey(), remaining: Math.max(0, Math.min(limit, remaining)), limit };
-    setStoredValue(DOWNLOAD_QUOTA_STORAGE_KEY, JSON.stringify(next));
-    updateDownloadQuotaUI();
-}
-
-function updateDownloadQuotaUI() {
-    const pill = document.getElementById('download-quota-pill');
-    if (!pill) return;
-    const { remaining, limit } = getDownloadQuotaState();
-    pill.textContent = `${remaining} / ${limit} downloads left`;
-}
-
-function consumeDownloadQuota() {
-    const { remaining } = getDownloadQuotaState();
-    if (remaining <= 0) {
-        updateDownloadQuotaUI();
-        return;
-    }
-    setDownloadQuotaRemaining(remaining - 1);
-}
 
 function getMarketplaceItems() {
     return parseStoredJson('marketplaceItems', []);
@@ -145,12 +97,11 @@ let pipelineMode = 'default';
 let projectSelectionMode = false;
 let selectedProjectIds = new Set();
 let lastPartialProgramActions = null;
+let streamingSummaryMessage = null;
 
 const DEFAULT_PROJECT_ICON = 'bolt';
 const PROJECT_NAME_MAX = 48;
 const PROJECT_DESCRIPTION_MAX = 180;
-const PROMPT_CHAR_LIMIT = 500;
-const FORCED_ACTION_LIMIT = 10;
 const PROJECT_ICON_IDS = [
     'bolt', 'star', 'wand', 'doc', 'music', 'photo', 'video', 'mic',
     'calendar', 'clock', 'check', 'chat', 'gear', 'map', 'bell', 'spark',
@@ -266,9 +217,6 @@ function initApp() {
 
 function initEventListeners() {
     document.getElementById('chat-input')?.addEventListener('input', function () {
-        if (this.value.length > PROMPT_CHAR_LIMIT) {
-            this.value = this.value.slice(0, PROMPT_CHAR_LIMIT);
-        }
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
@@ -303,6 +251,7 @@ function initEventListeners() {
         togglePlusMenu();
     });
     document.getElementById('send-btn')?.addEventListener('click', handleSend);
+    window.addEventListener('resize', updateChatEmptyState);
 
     // Preview Toolbar
     document.getElementById('add-action-btn')?.addEventListener('click', handleAddActionClick);
@@ -396,7 +345,6 @@ function initEventListeners() {
     });
 
     updateUndoRedoButtons();
-    updateDownloadQuotaUI();
 }
 
 function handleAddActionClick() {
@@ -565,7 +513,7 @@ function renderProjectsGrid() {
             }
         };
         const date = new Date(p.updated).toLocaleDateString();
-        const actionCount = p.actions ? p.actions.length : 0;
+        const actionCount = countActionsWithNested(p.actions || []);
         const descriptionText = typeof p.description === 'string' ? p.description.trim() : '';
         const descriptionHtml = descriptionText
             ? `<div class="project-description">${escapeHtml(descriptionText)}</div>`
@@ -699,7 +647,7 @@ function createNewProject(initialPrompt = null) {
     loadProject(id);
     if (initialPrompt) {
         setTimeout(() => {
-            document.getElementById('chat-input').value = String(initialPrompt || '').slice(0, PROMPT_CHAR_LIMIT);
+            document.getElementById('chat-input').value = String(initialPrompt || '');
             handleSend();
         }, 300);
     }
@@ -735,6 +683,7 @@ function loadProject(id) {
         const messagesEl = document.getElementById('messages');
         messagesEl.innerHTML = ''; // Start clean
     }
+    updateChatEmptyState();
     renderActions();
     updateUndoRedoButtons();
 }
@@ -1543,6 +1492,11 @@ function flattenActions(actions = currentActions, result = []) {
         }
     });
     return result;
+}
+
+function countActionsWithNested(actions = currentActions) {
+    if (!Array.isArray(actions)) return 0;
+    return flattenActions(actions, []).length;
 }
 
 function buildParamPlaceholder(paramKey) {
@@ -2794,10 +2748,6 @@ async function handleSend() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text) return;
-    if (text.length > PROMPT_CHAR_LIMIT) {
-        addMessageToUI(`Prompt too long. Limit is ${PROMPT_CHAR_LIMIT} characters.`, 'assistant');
-        return;
-    }
 
     addMessageToUI(text, 'user');
     input.value = '';
@@ -2821,9 +2771,70 @@ function addMessageToUI(text, role) {
     div.innerHTML = `<div class="message-avatar">${avatar}</div><div class="message-bubble">${formatMessage(text)}</div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+    updateChatEmptyState();
     if (role === 'assistant') {
         updateMobileShortcutCard();
     }
+}
+
+function clearStreamingSummary(removeNode = false) {
+    if (!streamingSummaryMessage) return;
+    if (removeNode) {
+        streamingSummaryMessage.node?.remove();
+    }
+    streamingSummaryMessage = null;
+}
+
+function createStreamingSummaryMessage() {
+    const container = document.getElementById('messages');
+    if (!container) return null;
+    const div = document.createElement('div');
+    div.className = 'message assistant streaming';
+    div.innerHTML = '<div class="message-avatar">S</div><div class="message-bubble"></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    updateChatEmptyState();
+    return { node: div, bubble: div.querySelector('.message-bubble'), text: '' };
+}
+
+function appendStreamingSummary(delta) {
+    if (!delta) return;
+    if (!streamingSummaryMessage) {
+        streamingSummaryMessage = createStreamingSummaryMessage();
+    }
+    if (!streamingSummaryMessage || !streamingSummaryMessage.bubble) return;
+    streamingSummaryMessage.text += delta;
+    streamingSummaryMessage.bubble.innerHTML = formatMessage(streamingSummaryMessage.text);
+    const container = document.getElementById('messages');
+    if (container) container.scrollTop = container.scrollHeight;
+}
+
+function finalizeStreamingSummary(finalText) {
+    if (!streamingSummaryMessage) return false;
+    if (typeof finalText === 'string' && finalText.trim()) {
+        streamingSummaryMessage.text = finalText;
+    }
+    if (streamingSummaryMessage.bubble) {
+        streamingSummaryMessage.bubble.innerHTML = formatMessage(streamingSummaryMessage.text);
+    }
+    streamingSummaryMessage.node?.classList.remove('streaming');
+    streamingSummaryMessage = null;
+    updateChatEmptyState();
+    updateMobileShortcutCard();
+    return true;
+}
+
+function updateChatEmptyState() {
+    const emptyState = document.getElementById('chat-empty-state');
+    const container = document.getElementById('messages');
+    if (!emptyState || !container) return;
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    if (!isMobile) {
+        emptyState.classList.add('hidden');
+        return;
+    }
+    const hasMessages = container.children.length > 0;
+    emptyState.classList.toggle('hidden', hasMessages);
 }
 
 function formatMessage(text) {
@@ -2972,10 +2983,12 @@ function showTypingIndicator() {
     div.innerHTML = `<div class="message-avatar">S</div><div class="message-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+    updateChatEmptyState();
 }
 
 function removeTypingIndicator() {
     document.getElementById('typing-indicator')?.remove();
+    updateChatEmptyState();
 }
 
 function updateMarkdownPreview() {
@@ -3079,6 +3092,7 @@ function getCurrentProgramPreviewText() {
 
 async function callGenerateAPI(userPrompt) {
     isGenerating = true;
+    clearStreamingSummary(true);
     lastPartialProgramActions = null;
     document.body.classList.add('is-generating'); // Mobile override trigger
     const isDiscussionMode = chatMode === 'discussion';
@@ -3108,7 +3122,7 @@ async function callGenerateAPI(userPrompt) {
         const followUpInstruction = `CRITICAL: If the user's request is vague or lacks specific details (e.g. "make a reminder"), you MUST ask clarifying questions before generating any code. Do not guess. Ask what specific details they need.`;
 
 
-        const forcedActionsPayload = forcedActions.slice(0, FORCED_ACTION_LIMIT);
+        const forcedActionsPayload = forcedActions;
         const forceInstruction = forcedActionsPayload.length
             ? `You MUST include these actions somewhere in the next response and any generated shortcut: ${forcedActionsPayload.map(f => f.action).join(', ')}. This is a minimum requirement; you may include other actions too.`
             : '';
@@ -3209,6 +3223,7 @@ async function callGenerateAPI(userPrompt) {
         removePipelineOrbs();
     } catch (err) {
         console.error('API Error:', err);
+        clearStreamingSummary(true);
         document.body.classList.remove('is-generating');
         removeTypingIndicator();
         removePipelineOrbs();
@@ -3259,8 +3274,13 @@ function handleStreamPacket(packet) {
         }
     }
 
+    if (packet.type === 'summary_delta' && typeof packet.content === 'string') {
+        appendStreamingSummary(packet.content);
+    }
+
     // Handle cancellation
     if (packet.type === 'cancelled') {
+        clearStreamingSummary(true);
         removeTypingIndicator();
         removePipelineOrbs();
         addMessageToUI('Generation was cancelled.', 'assistant');
@@ -3547,9 +3567,13 @@ function updatePipelineProgress(step, status, hint = '') {
         const applyStart = () => {
             const startNow = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
             clearPipelinePendingStart();
+            const previousStep = currentPipelineStep;
             currentPipelineStep = frontendStep;
             clearPipelineStepTimer(frontendStep);
             pipelineStepStartedAt.set(frontendStep, startNow);
+            if (previousStep !== frontendStep) {
+                console.log(`[pipeline ${new Date().toISOString()}] advancing orb: ${previousStep || 'none'} -> ${frontendStep}`);
+            }
             if (idx > 0) {
                 for (let i = 0; i < idx; i++) {
                     clearPipelineStepTimer(order[i]);
@@ -3680,10 +3704,15 @@ function handleFinalResponse(data) {
 
     // Add AI response to chat
     if (data.answer) {
-        addMessageToUI(data.answer, 'assistant');
+        const usedStreaming = finalizeStreamingSummary(data.answer);
+        if (!usedStreaming) {
+            addMessageToUI(data.answer, 'assistant');
+        }
         if (currentProject) {
             currentProject.history.push({ role: 'assistant', content: data.answer });
         }
+    } else {
+        finalizeStreamingSummary();
     }
 
     saveProjects();
@@ -3757,7 +3786,7 @@ function updateMobileShortcutCard() {
     const subEl = document.getElementById('mobile-shortcut-sub');
     const headerTitleInput = document.getElementById('mobile-project-name-input');
     const name = getProjectDisplayName(currentProject);
-    const actionCount = Array.isArray(currentActions) ? currentActions.length : 0;
+    const actionCount = countActionsWithNested(currentActions || []);
     const updatedAt = currentProject?.updated || currentProject?.created || Date.now();
     const dateLabel = new Date(updatedAt).toLocaleString(undefined, {
         month: 'short',
@@ -4223,8 +4252,9 @@ function createActionNode(action, index, shouldAnimate = false, parentMeta = { p
             if (editMode || (displayValue && !isPlaceholder)) {
                 hasVisibleParams = true;
                 const inputHtml = getInputForType(action.id, key, value, !editMode);
+                const paramClass = inputHtml.includes('param-checkbox') ? 'node-param checkbox-param' : 'node-param';
                 innerHtml += `
-                            <div class="node-param">
+                            <div class="${paramClass}">
                                 <span class="param-label">${escapeHtml(key)}</span>
                                 ${inputHtml}
                             </div>
@@ -4975,6 +5005,7 @@ function reorderOnPointerDown(e) {
     reorderState = {
         phase: 'pending',
         pointerId: e.pointerId,
+        pointerType: e.pointerType,
         handleEl: itemEl,
         draggedId: actionId,
         draggedRoot: loc.action,
@@ -5108,6 +5139,9 @@ function reorderBeginDrag(state) {
 
     state.phase = 'dragging';
     reorderSetZonesActive(true);
+    if (state.pointerType === 'touch') {
+        document.body.classList.add('dragging-action');
+    }
 
     reorderUpdateGhostPosition(state, state.startX, state.startY);
     reorderUpdatePlaceholderPosition(state, state.startX, state.startY);
@@ -5357,6 +5391,9 @@ function reorderApplyMove(actionId, targetInfo, targetIndex, draggedRoot) {
 
 function reorderCleanup(state) {
     reorderSetZonesActive(false);
+    if (state?.pointerType === 'touch') {
+        document.body.classList.remove('dragging-action');
+    }
     if (state?.placeholderRAF) {
         cancelAnimationFrame(state.placeholderRAF);
         state.placeholderRAF = null;
@@ -5424,10 +5461,6 @@ function openActionModal(mode = 'force') {
 }
 
 function openForceActionModal() {
-    if (forcedActions.length >= FORCED_ACTION_LIMIT) {
-        addMessageToUI(`Forced action limit reached (${FORCED_ACTION_LIMIT}). Remove one to add another.`, 'assistant');
-        return;
-    }
     openActionModal('force');
 }
 
@@ -5774,7 +5807,6 @@ async function executeDownload(type) {
         statusText.textContent = 'Downloading...';
         const signedBlob = await signRes.blob();
         downloadBlob(signedBlob, `${baseName}.shortcut`);
-        consumeDownloadQuota();
         // Shortcuts app import disabled; keep download-only behavior.
         // const hostedUrl = await uploadShortcutForInstall(signedBlob, `${baseName}.shortcut`);
         // openShortcutImport(hostedUrl);
@@ -5838,8 +5870,8 @@ const PIPELINE_STEPS = [
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
-const FULL_CATALOG_ORB_MIN_MS = 3000;
-const FULL_CATALOG_ORB_MAX_MS = 5000;
+const PIPELINE_FIRST_STEP_MIN_MS = 2000;
+const PIPELINE_FIRST_STEP_MAX_MS = 5000;
 const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();
@@ -5853,9 +5885,9 @@ function getRandomMs(minMs, maxMs) {
 }
 
 function getPipelineMinActiveMs(step) {
-    if (pipelineMode === 'full_catalog' && (step === 'plan' || step === 'catalog')) {
+    if (step === 'plan' || step === 'catalog') {
         if (!pipelineStepMinActiveMs.has(step)) {
-            pipelineStepMinActiveMs.set(step, getRandomMs(FULL_CATALOG_ORB_MIN_MS, FULL_CATALOG_ORB_MAX_MS));
+            pipelineStepMinActiveMs.set(step, getRandomMs(PIPELINE_FIRST_STEP_MIN_MS, PIPELINE_FIRST_STEP_MAX_MS));
         }
         return pipelineStepMinActiveMs.get(step) || MIN_PIPELINE_ACTIVE_MS;
     }
@@ -5941,10 +5973,6 @@ function removePipelineOrbs() {
 async function addForcedAction(template) {
     closeForceActionModal();
     if (forcedActions.find(a => a.action === template.action)) return; // Already forced
-    if (forcedActions.length >= FORCED_ACTION_LIMIT) {
-        addMessageToUI(`Forced action limit reached (${FORCED_ACTION_LIMIT}). Remove one to add another.`, 'assistant');
-        return;
-    }
     forcedActions.push({ action: template.action, file: template.file });
     renderForcedActions();
     addMessageToUI(`Will use **${formatActionNameForUI(template.action)}** in next response`, 'assistant');

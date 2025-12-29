@@ -88,19 +88,85 @@ body:not(.mode-dark) .market-card .card-icon {
     padding: 2rem;
 }
 
+.pricing-section {
+    padding-top: calc(6rem - 20px);
+}
+
+.pricing-section .section-header {
+    margin-bottom: 2rem;
+}
+
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    width: max-content;
+    margin: -1rem auto 3rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-hover);
+    --toggle-active-bg: rgba(59, 130, 246, 0.16);
+    --toggle-active-text: var(--heading-color);
+}
+
+body.mode-dark .pricing-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    --toggle-active-bg: rgba(59, 130, 246, 0.22);
+    --toggle-active-text: #f8fafc;
+}
+
+.pricing-toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pricing-toggle-pill {
+    padding: 0.4rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.pricing-toggle-pill span {
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+.pricing-toggle input:checked + .pricing-toggle-pill {
+    background: var(--toggle-active-bg);
+    color: var(--toggle-active-text);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.pricing-toggle-pill:hover {
+    color: var(--text-color);
+}
+
+
 .pricing-card {
     background: var(--surface-color);
     border: 1px solid var(--border-color);
     border-radius: 24px;
     padding: 2.5rem;
     text-align: center;
-    transition: all 0.3s;
+    transition: transform 0.35s cubic-bezier(0.22, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease, background 0.35s ease;
     position: relative;
+    will-change: transform;
 }
 
 .pricing-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-10px) scale(1.01);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+    border-color: rgba(59, 130, 246, 0.45);
 }
 
 .pricing-card.popular {
@@ -110,7 +176,9 @@ body:not(.mode-dark) .market-card .card-icon {
 }
 
 .pricing-card.popular:hover {
-    transform: scale(1.05) translateY(-8px);
+    transform: scale(1.06) translateY(-10px);
+    box-shadow: 0 24px 55px rgba(59, 130, 246, 0.25), 0 18px 45px rgba(0, 0, 0, 0.35);
+    border-color: var(--primary-color);
 }
 
 .price {
@@ -124,6 +192,45 @@ body:not(.mode-dark) .market-card .card-icon {
     font-size: 1rem;
     color: var(--text-muted);
     font-weight: 400;
+}
+
+.price .price-currency {
+    font-size: 0.85em;
+    color: var(--heading-color);
+    font-weight: 600;
+    margin-right: 0.1rem;
+}
+
+.price .price-amount {
+    font-size: 1.2em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--heading-color);
+}
+
+.price .price-term {
+    font-size: 0.9rem;
+    color: var(--heading-color);
+    font-weight: 500;
+    margin-left: 0.35rem;
+}
+
+.price-note {
+    margin-top: -0.6rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.pricing-cta {
+    margin-top: 0.5rem;
+}
+
+.pricing-cta p {
+    margin-bottom: 0.75rem;
+}
+
+.pricing-cta-btn {
+    margin-bottom: 0.5rem;
 }
 
 .features-list {
@@ -141,9 +248,9 @@ body:not(.mode-dark) .market-card .card-icon {
 }
 
 .pricing-features li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    position: relative;
+    display: block;
+    padding-left: 1.6rem;
 }
 
 .pricing-features li::before {
@@ -154,6 +261,15 @@ body:not(.mode-dark) .market-card .card-icon {
     background: var(--primary-color);
     -webkit-mask: var(--icon-check-mask) no-repeat center / contain;
     mask: var(--icon-check-mask) no-repeat center / contain;
+    position: absolute;
+    left: 0;
+    top: 0.35rem;
+}
+
+.pricing-features {
+    padding-left: 0;
+    margin-left: 0;
+    text-align: left;
 }
 
 .check-icon {

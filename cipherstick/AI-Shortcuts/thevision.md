@@ -502,3 +502,199 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: The dropdown now animates in/out with opacity/slide, and the icon morphs on toggle.
 -   **Failed**: None.
 -   **Changes**: Updated `index.html`, `css/layout.css`, `css/responsive.css`, and `script.js`.
+
+### 2025-12-28 08:27PM
+-   **Tried**: Moved the download quota pill into the download modal and added layout spacing for it.
+-   **Errors**: None observed during edits.
+-   **Worked**: The downloads-left indicator now appears inside the download modal instead of the top bar.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html` and `css/pages/app.css`.
+
+### 2025-12-28 08:35PM
+-   **Tried**: Refreshed pricing tier feature lists, updated daily download wording, and fixed the Pro card hover by removing the inline transform.
+-   **Errors**: None observed during edits.
+-   **Worked**: Pricing bullets now match current product behavior and Pro animates on hover again.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html`.
+
+### 2025-12-28 08:41PM
+-   **Tried**: Shortened pricing benefits to keep each bullet on a single line.
+-   **Errors**: None observed during edits.
+-   **Worked**: Pricing benefits now use shorter copy to avoid wrapping.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html`.
+
+### 2025-12-28 08:43PM
+-   **Tried**: Removed “new” from pricing download bullets and tightened the benefit icon spacing.
+-   **Errors**: None observed during edits.
+-   **Worked**: Pricing copy now matches the desired wording and checkmarks sit closer to the left.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html` and `css/pages/marketplace.css`.
+
+### 2025-12-28 08:45PM
+-   **Tried**: Repositioned pricing checkmarks to align with the button edge and increased icon-to-text spacing.
+-   **Errors**: None observed during edits.
+-   **Worked**: Pricing checkmarks align with the card content edge while text has more breathing room.
+-   **Failed**: None.
+-   **Changes**: Updated `css/pages/marketplace.css`.
+
+### 2025-12-28 08:57PM
+-   **Tried**: Reworked pricing CTAs, added a yearly/monthly billing toggle, and refined card hover motion while shifting the section upward.
+-   **Errors**: None observed during edits.
+-   **Worked**: CTA buttons now sit under the tier summaries, the toggle defaults to yearly with the discounted price, and card hover animations feel more polished.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html` and `css/pages/marketplace.css`.
+
+### 2025-12-28 09:07PM
+-   **Tried**: Restyled the billing toggle into a segmented pill, tightened its top spacing, and fixed the Pro price amount sizing.
+-   **Errors**: None observed during edits.
+-   **Worked**: The toggle matches the pill-style reference, sits closer to the header, and the price amount renders larger/bolder.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html` and `css/pages/marketplace.css`.
+
+### 2025-12-28 09:13PM
+-   **Tried**: Removed the yellow toggle theme, tightened the toggle sizing, increased its bottom spacing, and adjusted pricing text colors.
+-   **Errors**: None observed during edits.
+-   **Worked**: Billing toggle now uses a blue-neutral highlight, sits smaller with more separation below, and the Pro price reads as true white.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html` and `css/pages/marketplace.css`.
+
+### 2025-12-28 09:29PM
+-   **Tried**: Removed the top accent borders from the Free and Enterprise pricing cards.
+-   **Errors**: None observed during edits.
+-   **Worked**: Pricing cards no longer show the top border accent.
+-   **Failed**: None.
+-   **Changes**: Updated `pricing.html`.
+
+### 2025-12-28 09:45PM
+-   **Tried**: Reworked the mobile workspace empty state and preview toolbar layout, plus adjusted mobile spacing.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile now shows the Start Building prompt in-chat, the preview bar uses a back button + right-aligned edit, and the shortcut card sits slightly higher.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html`, `js/app.js`, and `css/mobile-overrides.css`.
+
+### 2025-12-29 10:27AM
+-   **Tried**: Tuned mobile action layout, drag behavior, and empty-state styling; added daily message limits; refreshed pricing copy.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile actions wrap better without horizontal overflow, touch drag is less likely to scroll the page, and daily message quotas are enforced client-side.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`, `css/pages/app.css`, `js/app.js`, and `pricing.html`.
+
+### 2025-12-29 12:31PM
+-   **Tried**: Tightened mobile action parameter spacing and aligned checkbox parameters into a compact row layout.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile edit/inspect params now stack more tightly and checkbox rows read as compact label+toggle pairs.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css` and `js/app.js`.
+
+### 2025-12-29 12:34PM
+-   **Tried**: Forced mobile action headers to stay on a single line for drag handle, icon, title, and action buttons.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile headers no longer wrap and the title truncates instead of dropping actions to a new row.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:38PM
+-   **Tried**: Removed the mobile workspace top-bar to eliminate the gap above the project name and aligned the preview overlay to the top.
+-   **Errors**: User observed error: mobile gap above the project name persisted while the top bar disappeared.
+-   **Worked**: Mobile chat header now sits at the top of the viewport and the preview overlay no longer reserves space for the top bar.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:40PM
+-   **Tried**: Restored the top bar on mobile, corrected the chat header sticky offset, and realigned the mobile preview overlay below the nav.
+-   **Errors**: None observed during edits.
+-   **Worked**: The top bar is visible again, the project name header aligns directly below it without extra gap, and the preview overlay respects the nav height.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:43PM
+-   **Tried**: Nudged the mobile messages container down slightly to add more breathing room before the first message.
+-   **Errors**: None observed during edits.
+-   **Worked**: The first message now starts a few pixels lower on mobile.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:47PM
+-   **Tried**: Forced mobile inspect action nodes back to row layout to match the desktop visualizer header line.
+-   **Errors**: None observed during edits.
+-   **Worked**: Drag handle, icon, title, output pill, and action buttons stay on one line in mobile inspect.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:51PM
+-   **Tried**: Reworked mobile inspect param rows to use a desktop-like horizontal label/value layout.
+-   **Errors**: None observed during edits.
+-   **Worked**: Param labels stay fixed-width while inputs expand to fill the remaining row space.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:52PM
+-   **Tried**: Extended the catalog orb minimum active time to 5 seconds.
+-   **Errors**: None observed during edits.
+-   **Worked**: The second pipeline orb stays active longer before advancing.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-29 12:55PM
+-   **Tried**: Removed the default “Untitled Project” display so unnamed shortcuts show a blank name.
+-   **Errors**: None observed during edits.
+-   **Worked**: Project name fields and the mobile shortcut card stay empty until the AI or user sets a name.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html` and `js/app.js`.
+
+### 2025-12-29 12:56PM
+-   **Tried**: Restored the default “Untitled Project” placeholder and labels per request.
+-   **Errors**: None observed during edits.
+-   **Worked**: Name inputs and mobile shortcut title now show “Untitled Project” when empty.
+-   **Failed**: None.
+-   **Changes**: Updated `app.html` and `js/app.js`.
+
+### 2025-12-29 12:31PM
+-   **Tried**: Collapsed the mobile preview header stack, shifted the empty-state prompt downward, and tightened action card widths.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile preview no longer shows a blank header band, the Start Building prompt sits lower, and action blocks fit the viewport.
+-   **Failed**: None.
+-   **Changes**: Updated `css/mobile-overrides.css`.
+
+### 2025-12-29 12:55PM
+-   **Tried**: Added a full-catalog delay so the searching orb lingers longer when action search is skipped.
+-   **Errors**: None observed during edits.
+-   **Worked**: The second pipeline orb now stays active an extra 5 seconds in full-catalog mode.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-29 12:57PM
+-   **Tried**: Randomized the full-catalog searching orb to 3-7 seconds and counted nested actions in action totals.
+-   **Errors**: None observed during edits.
+-   **Worked**: The second orb now varies between 3-7 seconds when action search is skipped, and action counts include nested control-flow actions.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-29 01:00PM
+-   **Tried**: Logged pipeline orb transitions to the console when the UI advances steps.
+-   **Errors**: None observed during edits.
+-   **Worked**: Each orb advance prints a `[pipeline]` log with previous and next step names.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-29 01:07PM
+-   **Tried**: Removed local download/message/prompt/forced-action limits and related UI.
+-   **Errors**: None observed during edits.
+-   **Worked**: Client-side limits are now disabled and the quota pill no longer appears.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`, `app.html`, and `css/pages/app.css`.
+
+### 2025-12-29 01:08PM
+-   **Tried**: Added timestamps to pipeline orb advance logs.
+-   **Errors**: User observed error: pipeline orbs advanced too quickly (plan -> build in ~1s).
+-   **Worked**: Console logs now include ISO timestamps on orb transitions.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.
+
+### 2025-12-29 01:18PM
+-   **Tried**: Slowed the first two pipeline orbs to a 2-5s random minimum and streamed summary text tokens to the UI.
+-   **Errors**: None observed during edits.
+-   **Worked**: Plan/Search orbs now hold 2-5s minimum each, and summaries stream into the chat bubble as they are generated.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js` and `secrets/src/index.js`.
