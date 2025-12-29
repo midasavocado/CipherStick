@@ -694,7 +694,14 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 
 ### 2025-12-29 01:18PM
 -   **Tried**: Slowed the first two pipeline orbs to a 2-5s random minimum and streamed summary text tokens to the UI.
--   **Errors**: None observed during edits.
+-   **Errors**: User observed error: second orb advanced instantly.
 -   **Worked**: Plan/Search orbs now hold 2-5s minimum each, and summaries stream into the chat bubble as they are generated.
 -   **Failed**: None.
 -   **Changes**: Updated `js/app.js` and `secrets/src/index.js`.
+
+### 2025-12-29 01:28PM
+-   **Tried**: Forced the first two pipeline steps to queue correctly and hold 2-6s each even if progress packets arrive early.
+-   **Errors**: None observed during edits.
+-   **Worked**: Plan/Search now stay active for a random 2-6s minimum before advancing.
+-   **Failed**: None.
+-   **Changes**: Updated `js/app.js`.

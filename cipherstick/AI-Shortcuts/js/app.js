@@ -98,6 +98,11 @@ let projectSelectionMode = false;
 let selectedProjectIds = new Set();
 let lastPartialProgramActions = null;
 let streamingSummaryMessage = null;
+let streamingJsonBuffer = '';
+let streamingJsonActive = false;
+let streamingJsonMeta = { name: '', summary: '', shortSummary: '', icon: '' };
+let streamingJsonLastActionCount = 0;
+let streamingJsonLastParsedLength = 0;
 
 const DEFAULT_PROJECT_ICON = 'bolt';
 const PROJECT_NAME_MAX = 48;
@@ -3058,6 +3063,270 @@ function safeParseJson(text) {
     }
 }
 
+function resetStreamingJsonState() {
+    streamingJsonBuffer = '';
+    streamingJsonActive = false;
+    streamingJsonMeta = { name: '', summary: '', shortSummary: '', icon: '' };
+    streamingJsonLastActionCount = 0;
+    streamingJsonLastParsedLength = 0;
+}
+
+function setStreamingSummary(text) {
+    const next = String(text || '');
+    if (!streamingSummaryMessage) {
+        streamingSummaryMessage = createStreamingSummaryMessage();
+    }
+    if (!streamingSummaryMessage || !streamingSummaryMessage.bubble) return;
+    streamingSummaryMessage.text = next;
+    streamingSummaryMessage.bubble.innerHTML = formatMessage(next);
+    const container = document.getElementById('messages');
+    if (container) container.scrollTop = container.scrollHeight;
+}
+
+function stripStreamingCodeFences(value) {
+    const trimmed = String(value || '').trim();
+    if (!trimmed.startsWith('```')) return trimmed;
+    return trimmed.replace(/^```[a-zA-Z0-9_-]*\s*/, '').replace(/\s*```$/, '');
+}
+
+function attemptPartialProgramParseFromStream(partialJson) {
+    if (!partialJson) return null;
+    let str = stripStreamingCodeFences(partialJson);
+
+    const parsed = safeParseJson(str);
+    if (parsed) {
+        if (Array.isArray(parsed.actions)) return parsed;
+        if (parsed.program && Array.isArray(parsed.program.actions)) {
+            const name = typeof parsed?.meta?.name === 'string'
+                ? parsed.meta.name
+                : (typeof parsed?.program?.name === 'string' ? parsed.program.name : (typeof parsed?.name === 'string' ? parsed.name : 'Building...'));
+            return { name, actions: parsed.program.actions };
+        }
+    }
+
+    const actionsMatch = str.match(/"actions"\s*:\s*\[/);
+    if (!actionsMatch) return null;
+    const actionsStart = actionsMatch.index + actionsMatch[0].length - 1;
+    let depth = 0;
+    let actionStart = -1;
+    let actions = [];
+    let inString = false;
+    let escaped = false;
+
+    for (let i = actionsStart; i < str.length; i++) {
+        const ch = str[i];
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (ch === '\\') {
+            escaped = true;
+            continue;
+        }
+        if (ch === '"') {
+            inString = !inString;
+            continue;
+        }
+        if (inString) continue;
+
+        if (ch === '{') {
+            if (depth === 1 && actionStart === -1) {
+                actionStart = i;
+            }
+            depth++;
+        } else if (ch === '}') {
+            depth--;
+            if (depth === 1 && actionStart !== -1) {
+                const actionStr = str.slice(actionStart, i + 1);
+                const action = safeParseJson(actionStr);
+                if (action && action.action) actions.push(action);
+                actionStart = -1;
+            }
+        } else if (ch === '[' && depth === 0) {
+            depth = 1;
+        } else if (ch === ']' && depth === 1) {
+            break;
+        }
+    }
+
+    if (!actions.length) return null;
+    const nameMatch = str.match(/"name"\s*:\s*"([^"]+)"/);
+    const name = nameMatch ? nameMatch[1] : 'Building...';
+    return { name, actions };
+}
+
+function sliceJsonObject(raw, key) {
+    if (!raw) return null;
+    const re = new RegExp(`"${key}"\\s*:\\s*\\{`);
+    const match = re.exec(raw);
+    if (!match) return null;
+    const start = match.index + match[0].length - 1;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    let end = raw.length;
+    for (let i = start; i < raw.length; i++) {
+        const ch = raw[i];
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (ch === '\\') {
+            escaped = true;
+            continue;
+        }
+        if (ch === '"') {
+            inString = !inString;
+            continue;
+        }
+        if (inString) continue;
+        if (ch === '{') {
+            depth++;
+        } else if (ch === '}') {
+            depth--;
+            if (depth === 0) {
+                end = i + 1;
+                break;
+            }
+        }
+    }
+    return raw.slice(start, end);
+}
+
+function decodeJsonStringFragment(raw) {
+    let out = '';
+    for (let i = 0; i < raw.length; i++) {
+        const ch = raw[i];
+        if (ch !== '\\') {
+            out += ch;
+            continue;
+        }
+        if (i + 1 >= raw.length) break;
+        const next = raw[i + 1];
+        if (next === 'u') {
+            const hex = raw.slice(i + 2, i + 6);
+            if (hex.length < 4 || !/^[0-9a-fA-F]{4}$/.test(hex)) break;
+            out += String.fromCharCode(parseInt(hex, 16));
+            i += 5;
+            continue;
+        }
+        const map = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
+        out += map[next] ?? next;
+        i += 1;
+    }
+    return out;
+}
+
+function extractJsonStringValue(raw, key) {
+    if (!raw) return null;
+    const re = new RegExp(`"${key}"\\s*:\\s*"`);
+    const match = re.exec(raw);
+    if (!match) return null;
+    const start = match.index + match[0].length;
+    let i = start;
+    let escaped = false;
+    while (i < raw.length) {
+        const ch = raw[i];
+        if (escaped) {
+            escaped = false;
+            i += 1;
+            continue;
+        }
+        if (ch === '\\') {
+            escaped = true;
+            i += 1;
+            continue;
+        }
+        if (ch === '"') break;
+        i += 1;
+    }
+    const rawValue = raw.slice(start, i);
+    return { value: decodeJsonStringFragment(rawValue), complete: i < raw.length && raw[i] === '"' };
+}
+
+function extractStreamingMeta(raw) {
+    const metaSlice = sliceJsonObject(raw, 'meta');
+    if (!metaSlice) return null;
+    const name = extractJsonStringValue(metaSlice, 'name');
+    const summary = extractJsonStringValue(metaSlice, 'summary');
+    const shortSummary = extractJsonStringValue(metaSlice, 'shortSummary');
+    const icon = extractJsonStringValue(metaSlice, 'icon');
+    const next = {};
+    if (name?.value) next.name = name.value;
+    if (summary?.value) next.summary = summary.value;
+    if (shortSummary?.value) next.shortSummary = shortSummary.value;
+    if (icon?.value) next.icon = icon.value;
+    return Object.keys(next).length ? next : null;
+}
+
+function updateStreamingProjectName(name) {
+    const trimmed = String(name || '').trim().slice(0, PROJECT_NAME_MAX);
+    if (!trimmed) return;
+    const mainInput = document.getElementById('project-name-input');
+    if (mainInput && document.activeElement !== mainInput) {
+        mainInput.value = trimmed;
+    }
+    const mobileInput = document.getElementById('mobile-project-name-input');
+    if (mobileInput && document.activeElement !== mobileInput) {
+        mobileInput.value = trimmed;
+    }
+    const mobileTitle = document.getElementById('mobile-shortcut-title');
+    if (mobileTitle) {
+        mobileTitle.textContent = trimmed;
+    }
+}
+
+function updateStreamingProjectIcon(iconId) {
+    const normalized = isValidProjectIcon(iconId) ? iconId : null;
+    if (!normalized) return;
+    const grid = document.getElementById('project-icon-grid');
+    if (grid && grid.offsetParent !== null) {
+        setProjectIconSelection(normalized);
+    }
+}
+
+function applyStreamingMeta(meta) {
+    if (!meta) return;
+    if (typeof meta.summary === 'string' && meta.summary !== streamingJsonMeta.summary) {
+        streamingJsonMeta.summary = meta.summary;
+        setStreamingSummary(meta.summary);
+    }
+    if (typeof meta.name === 'string' && meta.name !== streamingJsonMeta.name) {
+        streamingJsonMeta.name = meta.name;
+        updateStreamingProjectName(meta.name);
+    }
+    if (typeof meta.shortSummary === 'string' && meta.shortSummary !== streamingJsonMeta.shortSummary) {
+        streamingJsonMeta.shortSummary = meta.shortSummary;
+    }
+    if (typeof meta.icon === 'string') {
+        const normalized = meta.icon.trim().toLowerCase();
+        if (normalized && normalized !== streamingJsonMeta.icon) {
+            streamingJsonMeta.icon = normalized;
+            updateStreamingProjectIcon(normalized);
+        }
+    }
+}
+
+function ingestModelDelta(delta) {
+    if (!delta) return;
+    streamingJsonActive = true;
+    streamingJsonBuffer += delta;
+    if ((streamingJsonBuffer.length - streamingJsonLastParsedLength) < 4) return;
+    streamingJsonLastParsedLength = streamingJsonBuffer.length;
+
+    applyStreamingMeta(extractStreamingMeta(streamingJsonBuffer));
+
+    const partial = attemptPartialProgramParseFromStream(streamingJsonBuffer);
+    if (partial?.actions?.length) {
+        const nextCount = partial.actions.length;
+        if (nextCount > streamingJsonLastActionCount) {
+            streamingJsonLastActionCount = nextCount;
+            lastPartialProgramActions = cloneActionsForStreaming(partial.actions);
+            renderPartialProgram(partial.actions, false);
+        }
+    }
+}
+
 // ============ AI API ============
 function buildProgramPreviewActions(actions = currentActions) {
     if (!Array.isArray(actions)) return [];
@@ -3093,6 +3362,7 @@ function getCurrentProgramPreviewText() {
 async function callGenerateAPI(userPrompt) {
     isGenerating = true;
     clearStreamingSummary(true);
+    resetStreamingJsonState();
     lastPartialProgramActions = null;
     document.body.classList.add('is-generating'); // Mobile override trigger
     const isDiscussionMode = chatMode === 'discussion';
@@ -3224,6 +3494,7 @@ async function callGenerateAPI(userPrompt) {
     } catch (err) {
         console.error('API Error:', err);
         clearStreamingSummary(true);
+        resetStreamingJsonState();
         document.body.classList.remove('is-generating');
         removeTypingIndicator();
         removePipelineOrbs();
@@ -3262,8 +3533,12 @@ function handleStreamPacket(packet) {
         }
     }
 
+    if (packet.type === 'model_delta' && typeof packet.content === 'string') {
+        ingestModelDelta(packet.content);
+    }
+
     // Live build visualization - render partial program as it streams
-    if (packet.type === 'partial_program') {
+    if (packet.type === 'partial_program' && !streamingJsonActive) {
         const actions = Array.isArray(packet.actions)
             ? packet.actions
             : Array.isArray(packet.program?.actions)
@@ -3274,13 +3549,14 @@ function handleStreamPacket(packet) {
         }
     }
 
-    if (packet.type === 'summary_delta' && typeof packet.content === 'string') {
+    if (packet.type === 'summary_delta' && typeof packet.content === 'string' && !streamingJsonActive) {
         appendStreamingSummary(packet.content);
     }
 
     // Handle cancellation
     if (packet.type === 'cancelled') {
         clearStreamingSummary(true);
+        resetStreamingJsonState();
         removeTypingIndicator();
         removePipelineOrbs();
         addMessageToUI('Generation was cancelled.', 'assistant');
@@ -3533,6 +3809,10 @@ function updatePipelineStep(step, status) {
 function resetPipelineSteps() {
     clearPipelinePendingStart();
     currentPipelineStep = null;
+    pipelineQueuedStep = null;
+    pipelineQueuedHint = '';
+    pipelinePendingCompletionStep = null;
+    pipelinePendingCompletionHint = '';
     if (pipelineStepCompleteTimers && typeof pipelineStepCompleteTimers.forEach === 'function') {
         pipelineStepCompleteTimers.forEach((t) => { try { clearTimeout(t); } catch (e) { } });
         pipelineStepCompleteTimers.clear();
@@ -3564,7 +3844,29 @@ function updatePipelineProgress(step, status, hint = '') {
     const now = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
 
     if (status === 'started') {
+        if (pipelinePendingStartTimer && pipelinePendingStartStep) {
+            const pendingIdx = order.indexOf(pipelinePendingStartStep);
+            if (frontendStep === pipelinePendingStartStep) {
+                pipelinePendingStartHint = hint || pipelinePendingStartHint;
+                return;
+            }
+            if (pendingIdx >= 0 && idx > pendingIdx) {
+                pipelineQueuedStep = frontendStep;
+                pipelineQueuedHint = hint || pipelineQueuedHint;
+                return;
+            }
+        }
+
+        const prevStep = idx > 0 ? order[idx - 1] : null;
+        if (prevStep && !pipelineStepStartedAt.has(prevStep) && currentPipelineStep !== prevStep) {
+            pipelineQueuedStep = frontendStep;
+            pipelineQueuedHint = hint || pipelineQueuedHint;
+            updatePipelineProgress(prevStep, 'started', '');
+            return;
+        }
+
         const applyStart = () => {
+            const startHint = pipelinePendingStartHint || hint;
             const startNow = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
             clearPipelinePendingStart();
             const previousStep = currentPipelineStep;
@@ -3580,10 +3882,22 @@ function updatePipelineProgress(step, status, hint = '') {
                     updatePipelineOrb(order[i], 'completed');
                 }
             }
-            updatePipelineOrb(frontendStep, 'started', hint);
+            updatePipelineOrb(frontendStep, 'started', startHint);
+            if (pipelinePendingCompletionStep === frontendStep) {
+                const pendingHint = pipelinePendingCompletionHint;
+                pipelinePendingCompletionStep = null;
+                pipelinePendingCompletionHint = '';
+                updatePipelineProgress(frontendStep, 'completed', pendingHint || '');
+            }
+            if (pipelineQueuedStep) {
+                const queuedStep = pipelineQueuedStep;
+                const queuedHint = pipelineQueuedHint;
+                pipelineQueuedStep = null;
+                pipelineQueuedHint = '';
+                updatePipelineProgress(queuedStep, 'started', queuedHint || '');
+            }
         };
 
-        const prevStep = idx > 0 ? order[idx - 1] : null;
         const prevStartedAt = prevStep ? pipelineStepStartedAt.get(prevStep) : null;
         const prevElapsed = (prevStep && typeof prevStartedAt === 'number') ? (now - prevStartedAt) : null;
         const prevMinMs = prevStep ? getPipelineMinActiveMs(prevStep) : MIN_PIPELINE_ACTIVE_MS;
@@ -3593,6 +3907,8 @@ function updatePipelineProgress(step, status, hint = '') {
 
         if (delayMs > 0) {
             clearPipelinePendingStart();
+            pipelinePendingStartStep = frontendStep;
+            pipelinePendingStartHint = hint || '';
             pipelinePendingStartTimer = setTimeout(applyStart, delayMs);
             return;
         }
@@ -3602,6 +3918,11 @@ function updatePipelineProgress(step, status, hint = '') {
     }
 
     if (status === 'completed') {
+        if (pipelinePendingStartStep === frontendStep) {
+            pipelinePendingCompletionStep = frontendStep;
+            pipelinePendingCompletionHint = hint || '';
+            return;
+        }
         const startedAt = pipelineStepStartedAt.get(frontendStep);
         const elapsed = typeof startedAt === 'number' ? (now - startedAt) : null;
         const stepMinMs = getPipelineMinActiveMs(frontendStep);
@@ -3633,18 +3954,28 @@ function updatePipelineProgress(step, status, hint = '') {
 function handleFinalResponse(data) {
     if (!data.ok) {
         addMessageToUI(`${data.message || 'An error occurred'}`, 'assistant');
+        resetStreamingJsonState();
         return;
     }
     const isDiscussionMode = chatMode === 'discussion';
     if (currentProject) normalizeProjectMetadata(currentProject);
-    const nextName = typeof data.finalName === 'string' ? data.finalName.trim() : '';
+    const meta = data.meta && typeof data.meta === 'object' ? data.meta : null;
+    const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
+    const nextName = metaName || (typeof data.finalName === 'string' ? data.finalName.trim() : '');
     const willApplyProgram = !!data.program && !isDiscussionMode;
     const canUpdateName = !!(currentProject && !currentProject.nameFrozen);
     const canUpdateDescription = !!(currentProject && !currentProject.descriptionFrozen);
     const canUpdateIcon = !!(currentProject && !currentProject.iconFrozen);
     const willApplyName = !!(nextName && currentProject && !isDiscussionMode && canUpdateName && nextName !== currentProject.name);
-    const shortSummary = typeof data.shortSummary === 'string' ? data.shortSummary.trim() : '';
-    const iconChoice = typeof data.iconChoice === 'string' ? data.iconChoice.trim() : '';
+    const shortSummary = typeof meta?.shortSummary === 'string'
+        ? meta.shortSummary.trim()
+        : (typeof data.shortSummary === 'string' ? data.shortSummary.trim() : '');
+    const iconChoice = typeof meta?.icon === 'string'
+        ? meta.icon.trim()
+        : (typeof data.iconChoice === 'string' ? data.iconChoice.trim() : '');
+    const assistantAnswer = typeof meta?.summary === 'string'
+        ? meta.summary.trim()
+        : (typeof data.answer === 'string' ? data.answer : '');
     if (willApplyProgram || willApplyName) {
         pushUndoState();
     }
@@ -3703,13 +4034,13 @@ function handleFinalResponse(data) {
     lastPartialProgramActions = null;
 
     // Add AI response to chat
-    if (data.answer) {
-        const usedStreaming = finalizeStreamingSummary(data.answer);
+    if (assistantAnswer) {
+        const usedStreaming = finalizeStreamingSummary(assistantAnswer);
         if (!usedStreaming) {
-            addMessageToUI(data.answer, 'assistant');
+            addMessageToUI(assistantAnswer, 'assistant');
         }
         if (currentProject) {
-            currentProject.history.push({ role: 'assistant', content: data.answer });
+            currentProject.history.push({ role: 'assistant', content: assistantAnswer });
         }
     } else {
         finalizeStreamingSummary();
@@ -3721,6 +4052,7 @@ function handleFinalResponse(data) {
         renderActions(true);
     }
     updateUndoRedoButtons();
+    resetStreamingJsonState();
 }
 
 // ============ Actions Preview ============
@@ -5871,12 +6203,18 @@ const PIPELINE_STEPS = [
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
 const PIPELINE_FIRST_STEP_MIN_MS = 2000;
-const PIPELINE_FIRST_STEP_MAX_MS = 5000;
+const PIPELINE_FIRST_STEP_MAX_MS = 6000;
 const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();
 let currentPipelineStep = null;
 let pipelinePendingStartTimer = null;
+let pipelinePendingStartStep = null;
+let pipelinePendingStartHint = '';
+let pipelineQueuedStep = null;
+let pipelineQueuedHint = '';
+let pipelinePendingCompletionStep = null;
+let pipelinePendingCompletionHint = '';
 
 function getRandomMs(minMs, maxMs) {
     const min = Math.min(minMs, maxMs);
@@ -5899,6 +6237,8 @@ function clearPipelinePendingStart() {
         clearTimeout(pipelinePendingStartTimer);
         pipelinePendingStartTimer = null;
     }
+    pipelinePendingStartStep = null;
+    pipelinePendingStartHint = '';
 }
 
 function clearPipelineStepTimer(step) {
@@ -5960,6 +6300,10 @@ function getDefaultHint(step, state = 'idle') {
 function removePipelineOrbs() {
     clearPipelinePendingStart();
     currentPipelineStep = null;
+    pipelineQueuedStep = null;
+    pipelineQueuedHint = '';
+    pipelinePendingCompletionStep = null;
+    pipelinePendingCompletionHint = '';
     pipelineStepStartedAt?.clear?.();
     if (pipelineStepCompleteTimers && typeof pipelineStepCompleteTimers.forEach === 'function') {
         pipelineStepCompleteTimers.forEach((t) => { try { clearTimeout(t); } catch (e) { } });
