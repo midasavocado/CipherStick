@@ -1,0 +1,7 @@
+{
+  "action": "File.Delete",
+  "params": {
+    "Input": "{{VARIABLE}}",
+    "ImmediatelyDelete": "{{BOOLEAN}}"
+  }
+}

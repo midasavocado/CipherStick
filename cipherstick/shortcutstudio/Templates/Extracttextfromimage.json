@@ -1,0 +1,6 @@
+{
+  "action": "Extracttextfromimage",
+  "params": {
+    "Image": "{{VARIABLE}}"
+  }
+}

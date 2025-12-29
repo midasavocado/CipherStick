@@ -1,0 +1,7 @@
+{
+  "action": "Clock.IncreateTimer",
+  "params": {
+    "Duration": "{{NUMBER}}",
+    "Unit": "min/sec/hr"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "action": "Speaktext",
+  "params": {
+    "Text": "{{STRING}}",
+    "Language": "{{STRING}}", #Form: en-US
+    "WaitUntilFinished": "{{BOOLEAN}}"
+  }
+}

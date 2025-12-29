@@ -1,0 +1,6 @@
+{
+  "action": "GenerateQRCodeFromText",
+  "params": {
+    "Text": "{{STRING}}"
+  }
+}

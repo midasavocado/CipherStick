@@ -1,0 +1,9 @@
+{
+  "action": "Askllm",
+  "params": {
+    "FollowUp": "{{BOOLEAN}}",
+    "LLMPrompt": "{{STRING}}",
+    "Attachments": "{{VARIABLE}}", #Can be multiple. Must be seperated by commas.
+    "Model": "{{On-Device/ChatGPT/Private Cloud Compute}}"
+  }
+}

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortcutStudio - Shortcut Details</title>
+    <meta name="description" content="Download this Apple Shortcut for free on ShortcutStudio.">
+    <link rel="icon"
+        href="icon.png">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/marketplace.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .detail-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-meta {
+            color: var(--text-muted);
+            display: flex;
+            gap: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .preview-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body class="app-theme">
+
+    <!-- Navigation -->
+    <nav class="top-bar">
+        <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
+            <div class="logo-icon">S</div>
+            <span>ShortcutStudio</span>
+        </a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="pricing.html">Pricing</a>
+        </div>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme">
+                <!-- Icon injected by theme.js -->
+            </button>
+            <a href="login.html" id="nav-cta" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <main class="detail-container" style="padding-top: 100px;">
+        <a href="marketplace.html" class="btn-text"
+            style="margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Marketplace
+        </a>
+
+        <div class="detail-header">
+            <div class="detail-icon" id="item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path>
+                </svg>
+            </div>
+            <div class="detail-info">
+                <h1 id="item-title">Loading...</h1>
+                <div class="detail-meta">
+                    <span id="item-author">@shortcutstudio</span>
+                    <span>•</span>
+                    <span id="item-uses">0 uses</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-actions">
+            <button class="btn btn-primary-lg" onclick="handleGet()" style="flex: 1;">
+                Get Shortcut
+            </button>
+            <button class="btn btn-secondary" onclick="handleRemix()" style="flex: 1;">
+                Remix in Editor
+            </button>
+        </div>
+
+        <div class="preview-box">
+            <h3 style="margin-bottom: 1rem;">Description</h3>
+            <p id="item-desc" style="line-height: 1.6; color: var(--text-color);">Loading description...</p>
+        </div>
+
+        <div class="preview-box">
+            <h3 style="margin-bottom: 1rem;">Preview</h3>
+            <div
+                style="background: var(--bg-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; color: var(--text-muted);">
+                <!-- Mock Preview -->
+                <div style="margin-bottom: 0.5rem;">1. Receive Input (Text)</div>
+                <div style="margin-bottom: 0.5rem;">2. Run Script (AI Model)</div>
+                <div style="margin-bottom: 0.5rem;">3. Show Result</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="shortcutstudio-ui.js"></script>
+    <script>
+        // Mock Data
+        const items = {
+            'spotify-to-apple-music': {
+                title: 'Spotify to Apple Music',
+                icon: 'music',
+                author: '@alex',
+                uses: '1.2k uses',
+                desc: 'Instantly convert your Spotify playlists to Apple Music. Supports public and private playlists. Requires Apple Music subscription.'
+            },
+            'photo-resizer-pro': {
+                title: 'Photo Resizer Pro',
+                icon: 'photo',
+                author: '@sarah_design',
+                uses: '850 uses',
+                desc: 'Batch resize images for social media. Includes presets for Instagram, Twitter, and LinkedIn. Can also add custom watermarks.'
+            },
+            'meeting-summarizer': {
+                title: 'Meeting Summarizer',
+                icon: 'note',
+                author: '@tech_guru',
+                uses: '2.5k uses',
+                desc: 'Record audio during your meeting and get a concise bulleted summary using GPT-4. Automatically saves to Notes.'
+            },
+            'hydration-tracker': {
+                title: 'Hydration Tracker',
+                icon: 'water',
+                author: '@health_bot',
+                uses: '500 uses',
+                desc: 'Log your daily water intake with a single tap. Sends reminders every 2 hours. Syncs with Apple Health.'
+            }
+        };
+
+        const ICONS = {
+            music: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+            `,
+            photo: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <path d="M21 15l-5-5L5 21"></path>
+                </svg>
+            `,
+            note: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            `,
+            water: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 2.5C12 2.5 7 9 7 12.5a5 5 0 0 0 10 0C17 9 12 2.5 12 2.5z"></path>
+                </svg>
+            `,
+            default: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path>
+                </svg>
+            `
+        };
+
+        function getItemIconSvg(name) {
+            return ICONS[name] || ICONS.default;
+        }
+
+        // Load Data
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const item = items[id];
+
+        if (item) {
+            document.getElementById('item-title').textContent = item.title;
+            document.getElementById('item-icon').innerHTML = getItemIconSvg(item.icon);
+            document.getElementById('item-author').textContent = item.author;
+            document.getElementById('item-uses').textContent = item.uses;
+            document.getElementById('item-desc').textContent = item.desc;
+            document.title = `ShortcutStudio - ${item.title}`;
+        } else {
+            document.getElementById('item-title').textContent = 'Shortcut Not Found';
+            document.getElementById('item-desc').textContent = 'The requested shortcut could not be found.';
+        }
+
+        // Actions
+        const legacyStoragePrefix = String.fromCharCode(102, 108, 117, 120);
+
+        function getStoredValue(suffix) {
+            const key = `shortcutstudio_${suffix}`;
+            const cached = localStorage.getItem(key);
+            if (cached !== null) return cached;
+            const legacyKey = `${legacyStoragePrefix}_${suffix}`;
+            const legacyValue = localStorage.getItem(legacyKey);
+            if (legacyValue !== null) {
+                localStorage.setItem(key, legacyValue);
+                return legacyValue;
+            }
+            return null;
+        }
+
+        function handleGet() {
+            const isLoggedIn = getStoredValue('logged_in');
+            if (!isLoggedIn) {
+                // Use ShortcutStudioUI if available, else alert
+                if (typeof ShortcutStudioUI !== 'undefined') {
+                    ShortcutStudioUI.confirm('You need to be signed in to download shortcuts.', 'Sign In Required', () => {
+                        window.location.href = 'login.html';
+                    });
+                } else {
+                    if (confirm('You need to be signed in to download shortcuts. Go to login?')) {
+                        window.location.href = 'login.html';
+                    }
+                }
+            } else {
+                // Mock Download
+                const btn = document.querySelector('.btn-primary-lg');
+                const originalText = btn.textContent;
+                btn.textContent = 'Downloading...';
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    btn.textContent = 'Downloaded!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+
+                    if (typeof ShortcutStudioUI !== 'undefined') {
+                        ShortcutStudioUI.alert('Shortcut downloaded to your device.', 'Success');
+                    } else {
+                        alert('Shortcut downloaded!');
+                    }
+                }, 1500);
+            }
+        }
+
+        function handleRemix() {
+            window.location.href = `workspace.html?prompt=Remix of ${encodeURIComponent(item ? item.title : 'Shortcut')}`;
+        }
+    </script>
+</body>
+
+</html>

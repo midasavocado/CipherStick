@@ -1,0 +1,7 @@
+{
+  "action": "File.Rename",
+  "params": {
+    "File": "{{VARIABLE}}",
+    "NewFilename": "{{STRING}}"
+  }
+}
