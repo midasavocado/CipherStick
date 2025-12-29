@@ -47,6 +47,57 @@ body.mode-dark .top-bar {
     gap: 2rem;
 }
 
+.top-bar .nav-actions {
+    position: relative;
+}
+
+.mobile-nav-toggle {
+    display: none;
+}
+
+.mobile-nav-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    min-width: 180px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    padding: 0.5rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.25rem;
+    z-index: 60;
+}
+
+.mobile-nav-toggle .hamburger {
+    width: 18px;
+    height: 14px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.mobile-nav-toggle .hamburger span {
+    height: 2px;
+    width: 100%;
+    border-radius: 999px;
+    background: currentColor;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.mobile-nav-dropdown a {
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.mobile-nav-dropdown a:hover {
+    background: var(--surface-hover);
+}
+
 .nav-links-mobile {
     display: none;
     gap: 0.75rem;

@@ -488,3 +488,17 @@ ShortcutStudio is the premier AI-powered platform for building Apple Shortcuts. 
 -   **Worked**: Landing now scrolls without showing the vertical scrollbar.
 -   **Failed**: None.
 -   **Changes**: Updated `css/pages/landing.css`.
+
+### 2025-12-28 07:02PM
+-   **Tried**: Replaced the mobile nav buttons with a hamburger dropdown next to the Get Started CTA.
+-   **Errors**: None observed during edits.
+-   **Worked**: Mobile now shows a three-line menu toggle that reveals Home/Marketplace/Pricing links in a dropdown.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html`, `css/layout.css`, `css/responsive.css`, and `script.js`.
+
+### 2025-12-28 07:04PM
+-   **Tried**: Smoothed the mobile nav dropdown animation and added a hamburger-to-X icon transition.
+-   **Errors**: None observed during edits.
+-   **Worked**: The dropdown now animates in/out with opacity/slide, and the icon morphs on toggle.
+-   **Failed**: None.
+-   **Changes**: Updated `index.html`, `css/layout.css`, `css/responsive.css`, and `script.js`.

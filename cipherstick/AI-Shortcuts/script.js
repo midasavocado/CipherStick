@@ -19,6 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+    const mobileNavDropdown = document.getElementById('mobile-nav-dropdown');
+    if (mobileNavToggle && mobileNavDropdown) {
+        mobileNavToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = document.body.classList.toggle('mobile-nav-open');
+            mobileNavToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            mobileNavToggle.classList.toggle('is-open', isOpen);
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#mobile-nav-dropdown') && !e.target.closest('#mobile-nav-toggle')) {
+                document.body.classList.remove('mobile-nav-open');
+                mobileNavToggle.setAttribute('aria-expanded', 'false');
+                mobileNavToggle.classList.remove('is-open');
+            }
+        });
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                document.body.classList.remove('mobile-nav-open');
+                mobileNavToggle.setAttribute('aria-expanded', 'false');
+                mobileNavToggle.classList.remove('is-open');
+            }
+        });
+    }
+
     // Contact form stub
     const contactBtn = document.getElementById('contact-submit-btn');
     if (contactBtn) {

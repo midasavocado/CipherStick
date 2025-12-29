@@ -77,12 +77,38 @@
         gap: 0.5rem;
     }
 
-    .nav-links-mobile {
+    .mobile-nav-toggle {
+        display: inline-flex;
+    }
+
+    .mobile-nav-dropdown {
         display: flex;
-        width: 100%;
-        justify-content: center;
-        gap: 0.75rem;
-        padding-bottom: 0.25rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px);
+        max-height: 0;
+        overflow: hidden;
+        transition: opacity 0.2s ease, transform 0.2s ease, max-height 0.25s ease;
+    }
+
+    .mobile-nav-toggle.is-open .hamburger span:nth-child(1) {
+        transform: translateY(6px) rotate(45deg);
+    }
+
+    .mobile-nav-toggle.is-open .hamburger span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-nav-toggle.is-open .hamburger span:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg);
+    }
+
+    body.mobile-nav-open .mobile-nav-dropdown {
+        display: flex;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        max-height: 260px;
     }
 
     .logo-area {
