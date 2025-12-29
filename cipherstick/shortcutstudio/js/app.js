@@ -6202,8 +6202,8 @@ const PIPELINE_STEPS = [
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
-const PIPELINE_FIRST_STEP_MIN_MS = 2000;
-const PIPELINE_FIRST_STEP_MAX_MS = 6000;
+const PIPELINE_FIRST_STEP_MIN_MS = 5000;
+const PIPELINE_FIRST_STEP_MAX_MS = 7000;
 const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();

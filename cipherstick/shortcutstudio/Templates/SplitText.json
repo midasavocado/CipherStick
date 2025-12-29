@@ -1,0 +1,8 @@
+{
+  "action": "SplitText",
+  "params": {
+    "Text": "{{STRING}}",
+    "Separator": "Custom/Spaces/Every Character/New Lines",
+    "CustomSeparator": "{{STRING}}"
+  }
+}

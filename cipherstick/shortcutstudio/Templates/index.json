@@ -98,6 +98,7 @@
   "Showdefinition.json",
   "Showresult.json",
   "Speaktext.json",
+  "SplitText.json",
   "StopAndOutput.json",
   "Takephoto.json",
   "Takescreenshot.json",
@@ -113,5 +114,7 @@
   "Weather.Forecast.json",
   "Savetocameraroll.json",
   "ChooseFromMenu.json",
-  "Email.Send.json"
+  "Email.Send.json",
+  "CreateListFromString.json",
+  "MakeListFromText.json"
 ]
