@@ -1,0 +1,11 @@
+{
+  "action": "Addframetogif",
+  "params": {
+    "AutoSize": "{{BOOLEAN}}",
+    "DelaySeconds": "{{STRING}}",
+    "Height": "{{STRING}}",
+    "Width": "{{STRING}}",
+    "Image": "{{VARIABLE}}",
+    "InputGIF": "{{VARIABLE}}"
+  }
+}

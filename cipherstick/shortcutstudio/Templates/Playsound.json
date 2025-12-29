@@ -1,0 +1,6 @@
+{
+  "action": "PlaySoundFile",
+  "params": {
+    "File": "{{VARIABLE}}" #if not set will play a regular notifacation sound
+  }
+}

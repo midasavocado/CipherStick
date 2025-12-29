@@ -1,0 +1,7 @@
+{
+  "action": "Getitemname",
+  "params": {
+    "Input": "{{VARIABLE}}",
+    "GetWebPageTitle": "{{BOOLEAN}}"
+  }
+}

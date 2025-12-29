@@ -1,0 +1,6 @@
+{
+  "action": "QRcode.Generate",
+  "params": {
+    "Text": "{{STRING}}"
+  }
+}

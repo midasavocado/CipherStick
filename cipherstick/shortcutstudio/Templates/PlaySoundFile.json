@@ -1,0 +1,6 @@
+{
+  "action": "PlaySoundFile",
+  "params": {
+    "Input": "{{VARIABLE}}"
+  }
+}

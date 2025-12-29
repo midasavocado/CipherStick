@@ -1,0 +1,11 @@
+{
+  "action": "Address",
+  "params": {
+    "AddressLine1": "{{STRING}}",
+    "AddressLine2": "{{STRING}}",
+    "City": "{{STRING}}",
+    "Country": "{{STRING}}",
+    "PostalCode": "{{STRING}}",
+    "State": "{{STRING}}"
+  }
+}

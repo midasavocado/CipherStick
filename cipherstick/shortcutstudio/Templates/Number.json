@@ -1,0 +1,6 @@
+{
+  "action": "Number",
+  "params": {
+    "Number": "{{NUMBER}}"
+  }
+}

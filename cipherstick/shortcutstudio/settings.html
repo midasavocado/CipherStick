@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortcutStudio - User Settings</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="app-theme">
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="logo-container">
+            <div class="logo-icon">S</div>
+            <span class="logo-text">ShortcutStudio</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html#features">Features</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="pricing.html">Pricing</a>
+        </div>
+        <div class="nav-actions">
+            <a href="projects.html" id="nav-cta" class="btn-primary-sm">Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Settings Layout -->
+    <div class="settings-layout">
+        <div class="settings-header">
+            <h2>User Settings</h2>
+            <p>Manage your account and global preferences.</p>
+        </div>
+
+        <!-- Subscription -->
+        <div class="settings-section">
+            <h3>Subscription</h3>
+            <div class="settings-form-group">
+                <label>Current Plan</label>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div>
+                        <strong id="user-plan-name" style="color: var(--heading-color);">Free Plan</strong>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Basic access to standard
+                            models.</p>
+                    </div>
+                    <a href="pricing.html" class="btn-primary-sm">Upgrade</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account -->
+        <div class="settings-section">
+            <h3>Account</h3>
+            <div class="settings-form-group">
+                <label>Email Address</label>
+                <input type="email" id="user-email" class="input-glass full-width" value="user@example.com">
+            </div>
+            <div class="settings-form-group">
+                <label>Password</label>
+                <input type="password" id="user-password" class="input-glass full-width" value="********">
+            </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="settings-section">
+            <h3>Global Preferences</h3>
+            <div class="settings-form-group">
+                <label>Custom Instructions</label>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">These instructions will
+                    be applied to all your new projects.</p>
+                <textarea id="user-instructions" class="input-glass full-width" rows="5"
+                    placeholder="E.g., Always prefer short variable names..."></textarea>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+            <button class="btn-secondary" onclick="window.location.href='projects.html'">Cancel</button>
+            <button class="btn-primary-sm" onclick="saveUserSettings()">Save Changes</button>
+        </div>
+    </div>
+
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Inline init for settings page
+        document.addEventListener('DOMContentLoaded', () => {
+            initUserSettings();
+        });
+    </script>
+</body>
+
+</html>

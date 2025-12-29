@@ -1,0 +1,45 @@
+/* --- CSS Variables & Themes --- */
+:root {
+    /* Light Theme (Default) */
+    --bg-color: #FAFBFC;
+    --surface-color: #FFFFFF;
+    --surface-hover: #F1F3F5;
+    --border-color: #D1D5DB;
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --secondary-color: #60A5FA;
+    --text-color: #0F172A;
+    --text-muted: #475569;
+    --heading-color: #020617;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.12);
+
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --glow: 0 0 20px rgba(59, 130, 246, 0.15);
+    --icon-check-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+}
+
+body.mode-dark {
+    /* Dark Theme */
+    --bg-color: #050505;
+    --surface-color: #0A0A0A;
+    --surface-hover: #171717;
+    --border-color: #262626;
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --secondary-color: #60A5FA;
+    --text-color: #E5E5E5;
+    --text-muted: #A1A1AA;
+    --heading-color: #FFFFFF;
+    --glass-bg: rgba(10, 10, 10, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}

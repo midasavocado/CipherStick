@@ -1,0 +1,6 @@
+{
+  "action": "Count",
+  "params": {
+    "Input": "{{VARIABLE}}"
+  }
+}

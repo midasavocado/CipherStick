@@ -1,0 +1,8 @@
+{
+  "action": "StopAndOutput",
+  "params": {
+    "NowhereToOutputBehaviour": "Do Nothing/Respond/Copy to Clipboard",
+    "Output": "{{STRING}}",
+    "Response": "{{STRING}}" #only used if "NowhereToOutputBehaviour" is set to "Respond"
+  }
+}

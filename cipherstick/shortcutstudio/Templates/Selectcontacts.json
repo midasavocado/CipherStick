@@ -1,0 +1,6 @@
+{
+  "action": "Selectcontacts",
+  "params": {
+    "SelectMultiple": "{{BOOLEAN}}"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "action": "Text",
+  "params": {
+    "Text": "{{STRING}}"
+  }
+}

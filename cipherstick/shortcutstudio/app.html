@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortcutStudio - AI Shortcut Generator</title>
+    <meta name="description"
+        content="Build Apple Shortcuts with AI. ShortcutStudio turns natural language into powerful automation workflows.">
+    <meta property="og:title" content="ShortcutStudio - AI Shortcut Generator">
+    <meta property="og:description"
+        content="Build Apple Shortcuts with AI. ShortcutStudio turns natural language into powerful automation workflows.">
+    <meta property="og:image" content="icon.png">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="icon.png">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/app.css?v=2025-12-14-6">
+    <link rel="stylesheet" href="css/mobile-overrides.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="mode-dark" data-page="workspace">
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <nav class="top-bar px-6">
+            <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
+                <div class="logo-icon">S</div>
+                <span>ShortcutStudio</span>
+            </a>
+            <div class="nav-actions flex items-center gap-4">
+                <button class="toolbar-btn primary" id="top-download-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                </button>
+                <div class="dropdown" id="profile-dropdown">
+                    <button class="user-profile-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="profile-menu">
+                        <div class="dropdown-item" id="menu-item-settings" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>Settings</div>
+                        <div class="dropdown-item" id="menu-item-pricing" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                </polygon>
+                            </svg>Upgrade to Pro</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" id="menu-item-theme" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>Toggle Theme</div>
+                        <div class="dropdown-item" id="menu-item-animations" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 12l2 2 4-4"></path>
+                            </svg><span id="animations-toggle-text">Disable Animations</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" id="menu-item-tutorial" role="button" tabindex="0"><svg width="16"
+                                height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>Replay Tutorial</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main App Content -->
+        <main class="app-main">
+            <!-- Workspace View -->
+            <div id="workspace-view" class="workspace hidden">
+                <!-- Chat Pane -->
+                <aside class="chat-pane" id="chat-pane">
+                    <div class="chat-header">
+                        <button class="back-btn" id="back-to-projects-btn" title="Back to Projects">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M19 12H5"></path>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                        </button>
+                        <div class="chat-header-titles">
+                            <span class="chat-header-title" id="chat-header-title">Builder</span>
+                            <input type="text" id="mobile-project-name-input" class="mobile-project-name-input"
+                                placeholder="Untitled Project" value="" maxlength="48">
+                        </div>
+                        <button class="icon-btn-sm mobile-project-edit-btn" id="mobile-project-edit-btn"
+                            title="Edit project" aria-label="Edit project">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="mobile-shortcut-card hidden" id="mobile-shortcut-card">
+                        <div class="mobile-shortcut-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <path d="M14 2v6h6"></path>
+                            </svg>
+                        </div>
+                        <div class="mobile-shortcut-meta">
+                            <div class="mobile-shortcut-title-row">
+                            <div class="mobile-shortcut-title" id="mobile-shortcut-title">Untitled Project</div>
+                                <div class="mobile-shortcut-loading" id="mobile-shortcut-loading" aria-hidden="true">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                            <div class="mobile-shortcut-sub" id="mobile-shortcut-sub">0 actions</div>
+                        </div>
+                        <div class="mobile-shortcut-actions">
+                            <button class="mobile-card-btn" id="mobile-card-inspect-btn" type="button">Inspect</button>
+                            <button class="mobile-card-btn primary" id="mobile-card-download-btn" type="button">Download</button>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Orbs (inline in chat) -->
+
+                    <div class="messages-container" id="messages"></div>
+                    <div class="chat-empty-state hidden" id="chat-empty-state">
+                        <div class="empty-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <h3>Start Building</h3>
+                        <p>Describe your shortcut in the chat and watch it come to life.</p>
+                    </div>
+
+                    <!-- Chat Input Area -->
+                    <div class="chat-input-area">
+                        <div class="plus-menu" id="plus-menu">
+                            <div class="plus-menu-item" onclick="event.stopPropagation(); openForceActionModal();"
+                                role="button" tabindex="0">
+                                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg></div>
+                                <div class="item-content">
+                                    <div class="item-title">Force Action <span class="pro-badge">PRO</span></div>
+                                    <div class="item-desc">Add a specific action to your shortcut</div>
+                                </div>
+                            </div>
+                            <div class="plus-menu-item" id="discussion-mode-toggle"
+                                onclick="event.stopPropagation(); toggleMode('discussion');" role="button" tabindex="0">
+                                <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg></div>
+                                <div class="item-content">
+                                    <div class="item-title">Discussion Mode</div>
+                                    <div class="item-desc">Chat without modifying shortcut</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Forced Actions Display -->
+                        <div class="forced-actions" id="forced-actions"></div>
+                        <div class="chat-input-wrapper">
+                            <button class="plus-menu-btn" id="plus-menu-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                            <textarea id="chat-input" class="chat-input" placeholder="Describe your shortcut..."
+                                rows="1"></textarea>
+                            <button class="send-btn" id="send-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="chat-extras" style="display:none;">
+                            <div class="markdown-preview" id="markdown-preview" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="resize-handle" id="resize-handle"></div>
+                </aside>
+
+                <!-- Preview Pane -->
+                <section class="preview-pane">
+                    <div class="preview-toolbar">
+                        <button class="icon-btn-sm mobile-preview-close-btn" id="mobile-preview-close-btn"
+                            title="Back to chat" aria-label="Back to chat">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M19 12H5"></path>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                        </button>
+                        <div class="project-title-wrap" id="project-title-wrap">
+                            <input type="text" id="project-name-input" class="project-name-input"
+                                placeholder="Untitled Project" value="" maxlength="48">
+                            <button class="icon-btn-sm project-edit-btn" id="project-edit-btn" title="Edit project">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="toolbar-actions">
+                            <button class="toolbar-btn icon-only" id="undo-btn" onclick="undoWorkspace()"
+                                title="Undo (⌘Z)" disabled style="display:none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10"></polyline>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                </svg>
+                            </button>
+                            <button class="toolbar-btn icon-only" id="redo-btn" onclick="redoWorkspace()"
+                                title="Redo (⇧⌘Z)" disabled style="display:none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
+                                </svg>
+                            </button>
+                            <button class="toolbar-btn" id="add-action-btn" style="display:none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Add Action
+                            </button>
+                            <button class="toolbar-btn" id="edit-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                <span id="edit-btn-text">Edit</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="preview-canvas" id="preview-canvas">
+                        <div class="empty-state" id="empty-state">
+                            <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                </svg></div>
+                            <h3>Start Building</h3>
+                            <p>Describe your shortcut in the chat and watch it come to life.</p>
+                        </div>
+                        <div id="actions-container" class="hidden"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Force Action Modal -->
+    <div id="force-action-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 600px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3 id="force-action-modal-title">Force Action</h3>
+                <button class="modal-close" onclick="closeForceActionModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <input type="text" id="action-search" class="input-glass" placeholder="Search actions..."
+                style="margin-bottom: 1rem; width: 100%;">
+            <div id="actions-list"
+                style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+        </div>
+    </div>
+
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Delete Action?</h3>
+                <button class="modal-close" onclick="closeDeleteModal()"><svg width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this action? This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn danger" onclick="confirmDeleteAction()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- List Item Remove Confirmation Modal -->
+    <div id="list-item-remove-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Remove List Item?</h3>
+                <button class="modal-close" onclick="closeListItemRemoveModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove this list item?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeListItemRemoveModal()">Cancel</button>
+                <button class="btn secondary" onclick="disableListItemRemovalConfirm()">Don't show again</button>
+                <button class="btn danger" onclick="confirmListItemRemoval()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Modal -->
+    <div id="download-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Download Shortcut</h3>
+                <button class="modal-close" onclick="closeDownloadModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <div id="download-status"
+                style="display: none; padding: 1rem; background: var(--surface-hover); border-radius: 8px; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                    <span id="download-status-text">Generating shortcut...</span>
+                </div>
+            </div>
+            <div class="download-options">
+                <div class="download-option disabled" id="download-private-option"
+                    style="opacity: 0.5; cursor: not-allowed;" aria-disabled="true">
+                    <div class="option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg></div>
+                    <div class="option-content">
+                        <h4>Download Private <span class="pro-badge">PRO</span></h4>
+                        <p>Download for personal use. Chat history stays private.</p>
+                    </div>
+                </div>
+                <div class="download-option" id="download-publish-btn" role="button" tabindex="0">
+                    <div class="option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                            </path>
+                        </svg></div>
+                    <div class="option-content">
+                        <h4>Download &amp; Publish</h4>
+                        <p>Share with the community. Shortcut only, no chat.</p>
+                    </div>
+                </div>
+                <div class="download-option" id="download-raw-btn" role="button" tabindex="0">
+                    <div class="option-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="16 16 21 11 16 6"></polyline>
+                            <polyline points="8 8 3 13 8 18"></polyline>
+                            <line x1="10" y1="20" x2="14" y2="4"></line>
+                        </svg></div>
+                    <div class="option-content">
+                        <h4>Download Raw Outputs</h4>
+                        <p>Get the JSON and PLIST exactly as generated.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Settings Modal -->
+    <div id="project-settings-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>Edit Project</h3>
+                <button class="modal-close" onclick="closeProjectSettingsModal()"><svg width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <div class="modal-body project-settings-body">
+                <label class="project-settings-label" for="project-settings-name">Name</label>
+                <input type="text" id="project-settings-name" class="input-glass project-settings-input"
+                    placeholder="Project name" maxlength="48">
+
+                <label class="project-settings-label" for="project-settings-description">Description</label>
+                <textarea id="project-settings-description" class="input-glass project-settings-input" rows="3"
+                    placeholder="Short description for your project" maxlength="180"></textarea>
+
+                <div class="project-settings-label">Icon</div>
+                <div id="project-icon-grid" class="project-icon-grid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeProjectSettingsModal()">Cancel</button>
+                <button class="btn primary" id="project-settings-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variable Context Menu -->
+    <div id="variable-context-menu" class="context-menu"></div>
+
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay" class="tutorial-overlay">
+        <div class="tutorial-spotlight" id="tutorial-spotlight"></div>
+        <div class="tutorial-popup" id="tutorial-popup">
+            <div class="tutorial-step-indicator" id="tutorial-indicator"></div>
+            <h3 id="tutorial-title">Welcome to ShortcutStudio!</h3>
+            <p id="tutorial-text">Let's take a quick tour of how to build shortcuts with AI.</p>
+            <div class="tutorial-actions">
+                <button class="tutorial-skip" onclick="skipTutorial()">Skip Tutorial</button>
+                <button class="tutorial-next" id="tutorial-next" onclick="nextTutorialStep()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="shortcutstudio-ui.js"></script>
+    <script src="js/app.js?v=2025-12-14-6"></script>
+</body>
+
+</html>

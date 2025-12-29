@@ -1,0 +1,9 @@
+{
+  "action": "Message.Filter",
+  "params": {
+    "Input": "{{VARIABLE}}",
+    "WFContentItemFilter": "{{RAW}}",
+    "WFContentItemSortProperty": "isUnread/Date/Subject/Body",
+    "WFContentItemSortOrder": "Smallest First/Biggest First/Latest First/Oldest First/Ascending/Descending/Random"
+  }
+}

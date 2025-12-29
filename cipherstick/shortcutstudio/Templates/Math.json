@@ -1,0 +1,8 @@
+{
+  "action": "Math",
+  "params": {
+    "1stNumber": "{{STRING}}",
+    "2ndNumber": "{{STRING}}",
+    "Operation": "+/-/x/÷"
+  }
+}

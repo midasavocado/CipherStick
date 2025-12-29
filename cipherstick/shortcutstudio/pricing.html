@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortcutStudio - Pricing</title>
+    <meta name="description" content="Simple, transparent pricing for ShortcutStudio. Start for free and scale as you grow.">
+    <meta property="og:title" content="ShortcutStudio - Pricing">
+    <meta property="og:description" content="Simple, transparent pricing for ShortcutStudio.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="icon.png">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pages/marketplace.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="app-theme" data-billing="yearly">
+
+    <!-- Navigation -->
+    <nav class="top-bar">
+        <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
+            <div class="logo-icon">S</div>
+            <span>ShortcutStudio</span>
+        </a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="pricing.html" class="active" style="color: var(--primary-color);">Pricing</a>
+        </div>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme">
+                <!-- Icon injected by theme.js -->
+            </button>
+            <a href="login.html" id="nav-cta" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Pricing Section -->
+    <section class="section pricing-section">
+        <div class="section-header">
+            <h2>Simple, transparent pricing.</h2>
+            <p>Start for free, scale as you grow.</p>
+        </div>
+        <div class="pricing-toggle" role="radiogroup" aria-label="Billing period">
+            <input type="radio" id="billing-yearly" name="billing" value="yearly" checked>
+            <label class="pricing-toggle-pill" for="billing-yearly">Yearly <span>(save 20%)</span></label>
+            <input type="radio" id="billing-monthly" name="billing" value="monthly">
+            <label class="pricing-toggle-pill" for="billing-monthly">Monthly</label>
+        </div>
+
+        <div class="ss-grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); max-width: 1100px; margin: 0 auto; gap: 2rem;">
+
+            <!-- Free Tier -->
+            <div class="ss-card pricing-card">
+                <h3>Free</h3>
+                <div class="price" style="font-size: 2.5rem; font-weight: 800; margin: 1rem 0;">$0 <span
+                        style="font-size: 1rem; color: var(--text-muted); font-weight: 400;">/mo</span></div>
+                <div class="pricing-cta">
+                    <p>Perfect for getting started.</p>
+                    <a href="login.html" onclick="setPlan('free')"
+                        class="btn-outlined pricing-cta-btn"
+                        style="display: block; width: 100%; text-align: center; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-color); transition: all 0.2s;">Get
+                        Started</a>
+                </div>
+                <ul class="pricing-features"
+                    style="list-style: none; margin: 1.5rem 0 0; color: var(--text-muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                    <li>3 shortcut downloads/day</li>
+                    <li>3 marketplace downloads/day</li>
+                    <li>5 messages/day</li>
+                    <li>Build + edit in workspace</li>
+                    <li>Publish to marketplace</li>
+                </ul>
+            </div>
+
+            <!-- Pro Tier -->
+            <div class="ss-card pricing-card popular">
+                <div class="pro-badge"
+                    style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: white; padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">
+                    Most Popular</div>
+                <h3 style="color: var(--primary-color);">Pro</h3>
+                <div class="price" id="pro-price" data-monthly="11" data-yearly="9"
+                    style="font-size: 2.5rem; font-weight: 800; margin: 1rem 0;">
+                    <span class="price-currency">$</span><span id="pro-price-amount" class="price-amount">9</span>
+                    <span class="price-term">/mo</span>
+                </div>
+                <div class="price-note" id="pro-billing-note">Billed yearly</div>
+                <div class="pricing-cta">
+                    <a href="projects.html" onclick="setPlan('paid')" class="btn btn-primary pricing-cta-btn"
+                        style="display: block; width: 100%; text-align: center; padding: 0.8rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">Upgrade
+                        to Pro</a>
+                </div>
+                <ul class="pricing-features"
+                    style="list-style: none; margin: 1.5rem 0 0; color: var(--text-muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                    <li>20 shortcut downloads/day</li>
+                    <li>Unlimited marketplace downloads</li>
+                    <li>50 messages/day</li>
+                    <li><span style="color: var(--primary-color); font-weight: 600;">Force Action</span> (manual)</li>
+                    <li>Private downloads</li>
+                </ul>
+            </div>
+
+            <!-- Enterprise Tier -->
+            <div class="ss-card pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price" style="font-size: 2.5rem; font-weight: 800; margin: 1rem 0;">Custom</div>
+                <div class="pricing-cta">
+                    <p>For teams and organizations.</p>
+                    <a href="index.html#contact" class="btn-outlined pricing-cta-btn"
+                        style="display: block; width: 100%; text-align: center; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-color); transition: all 0.2s;">Contact
+                        Sales</a>
+                </div>
+                <ul class="pricing-features"
+                    style="list-style: none; margin: 1.5rem 0 0; color: var(--text-muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                    <li>Custom usage limits</li>
+                    <li>Team access + billing</li>
+                    <li>Dedicated onboarding</li>
+                    <li>Priority support</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container">
+                    <span class="logo-text">ShortcutStudio</span>
+                </div>
+                <p>Automation, Reimagined.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a href="#">Editor</a>
+                <a href="#">Marketplace</a>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <a href="marketplace.html">Marketplace</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 ShortcutStudio Inc. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="theme.js"></script>
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const yearlyRadio = document.getElementById('billing-yearly');
+            const monthlyRadio = document.getElementById('billing-monthly');
+            const priceBox = document.getElementById('pro-price');
+            const priceAmount = document.getElementById('pro-price-amount');
+            const billingNote = document.getElementById('pro-billing-note');
+            if (!yearlyRadio || !monthlyRadio || !priceBox || !priceAmount || !billingNote) return;
+
+            const updateBilling = () => {
+                const yearly = yearlyRadio.checked;
+                const amount = yearly ? priceBox.dataset.yearly : priceBox.dataset.monthly;
+                priceAmount.textContent = amount;
+                billingNote.textContent = yearly ? 'Billed yearly' : 'Billed monthly';
+                document.body.dataset.billing = yearly ? 'yearly' : 'monthly';
+            };
+
+            updateBilling();
+            yearlyRadio.addEventListener('change', updateBilling);
+            monthlyRadio.addEventListener('change', updateBilling);
+        });
+    </script>
+</body>
+
+</html>
