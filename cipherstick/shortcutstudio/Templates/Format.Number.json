@@ -1,7 +1,0 @@
-{
-  "action": "Format.Number",
-  "params": {
-    "Number": "{{NUMBER}}",
-    "FormatDecimalPlaces": "{{NUMBER}}"
-  }
-}

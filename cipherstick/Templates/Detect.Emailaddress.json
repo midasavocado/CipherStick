@@ -1,6 +1,0 @@
-{
-  "action": "Emailaddress",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

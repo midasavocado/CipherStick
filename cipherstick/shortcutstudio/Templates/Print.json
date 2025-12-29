@@ -1,6 +1,0 @@
-{
-  "action": "Print",
-  "params": {
-    "Input": "{{VARIABLE}}"
-  }
-}

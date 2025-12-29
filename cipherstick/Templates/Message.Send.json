@@ -1,7 +1,0 @@
-{
-  "action": "Message.Send",
-  "params": {
-    "WFSendMessageContent": "{{STRING}}",
-    "ShowWhenRun": "{{BOOLEAN}}"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "action": "Makezip",
-  "params": {
-    "Input": "{{STRING}}",
-    "ZIPName": "{{STRING}}"
-  }
-}

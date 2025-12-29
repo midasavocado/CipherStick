@@ -1,6 +1,0 @@
-{
-  "action": "Getwebpagecontents",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}

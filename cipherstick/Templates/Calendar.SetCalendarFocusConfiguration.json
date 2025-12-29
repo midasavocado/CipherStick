@@ -1,6 +1,0 @@
-{
-  "action": "Calendar.SetCalendarFocusConfiguration",
-  "params": {
-    "Calendars": "{{VARIABLE}}"
-  }
-}

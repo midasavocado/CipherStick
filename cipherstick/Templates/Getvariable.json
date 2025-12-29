@@ -1,6 +1,0 @@
-{
-  "action": "Getvariable",
-  "params": {
-    "Variable": "{{VARIABLE}}"
-  }
-}

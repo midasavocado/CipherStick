@@ -1,6 +1,0 @@
-{
-  "action": "Calendar.CreateCalendar",
-  "params": {
-    "CalendarName": "{{STRING}}"
-  }
-}

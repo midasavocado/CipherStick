@@ -1,6 +1,0 @@
-{
-  "action": "Correctspelling",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}

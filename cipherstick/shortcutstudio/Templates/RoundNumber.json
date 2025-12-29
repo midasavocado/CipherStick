@@ -1,8 +1,0 @@
-{
-  "action": "Round",
-  "params": {
-    "Number": "{{NUMBER}}",
-    "Mode": "{{STRING}}",
-    "DecimalPlaces": "{{NUMBER}}"
-  }
-}

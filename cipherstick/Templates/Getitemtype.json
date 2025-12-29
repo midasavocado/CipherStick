@@ -1,6 +1,0 @@
-{
-  "action": "Getitemtype",
-  "params": {
-    "Input": "{{VARIABLE}}"
-  }
-}

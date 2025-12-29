@@ -1,6 +1,0 @@
-{
-  "action": "Control.Comment",
-  "params": {
-    "CommentActionText": "{{STRING}}"
-  }
-}

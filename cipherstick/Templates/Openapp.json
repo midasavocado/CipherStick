@@ -1,6 +1,0 @@
-{
-  "action": "Openapp",
-  "params": {
-    "AppName": "{{STRING}}"
-  }
-}

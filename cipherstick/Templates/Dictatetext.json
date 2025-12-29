@@ -1,6 +1,0 @@
-{
-  "action": "Dictatetext",
-  "params": {
-    "DictateTextStopListening": "After Pause/After short pause/On tap"
-  }
-}

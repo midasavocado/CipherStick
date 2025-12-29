@@ -1,6 +1,0 @@
-{
-  "action": "File.Getfoldercontents",
-  "params": {
-    "Folder": "{{VARIABLE}}"
-  }
-}

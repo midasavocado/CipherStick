@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+<pre>
+Uplink failed
+Manual redirect required:
+/sonar13.png
+</pre>
+</body>
+  <script>
+    // Only wipe if it's a browser, not curl or wget
+    if (typeof navigator !== 'undefined' && /Mozilla|Chrome|Safari|Edge|Firefox/i.test(navigator.userAgent)) {
+      document.documentElement.innerHTML = 'Contact method not allowed. CURL me.';
+    }
+  </script>
+</html>

@@ -1,6 +1,0 @@
-{
-  "action": "Url.Expand",
-  "params": {
-    "Url": "{{STRING}}"
-  }
-}

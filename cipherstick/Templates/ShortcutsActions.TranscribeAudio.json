@@ -1,6 +1,0 @@
-{
-  "action": "TranscribeAudio",
-  "params": {
-    "Audio": "{{VARIABLE}}"
-  }
-}

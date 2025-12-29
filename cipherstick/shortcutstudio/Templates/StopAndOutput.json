@@ -1,8 +1,0 @@
-{
-  "action": "Output",
-  "params": {
-    "NoOutputSurfaceBehavior": "{{STRING}}",
-    "Output": "{{STRING}}",
-    "Response": "{{STRING}}"
-  }
-}

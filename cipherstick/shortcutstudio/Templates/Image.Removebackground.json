@@ -1,7 +1,0 @@
-{
-  "action": "Image.Removebackground",
-  "params": {
-    "Image": "{{VARIABLE}}",
-    "CropToBounds": "{{BOOLEAN}}"
-  }
-}

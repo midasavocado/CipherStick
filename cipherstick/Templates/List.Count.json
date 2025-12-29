@@ -1,7 +1,0 @@
-{
-  "action": "Count",
-  "params": {
-    "Input": "{{VARIABLE}}",
-    "CountType": "Items/Characters/Words/Sentences/Lines"
-  }
-}

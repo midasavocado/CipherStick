@@ -1,6 +1,0 @@
-{
-  "action": "Math.CalculateExpression",
-  "params": {
-    "Expression": "{{STRING}}"
-  }
-}

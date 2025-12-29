@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CipherStick: Hard - The Digital Enigma</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Confetti + jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Firebase compat SDK setup (required before any Firebase usage) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+     :root {
+      --accent-color: #ff0000; /* Dark red accent */
+      --text-color: #ffffff;   /* Primary text color */
+      --border-hover: rgba(255, 0, 0, 0.4);
+      --warning-color: #f1c40f;
+      --danger-color: #e74c3c;
+      --success-color: #28a745;
+    }
+
+    /* Reset & Box Sizing */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* BODY: With background image + an optional subtle black overlay */
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: url('HARD_BG.webp') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 0 1rem 1rem 1rem;
+      color: var(--text-color);
+      text-shadow: 1px 1px 3px #000; /* Add shadow for readability */
+    }
+    /* If you want a subtle overlay to help text clarity, uncomment:
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.3);
+      pointer-events: none;
+      z-index: -1;
+    }
+    */
+
+    /* HEADER: no background so it blends in */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.6);
+      border: none;
+      box-shadow: none;
+    }
+    header img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* MAIN CONTAINER: Transparent, so background shows through */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: transparent; /* fully transparent container */
+      border-radius: 15px;
+      box-shadow: none; /* removing heavy shadows if you want it truly transparent */
+      flex: 1;
+      margin-top: calc(100vw * 0.18);
+      padding: 1rem;
+    }
+
+    .intro {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.6); /* Keep it transparent */
+      border-left: 4px solid var(--accent-color);
+      border-radius: 8px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .intro p {
+      margin-bottom: 1rem;
+    }
+
+    /* DETAILS + SUMMARY box for OSINT Tools */
+    details {
+      background: rgba(0, 0, 0, 0.6);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.1rem;
+      list-style: none;
+      outline: none;
+      color: var(--text-color);
+      text-shadow: 1px 1px 2px #000;
+    }
+    details ul li {
+      margin: 0.5rem 0;
+    }
+
+    /* QUESTION BLOCKS */
+    .question {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      background: black; /* Make it truly see-through */
+      box-shadow: none;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .question:hover {
+      border-color: white;
+    }
+    .question .question-text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+      margin-bottom: 0.5rem;
+      text-shadow: 1px 1px 2px #000;
+    }
+    .question .input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .question input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      font-size: 1rem;
+      color: var(--text-color);
+      background-color: rgba(0,0,0,0.5); /* Slightly dark to show text clearly */
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+      text-shadow: none; /* remove text shadow for inputs if you prefer */
+    }
+    .question input[type="text"]:focus {
+      border-color: white;
+      outline: none;
+      box-shadow: 0 0 8px var(--border-hover);
+    }
+
+    /* HINT + CHECK BUTTONS */
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-hint, .btn-check {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      color: #fff;
+      text-shadow: none;
+    }
+    .btn-hint {
+      background: linear-gradient(135deg, #444, #777);
+    }
+    .btn-hint:hover {
+      background: linear-gradient(135deg, #777, #999);
+      transform: translateY(-3px);
+    }
+    .btn-check {
+      background: linear-gradient(135deg, #b30000, #7a0000);
+    }
+    .btn-check:hover {
+      background: linear-gradient(135deg, #ff0000, #990000);
+      transform: translateY(-3px);
+    }
+
+    /* HINT */
+    .hint {
+      margin-top: 0.5rem;
+      background: rgba(0,0,0,0.5);
+      border-left: 4px solid var(--accent-color);
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-style: italic;
+      color: #fff;
+      display: none;
+    }
+
+    /* RESULT TEXT */
+    .result {
+      font-weight: bold;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      min-height: 1.2rem;
+      color: var(--warning-color);
+      text-shadow: 1px 1px 2px #000;
+    }
+    .result.incorrect {
+      color: var(--danger-color);
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+      animation: slideIn 0.5s ease-out;
+      color: #fff;
+      background: #b30000;
+      font-family: 'Poppins', sans-serif;
+      text-shadow: none;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* FINAL MESSAGE */
+    #finalMessage {
+      text-align: center;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border: 2px solid var(--warning-color);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.5);
+      color: var(--warning-color);
+      font-family: 'Poppins', sans-serif;
+      display: none;
+      text-shadow: 1px 1px 2px #000;
+    }
+    #finalMessage h2 {
+      color: var(--warning-color);
+      margin-bottom: 1rem;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    /* VICTORY OVERLAY */
+    #victoryOverlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Poppins', sans-serif;
+      font-size: 3rem;
+      color: var(--warning-color);
+      background: rgba(0,0,0,0.8);
+      padding: 2rem 4rem;
+      border-radius: 10px;
+      z-index: 1500;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      pointer-events: none;
+      text-shadow: 1px 1px 3px #000;
+    }
+
+    /* NAME INPUT MODAL */
+    .name-input-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+      z-index: 2000;
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+    .name-input-modal input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #333;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      width: 80%;
+      text-shadow: none;
+    }
+    .name-input-modal button {
+      padding: 0.75rem 1.5rem;
+      background: var(--warning-color);
+      color: #111;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      text-shadow: none;
+    }
+    .name-input-modal button:hover {
+      background: #d4ac0d;
+      transform: scale(1.05);
+    }
+
+    /* CERTIFICATE BUTTON */
+    .btn-certificate {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #b30000, #7a0000);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+      text-shadow: none;
+    }
+    .btn-certificate:hover {
+      background: linear-gradient(135deg, #ff0000, #990000);
+      transform: translateY(-3px);
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #ccc;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      header img { height: auto; }
+      .container { padding: 1rem; }
+      .question { padding: 0.8rem; }
+      .btn-hint, .btn-check { padding: 0.5rem 1rem; font-size: 0.9rem; }
+      #victoryOverlay { font-size: 2rem; padding: 1rem 2rem; }
+    }
+    @media print {
+      body { background: #fff !important; color: #000; }
+      header, footer, .container { display: none !important; }
+    }
+  </style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7064134413713909"
+     crossorigin="anonymous"></script>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-M2NFQ1M6LR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-M2NFQ1M6LR');
+</script>
+<body>
+  <header>
+    <a href="index.html">
+    <img src="HARD.webp" alt="CipherStick: Hard"/>
+  </a>
+  </header>
+
+  <div class="container">
+    <div class="intro" id="introText">
+    </div>
+    <details style="margin: 1rem 0; background: rgba(0, 0, 0, 0.6); border-left: 5px solid var(--accent-color); padding: 1rem; border-radius: 8px;">
+      <summary style="cursor: pointer; font-weight: bold; font-size: 1.1rem;">🧰 Useful OSINT Tools (click to expand)</summary>
+      <ul style="margin-top: 0.75rem; padding-left: 1.2rem; line-height: 1.7;">
+        <li><a href="https://www.metadata2go.com/" target="_blank" style="color: #fff;">📷 Metadata2Go</a> – Extract metadata from images</li>
+        <li style="color: #fff;">🛠 Browser <strong>Inspect Tool</strong> – Right click → Inspect → View source & elements</li>
+        <li><a href="https://www.base64decode.org/" target="_blank" style="color: #fff;">📂 Base64 Decode</a> – Decode encoded strings</li>
+        <li><a href="https://www.gps-coordinates.net/" target="_blank" style="color: #fff;">📍 GPS Coordinates Lookup</a></li>
+        <li><a href="https://archive.org/web/" target="_blank" style="color: #fff;">🕰️ Wayback Machine</a> – View old versions of websites</li>
+        <li><a href="https://www.osintcurio.us/" target="_blank" style="color: #fff;">🔍 OSINT Curious Project</a> – Great OSINT blog & tools</li>
+        <li><a href="https://dnsdumpster.com/" target="_blank" style="color: #fff;">🌐 DNSDumpster</a> – DNS recon & infrastructure mapping</li>
+        <li><a href="https://www.shodan.io/" target="_blank" style="color: #fff;">🛰️ Shodan</a> – Scan internet-connected devices</li>
+        <li><a href="https://exif.tools/" target="_blank" style="color: #fff;">🧬 EXIF.tools</a> – Analyze hidden metadata in images</li>
+        <li><a href="https://haveibeenpwned.com/" target="_blank" style="color: #fff;">🕵️‍♂️ Have I Been Pwned</a> – Check for compromised emails</li>      
+        <li>IMPORTANT NOTE: Some of these sites may not be used in this puzzle, and there may be some other sites needed throught the challenge. With OSINT, you have to be prepared for everything.</li>
+      </ul>
+    </details>
+
+    <div id="questionsContainer"></div>
+
+    <div id="finalMessage">
+      <h2 style="color: #ffcc00;">You beat it!</h2>
+      <button class="btn-certificate" onclick="openCertificateModal()">Claim Your Certificate</button>
+    </div>
+  </div>
+
+  <div id="victoryOverlay">You beat it! <p style="color: white; font-size: 12px; text-align: center;">Scroll down to claim your certificate!</p></div>
+
+  <div id="nameInputModal" class="name-input-modal">
+    <h2 style="color: #ffcc00;">Enter Your Name</h2>
+    <input type="text" id="userNameInput" placeholder="Your Name" />
+    <button onclick="downloadCertificate()">Download Certificate</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <footer>
+    <p>© 2025 CipherStick. All rights reserved.</p>
+  </footer>
+
+<script>
+  function logCompletion() {
+    if (testMode) {
+      console.warn("🚫 Test mode active — skipping completion logging.");
+      return;
+    }
+    function innerWrite() {
+      if (!window.authUID) {
+        setTimeout(innerWrite, 200);
+        return;
+      }
+      const uid = window.authUID;
+      // Use "medium" as database record path, matching naming convention
+      const completionsRef = firebase.database().ref("completions/hard/" + uid);
+      const attemptsRef = firebase.database().ref("attempts/hard/" + uid);
+      console.log("🔄 Checking completions and attempts for user...");
+      // Fetch attempts and completions
+      attemptsRef.once("value").then((attemptSnap) => {
+        const attemptsVal = attemptSnap.val();
+        let attemptsCount = 0;
+        if (attemptsVal && typeof attemptsVal === 'object') {
+          attemptsCount = Object.keys(attemptsVal).length;
+        }
+        completionsRef.once("value").then((completionSnap) => {
+          const completionsVal = completionSnap.val();
+          let completionsCount = 0;
+          if (completionsVal && typeof completionsVal === 'object') {
+            completionsCount = Object.keys(completionsVal).length;
+          } else if (completionSnap.exists()) {
+            completionsCount = 1;
+          }
+          // Save completion (allow multiple completions, use push for consistency)
+          const newCompletionKey = firebase.database().ref().push().key;
+          const updateData = {};
+          updateData[newCompletionKey] = { timestamp: Date.now() };
+          completionsRef.update(updateData)
+            .then(() => {
+              console.log("✅ Completion logged");
+
+            })
+            .catch(error => {
+              console.warn("❌ Completion logging failed:", error);
+            });
+        });
+      });
+    }
+    innerWrite();
+  }
+
+function loadIntroText() {
+
+  let prefixInfo = "";
+
+  if (prefixEnabled) {
+    prefixInfo = `<p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>`;
+  }
+
+  const introHTML = `
+    <p>Welcome to <strong>The Digital Enigma</strong>, an advanced open-source intelligence (OSINT) challenge designed to push your skills to their limits. You'll investigate the mysterious disappearance of Taylor, a digital artist whose final clues lie scattered across social media, images, and hidden data trails.</p>
+    <p>Your investigation begins at: <a href="https://taylorartx.wordpress.com" target="_blank" style="color:#fff;">taylorartx.wordpress.com</a><br>Password: <code style="background:rgba(0,0,0,0.5);">TaylorPaints</code></p>
+    <p>Use your wits, curiosity, and OSINT tools to uncover secrets buried in metadata, inspect source code, decode messages, and follow digital footprints to uncover the truth.</p>
+    <p>If you are new to OSINT, I reccomend <a href="https://www.youtube.com/watch?v=Sa5LbKqCmFI" target="_blank">this video</a> to familiarize yourself with it</p>
+
+    ` + prefixInfo + `
+
+    <p>Good luck, Agent.</p>
+
+     <br><br>
+      If you are unable to solve the puzzle due to a possible error, please contact us <a href="https://cipherstick.tech/#contact" target="_blank">here</a>
+      </p>
+  `;
+  document.getElementById("introText").innerHTML = introHTML;
+}
+
+
+const q = 'W3sicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBVUkwgb2YgdGhlIHdlYnNpdGUgd2hlcmUgdGhlIGludmVzdGlnYXRpb24gYmVnaW5zPyIsImhpbnQiOiJUaGUgV29yZFByZXNzIHNpdGUgbWVudGlvbmVkIGluIHRoZSBjYXNlIGJyaWVmaW5nLiJ9LHsicXVlc3Rpb24iOiJEb2VzIFRheWxvciBoYXZlIGEgYm9zcz8iLCJoaW50IjoiIn0seyJxdWVzdGlvbiI6IldoZW4gd2FzIFRheWxvcidzIG1vc3QgcmVjZW50IGJsb2cgcG9zdCBwdWJsaXNoZWQ/IiwiaGludCI6IkNoZWNrIHRoZSBwb3N0IGRhdGUuIEZvcm1hdDogTU0vREQvWVkifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBXb3JkUHJlc3MgdXNlcm5hbWU/IiwiaGludCI6Ikxvb2sgdW5kZXIgdGhlIHBvc3QgdGl0bGUgZm9yIGF1dGhvciBpbmZvLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBmaWxlbmFtZSBvZiB0aGUgdXBsb2FkZWQgcGFpbnRpbmc/IiwiaGludCI6IkNoZWNrIHRoZSBpbWFnZSBVUkwgZm9yIGZpbGVuYW1lICsgZXh0ZW5zaW9uLiJ9LHsicXVlc3Rpb24iOiJXaGVyZSBpcyB0aGUgaW1hZ2UgaG9zdGVkPyIsImhpbnQiOiJDaGVjayB0aGUgaW1hZ2Ugc291cmNlIGxpbmsuIn0seyJxdWVzdGlvbiI6IldoYXQgaXMgVGF5bG9yJ3MgR2l0TGFiIHVzZXJuYW1lPyIsImhpbnQiOiJJdCdzIGluIHRoZSBpbWFnZSBVUkwgYW5kIHJlcG8gbmFtZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCdzIHRoZSBoaWRkZW4gbWVzc2FnZSBpbiB0aGUgcGhvdG8/IiwiaGludCI6IkV4dHJhY3QgbWV0YWRhdGEgYW5kIGRlY29kZSBhbnkgYmFzZTY0IHRleHQuIn0seyJxdWVzdGlvbiI6IldoZXJlIHdhcyB0aGUgcGhvdG8gcGFpbnRlZD8iLCJoaW50IjoiTWV0YWRhdGEgbWF5IGNvbnRhaW4gR1BTIGNvb3JkaW5hdGVzLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSB1bmxvY2sgY29kZSBmb3IgdGhlIGZpcnN0IHNlY3JldCBpbiB0aGUgcmVwbz8iLCJoaW50IjoiVHJ5IGNsaWNraW5nIG9uIHRoZSBoZWFkZXIgdGV4dCBvZiB0aGUgaW1hZ2UuLi4gSXQgbG9va2VkIGVuY29kZWQsIGJ1dCBpcyBpdCByZWFsbHk/In0seyJxdWVzdGlvbiI6IldoYXQncyB0aGUgcGFzc3dvcmQgdG8gdGhlIFdvcmRQcmVzcyBzaXRlPyIsImhpbnQiOiJDaGVjayB0aGUgY2FzZSBicmllZmluZyBhYm92ZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBwbGF0Zm9ybSBpcyB0aGUgZW1iZWRkZWQgdmlkZW8gaG9zdGVkIG9uPyIsImhpbnQiOiJIb3ZlciBvdmVyIHRoZSBlbWJlZGRlZCB2aWRlbyBvciBjaGVjayBzb3VyY2UgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBkYXRlIHdhcyB0aGUgdmlkZW8gcmVjb3JkZWQ/IiwiaGludCI6IlVzZSBNTS9ERC9ZWS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBhaXJsaW5lIGlzIFRheWxvciBmbHlpbmcgYmFjayB3aXRoPyIsImhpbnQiOiJTZWFyY2ggdGhlIGZsaWdodCBudW1iZXIsIHVzZSAzLWxldHRlciBhaXJsaW5lIGNvZGUgKGUuZy4gVUFMKS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBmdWxsIGZsaWdodCBudW1iZXI/IiwiaGludCI6IkZvcm1hdDogQUJDMTIzNCJ9LHsicXVlc3Rpb24iOiJXaGF0IHN0YXRlIGRvZXMgVGF5bG9yIGxpdmUgaW4/IiwiaGludCI6IkZpbmQgdGhlIGRlc3RpbmF0aW9uIGFpcnBvcnQgYW5kIGRlZHVjZSB0aGUgc3RhdGUuIn0seyJxdWVzdGlvbiI6IldoaWNoIGFpcnBvcnQgZGlkIHRoZSBmbGlnaHQgbGFuZCBhdD8iLCJoaW50IjoiVXNlIHRoZSBmbGlnaHQgaW5mbyB0byBkZXRlcm1pbmUgdGhlIElBVEEgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCdzIHRoZSBzZWNvbmQgaGlkZGVuIG1lc3NhZ2UgaW4gdGhlIHZpZGVvPyIsImhpbnQiOiJMaXN0ZW4gY2xvc2VseSBhbmQgbG9vayBmb3IgTW9yc2UgY29kZS4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBYIChUd2l0dGVyKSBoYW5kbGU/IiwiaGludCI6IiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBzZWNvbmQgcmVwb3NpdG9yeSB1bmxvY2sgY29kZT8iLCJoaW50IjoiRGVjb2RlIHRoZSBoZXggb3IgYmFzZTY0IHN0cmluZyBwb3N0ZWQgb24gWC4ifSx7InF1ZXN0aW9uIjoiV2hpY2ggc2l0ZSBpcyByZWZlcmVuY2VkIGluIGhpcyBYIHBvc3Q/IiwiaGludCI6IkNvbnZlcnQgdGhlIGhleCBjb2RlIHRvIHJlYWRhYmxlIHRleHQuIn0seyJxdWVzdGlvbiI6IldoZXJlIHdhcyBUYXlsb3Igb24gQXByaWwgOHRoPyAoZXhhY3QgY29vcmRpbmF0ZXMpIiwiaGludCI6IkNsdWUgZm91bmQgaW4gdGhlIHNlY29uZCByZXBvIHNlY3JldC4ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyBUYXlsb3IncyBlbWFpbCBhZGRyZXNzPyIsImhpbnQiOiJGb3VuZCBpbiB0aGUgaGlkZGVuIHBhZ2U7IGRlY29kZSB0aGUgbWVzc2FnZS4ifV0=';
+const questions = JSON.parse(atob(q));
+
+// Prefetch all answers for HARD challenge
+async function fetchAllAnswers() {
+  try {
+    const res = await fetch("https://validate-answer.mwsaulsbury.workers.dev/all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge: "hard" })
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const { answers } = await res.json();
+    answers.forEach((ans, i) => (questions[i].answer = ans));
+  } catch (err) {
+    console.warn("❌ Prefetch HARD answers failed:", err);
+  }
+}
+
+function generatePlaceholder(answer) {
+  const prefix = requiredPrefix || "";
+  const suffix = requiredSuffix || "";
+  if (!answer) return "";
+  const core = answer.slice(prefix.length, answer.length - suffix.length);
+  return `${prefix}${core.replace(/[^{} ]/g, "*")}${suffix}`;
+}
+
+
+const storageKeyPrefix = "OSINT-HARD";
+const requiredPrefix = "pr{";
+const requiredSuffix = "}";
+const prefixEnabled = requiredPrefix.trim() !== "";
+let quizCompleted = false;
+let checkedQuestions = new Array(questions.length).fill(false);
+let answeredCorrectly = new Array(questions.length).fill(false);
+
+// --- Remote validation for HARD answers ---
+const VALIDATION_URL = "https://validate-answer.mwsaulsbury.workers.dev/";
+
+function validateAnswerRemotely({ challenge, questionIndex, answer }) {
+  return fetch(VALIDATION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ challenge, questionIndex, answer })
+  })
+    .then(res => res.json())
+    .then(result => {
+      console.log("🧠 Remote validation result:", result);
+      return result.correct === true;
+    })
+    .catch(err => {
+      console.error("🌩️ Server error validating:", err);
+      return false;
+    });
+}
+
+function normalizeInput(str) {
+  return str.toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
+    .normalize("NFKC")
+    .trim();
+}
+
+function showToastMessage(message, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.background = (type === "correct") ? "#28a745" : "#e74c3c";
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+// --- UI-based validation for challenge completion ---
+function checkAnswer(index, showBanner = true) {
+  const inputField = document.getElementById(`input-${index}`);
+  const userInputRaw = inputField.value;
+  const userInput = normalizeInput(userInputRaw);
+  const questionDiv = document.getElementById(`question-${index}`);
+  const questionText = questionDiv.firstChild;
+
+  localStorage.setItem(`${storageKeyPrefix}-input-${index}`, userInputRaw);
+  if (userInput !== "") checkedQuestions[index] = true;
+
+  fetch('https://validate-answer.mwsaulsbury.workers.dev/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      challenge: "hard",
+      questionIndex: index,
+      answer: `${userInput}`
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result.correct) {
+        if (!answeredCorrectly[index]) {
+          answeredCorrectly[index] = true;
+          questionDiv.style.borderColor = 'limegreen';
+          inputField.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+          questionText.style.color = "lime";
+          inputField.style.borderColor = "limegreen";
+          if (showBanner) {
+            showToastMessage("Correct!", "correct");
+            confetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
+          }
+        }
+      } else {
+        questionDiv.style.borderColor = 'red';
+        inputField.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+        questionText.style.color = "rgb(255,0,0)";
+        inputField.style.borderColor = "rgb(255,0,0)";
+        answeredCorrectly[index] = false;
+        if (showBanner) {
+          showToastMessage(`Incorrect answer for question ${index + 1}`, "incorrect");
+        }
+      }
+      checkAllAnswers();
+    })
+    .catch(err => {
+      console.error("Validation error:", err);
+      showToastMessage("Error validating answer with server", "incorrect");
+    });
+}
+
+function checkAllAnswers() {
+  const finalMessage = document.getElementById('finalMessage');
+
+  // Check visual state of all question blocks
+  const allQuestions = document.querySelectorAll('.question');
+  const allGreen = [...allQuestions].every(q =>
+    q.style.borderColor === 'limegreen' || q.style.borderColor === 'green'
+  );
+
+  if (allGreen && !quizCompleted) {
+    quizCompleted = true;
+    finalMessage.style.display = 'block';
+    startVictoryConfetti();
+    showVictoryOverlay();
+    logCompletion();
+
+    // Clear local storage except anon IDs
+    setTimeout(() => {
+      Object.keys(localStorage).forEach(key => {
+        if (!key.includes("cipherstick-anon")) localStorage.removeItem(key);
+      });
+      console.log("🧹 LocalStorage cleared (except anon keys)");
+    }, 500);
+  } else if (!allGreen) {
+    finalMessage.style.display = 'none';
+    quizCompleted = false;
+  }
+}
+
+function toggleHint(index) {
+  const hint = document.getElementById(`hint-${index}`);
+  hint.style.display = (hint.style.display === 'none' || hint.style.display === '') ? 'block' : 'none';
+}
+
+function generateQuestions() {
+  const container = document.getElementById('questionsContainer');
+  questions.forEach((q, index) => {
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'question';
+    questionDiv.id = `question-${index}`;
+
+    const questionText = document.createElement('div');
+    questionText.className = 'question-text';
+    questionText.textContent = `${index + 1}. ${q.question}`;
+    questionDiv.appendChild(questionText);
+
+    const inputGroup = document.createElement('div');
+    inputGroup.className = 'input-group';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = `input-${index}`;
+    // A simple placeholder that hides actual text:
+    const answer = requiredPrefix + q.answer + requiredSuffix
+    input.placeholder = answer.replace(/[^{} ]/g, '*');
+    input.oninput = () => localStorage.setItem(`${storageKeyPrefix}-input-${index}`, input.value);
+    inputGroup.appendChild(input);
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group';
+
+    if (q.hint) {
+      const hintBtn = document.createElement('button');
+      hintBtn.className = 'btn-hint';
+      hintBtn.textContent = 'Show Hint';
+      hintBtn.onclick = () => toggleHint(index);
+      btnGroup.appendChild(hintBtn);
+    }
+
+    const checkBtn = document.createElement('button');
+    checkBtn.className = 'btn-check';
+    checkBtn.textContent = 'Check Answer';
+    checkBtn.onclick = () => checkAnswer(index, true);
+    btnGroup.appendChild(checkBtn);
+
+    inputGroup.appendChild(btnGroup);
+    questionDiv.appendChild(inputGroup);
+
+    if (q.hint) {
+      const hintDiv = document.createElement('div');
+      hintDiv.className = 'hint';
+      hintDiv.id = `hint-${index}`;
+      hintDiv.textContent = q.hint;
+      questionDiv.appendChild(hintDiv);
+    }
+
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'result';
+    resultDiv.id = `result-${index}`;
+    questionDiv.appendChild(resultDiv);
+
+    container.appendChild(questionDiv);
+  });
+}
+
+function restoreInputs() {
+  questions.forEach((_, i) => {
+    const saved = localStorage.getItem(`${storageKeyPrefix}-input-${i}`);
+    if (saved) {
+      const inputField = document.getElementById(`input-${i}`);
+      inputField.value = saved;
+      // Don't await here, just fire and forget for restoration
+      checkAnswer(i, false);
+    }
+  });
+}
+
+function startVictoryConfetti() {
+  const interval = setInterval(() => {
+    confetti({ particleCount: 300, spread: 150, origin: { x: 0, y: 0.5 } });
+    confetti({ particleCount: 300, spread: 150, origin: { x: 1, y: 0.5 } });
+  }, 350);
+  setTimeout(() => clearInterval(interval), 10000);
+}
+
+function showVictoryOverlay() {
+  const overlay = document.getElementById('victoryOverlay');
+  overlay.style.opacity = '1';
+  setTimeout(() => { overlay.style.opacity = '0'; }, 3000);
+}
+
+function openCertificateModal() {
+  const modal = document.getElementById('nameInputModal');
+  // Insert close button if not already present
+  modal.style.display = 'block';
+}
+
+function downloadCertificate() {
+  const userName = document.getElementById('userNameInput').value || '[Your Name]';
+
+  // Send email via EmailJS
+  emailjs.send("service_mpx4p0t", "certificate_claimed", {
+    user_name: userName,
+    quiz_difficulty: "HARD"
+  }).then(function(response) {
+    console.log("✅ Email sent!", response.status, response.text);
+  }, function(error) {
+    console.error("❌ Failed to send email", error);
+  });
+
+  const certificateDate = new Date().toLocaleDateString();
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [11, 8.5] });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Simple red-themed certificate
+  doc.setFillColor(70, 0, 0);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  doc.setDrawColor(241, 196, 15);
+  doc.setLineWidth(0.25);
+  doc.rect(0.25, 0.25, pageWidth - 0.5, pageHeight - 0.5);
+
+  doc.setFont('times', 'bolditalic');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(28);
+  doc.text('Certificate of Mastery', pageWidth / 2, 1.5, { align: 'center' });
+
+  doc.setFontSize(18);
+  doc.text('This certifies that', pageWidth / 2, 2.5, { align: 'center' });
+
+  doc.setFontSize(24);
+  doc.text(userName, pageWidth / 2, 3.5, { align: 'center' });
+
+  doc.setFontSize(18);
+  doc.text('has successfully completed', pageWidth / 2, 4.5, { align: 'center' });
+  doc.text('CipherStick: HARD - The Digital Enigma', pageWidth / 2, 5, { align: 'center' });
+
+  doc.setFontSize(16);
+  doc.text(`on ${certificateDate}`, pageWidth / 2, 5.5, { align: 'center' });
+  doc.text('Awarded by: CipherStick Team', pageWidth / 2, 6.5, { align: 'center' });
+
+  doc.setFontSize(14);
+  doc.text('This achievement recognizes your elite investigative ability and OSINT expertise.', pageWidth / 2, 7.5, { align: 'center' });
+
+  // Trigger download
+  doc.save("DigitalEnigma-Certificate.pdf");
+
+  // Display certificate as image on the page
+  try {
+    // Remove any previous certificate display
+    const prev = document.getElementById('certificateDisplay');
+    if (prev) prev.remove();
+    const dataUrl = doc.output('dataurlstring');
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = 'Your Certificate';
+    img.style.maxWidth = '100%';
+    img.style.marginTop = '2rem';
+
+    const certDisplay = document.createElement('div');
+    certDisplay.id = 'certificateDisplay';
+    certDisplay.style.textAlign = 'center';
+    certDisplay.appendChild(img);
+
+    document.body.appendChild(certDisplay);
+  } catch (e) {
+    console.warn("Could not display certificate as image:", e);
+  }
+
+  // Firebase completion logging (runs only when certificate is generated)
+
+  // --- Freeze all input fields and disable buttons, clear storage but preserve userId ---
+
+  document.getElementById('nameInputModal').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadIntroText();
+  fetchAllAnswers().then(() => {
+    generateQuestions();
+    restoreInputs();
+
+    // --- TEST MODE AUTOFILL (new logic) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.has('test');
+
+    if (testMode) {
+      const confirmed = confirm("Test mode is ON. All answers will be filled in automatically, and Firebase logging will be skipped.");
+      if (confirmed) {
+        questions.forEach((q, i) => {
+          const input = document.getElementById(`input-${i}`);
+          input.value = `${requiredPrefix}${q.answer}${requiredSuffix}`;
+          if (!testMode) {
+            localStorage.setItem(`${storageKeyPrefix}-input-${i}`, input.value);
+          }
+          // For test mode, bypass remote validation, mark as correct directly
+          answeredCorrectly[i] = true;
+          checkedQuestions[i] = true;
+          const questionDiv = document.getElementById(`question-${i}`);
+          const questionText = questionDiv.firstChild;
+          questionDiv.style.borderColor = 'green';
+          input.style.backgroundColor = "rgba(0, 255, 0, 0.1)";
+          questionText.style.color = "rgb(0,255,0)"
+          input.style.borderColor = "rgb(0,255,0)"
+        });
+        checkAllAnswers();
+        console.log("✅ Test mode: answers filled and logging skipped.");
+      }
+    }
+  });
+});
+</script>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+  const testMode = urlParams.has('test');
+  // Firebase config and initialization
+  console.log("📦 Initializing Firebase...");
+  const firebaseConfig = {
+    apiKey: "AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y",
+    authDomain: "cipherstick.firebaseapp.com",
+    databaseURL: "https://cipherstick-default-rtdb.firebaseio.com",
+    projectId: "cipherstick",
+    storageBucket: "cipherstick.appspot.com",
+    messagingSenderId: "827207706323",
+    appId: "1:827207706323:web:a84d3c536b25e0e66c5626"
+  };
+  const app = firebase.initializeApp(firebaseConfig);
+  console.log("✅ Firebase initialized.");
+
+  // Wait for Firebase Auth state and ensure anonymous login before attempt/completion logging
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (testMode) {
+      console.warn("🚫 Test mode active — skipping attempt logging.");
+      return;
+    }
+    if (user) {
+      // User is signed in
+      const uid = user.uid;
+      window.authUID = uid;
+      console.info("✅ Signed in anonymously:", uid);
+      // Set timer to log attempt after 60 seconds on the page
+      console.info("WAITING 60 SECONDS FOR ATTEMPT TO LOG")
+      setTimeout(function() {
+        // Use "medium" as database record path, matching naming convention
+        const attemptRef = firebase.database().ref(`attempts/hard/${uid}`);
+        attemptRef.once('value').then(snap => {
+          const data = snap.val();
+          const now = Date.now();
+          let lastTimestamp = null;
+          if (data && data.timestamp) {
+            // Firebase stores timestamp as number (ms since epoch) or as ServerValue.TIMESTAMP (number), or as ISO string if set that way.
+            // Try to parse as number first, fallback to Date parse.
+            if (typeof data.timestamp === "number") {
+              lastTimestamp = data.timestamp;
+            } else {
+              // Try to parse as date string
+              lastTimestamp = new Date(data.timestamp).getTime();
+            }
+          }
+
+          console.log("🆕 Logging new attempt...");
+          attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP })
+            .then(() => console.log("✅ Attempt logged"))
+            .catch((err) => console.warn("❌ Failed to log attempt:", err));
+       
+        }).catch((err) => console.warn("❌ Error checking attempt timestamp:", err));
+      }, 60000); // 60 seconds
+    } else {
+      // Not signed in, try to sign in anonymously
+      firebase.auth().signInAnonymously().catch(error => {
+        console.warn("❌ Auth error:", error.message);
+      });
+    }
+  });
+</script>
+<script>
+(function () {
+  const BTN_W = '200px';
+  const TITLE = 'CipherStick: HARD - The Digital Enigma';
+  const MSG   = 'Try to solve this OSINT challenge!';
+  const LINK  = location.href;
+
+  // --- TEST MODE DETECTION ---
+  // (Handled in main script; do not redeclare testMode here)
+
+  function showNativeShare() {
+    if (navigator.share && window.isSecureContext) {
+      navigator.share({ title: TITLE, text: `${TITLE} — ${MSG}`, url: LINK })
+        .catch(err => {
+          if (err.name !== "AbortError") {
+            console.warn('Share failed:', err);
+            alert('Sharing not supported or failed.');
+          }
+        });
+    } else {
+      alert('Sharing not supported. Try on a phone or secure browser.');
+    }
+  }
+
+  function closeFeedback() {
+    const fm = document.getElementById('feedbackModal');
+    if (fm) fm.style.display = 'none';
+  }
+
+  function ensureModal() {
+    const html = `
+      <div id="feedbackModal" class="name-input-modal" style="display:none;background:rgba(0,0,0,1);">
+        <h2 style="margin-bottom:.75rem; color: white">Did you enjoy the challenge?</h2>
+        <p style="margin-bottom:1rem; color: white">Share it with friends to spread the word!</p>
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.2rem;">
+          <button onclick="showNativeShare()" style="width:${BTN_W};padding:.6rem 0;background:#b30000;color:#fff;border:none;border-radius:6px;
+                  cursor:pointer;font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:.6rem;">
+            🔗 Share
+          </button>
+          <a href="https://cipherstick.tech/#email" target="_blank"
+             style="width:200px;padding:.6rem 0;background:#0d00ff;color:#fff;border:none;border-radius:6px;
+                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
+                    margin-bottom:1.2rem;">
+            📬 Sign Up for More Challenges
+          </a>
+          <a href="https://buymeacoffee.com/midasthecoder" target="_blank"
+             style="width:${BTN_W};padding:.6rem 0;background:#FFDD00;color:#000;border:none;border-radius:6px;
+                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
+                    margin-bottom:1.2rem;">
+            ☕ Buy Me A Coffee
+          </a>
+          <a href="https://cipherstick.tech/index.html?review" target="_blank"
+             style="width:200px;padding:.6rem 0;background:#00aa00;color:#fff;border:none;border-radius:6px;
+                    cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;text-align:center;text-decoration:none;
+                    margin-bottom:1.2rem;">
+            ⭐ Leave a Review
+          </a>
+          <button onclick="closeFeedback()" style="width:${BTN_W};padding:.6rem 0;background:#333;color:#ccc;border:none;border-radius:6px;
+                  cursor:pointer;font-family:'Poppins',sans-serif;">
+            Close
+          </button>
+        </div>
+      </div>`;
+    const existing = document.getElementById('feedbackModal');
+    if (existing) existing.outerHTML = html;
+    else document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  function patchDownload() {
+    if (typeof window.downloadCertificate !== 'function') return;
+    const original = window.downloadCertificate;
+    window.downloadCertificate = function () {
+      original.apply(this, arguments);
+      setTimeout(() => {
+        ensureModal();
+        document.getElementById('feedbackModal').style.display = 'block';
+      }, 300);
+    };
+  }
+
+  ensureModal();
+  patchDownload();
+
+  window.showNativeShare = showNativeShare;
+  window.closeFeedback = closeFeedback;
+})();
+</script>
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="midasthecoder" data-description="Support me on Buy me a coffee!" data-message="" data-color="red" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+</script>
+</script>
+<!-- EmailJS integration (universal compatible) -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+  emailjs.init("vuIOVGmElOjK_aUJK");
+</script>
+</body>
+</html>

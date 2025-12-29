@@ -1,6 +1,0 @@
-{
-  "action": "Showresult",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}

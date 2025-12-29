@@ -1,8 +1,0 @@
-{
-  "action": "Clipboard.Set",
-  "params": {
-    "Input": "{{VARIABLE}}",
-    "ExpirationDate": "MM/DD/YY HH:MM",
-    "LocalOnly": "{{BOOLEAN}}"
-  }
-}
