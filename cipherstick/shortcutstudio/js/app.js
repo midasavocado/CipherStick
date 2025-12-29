@@ -1511,6 +1511,7 @@ function buildParamPlaceholder(paramKey) {
 }
 
 const SIMPLE_ID_LABEL_RE = /^[A-Za-z0-9_.\-|#@]+$/;
+const REPEAT_TOKEN_LABEL_RE = /^repeat(?:item|index|count)\d*$/i;
 
 function normalizeIdLabel(raw) {
     if (raw == null) return '';
@@ -1521,6 +1522,13 @@ function normalizeIdLabel(raw) {
         label = label.slice(2, -2).trim();
     }
     return label;
+}
+
+function isRepeatToken(raw) {
+    const normalized = normalizeIdLabel(raw);
+    if (!normalized) return false;
+    const compact = normalized.replace(/\s+/g, '');
+    return REPEAT_TOKEN_LABEL_RE.test(compact);
 }
 
 function normalizeVarLabel(raw) {
@@ -2335,9 +2343,10 @@ function pruneMissingOutputLinks() {
         return false;
     };
 
-    const tokenIsValidLink = (token, currentIndex) => {
+    const tokenIsValidLink = (token, currentIndex, allowRepeatTokens) => {
         const t = String(token || '').trim();
         if (!tokenIsLinkish(t)) return true;
+        if (allowRepeatTokens && isRepeatToken(t)) return true;
         let lookupKey = t;
         if (isIdToken(lookupKey) || lookupKey.toLowerCase().startsWith('!link:')) {
             const normalized = normalizeIdLabel(lookupKey);
@@ -2356,7 +2365,7 @@ function pruneMissingOutputLinks() {
         return true;
     };
 
-    const scrubString = (key, rawValue, currentIndex) => {
+    const scrubString = (key, rawValue, currentIndex, allowRepeatTokens) => {
         const str = String(rawValue);
         const trimmed = str.trim();
         if (!trimmed) return rawValue;
@@ -2373,7 +2382,7 @@ function pruneMissingOutputLinks() {
 
         // Pure link token
         if (tokenIsLinkish(trimmed) && trimmed === str.trim()) {
-            if (!tokenIsValidLink(trimmed, currentIndex)) {
+            if (!tokenIsValidLink(trimmed, currentIndex, allowRepeatTokens)) {
                 mutated = true;
                 return '';
             }
@@ -2383,13 +2392,13 @@ function pruneMissingOutputLinks() {
         // Mixed text: replace only invalid tokens.
         if (!str.toLowerCase().includes('!id:') && !str.toLowerCase().includes('!link:')) return rawValue;
         const replaced = str.replace(/!id:(?:\{\{[^}]+?\}\}|[^\s]+)/gi, (token) => {
-            if (!tokenIsValidLink(token, currentIndex)) {
+            if (!tokenIsValidLink(token, currentIndex, allowRepeatTokens)) {
                 mutated = true;
                 return '';
             }
             return token;
         }).replace(/!link:[^\s]+/gi, (token) => {
-            if (!tokenIsValidLink(token, currentIndex)) {
+            if (!tokenIsValidLink(token, currentIndex, allowRepeatTokens)) {
                 mutated = true;
                 return '';
             }
@@ -2398,12 +2407,13 @@ function pruneMissingOutputLinks() {
         return replaced.replace(/\s{2,}/g, ' ');
     };
 
-    const scrubAction = (action) => {
+    const scrubAction = (action, inRepeatBody = false) => {
         if (!action?.params) return;
         const currentIndex = actionIndexById.get(action.id);
+        const allowRepeatTokens = Boolean(inRepeatBody);
         Object.entries(action.params).forEach(([key, value]) => {
             if (typeof value === 'string') {
-                const next = scrubString(key, value, currentIndex);
+                const next = scrubString(key, value, currentIndex, allowRepeatTokens);
                 if (next !== value) action.params[key] = next;
                 return;
             }
@@ -2412,6 +2422,7 @@ function pruneMissingOutputLinks() {
                 const linkedKeyRaw = linkedUuid ? String(linkedUuid) : '';
                 let linkedKey = linkedKeyRaw.trim();
                 if (!linkedKey) return;
+                if (allowRepeatTokens && isRepeatToken(linkedKey)) return;
                 let lookupKey = linkedKey;
                 let sourceIndex = outputIndexByUuid.get(lookupKey);
                 if (!validOutputs.has(lookupKey) && (isIdToken(lookupKey) || lookupKey.toLowerCase().startsWith('!link:'))) {
@@ -2435,13 +2446,17 @@ function pruneMissingOutputLinks() {
             }
         });
         if (isConditionalAction(action)) {
-            (action.then || []).forEach(scrubAction);
-            (action.else || []).forEach(scrubAction);
+            (action.then || []).forEach(entry => scrubAction(entry, inRepeatBody));
+            (action.else || []).forEach(entry => scrubAction(entry, inRepeatBody));
         } else if (isRepeatAction(action)) {
-            (action.do || []).forEach(scrubAction);
+            (action.do || []).forEach(entry => scrubAction(entry, true));
+        } else if (isMenuAction(action)) {
+            (action.Cases || []).forEach(entry => {
+                (entry?.Actions || []).forEach(caseAction => scrubAction(caseAction, inRepeatBody));
+            });
         }
     };
-    (currentActions || []).forEach(scrubAction);
+    (currentActions || []).forEach(action => scrubAction(action, false));
     if (mutated && currentProject) {
         currentProject.actions = currentActions;
         saveProjects();
@@ -2711,6 +2726,26 @@ function isConditionalAction(action) {
 function isRepeatAction(action) {
     const id = (action.action || action.title || '').toLowerCase();
     return id.includes('repeat') || id === 'repeatwitheach' || id === 'repeatwith each';
+}
+
+function getRepeatItemsParamInfo(action) {
+    const params = action?.params || {};
+    const candidates = [
+        ['Items', params.Items],
+        ['RepeatItemVariableName', params.RepeatItemVariableName],
+        ['WFRepeatItemVariableName', params.WFRepeatItemVariableName],
+        ['ItemsIn', params.ItemsIn],
+        ['WFInput', params.WFInput],
+        ['List', params.List],
+    ];
+    for (const [key, value] of candidates) {
+        if (value !== undefined && value !== null && String(value) !== '') {
+            return { key, value };
+        }
+    }
+    const actionName = String(action?.action || action?.title || '').toLowerCase();
+    const isRepeatWithEach = actionName.includes('witheach') || actionName.includes('with each');
+    return { key: isRepeatWithEach ? 'ItemsIn' : 'Items', value: '' };
 }
 
 function isMenuAction(action) {
@@ -3022,9 +3057,11 @@ const LIVE_HINTS = [
 
 const LIVE_HINT_TICK_MS = 1200;
 
-function setPipelineHint(text) {
-    const hintEl = document.getElementById('pipeline-orbs-hint');
-    if (hintEl && text) hintEl.textContent = text;
+function setPipelineHint(text, stepId = null) {
+    if (!text) return;
+    const targetStep = stepId || currentPipelineStep || 'plan';
+    const hintEl = document.getElementById(`orb-hint-${targetStep}`);
+    if (hintEl) hintEl.textContent = text;
 }
 
 function setLiveHint(text, lockMs = 2500) {
@@ -3826,8 +3863,10 @@ function resetPipelineSteps() {
         const orb = document.getElementById(`orb-${id}`);
         orb?.classList.remove('active', 'completed');
     });
-    const hintEl = document.getElementById('pipeline-orbs-hint');
-    if (hintEl) hintEl.textContent = getDefaultHint('plan', 'active');
+    PIPELINE_STEPS.forEach(({ id }) => {
+        const hintEl = document.getElementById(`orb-hint-${id}`);
+        if (hintEl) hintEl.textContent = getDefaultHint(id, 'idle');
+    });
 }
 
 function updatePipelineProgress(step, status, hint = '') {
@@ -4335,7 +4374,8 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
             const actionName = (node.action.action || '').toLowerCase();
             const isRepeatWithEach = actionName.includes('witheach') || actionName.includes('with each');
             const repeatCount = node.action.params?.Count || node.action.params?.WFRepeatCount || '';
-            const repeatItems = node.action.params?.Items || node.action.params?.RepeatItemVariableName || node.action.params?.WFRepeatItemVariableName || '';
+            const repeatItemsInfo = getRepeatItemsParamInfo(node.action);
+            const repeatItems = repeatItemsInfo.value || '';
             const repeatIdPillHtml = buildIdPillHtml(node.action.id);
 
             const actionsHtml = editMode ? `
@@ -4354,7 +4394,9 @@ function renderNodeList(nodes, container, animateIds, depth = 0, parentMeta = { 
             let repeatHeaderHtml = '';
             if (isRepeatWithEach || repeatItems) {
                 const itemsValue = editMode ? (repeatItems || '{{VARIABLE}}') : repeatItems;
-                const itemsInputHtml = editMode ? getInputForType(node.action.id, 'Items', itemsValue, false) : `<span class="repeat-value">${formatLinkedValue(itemsValue || '')}</span>`;
+                const itemsInputHtml = editMode
+                    ? getInputForType(node.action.id, repeatItemsInfo.key, itemsValue, false)
+                    : `<span class="repeat-value">${formatLinkedValue(itemsValue || '')}</span>`;
                 repeatHeaderHtml = `
                             <div class="repeat-condition-line">
                                 <span class="repeat-label">Repeat with each item in</span>
@@ -6195,10 +6237,10 @@ function toggleEditMode() {
 
 // ============ Pipeline Orbs (in chat) ============
 const PIPELINE_STEPS = [
-    { id: 'plan', label: 'Planning', hint: 'Analyzing your request...' },
-    { id: 'catalog', label: 'Searching', hint: 'Finding matching actions...' },
-    { id: 'build', label: 'Building', hint: 'Assembling your shortcut...' },
-    { id: 'summarize', label: 'Finalizing', hint: 'Polishing results...' }
+    { id: 'plan', label: 'Planning', hint: 'Thinking...' },
+    { id: 'catalog', label: 'Searching', hint: 'Picking actions...' },
+    { id: 'build', label: 'Building', hint: 'Wiring the flow...' },
+    { id: 'summarize', label: 'Finalizing', hint: 'Wrapping it up...' }
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
@@ -6263,13 +6305,15 @@ function showPipelineOrbs() {
     orbsDiv.innerHTML = `
 	                <div class="pipeline-orbs-row" role="group" aria-label="Generation progress">
 	                    ${PIPELINE_STEPS.map((step, idx) => `
-	                        <div class="orb" id="orb-${step.id}" data-orb-step="${step.id}">
-	                            <span>${step.label}</span>
+	                        <div class=\"orb-wrapper\" data-orb-wrapper=\"${step.id}\">
+	                            <div class=\"orb\" id=\"orb-${step.id}\" data-orb-step=\"${step.id}\">
+	                                <span>${step.label}</span>
+	                            </div>
+	                            <div class=\"orb-subhint\" id=\"orb-hint-${step.id}\">${escapeHtml(step.hint || 'Working...')}</div>
 	                        </div>
-	                        ${idx < PIPELINE_STEPS.length - 1 ? '<div class="orb-line" aria-hidden="true"></div>' : ''}
+	                        ${idx < PIPELINE_STEPS.length - 1 ? '<div class=\"orb-line\" aria-hidden=\"true\"></div>' : ''}
 	                    `).join('')}
 	                </div>
-	                <div class="pipeline-orbs-hint" id="pipeline-orbs-hint">${escapeHtml(PIPELINE_STEPS[0]?.hint || 'Working...')}</div>
 	            `;
     container.appendChild(orbsDiv);
     container.scrollTop = container.scrollHeight;
@@ -6284,17 +6328,16 @@ function updatePipelineOrb(step, status, hint = '') {
     if (status === 'started') orb.classList.add('active');
     else if (status === 'completed') orb.classList.add('completed');
 
-    if (status === 'started' || hint) {
+    if (status === 'started' || status === 'completed' || hint) {
         const state = status === 'completed' ? 'completed' : status === 'started' ? 'active' : 'idle';
-        setPipelineHint(hint || getDefaultHint(step, state));
+        setPipelineHint(hint || getDefaultHint(step, state), step);
     }
 }
 
 function getDefaultHint(step, state = 'idle') {
     const meta = PIPELINE_STEPS.find(s => s.id === step);
     if (state === 'completed') return 'Done';
-    if (state === 'active') return meta?.hint || 'In progress...';
-    return 'Waiting...';
+    return meta?.hint || 'In progress...';
 }
 
 function removePipelineOrbs() {

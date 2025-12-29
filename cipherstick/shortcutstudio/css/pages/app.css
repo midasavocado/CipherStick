@@ -572,6 +572,15 @@ body.is-generating .mobile-shortcut-loading {
     min-width: 110px;
 }
 
+.orb-subhint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.2;
+    opacity: 0.85;
+    max-width: 120px;
+}
+
 @keyframes orbsSlideIn {
     from {
         opacity: 0;
