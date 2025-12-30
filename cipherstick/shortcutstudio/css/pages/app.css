@@ -925,6 +925,11 @@ body.is-generating .mobile-shortcut-loading {
     margin: 0.6rem 0;
 }
 
+.message-bubble .katex-display {
+    margin: 0.6rem 0;
+    overflow-x: auto;
+}
+
 .message-bubble hr {
     border: none;
     border-top: 1px solid var(--border-color);

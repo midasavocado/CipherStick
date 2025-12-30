@@ -2890,12 +2890,18 @@ function getMarkdownRenderer() {
     const md = factory({
         html: false,
         linkify: true,
-        breaks: true
+        breaks: true,
+        typographer: true
     });
     const plugins = [
+        window.markdownitKatex,
         window.markdownitFootnote,
         window.markdownitTaskLists,
         window.markdownitDeflist,
+        window.markdownitEmoji,
+        window.markdownitMark,
+        window.markdownitIns,
+        window.markdownitAbbr,
         window.markdownitSub,
         window.markdownitSup
     ].filter(fn => typeof fn === 'function');
