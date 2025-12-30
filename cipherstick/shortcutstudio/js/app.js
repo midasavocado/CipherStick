@@ -2881,7 +2881,68 @@ function formatMessage(text) {
     return renderMarkdown(String(text || ''));
 }
 
+let markdownRenderer = null;
+
+function getMarkdownRenderer() {
+    if (markdownRenderer) return markdownRenderer;
+    const factory = window?.markdownit;
+    if (typeof factory !== 'function') return null;
+    const md = factory({
+        html: false,
+        linkify: true,
+        breaks: true
+    });
+    const plugins = [
+        window.markdownitFootnote,
+        window.markdownitTaskLists,
+        window.markdownitDeflist,
+        window.markdownitSub,
+        window.markdownitSup
+    ].filter(fn => typeof fn === 'function');
+    plugins.forEach(plugin => {
+        try {
+            if (plugin === window.markdownitTaskLists) {
+                md.use(plugin, { enabled: true, label: true, labelAfter: false });
+            } else {
+                md.use(plugin);
+            }
+        } catch { }
+    });
+
+    const defaultRender =
+        md.renderer.rules.link_open ||
+        ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
+
+    md.validateLink = (url) => Boolean(sanitizeMarkdownUrl(url));
+    md.normalizeLink = (url) => sanitizeMarkdownUrl(url) || '';
+    md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+        const hrefIndex = tokens[idx].attrIndex('href');
+        if (hrefIndex >= 0) {
+            const href = tokens[idx].attrs[hrefIndex][1];
+            const safe = sanitizeMarkdownUrl(href);
+            if (!safe) {
+                tokens[idx].tag = 'span';
+                tokens[idx].attrs = null;
+                return '';
+            }
+            tokens[idx].attrs[hrefIndex][1] = safe;
+            tokens[idx].attrSet('target', '_blank');
+            tokens[idx].attrSet('rel', 'noopener noreferrer');
+        }
+        return defaultRender(tokens, idx, options, env, self);
+    };
+
+    markdownRenderer = md;
+    return md;
+}
+
 function renderMarkdown(src) {
+    const md = getMarkdownRenderer();
+    if (md) return md.render(String(src || ''));
+    return renderMarkdownFallback(src);
+}
+
+function renderMarkdownFallback(src) {
     const text = String(src || '').replace(/\r\n/g, '\n');
     if (!text) return '';
 
@@ -2894,6 +2955,50 @@ function renderMarkdown(src) {
     const isQuote = (line) => /^\s*>\s?/.test(line);
     const isUl = (line) => /^\s*[-*+]\s+/.test(line);
     const isOl = (line) => /^\s*\d+\.\s+/.test(line);
+    const splitTableRow = (line) => {
+        let trimmed = String(line || '').trim();
+        if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+        if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+        const cells = [];
+        let current = '';
+        let escape = false;
+        for (let j = 0; j < trimmed.length; j++) {
+            const ch = trimmed[j];
+            if (escape) {
+                current += ch;
+                escape = false;
+                continue;
+            }
+            if (ch === '\\') {
+                escape = true;
+                continue;
+            }
+            if (ch === '|') {
+                cells.push(current.trim());
+                current = '';
+                continue;
+            }
+            current += ch;
+        }
+        cells.push(current.trim());
+        return cells.map(cell => cell.replace(/\\\|/g, '|').replace(/\\\\/g, '\\'));
+    };
+    const isTableSeparator = (line) => {
+        const trimmed = String(line || '').trim();
+        if (!trimmed || !trimmed.includes('|')) return false;
+        const cells = splitTableRow(trimmed);
+        if (!cells.length) return false;
+        return cells.every(cell => /^:?-{3,}:?$/.test(cell.trim()));
+    };
+    const getTableAlign = (cell) => {
+        const trimmed = String(cell || '').trim();
+        const starts = trimmed.startsWith(':');
+        const ends = trimmed.endsWith(':');
+        if (starts && ends) return 'center';
+        if (ends) return 'right';
+        if (starts) return 'left';
+        return '';
+    };
 
     while (i < lines.length) {
         const line = lines[i] ?? '';
@@ -2935,7 +3040,47 @@ function renderMarkdown(src) {
                 quoteLines.push((lines[i] || '').replace(/^\s*>\s?/, ''));
                 i++;
             }
-            blocks.push(`<blockquote>${renderMarkdown(quoteLines.join('\n'))}</blockquote>`);
+            blocks.push(`<blockquote>${renderMarkdownFallback(quoteLines.join('\n'))}</blockquote>`);
+            continue;
+        }
+
+        if (line.includes('|') && isTableSeparator(lines[i + 1])) {
+            const headerCells = splitTableRow(line);
+            const alignCells = splitTableRow(lines[i + 1]).map(getTableAlign);
+            i += 2;
+            const rows = [];
+            while (i < lines.length) {
+                const rowLine = lines[i] ?? '';
+                if (!rowLine.trim()) break;
+                if (!rowLine.includes('|')) break;
+                if (isTableSeparator(rowLine)) break;
+                rows.push(splitTableRow(rowLine));
+                i++;
+            }
+            const colCount = Math.max(
+                headerCells.length,
+                rows.reduce((max, row) => Math.max(max, row.length), 0)
+            );
+            while (headerCells.length < colCount) headerCells.push('');
+            while (alignCells.length < colCount) alignCells.push('');
+            const alignAttr = (idx) => {
+                const align = alignCells[idx] || '';
+                return align ? ` style="text-align:${align}"` : '';
+            };
+            const headHtml = headerCells
+                .map((cell, idx) => `<th${alignAttr(idx)}>${renderInlineMarkdown(cell)}</th>`)
+                .join('');
+            const bodyHtml = rows
+                .map(row => {
+                    const cells = row.slice(0, colCount);
+                    while (cells.length < colCount) cells.push('');
+                    const rowHtml = cells
+                        .map((cell, idx) => `<td${alignAttr(idx)}>${renderInlineMarkdown(cell)}</td>`)
+                        .join('');
+                    return `<tr>${rowHtml}</tr>`;
+                })
+                .join('');
+            blocks.push(`<div class="message-table"><table><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`);
             continue;
         }
 
@@ -2995,10 +3140,27 @@ function renderInlineMarkdown(src) {
 
         let t = escapeHtml(part.value);
         // Keep regexes conservative so they don't cross HTML tags we inject.
+        t = t.replace(/~~([^<]+?)~~/g, '<del>$1</del>');
         t = t.replace(/\*\*([^<]+?)\*\*/g, '<strong>$1</strong>');
         t = t.replace(/\*([^<]+?)\*/g, '<em>$1</em>');
+        t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
+            const safeUrl = sanitizeMarkdownUrl(url);
+            if (!safeUrl) return label;
+            return `<a href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        });
         return t;
     }).join('');
+}
+
+function sanitizeMarkdownUrl(raw) {
+    const trimmed = String(raw || '').trim();
+    if (!trimmed) return '';
+    const normalized = trimmed.replace(/&amp;/g, '&');
+    const lower = normalized.toLowerCase();
+    if (lower.startsWith('http://') || lower.startsWith('https://')) return normalized;
+    if (lower.startsWith('mailto:') || lower.startsWith('tel:')) return normalized;
+    if (lower.startsWith('data:image/')) return normalized;
+    return '';
 }
 
 function escapeAttr(str) {
@@ -3442,11 +3604,15 @@ async function callGenerateAPI(userPrompt) {
 
         const historyLimit = plan === 'paid' ? 10 : 3;
         const recentHistory = currentProject?.history?.slice(-historyLimit) || [];
+        const userInstructions = (getStoredValue('user_instructions') || '').trim();
         const context = {
             basePrompt,
             programText,
             history: recentHistory
         };
+        if (userInstructions) {
+            context.memory = userInstructions;
+        }
         const body = {
             name: currentProject.name,
             prompt: userPrompt,
@@ -3571,7 +3737,11 @@ function handleStreamPacket(packet) {
     }
 
     if (packet.type === 'model_delta' && typeof packet.content === 'string') {
-        ingestModelDelta(packet.content);
+        if (chatMode === 'discussion') {
+            appendStreamingSummary(packet.content);
+        } else {
+            ingestModelDelta(packet.content);
+        }
     }
 
     // Live build visualization - render partial program as it streams

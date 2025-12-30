@@ -1,3 +1,64 @@
+const SETTINGS_STORAGE_PREFIX = 'shortcutstudio';
+const USER_INSTRUCTIONS_KEY = 'user_instructions';
+
+function settingsStorageKey(suffix) {
+    return `${SETTINGS_STORAGE_PREFIX}_${suffix}`;
+}
+
+function getSettingsValue(suffix) {
+    try {
+        return localStorage.getItem(settingsStorageKey(suffix));
+    } catch {
+        return null;
+    }
+}
+
+function setSettingsValue(suffix, value) {
+    try {
+        localStorage.setItem(settingsStorageKey(suffix), value);
+    } catch {
+        // Ignore storage failures (private mode, quota, etc).
+    }
+}
+
+function removeSettingsValue(suffix) {
+    try {
+        localStorage.removeItem(settingsStorageKey(suffix));
+    } catch {
+        // Ignore storage failures (private mode, quota, etc).
+    }
+}
+
+function initUserSettings() {
+    const instructionsInput = document.getElementById('user-instructions');
+    if (!instructionsInput) return;
+    const stored = getSettingsValue(USER_INSTRUCTIONS_KEY);
+    instructionsInput.value = stored || '';
+}
+
+function saveUserSettings() {
+    const instructionsInput = document.getElementById('user-instructions');
+    if (!instructionsInput) return;
+    const trimmed = instructionsInput.value.trim();
+    if (trimmed) {
+        setSettingsValue(USER_INSTRUCTIONS_KEY, trimmed);
+    } else {
+        removeSettingsValue(USER_INSTRUCTIONS_KEY);
+    }
+    instructionsInput.value = trimmed;
+
+    const saveButton = document.getElementById('user-settings-save');
+    if (saveButton) {
+        const originalText = saveButton.textContent;
+        saveButton.textContent = 'Saved';
+        saveButton.disabled = true;
+        setTimeout(() => {
+            saveButton.textContent = originalText;
+            saveButton.disabled = false;
+        }, 1200);
+    }
+}
+
 // Landing page functionality
 document.addEventListener('DOMContentLoaded', () => {
     // Hero Input handling

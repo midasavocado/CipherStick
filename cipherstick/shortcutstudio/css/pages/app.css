@@ -875,6 +875,77 @@ body.is-generating .mobile-shortcut-loading {
     margin: 0;
 }
 
+.message-bubble a {
+    color: var(--primary-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.message.user .message-bubble a {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.message-bubble .message-table {
+    margin: 0.6rem 0;
+    overflow-x: auto;
+}
+
+.message-bubble table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.message-bubble th,
+.message-bubble td {
+    border: 1px solid var(--border-color);
+    padding: 0.35rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.message-bubble thead th {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.message.user .message-bubble th,
+.message.user .message-bubble td {
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.message.user .message-bubble thead th {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.message-bubble img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    margin: 0.6rem 0;
+}
+
+.message-bubble hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 0.7rem 0;
+}
+
+.message-bubble .task-list-item {
+    list-style: none;
+}
+
+.message-bubble .task-list-item input[type="checkbox"] {
+    margin-right: 0.4rem;
+    transform: translateY(1px);
+}
+
+.message-bubble .footnotes {
+    margin-top: 0.75rem;
+    font-size: 0.88em;
+    color: var(--text-muted);
+}
+
 /* --- Chat Input Area --- */
 .chat-input-area {
     padding: 1rem 1.5rem;
