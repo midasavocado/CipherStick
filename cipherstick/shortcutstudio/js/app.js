@@ -3492,10 +3492,6 @@ function updateStreamingProjectIcon(iconId) {
 
 function applyStreamingMeta(meta) {
     if (!meta) return;
-    if (typeof meta.summary === 'string' && meta.summary !== streamingJsonMeta.summary) {
-        streamingJsonMeta.summary = meta.summary;
-        setStreamingSummary(meta.summary);
-    }
     if (typeof meta.name === 'string' && meta.name !== streamingJsonMeta.name) {
         streamingJsonMeta.name = meta.name;
         updateStreamingProjectName(meta.name);
@@ -6420,8 +6416,8 @@ const PIPELINE_STEPS = [
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
-const PIPELINE_FIRST_STEP_MIN_MS = 5000;
-const PIPELINE_FIRST_STEP_MAX_MS = 7000;
+const PIPELINE_PLAN_MIN_MS = 4000;
+const PIPELINE_PLAN_MAX_MS = 8000;
 const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();
@@ -6441,12 +6437,13 @@ function getRandomMs(minMs, maxMs) {
 }
 
 function getPipelineMinActiveMs(step) {
-    if (step === 'plan' || step === 'catalog') {
+    if (step === 'plan') {
         if (!pipelineStepMinActiveMs.has(step)) {
-            pipelineStepMinActiveMs.set(step, getRandomMs(PIPELINE_FIRST_STEP_MIN_MS, PIPELINE_FIRST_STEP_MAX_MS));
+            pipelineStepMinActiveMs.set(step, getRandomMs(PIPELINE_PLAN_MIN_MS, PIPELINE_PLAN_MAX_MS));
         }
         return pipelineStepMinActiveMs.get(step) || MIN_PIPELINE_ACTIVE_MS;
     }
+    if (step === 'catalog') return 0;
     return MIN_PIPELINE_ACTIVE_MS;
 }
 
