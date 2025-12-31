@@ -810,8 +810,8 @@ body.is-generating .mobile-shortcut-loading {
 .orb-line {
     width: 16px;
     height: 2px;
-    background: var(--border-color);
-    opacity: 0.35;
+    background: #9ca3af;
+    opacity: 0.4;
     border-radius: 2px;
     transition: all 0.3s ease;
     flex-shrink: 0;

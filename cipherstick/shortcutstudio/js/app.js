@@ -1683,7 +1683,7 @@ function paramKeySupportsInlineLinks(paramKey) {
     const key = String(paramKey || '').trim().toLowerCase();
     if (!key) return false;
     // Heuristic: "Text-like" fields where Shortcuts allows mixing words + variables.
-    // (e.g., Text/Prompt/Body/Title/Message/etc.)
+    // (e.g., Text/Prompt/Body/Title/Message/Content/etc.)
     if (key === 'text') return true;
     return (
         key.includes('text') ||
@@ -1696,7 +1696,8 @@ function paramKeySupportsInlineLinks(paramKey) {
         key.includes('notes') ||
         key.includes('query') ||
         key.includes('caption') ||
-        key.includes('description')
+        key.includes('description') ||
+        key.includes('content')
     );
 }
 
@@ -2080,13 +2081,23 @@ function getTokenDisplayLabel(token) {
     return trimmed;
 }
 
+const UUID_LIKE_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuidLike(str) {
+    return UUID_LIKE_RE.test(String(str || '').trim());
+}
+
 function buildVariablePillHtml(token) {
     const rawToken = String(token || '');
     const label = getTokenDisplayLabel(rawToken);
     const resolved =
         resolveOutputNameByUUID(rawToken, null) ||
         resolveOutputNameByUUID(label, null);
-    const display = humanizeOutputName(resolved || label || rawToken);
+    let display = humanizeOutputName(resolved || label || rawToken);
+    // If display is still a UUID-like string, fall back to a generic label
+    if (isUuidLike(display)) {
+        display = 'Linked Output';
+    }
     return `<span class="variable-pill" contenteditable="false" data-token="${escapeAttr(rawToken)}"><span class="variable-pill-label">${escapeHtml(display)}</span><button type="button" class="variable-pill-remove" title="Remove">&times;</button></span>`;
 }
 
@@ -2265,7 +2276,11 @@ function getActionOutputInfo(action) {
                     : (hasExplicitId && idLabel ? idLabel : (isIdToken(rawUUID) ? normalizeIdLabel(rawUUID) : ''))
                     || action.title || action.action || 'Action Output';
 
-    const outputName = String(rawNameCandidate || '').trim() || 'Action Output';
+    let outputName = String(rawNameCandidate || '').trim() || 'Action Output';
+    // If outputName looks like a UUID, fall back to the action title
+    if (isUuidLike(outputName)) {
+        outputName = action.title || action.action || 'Action Output';
+    }
     return { outputUUID: rawUUID, outputName, outputId: hasExplicitId ? idLabel : null };
 }
 
@@ -3072,6 +3087,35 @@ async function handleSend() {
     await callGenerateAPI(text);
 }
 
+function formatAssistantForUi(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return '';
+
+    const hasMarkdown = /(^|\n)\s*[-*]\s+/m.test(raw)
+        || /(^|\n)#{1,4}\s+/m.test(raw)
+        || /```/.test(raw)
+        || /\|.+\|/.test(raw);
+    if (hasMarkdown) return raw;
+
+    const sentences = raw.split(/(?<=[.!?])\s+(?=[A-Z0-9])/).filter(Boolean);
+    const overview = sentences.shift() || raw;
+    const detailCandidates = sentences.length ? sentences : raw.split(/;\s+|\n+/).filter(Boolean);
+    const bullets = detailCandidates
+        .map((line) => line.replace(/^\s*[-*]\s*/, '').trim())
+        .filter(Boolean);
+    const uniqueBullets = bullets.length ? Array.from(new Set(bullets)) : [overview];
+
+    const sections = [
+        '**Overview**',
+        overview,
+        '',
+        '**Key Points**',
+        uniqueBullets.map((line) => `- ${line}`).join('\n')
+    ].filter(Boolean);
+
+    return sections.join('\n');
+}
+
 function addMessageToUI(text, role) {
     const container = document.getElementById('messages');
     const div = document.createElement('div');
@@ -3079,7 +3123,8 @@ function addMessageToUI(text, role) {
     const avatar = role === 'user'
         ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'
         : 'S';
-    div.innerHTML = `<div class="message-avatar">${avatar}</div><div class="message-bubble">${formatMessage(text)}</div>`;
+    const displayText = role === 'assistant' ? formatAssistantForUi(text) : text;
+    div.innerHTML = `<div class="message-avatar">${avatar}</div><div class="message-bubble">${formatMessage(displayText)}</div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     updateChatEmptyState();
@@ -3115,7 +3160,7 @@ function appendStreamingSummary(delta) {
     }
     if (!streamingSummaryMessage || !streamingSummaryMessage.bubble) return;
     streamingSummaryMessage.text += delta;
-    streamingSummaryMessage.bubble.innerHTML = formatMessage(streamingSummaryMessage.text);
+    streamingSummaryMessage.bubble.innerHTML = formatMessage(formatAssistantForUi(streamingSummaryMessage.text));
     const container = document.getElementById('messages');
     if (container) container.scrollTop = container.scrollHeight;
 }
@@ -3126,9 +3171,10 @@ function finalizeStreamingSummary(finalText) {
         streamingSummaryMessage.text = finalText;
     }
     if (streamingSummaryMessage.bubble) {
-        streamingSummaryMessage.bubble.innerHTML = formatMessage(streamingSummaryMessage.text);
+        streamingSummaryMessage.bubble.innerHTML = formatMessage(formatAssistantForUi(streamingSummaryMessage.text));
     }
     streamingSummaryMessage.node?.classList.remove('streaming');
+    updatePipelineProgress('summarize', 'completed', 'Summary delivered');
     streamingSummaryMessage = null;
     updateChatEmptyState();
     updateMobileShortcutCard();
@@ -3549,10 +3595,34 @@ const LIVE_HINTS = [
     'Validating logic...',
     'Checking parameters...',
     'Polishing details...',
-    'Almost there...'
+    'Almost there...',
+    'Auto-checking permissions...',
+    'Sequencing trigger logic...',
+    'Inlining helpful defaults...',
+    'Making sure outputs match...',
+    'Tidying variable names...',
+    'Formatting the reply with Markdown',
+    'Analyzing your workflow...',
+    'Finding the best actions...',
+    'Optimizing step order...',
+    'Cross-referencing capabilities...',
+    'Parsing your requirements...',
+    'Evaluating action compatibility...',
+    'Structuring data flow...',
+    'Assembling the pieces...',
+    'Double-checking connections...',
+    'Verifying action syntax...',
+    'Preparing your automation...',
+    'Resolving dependencies...',
+    'Finalizing action chain...',
+    'Reviewing edge cases...',
+    'Smoothing transitions...',
+    'Ensuring reliability...',
+    'Running final checks...',
+    'Wrapping things up...'
 ];
 
-const LIVE_HINT_TICK_MS = 1800;
+const LIVE_HINT_TICK_MS = 1200;
 
 function setPipelineHint(text) {
     if (!text) return;
@@ -3560,7 +3630,7 @@ function setPipelineHint(text) {
     if (liveHintEl) liveHintEl.textContent = text;
 }
 
-function setLiveHint(text, lockMs = 2500) {
+function setLiveHint(text, lockMs = 1500) {
     if (!text) return;
     setPipelineHint(text);
     liveHintLockUntil = Date.now() + Math.max(0, lockMs);
@@ -4099,6 +4169,7 @@ function handleStreamPacket(packet) {
     }
 
     if (packet.type === 'summary_delta' && typeof packet.content === 'string' && !streamingJsonActive) {
+        updatePipelineProgress('summarize', 'started', packet.hint || 'Summarizing your shortcut');
         appendStreamingSummary(packet.content);
     }
 
@@ -4536,6 +4607,7 @@ function handleFinalResponse(data) {
     const assistantAnswer = typeof meta?.summary === 'string'
         ? meta.summary.trim()
         : (typeof data.answer === 'string' ? data.answer : '');
+    updatePipelineProgress('summarize', 'started', 'Wrapping up the summary');
     if (willApplyProgram || willApplyName) {
         pushUndoState();
     }
@@ -4609,6 +4681,7 @@ function handleFinalResponse(data) {
         const usedStreaming = finalizeStreamingSummary(assistantAnswer);
         if (!usedStreaming) {
             addMessageToUI(assistantAnswer, 'assistant');
+            updatePipelineProgress('summarize', 'completed', 'Summary delivered');
         }
         if (currentProject) {
             currentProject.history.push({ role: 'assistant', content: assistantAnswer });
@@ -5398,7 +5471,12 @@ function getInputForType(actionId, key, value, readonly = false) {
 
 function humanizeOutputName(name) {
     if (!name) return 'Output';
-    return String(name).replace(/^!id:/i, '').replace(/^!link:/i, '').trim() || 'Output';
+    let result = String(name).replace(/^!id:/i, '').replace(/^!link:/i, '').trim() || 'Output';
+    // If the result looks like a UUID, return a generic label instead
+    if (isUuidLike(result)) {
+        return 'Linked Output';
+    }
+    return result;
 }
 
 const BUILTIN_OUTPUT_LABELS = new Map([
@@ -6806,8 +6884,8 @@ const PIPELINE_STEPS = [
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
-const PIPELINE_PLAN_MIN_MS = 4000;
-const PIPELINE_PLAN_MAX_MS = 8000;
+const PIPELINE_PLAN_MIN_MS = 8000;
+const PIPELINE_PLAN_MAX_MS = 16000;
 const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();
@@ -6834,6 +6912,7 @@ function getPipelineMinActiveMs(step) {
         }
         return pipelineStepMinActiveMs.get(step) || MIN_PIPELINE_ACTIVE_MS;
     }
+    if (step === 'summarize') return 0;
     if (step === 'catalog') return 0;
     return MIN_PIPELINE_ACTIVE_MS;
 }
