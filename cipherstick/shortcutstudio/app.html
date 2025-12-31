@@ -417,7 +417,7 @@
 
     <!-- Project Settings Modal -->
     <div id="project-settings-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 640px;">
+        <div class="modal-card" style="max-width: 720px; width: 100%;">
             <div class="modal-header">
                 <h3>Edit Project</h3>
                 <button class="modal-close" onclick="closeProjectSettingsModal()"><svg width="16" height="16"
@@ -427,45 +427,59 @@
                     </svg></button>
             </div>
             <div class="modal-body project-settings-body">
-                <label class="project-settings-label" for="project-settings-name">Name</label>
-                <div class="input-with-counter full-width">
-                    <input type="text" id="project-settings-name" class="input-glass project-settings-input"
-                        placeholder="Project name" maxlength="25">
-                    <span class="char-counter" id="project-settings-name-counter">0/25</span>
+                <div class="project-settings-field">
+                    <label class="project-settings-label" for="project-settings-name">Name</label>
+                    <div class="input-with-counter full-width">
+                        <input type="text" id="project-settings-name" class="input-glass project-settings-input"
+                            placeholder="Project name" maxlength="25">
+                        <span class="char-counter" id="project-settings-name-counter">0/25</span>
+                    </div>
                 </div>
 
-                <label class="project-settings-label" for="project-settings-description">Description</label>
-                <div class="input-with-counter full-width">
-                    <textarea id="project-settings-description" class="input-glass project-settings-input" rows="3"
-                        placeholder="Short description for your project" maxlength="110"></textarea>
-                    <span class="char-counter" id="project-settings-description-counter">0/110</span>
+                <div class="project-settings-field">
+                    <label class="project-settings-label" for="project-settings-description">Description</label>
+                    <div class="input-with-counter full-width">
+                        <textarea id="project-settings-description" class="input-glass project-settings-input" rows="3"
+                            placeholder="Short description for your project" maxlength="110"></textarea>
+                        <span class="char-counter" id="project-settings-description-counter">0/110</span>
+                    </div>
                 </div>
 
-                <div class="project-settings-label">Icon</div>
-                <div id="project-icon-grid" class="project-icon-grid"></div>
+                <div class="project-settings-tile">
+                    <div class="project-settings-tile-header">
+                        <div class="project-settings-label">Icon</div>
+                        <span class="project-settings-hint">Pick a badge for your shortcut.</span>
+                    </div>
+                    <div id="project-icon-grid" class="project-icon-grid"></div>
+                </div>
 
-                <div class="project-settings-label">Color</div>
-                <div id="project-color-picker" class="project-color-picker">
-                    <button type="button" class="color-preset" data-color="#ef4444" style="background:#ef4444"></button>
-                    <button type="button" class="color-preset" data-color="#f43f5e" style="background:#f43f5e"></button>
-                    <button type="button" class="color-preset" data-color="#f97316" style="background:#f97316"></button>
-                    <button type="button" class="color-preset" data-color="#eab308" style="background:#eab308"></button>
-                    <button type="button" class="color-preset" data-color="#84cc16" style="background:#84cc16"></button>
-                    <button type="button" class="color-preset" data-color="#22c55e" style="background:#22c55e"></button>
-                    <button type="button" class="color-preset" data-color="#14b8a6" style="background:#14b8a6"></button>
-                    <button type="button" class="color-preset" data-color="#06b6d4" style="background:#06b6d4"></button>
-                    <button type="button" class="color-preset" data-color="#3b82f6" style="background:#3b82f6"></button>
-                    <button type="button" class="color-preset" data-color="#8b5cf6" style="background:#8b5cf6"></button>
-                    <button type="button" class="color-preset" data-color="#a855f7" style="background:#a855f7"></button>
-                    <button type="button" class="color-preset" data-color="#ec4899" style="background:#ec4899"></button>
-                    <label class="color-custom-btn" id="color-custom-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="19" cy="12" r="1"></circle>
-                            <circle cx="5" cy="12" r="1"></circle>
-                        </svg>
-                        <input type="color" id="color-custom-input" value="#3b82f6">
-                    </label>
+                <div class="project-settings-tile">
+                    <div class="project-settings-tile-header">
+                        <div class="project-settings-label">Color</div>
+                        <span class="project-settings-hint">Used on the project card and chip.</span>
+                    </div>
+                    <div id="project-color-picker" class="project-color-picker swatch-row">
+                        <button type="button" class="color-preset" data-color="#ef4444" style="background:#ef4444"></button>
+                        <button type="button" class="color-preset" data-color="#f43f5e" style="background:#f43f5e"></button>
+                        <button type="button" class="color-preset" data-color="#f97316" style="background:#f97316"></button>
+                        <button type="button" class="color-preset" data-color="#eab308" style="background:#eab308"></button>
+                        <button type="button" class="color-preset" data-color="#84cc16" style="background:#84cc16"></button>
+                        <button type="button" class="color-preset" data-color="#22c55e" style="background:#22c55e"></button>
+                        <button type="button" class="color-preset" data-color="#14b8a6" style="background:#14b8a6"></button>
+                        <button type="button" class="color-preset" data-color="#06b6d4" style="background:#06b6d4"></button>
+                        <button type="button" class="color-preset" data-color="#3b82f6" style="background:#3b82f6"></button>
+                        <button type="button" class="color-preset" data-color="#8b5cf6" style="background:#8b5cf6"></button>
+                        <button type="button" class="color-preset" data-color="#a855f7" style="background:#a855f7"></button>
+                        <button type="button" class="color-preset" data-color="#ec4899" style="background:#ec4899"></button>
+                        <label class="color-custom-btn" id="color-custom-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                            <input type="color" id="color-custom-input" value="#3b82f6">
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
