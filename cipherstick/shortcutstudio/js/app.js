@@ -188,6 +188,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initResizeHandle();
     loadTemplates();
     initEventListeners();
+    
+    // Warn before leaving/refreshing page during generation
+    window.addEventListener('beforeunload', (e) => {
+        if (isGenerating) {
+            e.preventDefault();
+            // Modern browsers ignore custom messages but still show a generic dialog
+            return 'Your shortcut is still being generated. Are you sure you want to leave?';
+        }
+    });
 });
 
 function initApp() {
