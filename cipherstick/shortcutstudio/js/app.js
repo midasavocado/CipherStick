@@ -3639,7 +3639,7 @@ function setPipelineHint(text) {
     if (liveHintEl) liveHintEl.textContent = text;
 }
 
-function setLiveHint(text, lockMs = 1500) {
+function setLiveHint(text, lockMs = 1000) {
     if (!text) return;
     setPipelineHint(text);
     liveHintLockUntil = Date.now() + Math.max(0, lockMs);
@@ -4134,7 +4134,7 @@ function handleStreamPacket(packet) {
         setPipelineMode(packet.pipelineMode);
     }
     if (typeof packet.hint === 'string' && packet.hint.trim()) {
-        setLiveHint(packet.hint, 3500);
+        setLiveHint(packet.hint, 1500);
     }
     // Ignore heartbeats - they're just for keeping connection alive
     if (packet.type === 'heartbeat') {
@@ -4142,13 +4142,13 @@ function handleStreamPacket(packet) {
     }
 
     if (packet.type === 'status' && typeof packet.message === 'string') {
-        setLiveHint(packet.message, 3000);
+        setLiveHint(packet.message, 1200);
     }
 
     if (packet.type === 'progress') {
         updatePipelineProgress(packet.step, packet.status, packet.hint);
         if (typeof packet.hint === 'string' && packet.hint.trim()) {
-            setLiveHint(packet.hint, 4000);
+            setLiveHint(packet.hint, 1800);
         }
 
         // Update progress percentage if available
