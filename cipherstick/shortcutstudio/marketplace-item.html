@@ -99,6 +99,78 @@
             height: 16px;
         }
 
+        .profile-trigger {
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-trigger::before {
+            content: '';
+            position: absolute;
+            inset: -0.3rem -0.45rem;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.1);
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.96);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .profile-trigger > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-trigger:hover,
+        .profile-trigger:focus-visible {
+            transform: translateY(-1px);
+        }
+
+        .profile-trigger:hover::before,
+        .profile-trigger:focus-visible::before {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .profile-avatar {
+            position: relative;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .profile-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1px solid rgba(59, 130, 246, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .profile-name {
+            transition: color 0.2s ease, letter-spacing 0.2s ease;
+        }
+
+        .profile-trigger:hover .profile-avatar,
+        .profile-trigger:focus-visible .profile-avatar {
+            transform: scale(1.05);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        }
+
+        .profile-trigger:hover .profile-avatar::after,
+        .profile-trigger:focus-visible .profile-avatar::after {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .profile-trigger:hover .profile-name,
+        .profile-trigger:focus-visible .profile-name {
+            color: var(--heading-color);
+            letter-spacing: 0.01em;
+        }
+
         /* Actions Bar */
         .detail-actions {
             display: flex;
@@ -200,7 +272,7 @@
 
         /* Profile Modal */
         .avatar-modal {
-            display: none;
+            display: flex;
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.6);
@@ -208,10 +280,17 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease, visibility 0s linear 0.3s;
         }
 
         .avatar-modal.active {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease, visibility 0s;
         }
 
         .avatar-modal-content {
@@ -223,6 +302,52 @@
             max-width: 400px;
             margin: 1rem;
             position: relative;
+            opacity: 0;
+            transform: translateY(18px) scale(0.98);
+            transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        .avatar-modal.active .avatar-modal-content {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .avatar-modal-content .profile-header,
+        .avatar-modal-content .profile-stats,
+        .avatar-modal-content .avatar-modal-actions {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .avatar-modal.active .profile-header {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.08s;
+        }
+
+        .avatar-modal.active .profile-stats {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.14s;
+        }
+
+        .avatar-modal.active .avatar-modal-actions {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+
+        .avatar-modal.active #modal-profile-avatar {
+            animation: profile-pop 0.5s ease;
+        }
+
+        @keyframes profile-pop {
+            0% { transform: scale(0.85); }
+            60% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
         }
 
         .action-node {
@@ -409,6 +534,23 @@
 
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .profile-trigger,
+            .profile-avatar,
+            .profile-name,
+            .avatar-modal,
+            .avatar-modal-content,
+            .avatar-modal-content .profile-header,
+            .avatar-modal-content .profile-stats,
+            .avatar-modal-content .avatar-modal-actions {
+                transition: none;
+            }
+
+            .avatar-modal.active #modal-profile-avatar {
+                animation: none;
             }
         }
     </style>
@@ -820,11 +962,11 @@
             const initial = author.name ? author.name[0].toUpperCase() : 'A';
             
             document.getElementById('item-author').innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" onclick="viewProfile('${author.username}', event)">
-                    <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: ${author.avatarUrl ? 'transparent' : (author.avatarColor || AVATAR_COLORS[0])}; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">
+                <div class="profile-trigger" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" onclick="viewProfile('${author.username}', event)">
+                    <div class="profile-avatar" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: ${author.avatarUrl ? 'transparent' : (author.avatarColor || AVATAR_COLORS[0])}; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">
                         ${author.avatarUrl ? `<img src="${author.avatarUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="">` : initial}
                     </div>
-                    <span>@${author.username}</span>
+                    <span class="profile-name">@${author.username}</span>
                 </div>
             `;
             

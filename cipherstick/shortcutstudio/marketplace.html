@@ -253,6 +253,36 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .shortcut-author::before {
+            content: '';
+            position: absolute;
+            inset: -0.3rem -0.45rem;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.1);
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.96);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .shortcut-author > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .shortcut-author:hover,
+        .shortcut-author:focus-visible {
+            transform: translateY(-1px);
+        }
+
+        .shortcut-author:hover::before,
+        .shortcut-author:focus-visible::before {
+            opacity: 1;
+            transform: scale(1);
         }
 
         .author-avatar {
@@ -267,6 +297,20 @@
             color: white;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .author-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1px solid rgba(59, 130, 246, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            transition: opacity 0.25s ease, transform 0.25s ease;
         }
 
         .author-avatar img {
@@ -279,6 +323,25 @@
             font-size: 0.85rem;
             color: var(--text-muted);
             font-weight: 500;
+            transition: color 0.2s ease, letter-spacing 0.2s ease;
+        }
+
+        .shortcut-author:hover .author-avatar,
+        .shortcut-author:focus-visible .author-avatar {
+            transform: scale(1.05);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        }
+
+        .shortcut-author:hover .author-avatar::after,
+        .shortcut-author:focus-visible .author-avatar::after {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .shortcut-author:hover .author-name,
+        .shortcut-author:focus-visible .author-name {
+            color: var(--heading-color);
+            letter-spacing: 0.01em;
         }
 
         .shortcut-description {
@@ -503,7 +566,7 @@
 
         /* Profile Modal */
         .avatar-modal {
-            display: none;
+            display: flex;
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.6);
@@ -511,10 +574,17 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease, visibility 0s linear 0.3s;
         }
 
         .avatar-modal.active {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease, visibility 0s;
         }
 
         .avatar-modal-content {
@@ -526,6 +596,69 @@
             max-width: 400px;
             margin: 1rem;
             position: relative;
+            opacity: 0;
+            transform: translateY(18px) scale(0.98);
+            transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        .avatar-modal.active .avatar-modal-content {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .avatar-modal-content .profile-header,
+        .avatar-modal-content .profile-stats,
+        .avatar-modal-content .avatar-modal-actions {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .avatar-modal.active .profile-header {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.08s;
+        }
+
+        .avatar-modal.active .profile-stats {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.14s;
+        }
+
+        .avatar-modal.active .avatar-modal-actions {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+
+        .avatar-modal.active #modal-profile-avatar {
+            animation: profile-pop 0.5s ease;
+        }
+
+        @keyframes profile-pop {
+            0% { transform: scale(0.85); }
+            60% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .shortcut-author,
+            .author-avatar,
+            .author-name,
+            .avatar-modal,
+            .avatar-modal-content,
+            .avatar-modal-content .profile-header,
+            .avatar-modal-content .profile-stats,
+            .avatar-modal-content .avatar-modal-actions {
+                transition: none;
+            }
+
+            .avatar-modal.active #modal-profile-avatar {
+                animation: none;
+            }
+        }
         }
 
         @media (max-width: 768px) {
