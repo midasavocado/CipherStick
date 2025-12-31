@@ -3825,6 +3825,12 @@ function applyStreamingMeta(meta) {
         streamingJsonMeta.name = meta.name;
         updateStreamingProjectName(meta.name);
     }
+    if (typeof meta.summary === 'string' && meta.summary !== streamingJsonMeta.summary) {
+        streamingJsonMeta.summary = meta.summary;
+        if (meta.summary.trim()) {
+            setStreamingSummary(meta.summary);
+        }
+    }
     if (typeof meta.shortSummary === 'string' && meta.shortSummary !== streamingJsonMeta.shortSummary) {
         let val = meta.shortSummary;
         if (val.length > PROJECT_DESCRIPTION_MAX) {
@@ -3897,6 +3903,7 @@ async function callGenerateAPI(userPrompt) {
     isGenerating = true;
     clearStreamingSummary(true);
     resetStreamingJsonState();
+    clearPipelineRemovalTimer();
     lastPartialProgramActions = null;
     document.body.classList.add('is-generating'); // Mobile override trigger
     const isDiscussionMode = chatMode === 'discussion';
@@ -4028,14 +4035,14 @@ async function callGenerateAPI(userPrompt) {
         if (finalData) {
             handleFinalResponse(finalData);
         }
-        removePipelineOrbs();
+        schedulePipelineOrbsRemoval(900);
     } catch (err) {
         console.error('API Error:', err);
         clearStreamingSummary(true);
         resetStreamingJsonState();
         document.body.classList.remove('is-generating');
         removeTypingIndicator();
-        removePipelineOrbs();
+        schedulePipelineOrbsRemoval();
         addMessageToUI('Failed to connect to the AI service. Please try again.', 'assistant');
     }
 
@@ -4100,7 +4107,7 @@ function handleStreamPacket(packet) {
         clearStreamingSummary(true);
         resetStreamingJsonState();
         removeTypingIndicator();
-        removePipelineOrbs();
+        schedulePipelineOrbsRemoval();
         addMessageToUI('Generation was cancelled.', 'assistant');
     }
 }
@@ -6792,10 +6799,10 @@ function toggleEditMode() {
 
 // ============ Pipeline Orbs (in chat) ============
 const PIPELINE_STEPS = [
-    { id: 'plan', label: 'Plan', description: 'Understanding your request', hint: 'Thinking...' },
-    { id: 'catalog', label: 'Search', description: 'Finding available actions', hint: 'Finding actions...' },
-    { id: 'build', label: 'Build', description: 'Creating your shortcut', hint: 'Wiring flow...' },
-    { id: 'summarize', label: 'Finish', description: 'Finalizing the build', hint: 'Wrapping up...' }
+    { id: 'plan', label: 'Plan', hint: 'Understanding your request' },
+    { id: 'catalog', label: 'Search', hint: 'Finding available actions' },
+    { id: 'build', label: 'Build', hint: 'Creating your shortcut' },
+    { id: 'summarize', label: 'Finish', hint: 'Finalizing the build' }
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
@@ -6812,6 +6819,7 @@ let pipelineQueuedStep = null;
 let pipelineQueuedHint = '';
 let pipelinePendingCompletionStep = null;
 let pipelinePendingCompletionHint = '';
+let pipelineRemovalTimer = null;
 
 function getRandomMs(minMs, maxMs) {
     const min = Math.min(minMs, maxMs);
@@ -6847,6 +6855,25 @@ function clearPipelineStepTimer(step) {
     }
 }
 
+function clearPipelineRemovalTimer() {
+    if (pipelineRemovalTimer) {
+        clearTimeout(pipelineRemovalTimer);
+        pipelineRemovalTimer = null;
+    }
+}
+
+function schedulePipelineOrbsRemoval(delayMs = 0) {
+    clearPipelineRemovalTimer();
+    if (delayMs > 0) {
+        pipelineRemovalTimer = setTimeout(() => {
+            pipelineRemovalTimer = null;
+            removePipelineOrbs();
+        }, delayMs);
+        return;
+    }
+    removePipelineOrbs();
+}
+
 function showPipelineOrbs() {
     const container = document.getElementById('messages');
     const existing = document.getElementById('pipeline-orbs');
@@ -6865,7 +6892,6 @@ function showPipelineOrbs() {
                     <div class="orb" id="orb-${step.id}" data-orb-step="${step.id}">
                         <span>${step.label}</span>
                     </div>
-                    <div class="orb-label">${step.description}</div>
                 </div>
                 ${idx < PIPELINE_STEPS.length - 1 ? '<div class="orb-line"></div>' : ''}
             `).join('')}
@@ -6875,7 +6901,7 @@ function showPipelineOrbs() {
     container.appendChild(orbsDiv);
     container.scrollTop = container.scrollHeight;
     resetPipelineSteps();
-    updatePipelineProgress('assess', 'started', 'Analyzing your request...');
+    updatePipelineProgress('assess', 'started');
 }
 
 function updatePipelineOrb(step, status, hint = '') {
@@ -6898,6 +6924,7 @@ function getDefaultHint(step, state = 'idle') {
 }
 
 function removePipelineOrbs() {
+    clearPipelineRemovalTimer();
     clearPipelinePendingStart();
     currentPipelineStep = null;
     pipelineQueuedStep = null;

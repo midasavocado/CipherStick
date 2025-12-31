@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - ShortcutStudio</title>
+    <meta name="description" content="Page not found.">
+    <link rel="icon" href="icon.png">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: filter 0.5s, background 0.5s;
+        }
+
+        .error-content {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            overflow: hidden;
+            min-height: 90vh;
+            padding-bottom: 100px;
+        }
+
+        #physics-container {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .overlay-text {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+            margin-top: 20vh;
+            transition: opacity 0.5s;
+        }
+
+        .overlay-text h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .overlay-text p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .home-btn {
+            margin-top: 2rem;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Mode Indicators */
+        #mode-indicator {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        #mode-indicator.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Particle Canvas */
+        #particle-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Screen Effects */
+        .screen-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0); }
+            10% { transform: translate(-10px, -5px) rotate(-1deg); }
+            20% { transform: translate(10px, 5px) rotate(1deg); }
+            30% { transform: translate(-10px, 5px) rotate(0deg); }
+            40% { transform: translate(10px, -5px) rotate(1deg); }
+            50% { transform: translate(-5px, 5px) rotate(-1deg); }
+            60% { transform: translate(5px, -5px) rotate(0deg); }
+            70% { transform: translate(-5px, -5px) rotate(-1deg); }
+            80% { transform: translate(5px, 5px) rotate(1deg); }
+            90% { transform: translate(-5px, 0) rotate(0); }
+        }
+
+        /* Matrix Mode */
+        body.matrix-mode {
+            background: #000 !important;
+        }
+        body.matrix-mode .error-content {
+            background: #000 !important;
+        }
+        body.matrix-mode::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0, 255, 0, 0.03) 20px, rgba(0, 255, 0, 0.03) 21px),
+                repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0, 255, 0, 0.03) 20px, rgba(0, 255, 0, 0.03) 21px);
+            pointer-events: none;
+            z-index: 0;
+            animation: matrixScroll 20s linear infinite;
+        }
+        @keyframes matrixScroll {
+            from { background-position: 0 0, 0 0; }
+            to { background-position: 0 1000px, 1000px 0; }
+        }
+
+        /* Vortex Cursor */
+        body.vortex-mode {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%233b82f6' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%233b82f6'/%3E%3C/svg%3E"), auto;
+        }
+
+        /* Hints */
+        #hints-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            border-radius: 12px;
+            padding: 1.25rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.95);
+            z-index: 1000;
+            max-width: 300px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        #hints-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #hints-panel h4 {
+            color: #60a5fa;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        #hints-panel ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #hints-panel li {
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            line-height: 1.6;
+        }
+
+        #hints-panel li:last-child {
+            border-bottom: none;
+        }
+
+        #hints-panel kbd {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Black Hole Visual */
+        #black-hole {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #black-hole.active {
+            opacity: 1;
+        }
+        #black-hole .event-horizon {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #000 0%, #000 40%, transparent 70%);
+            box-shadow: 
+                0 0 60px 30px rgba(139, 92, 246, 0.5),
+                0 0 100px 60px rgba(139, 92, 246, 0.3),
+                0 0 140px 90px rgba(139, 92, 246, 0.1),
+                inset 0 0 60px 30px rgba(0,0,0,1);
+            transform: translate(-50%, -50%);
+            animation: blackHolePulse 1s ease-in-out infinite;
+        }
+        #black-hole .accretion-disk {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, 
+                transparent, 
+                rgba(251, 146, 60, 0.8), 
+                rgba(239, 68, 68, 0.6), 
+                rgba(168, 85, 247, 0.4),
+                transparent);
+            transform: translate(-50%, -50%) rotateX(75deg);
+            animation: accretionSpin 2s linear infinite;
+            filter: blur(3px);
+        }
+        @keyframes blackHolePulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        @keyframes accretionSpin {
+            from { transform: translate(-50%, -50%) rotateX(75deg) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotateX(75deg) rotate(360deg); }
+        }
+
+        /* Typing Display */
+        #typing-display {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #0f0;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-shadow: 0 0 10px #0f0;
+            min-width: 200px;
+            text-align: center;
+        }
+        #typing-display.visible {
+            opacity: 1;
+        }
+        #typing-display .cursor {
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Stupid Mode Effects */
+        body.stupid-mode {
+            animation: stupidWobble 0.1s infinite;
+        }
+        @keyframes stupidWobble {
+            0% { transform: rotate(-1deg) scale(1.01); }
+            50% { transform: rotate(1deg) scale(0.99); }
+            100% { transform: rotate(-1deg) scale(1.01); }
+        }
+        body.stupid-mode * {
+            font-family: 'Comic Sans MS', cursive !important;
+        }
+        .flying-element {
+            position: fixed;
+            font-size: 3rem;
+            z-index: 9999;
+            pointer-events: none;
+            animation: flyAcross 3s linear forwards;
+        }
+        @keyframes flyAcross {
+            0% { transform: translateX(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateX(calc(100vw + 100px)) rotate(720deg); opacity: 0; }
+        }
+
+        /* Earthquake */
+        .earthquake {
+            animation: earthquake 0.5s ease-in-out;
+        }
+        @keyframes earthquake {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-20px, -10px); }
+            20% { transform: translate(20px, 10px); }
+            30% { transform: translate(-15px, 5px); }
+            40% { transform: translate(15px, -5px); }
+            50% { transform: translate(-10px, 10px); }
+            60% { transform: translate(10px, -10px); }
+            70% { transform: translate(-5px, -5px); }
+            80% { transform: translate(5px, 5px); }
+            90% { transform: translate(-2px, 2px); }
+        }
+
+        /* Achievement Toast */
+        #achievement {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            z-index: 10000;
+            transition: top 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 40px rgba(251, 191, 36, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        #achievement.show {
+            top: 100px;
+        }
+
+        #achievement svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90vw;
+        }
+
+        #mobile-controls button {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--heading-color);
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+
+        #mobile-controls button:active {
+            transform: scale(0.95);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: flex;
+            }
+            #hints-panel {
+                display: none !important;
+            }
+            .overlay-text h1 {
+                font-size: 1.5rem;
+            }
+            .overlay-text p {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (pointer: coarse) {
+            #mobile-controls {
+                display: flex;
+            }
+        }
+
+        /* Enhanced Glow Effects */
+        .glow-text {
+            text-shadow: 
+                0 0 10px currentColor,
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                0 0 80px currentColor;
+        }
+
+        /* Pulse animation for mode indicator */
+        #mode-indicator.pulse {
+            animation: pulse 0.5s ease-out;
+        }
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+    </style>
+</head>
+
+<body class="app-theme">
+
+    <nav class="top-bar px-6">
+        <a href="index.html" class="logo-area decorate-none color-inherit">
+            <div class="logo-icon">S</div>
+            <span>ShortcutStudio</span>
+        </a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="pricing.html">Pricing</a>
+        </div>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme"></button>
+            <a href="login.html" id="nav-cta" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <main class="error-content" id="main-content">
+        <canvas id="particle-canvas"></canvas>
+        <div id="physics-container"></div>
+        
+        <div class="overlay-text" id="overlay-text">
+            <h1>Page Not Found</h1>
+            <p>The page you are looking for doesn't exist.</p>
+            <a href="index.html" class="btn btn-primary home-btn">Go Home</a>
+        </div>
+    </main>
+
+    <div id="mode-indicator"></div>
+    
+    <div id="hints-panel">
+        <h4>🎮 Secret Controls</h4>
+        <ul>
+            <li><kbd>?</kbd> Toggle this panel</li>
+            <li><kbd>Space</kbd> Explosion</li>
+            <li><kbd>G</kbd> Flip gravity</li>
+            <li><kbd>R</kbd> Reset</li>
+            <li><kbd>M</kbd> Matrix mode</li>
+            <li><kbd>P</kbd> Party mode</li>
+            <li><kbd>S</kbd> Slow motion</li>
+            <li><kbd>F</kbd> Freeze time</li>
+            <li><kbd>V</kbd> Vortex mode</li>
+            <li><kbd>B</kbd> Bouncy mode</li>
+            <li><kbd>↑↓←→</kbd> Wind</li>
+            <li><kbd>1-9</kbd> Spawn that digit</li>
+            <li>Right-click: Zero gravity</li>
+            <li>Double-click: Spawn code</li>
+            <li>Triple-click: Jolt all</li>
+            <li>Hold click: Black hole</li>
+            <li>Konami code: ↑↑↓↓←→←→BA</li>
+        </ul>
+        <h4 style="margin-top: 0.75rem;">⌨️ Type Words</h4>
+        <ul>
+            <li>pizza, cat, dog, money</li>
+            <li>fire, rainbow, dance</li>
+            <li>earthquake, yeet, spin</li>
+            <li>stupid, banana, bruh, sus</li>
+            <li>help - show all commands</li>
+        </ul>
+    </div>
+
+    <div id="achievement">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        <span id="achievement-text">Achievement Unlocked!</span>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls">
+        <button data-action="spawn" title="Spawn Code">➕</button>
+        <button data-action="explode" title="Explosion">💥</button>
+        <button data-action="gravity" title="Flip Gravity">🔄</button>
+        <button data-action="party" title="Party Mode">🎉</button>
+        <button data-action="matrix" title="Matrix Mode">💊</button>
+        <button data-action="reset" title="Reset">🔃</button>
+        <button data-action="zero-g" title="Zero Gravity">🌌</button>
+        <button data-action="bouncy" title="Bouncy">🏀</button>
+        <button data-action="stupid" title="????">🤪</button>
+    </div>
+
+    <!-- Black Hole Visual -->
+    <div id="black-hole">
+        <div class="accretion-disk"></div>
+        <div class="event-horizon"></div>
+    </div>
+
+    <!-- Typing Display -->
+    <div id="typing-display">
+        <span id="typed-text"></span><span class="cursor">|</span>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-container">
+                    <span class="logo-text">ShortcutStudio</span>
+                </div>
+                <p>Automation, Reimagined.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <a href="#">Editor</a>
+                <a href="#">Marketplace</a>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <a href="marketplace.html">Marketplace</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 ShortcutStudio Inc. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="theme.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script>
+        // ============================================
+        // 🎮 ULTIMATE 404 EXPERIENCE
+        // ============================================
+
+        const Engine = Matter.Engine,
+              Render = Matter.Render,
+              Runner = Matter.Runner,
+              Bodies = Matter.Bodies,
+              Body = Matter.Body,
+              Composite = Matter.Composite,
+              Mouse = Matter.Mouse,
+              MouseConstraint = Matter.MouseConstraint,
+              Events = Matter.Events,
+              Vector = Matter.Vector;
+
+        // ============================================
+        // STATE & CONFIG
+        // ============================================
+        const state = {
+            matrixMode: false,
+            slowMotion: false,
+            frozen: false,
+            vortexMode: false,
+            bouncyMode: false,
+            blackHoleActive: false,
+            stupidMode: false,
+            mouseHoldStart: 0,
+            secretBuffer: '',
+            typingBuffer: '',
+            typingTimeout: null,
+            achievements: new Set(JSON.parse(localStorage.getItem('404_achievements') || '[]')),
+            spawnCount: 0,
+            konamiIndex: 0,
+            colorCycle: 0,
+            mouseX: 0,
+            mouseY: 0
+        };
+
+        const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        const ERROR_CODES = ['505', '500', '403', '401', '418', '502', '503', '504', '400', '408', '429', '451', '409', '406', '410', '301', '302', '307', '308', '204', '201', '101'];
+        
+        // Secret typing commands
+        const TYPING_SECRETS = {
+            'pizza': () => { flyEmoji('🍕', 10); showIndicator('🍕 PIZZA TIME!'); },
+            'cat': () => { flyEmoji('🐱', 15); showIndicator('😺 MEOW!'); },
+            'dog': () => { flyEmoji('🐕', 15); showIndicator('🐶 WOOF!'); },
+            'money': () => { flyEmoji('💰', 20); showIndicator('💸 MAKE IT RAIN!'); showAchievement('💰 Cha-Ching - Made it rain!'); },
+            'fire': () => { spawnFire(); showIndicator('🔥 EVERYTHING IS FINE'); },
+            'rainbow': () => { activateRainbowRoad(); showIndicator('🌈 RAINBOW ROAD!'); },
+            'dance': () => { makeBodiesDance(); showIndicator('💃 DANCE PARTY!'); },
+            'earthquake': () => { triggerEarthquake(); showIndicator('🌋 EARTHQUAKE!'); },
+            'yeet': () => { yeetAllBodies(); showIndicator('YEET!', 2000); showAchievement('🚀 Yeeted - Launched everything!'); },
+            'stupid': () => { toggleStupidMode(); },
+            'spin': () => { spinEverything(); showIndicator('🌀 SPINNNN!'); },
+            'love': () => { flyEmoji('❤️', 30); showIndicator('❤️ LOVE IS IN THE AIR'); },
+            'poop': () => { flyEmoji('💩', 25); showIndicator('💩 OH NO...'); },
+            'sus': () => { flyEmoji('📮', 10); showIndicator('📮 AMOGUS'); showAchievement('📮 Sussy Baka - Found among us!'); },
+            'banana': () => { spinBananaRain(); showIndicator('🍌 BANANA!'); },
+            'bruh': () => { bruhMoment(); showIndicator('BRUH'); },
+            'help': () => { showIndicator('Try: pizza, cat, yeet, stupid, dance, earthquake, sus, banana...', 4000); }
+        };
+
+        // ============================================
+        // PARTICLE SYSTEM
+        // ============================================
+        const particleCanvas = document.getElementById('particle-canvas');
+        const pCtx = particleCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeParticleCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+        resizeParticleCanvas();
+        window.addEventListener('resize', resizeParticleCanvas);
+
+        class Particle {
+            constructor(x, y, options = {}) {
+                this.x = x;
+                this.y = y;
+                this.vx = options.vx || (Math.random() - 0.5) * 10;
+                this.vy = options.vy || (Math.random() - 0.5) * 10;
+                this.life = options.life || 1;
+                this.decay = options.decay || 0.02;
+                this.size = options.size || Math.random() * 5 + 2;
+                this.color = options.color || `hsl(${Math.random() * 360}, 70%, 60%)`;
+                this.gravity = options.gravity || 0.1;
+                this.type = options.type || 'normal';
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+                this.scale = 1;
+                this.initialSize = this.size;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.life -= this.decay;
+                this.rotation += this.rotationSpeed;
+                
+                // Dramatic scaling based on life
+                this.scale = this.life * 1.2;
+                
+                if (this.type === 'confetti') {
+                    this.vx *= 0.98;
+                    this.vy *= 0.98;
+                    this.rotationSpeed *= 1.02;
+                }
+                if (this.type === 'matrix') {
+                    this.vy = 8 + Math.random() * 4;
+                    this.vx = 0;
+                }
+                if (this.type === 'firework') {
+                    this.vx *= 0.96;
+                    this.vy *= 0.96;
+                    this.size = this.initialSize * this.life;
+                }
+                if (this.type === 'ember') {
+                    this.vx += (Math.random() - 0.5) * 0.5;
+                    this.vy -= 0.05;
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.min(this.life, 1);
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.scale(this.scale, this.scale);
+                
+                if (this.type === 'matrix') {
+                    ctx.fillStyle = '#0f0';
+                    ctx.shadowColor = '#0f0';
+                    ctx.shadowBlur = 15;
+                    ctx.font = `bold ${this.size * 3}px monospace`;
+                    ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), 0, 0);
+                } else if (this.type === 'confetti') {
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 5;
+                    // Ribbon shape
+                    ctx.beginPath();
+                    ctx.moveTo(-this.size, -this.size/2);
+                    ctx.quadraticCurveTo(0, this.size, this.size, -this.size/2);
+                    ctx.quadraticCurveTo(0, -this.size, -this.size, -this.size/2);
+                    ctx.fill();
+                } else if (this.type === 'sparkle') {
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 20;
+                    // 8-point star
+                    ctx.beginPath();
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (i * Math.PI * 2) / 8;
+                        const r = i % 2 === 0 ? this.size * 2 : this.size * 0.5;
+                        if (i === 0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+                        else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (this.type === 'firework') {
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(0.5, this.color);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 30;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'ember') {
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
+                    gradient.addColorStop(0, '#fff');
+                    gradient.addColorStop(0.3, this.color);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Enhanced normal particle with glow
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        function spawnParticles(x, y, count, options = {}) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, options));
+            }
+        }
+
+        function updateParticles() {
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            
+            // Matrix rain
+            if (state.matrixMode && Math.random() < 0.3) {
+                particles.push(new Particle(
+                    Math.random() * particleCanvas.width,
+                    -20,
+                    { type: 'matrix', life: 2, decay: 0.01, size: 5 + Math.random() * 10, gravity: 0 }
+                ));
+            }
+
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw(pCtx);
+            });
+
+            requestAnimationFrame(updateParticles);
+        }
+        updateParticles();
+
+        // ============================================
+        // PHYSICS SETUP
+        // ============================================
+        const container = document.getElementById('physics-container');
+        const engine = Engine.create();
+        const world = engine.world;
+
+        const render = Render.create({
+            element: container,
+            engine: engine,
+            options: {
+                width: container.clientWidth,
+                height: container.clientHeight,
+                background: 'transparent',
+                wireframes: false,
+                pixelRatio: 1, // Force 1 for consistent performance
+                hasBounds: false,
+                enabled: true,
+                showAngleIndicator: false,
+                showCollisions: false,
+                showVelocity: false
+            }
+        });
+
+        const getVar = (name) => getComputedStyle(document.body).getPropertyValue(name).trim();
+
+        // Original 404 bodies (tracked separately)
+        let originalBodies = [];
+
+        function createTextBody(x, y, text, options = {}) {
+            const size = options.size || 180;
+            const common = {
+                restitution: state.bouncyMode ? 1.5 : 0.8,
+                friction: 0.1,
+                density: 0.04,
+                render: { opacity: 0 }
+            };
+
+            let body;
+
+            if (text === '0' || text === 'O') {
+                body = Bodies.circle(x, y, size * 0.35, common);
+            } else if (text === '4') {
+                const stem = Bodies.rectangle(x + 30, y, 35, size, common);
+                const diag = Bodies.rectangle(x - 25, y - 20, 35, size * 0.65, { ...common, angle: -0.5 });
+                const cross = Bodies.rectangle(x, y + 20, size * 0.8, 35, common);
+                body = Body.create({ parts: [stem, diag, cross], ...common });
+                Body.setPosition(body, { x, y });
+            } else if (text === '5' || text === 'S') {
+                const top = Bodies.rectangle(x, y - 60, size * 0.6, 35, common);
+                const vert = Bodies.rectangle(x - 40, y - 20, 35, 60, common);
+                const bottom = Bodies.circle(x + 5, y + 35, 45, common);
+                body = Body.create({ parts: [top, vert, bottom], ...common });
+                Body.setPosition(body, { x, y });
+            } else if (text === '1' || text === 'I') {
+                body = Bodies.rectangle(x, y, 40, size, common);
+            } else if (text === '8') {
+                const top = Bodies.circle(x, y - 40, 40, common);
+                const bottom = Bodies.circle(x, y + 40, 50, common);
+                body = Body.create({ parts: [top, bottom], ...common });
+                Body.setPosition(body, { x, y });
+            } else if (text === '3') {
+                const t = Bodies.circle(x + 10, y - 50, 35, common);
+                const b = Bodies.circle(x + 10, y + 50, 40, common);
+                body = Body.create({ parts: [t, b], ...common });
+                Body.setPosition(body, { x, y });
+            } else if (text === '2') {
+                const curve = Bodies.circle(x, y - 40, 40, common);
+                const base = Bodies.rectangle(x, y + 50, size * 0.6, 35, common);
+                body = Body.create({ parts: [curve, base], ...common });
+                Body.setPosition(body, { x, y });
+            } else {
+                body = Bodies.rectangle(x, y, size * 0.6, size, common);
+            }
+
+            body.plugin = { 
+                text: text, 
+                hue: options.hue || Math.random() * 360,
+                rainbow: options.rainbow || false
+            };
+            return body;
+        }
+
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        // Walls
+        const wallOptions = { isStatic: true, render: { visible: false } };
+        const ground = Bodies.rectangle(width / 2, height + 50, width * 3, 100, wallOptions);
+        const leftWall = Bodies.rectangle(-50, height / 2, 100, height * 4, wallOptions);
+        const rightWall = Bodies.rectangle(width + 50, height / 2, 100, height * 4, wallOptions);
+        const ceiling = Bodies.rectangle(width / 2, -400, width * 3, 100, wallOptions);
+
+        // Initial 404 - spawn just below ceiling
+        const b1 = createTextBody(width / 2 - 150, 50, '4');
+        const b2 = createTextBody(width / 2, -50, '0');
+        const b3 = createTextBody(width / 2 + 150, 0, '4');
+        originalBodies = [b1, b2, b3];
+
+        Composite.add(world, [ground, leftWall, rightWall, ceiling, b1, b2, b3]);
+
+        // ============================================
+        // MOUSE CONTROLS
+        // ============================================
+        const mouse = Mouse.create(render.canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: { stiffness: 0.05, damping: 0.1, render: { visible: false } }
+        });
+
+        mouseConstraint.mouse.element.removeEventListener("mousewheel", mouseConstraint.mouse.mousewheel);
+        mouseConstraint.mouse.element.removeEventListener("DOMMouseScroll", mouseConstraint.mouse.mousewheel);
+        Composite.add(world, mouseConstraint);
+        
+        // Track mouse position for black hole
+        document.addEventListener('mousemove', (e) => {
+            state.mouseX = e.clientX;
+            state.mouseY = e.clientY;
+        });
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function showIndicator(text, duration = 1500) {
+            const el = document.getElementById('mode-indicator');
+            el.textContent = text;
+            el.classList.add('visible');
+            setTimeout(() => el.classList.remove('visible'), duration);
+        }
+
+        function showAchievement(text) {
+            if (state.achievements.has(text)) return;
+            state.achievements.add(text);
+            localStorage.setItem('404_achievements', JSON.stringify([...state.achievements]));
+            
+            const el = document.getElementById('achievement');
+            document.getElementById('achievement-text').textContent = text;
+            el.classList.add('show');
+            
+            // Confetti explosion!
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    spawnParticles(
+                        window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                        150,
+                        1,
+                        { type: 'confetti', life: 2, decay: 0.01, gravity: 0.2, 
+                          vx: (Math.random() - 0.5) * 20, vy: Math.random() * -15 }
+                    );
+                }, i * 10);
+            }
+            
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        function screenShake() {
+            document.getElementById('main-content').classList.add('screen-shake');
+            setTimeout(() => document.getElementById('main-content').classList.remove('screen-shake'), 500);
+        }
+
+        function getAllBodies() {
+            return Composite.allBodies(world).filter(b => !b.isStatic);
+        }
+        
+        // ============================================
+        // TYPING SECRET EFFECT FUNCTIONS
+        // ============================================
+        function flyEmoji(emoji, count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'flying-element';
+                    el.textContent = emoji;
+                    el.style.top = Math.random() * 80 + 10 + '%';
+                    el.style.animationDuration = (2 + Math.random() * 2) + 's';
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 4000);
+                }, i * 150);
+            }
+        }
+        
+        function spawnFire() {
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    particles.push(new Particle(
+                        Math.random() * width,
+                        height + 50,
+                        { type: 'ember', color: `hsl(${Math.random() * 40 + 10}, 100%, 50%)`, 
+                          life: 3, decay: 0.01, gravity: -0.15, vy: -5 - Math.random() * 10 }
+                    ));
+                }, i * 30);
+            }
+        }
+        
+        function activateRainbowRoad() {
+            const bodies = getAllBodies();
+            bodies.forEach((b, i) => {
+                b.plugin.rainbow = true;
+                setTimeout(() => {
+                    Body.applyForce(b, b.position, { x: 0, y: -0.3 * b.mass });
+                }, i * 100);
+            });
+            // Rainbow particles from bottom
+            for (let i = 0; i < 150; i++) {
+                setTimeout(() => {
+                    const hue = (i * 5) % 360;
+                    particles.push(new Particle(
+                        i * (width / 150),
+                        height,
+                        { type: 'sparkle', color: `hsl(${hue}, 100%, 60%)`, life: 2, gravity: -0.2, vy: -10 }
+                    ));
+                }, i * 20);
+            }
+        }
+        
+        function makeBodiesDance() {
+            const bodies = getAllBodies();
+            let beat = 0;
+            const danceInterval = setInterval(() => {
+                bodies.forEach(b => {
+                    Body.applyForce(b, b.position, {
+                        x: Math.sin(beat) * 0.02 * b.mass,
+                        y: Math.abs(Math.cos(beat * 2)) * -0.03 * b.mass
+                    });
+                    Body.setAngularVelocity(b, Math.sin(beat) * 0.1);
+                });
+                beat += 0.5;
+                if (beat > 20) clearInterval(danceInterval);
+            }, 100);
+        }
+        
+        function triggerEarthquake() {
+            document.getElementById('main-content').classList.add('earthquake');
+            setTimeout(() => document.getElementById('main-content').classList.remove('earthquake'), 500);
+            const bodies = getAllBodies();
+            bodies.forEach(b => {
+                Body.applyForce(b, b.position, {
+                    x: (Math.random() - 0.5) * 0.5,
+                    y: -0.2 * b.mass
+                });
+            });
+            // Debris particles
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle(
+                    Math.random() * width,
+                    0,
+                    { type: 'normal', color: '#888', size: 5 + Math.random() * 10, life: 2, vy: 5 + Math.random() * 10 }
+                ));
+            }
+        }
+        
+        function yeetAllBodies() {
+            const bodies = getAllBodies();
+            bodies.forEach((b, i) => {
+                setTimeout(() => {
+                    Body.setVelocity(b, { x: (Math.random() - 0.5) * 50, y: -30 - Math.random() * 20 });
+                    Body.setAngularVelocity(b, (Math.random() - 0.5) * 2);
+                    spawnParticles(b.position.x, b.position.y, 10, { type: 'sparkle' });
+                }, i * 50);
+            });
+            screenShake();
+        }
+        
+        function toggleStupidMode() {
+            state.stupidMode = !state.stupidMode;
+            document.body.classList.toggle('stupid-mode', state.stupidMode);
+            if (state.stupidMode) {
+                showIndicator('🤪 STUPID MODE ACTIVATED!', 3000);
+                showAchievement('🤪 Big Brain - Activated stupid mode!');
+                // Random emoji rain
+                flyEmoji('🤪', 5);
+                flyEmoji('😂', 5);
+                flyEmoji('💀', 5);
+                // Wacky gravity
+                engine.gravity.y = Math.random() > 0.5 ? 1 : -1;
+                engine.gravity.x = (Math.random() - 0.5) * 2;
+                // Spin everything
+                getAllBodies().forEach(b => Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.5));
+            } else {
+                showIndicator('Stupid Mode OFF');
+                engine.gravity.y = 1;
+                engine.gravity.x = 0;
+                document.body.style.fontFamily = '';
+            }
+        }
+        
+        function spinEverything() {
+            getAllBodies().forEach(b => {
+                Body.setAngularVelocity(b, 0.5);
+            });
+        }
+        
+        function spinBananaRain() {
+            flyEmoji('🍌', 30);
+            getAllBodies().forEach(b => Body.setAngularVelocity(b, 1));
+        }
+        
+        function bruhMoment() {
+            // Everything stops, dramatic pause, then chaos
+            engine.timing.timeScale = 0;
+            document.body.style.filter = 'grayscale(1)';
+            setTimeout(() => {
+                document.body.style.filter = '';
+                engine.timing.timeScale = 1;
+                getAllBodies().forEach(b => {
+                    Body.applyForce(b, b.position, {
+                        x: (Math.random() - 0.5) * 0.5,
+                        y: (Math.random() - 0.5) * 0.5
+                    });
+                });
+                screenShake();
+            }, 1000);
+        }
+        
+        // Typing display handler
+        function updateTypingDisplay(key) {
+            if (key.length === 1 && key.match(/[a-z]/i)) {
+                state.typingBuffer += key.toLowerCase();
+                
+                // Show typing display
+                const display = document.getElementById('typing-display');
+                document.getElementById('typed-text').textContent = state.typingBuffer;
+                display.classList.add('visible');
+                
+                // Clear timeout and set new one
+                clearTimeout(state.typingTimeout);
+                state.typingTimeout = setTimeout(() => {
+                    // Check for secrets before clearing
+                    for (const [secret, action] of Object.entries(TYPING_SECRETS)) {
+                        if (state.typingBuffer.includes(secret)) {
+                            action();
+                            state.typingBuffer = '';
+                            break;
+                        }
+                    }
+                    display.classList.remove('visible');
+                    state.typingBuffer = '';
+                }, 1500);
+                
+                // Check for secrets immediately
+                for (const [secret, action] of Object.entries(TYPING_SECRETS)) {
+                    if (state.typingBuffer.endsWith(secret)) {
+                        action();
+                        state.typingBuffer = '';
+                        display.classList.remove('visible');
+                        clearTimeout(state.typingTimeout);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function spawnCode(code) {
+            const chars = code.split('');
+            chars.forEach((char, i) => {
+                const startX = width / 2 + ((i - (chars.length - 1) / 2) * 150) + (Math.random() * 50 - 25);
+                const body = createTextBody(startX, -200 - (i * 50), char, { rainbow: state.partyMode });
+                Composite.add(world, body);
+            });
+            state.spawnCount += chars.length;
+            
+            if (state.spawnCount >= 10 && !state.achievements.has('Number Hoarder')) {
+                showAchievement('🔢 Number Hoarder - Spawned 10+ digits!');
+            }
+            if (state.spawnCount >= 50 && !state.achievements.has('Digit Maniac')) {
+                showAchievement('🤯 Digit Maniac - 50 digits spawned!');
+            }
+        }
+
+        // ============================================
+        // CLICK HANDLERS
+        // ============================================
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('a, button, nav, footer')) return;
+            
+            // Triple click: Mega jolt
+            if (e.detail === 3) {
+                getAllBodies().forEach(body => {
+                    Body.applyForce(body, body.position, {
+                        x: (Math.random() - 0.5) * 0.8,
+                        y: -0.8 * body.mass
+                    });
+                });
+                screenShake();
+                spawnParticles(e.clientX, e.clientY, 30, { type: 'sparkle' });
+                showIndicator('💥 MEGA JOLT!');
+            }
+        });
+
+        // Double click: Spawn random code
+        render.canvas.addEventListener('dblclick', (e) => {
+            if (e.target.closest('a, button, nav, footer')) return;
+            const code = ERROR_CODES[Math.floor(Math.random() * ERROR_CODES.length)];
+            spawnCode(code);
+            spawnParticles(e.clientX, e.clientY, 20);
+            showIndicator(`Spawned: ${code}`);
+        });
+
+        // Right click: Toggle zero gravity
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('a, button, nav, footer')) return;
+            e.preventDefault();
+            engine.gravity.y = engine.gravity.y === 0 ? 1 : 0;
+            
+            if (engine.gravity.y === 0) {
+                document.body.style.background = '#0a0a1a';
+                showIndicator('🌌 Zero Gravity');
+                showAchievement('🚀 Space Cadet - Disabled gravity!');
+            } else {
+                document.body.style.background = '';
+                showIndicator('⬇️ Gravity Restored');
+            }
+        });
+
+        // Hold for black hole
+        let holdTimeout;
+        const blackHoleEl = document.getElementById('black-hole');
+        
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.closest('a, button, nav, footer')) return;
+            state.mouseHoldStart = Date.now();
+            
+            holdTimeout = setTimeout(() => {
+                state.blackHoleActive = true;
+                blackHoleEl.classList.add('active');
+                showIndicator('🕳️ Black Hole Active!');
+                showAchievement('🕳️ Event Horizon - Created a black hole!');
+            }, 800);
+        });
+
+        document.addEventListener('mouseup', () => {
+            clearTimeout(holdTimeout);
+            if (state.blackHoleActive) {
+                state.blackHoleActive = false;
+                blackHoleEl.classList.remove('active');
+                showIndicator('Black Hole Released');
+            }
+        });
+
+        // ============================================
+        // KEYBOARD CONTROLS
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            const bodies = getAllBodies();
+            
+            // Update typing display for secret words
+            updateTypingDisplay(e.key);
+
+            // Konami Code Detection
+            if (e.key === KONAMI[state.konamiIndex] || key === KONAMI[state.konamiIndex]) {
+                state.konamiIndex++;
+                if (state.konamiIndex === KONAMI.length) {
+                    // KONAMI CODE ACTIVATED!
+                    state.konamiIndex = 0;
+                    showIndicator('🎮 KONAMI CODE ACTIVATED!', 3000);
+                    showAchievement('🎮 Old School - Entered the Konami Code!');
+                    
+                    // Epic rainbow explosion
+                    for (let i = 0; i < 200; i++) {
+                        setTimeout(() => {
+                            spawnParticles(
+                                Math.random() * window.innerWidth,
+                                Math.random() * window.innerHeight,
+                                1,
+                                { type: 'confetti', life: 3, decay: 0.005, gravity: 0.05,
+                                  vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30 }
+                            );
+                        }, i * 10);
+                    }
+                    
+                    // Make all bodies rainbow and super bouncy
+                    bodies.forEach(b => {
+                        b.plugin.rainbow = true;
+                        b.restitution = 1.2;
+                        Body.applyForce(b, b.position, {
+                            x: (Math.random() - 0.5) * 0.5,
+                            y: (Math.random() - 0.5) * 0.5
+                        });
+                    });
+                    
+                    screenShake();
+                }
+            } else {
+                state.konamiIndex = 0;
+            }
+
+            // Secret word detection
+            state.secretBuffer += key;
+            if (state.secretBuffer.length > 20) state.secretBuffer = state.secretBuffer.slice(-20);
+            
+            if (state.secretBuffer.includes('teapot')) {
+                state.secretBuffer = '';
+                spawnCode('418');
+                showIndicator("🫖 I'm a teapot!");
+                showAchievement("🫖 Tea Time - Summoned the legendary 418!");
+            }
+            if (state.secretBuffer.includes('chaos')) {
+                state.secretBuffer = '';
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => spawnCode(ERROR_CODES[Math.floor(Math.random() * ERROR_CODES.length)]), i * 200);
+                }
+                showIndicator('😈 CHAOS MODE!');
+                screenShake();
+            }
+            if (state.secretBuffer.includes('nuke')) {
+                state.secretBuffer = '';
+                bodies.forEach(b => {
+                    Body.applyForce(b, b.position, { x: (Math.random() - 0.5) * 2, y: -2 * b.mass });
+                });
+                screenShake();
+                showIndicator('☢️ NUKED!');
+                for (let i = 0; i < 100; i++) {
+                    spawnParticles(width/2, height/2, 1, { 
+                        type: 'sparkle', 
+                        vx: (Math.random() - 0.5) * 40, 
+                        vy: (Math.random() - 0.5) * 40,
+                        color: '#ff4400',
+                        life: 2
+                    });
+                }
+            }
+
+            // Number keys: spawn that digit
+            if (/^[0-9]$/.test(e.key)) {
+                const body = createTextBody(
+                    Math.random() * width * 0.6 + width * 0.2,
+                    -250,
+                    e.key,
+                    { rainbow: state.partyMode }
+                );
+                Composite.add(world, body);
+                state.spawnCount++;
+                return;
+            }
+
+            switch (key) {
+                case ' ': // Spacebar: Explosion
+                    e.preventDefault();
+                    const centerX = mouse.position.x || width / 2;
+                    const centerY = mouse.position.y || height / 2;
+                    bodies.forEach(body => {
+                        const angle = Math.atan2(body.position.y - centerY, body.position.x - centerX);
+                        const dist = Vector.magnitude(Vector.sub(body.position, { x: centerX, y: centerY }));
+                        const force = Math.max(0.01, 0.15 - dist / 1500) * body.mass;
+                        Body.applyForce(body, body.position, {
+                            x: Math.cos(angle) * force,
+                            y: Math.sin(angle) * force
+                        });
+                    });
+                    // Dramatic multi-layer explosion
+                    spawnFireworks(centerX, centerY, 40);
+                    for (let i = 0; i < 30; i++) {
+                        setTimeout(() => {
+                            spawnParticles(centerX + (Math.random()-0.5)*100, centerY + (Math.random()-0.5)*100, 3, { 
+                                type: 'ember',
+                                color: `hsl(${20 + Math.random()*30}, 100%, 60%)`,
+                                life: 2,
+                                gravity: -0.05
+                            });
+                        }, i * 20);
+                    }
+                    screenShake();
+                    showIndicator('💥 BOOM!');
+                    break;
+
+                case 'g': // Flip gravity
+                    engine.gravity.y *= -1;
+                    showIndicator(engine.gravity.y < 0 ? '⬆️ Gravity Flipped!' : '⬇️ Gravity Normal');
+                    if (engine.gravity.y < 0) showAchievement('🙃 Upside Down - Flipped gravity!');
+                    break;
+
+                case 'r': // Reset
+                    const toRemove = bodies.filter(b => !originalBodies.includes(b));
+                    Composite.remove(world, toRemove);
+                    originalBodies.forEach((b, i) => {
+                        Body.setPosition(b, { x: width / 2 + (i - 1) * 150, y: 100 });
+                        Body.setVelocity(b, { x: 0, y: 0 });
+                        Body.setAngularVelocity(b, 0);
+                        Body.setAngle(b, 0);
+                    });
+                    engine.gravity.y = 1;
+                    engine.timing.timeScale = 1;
+                    state.partyMode = false;
+                    state.matrixMode = false;
+                    state.bouncyMode = false;
+                    document.body.classList.remove('party-mode', 'matrix-mode', 'vortex-mode');
+                    document.body.style.background = '';
+                    document.body.style.filter = '';
+                    showIndicator('🔄 Reset!');
+                    break;
+
+                case 'm': // Matrix mode
+                    state.matrixMode = !state.matrixMode;
+                    document.body.classList.toggle('matrix-mode', state.matrixMode);
+                    showIndicator(state.matrixMode ? '💊 Matrix Mode ON' : 'Matrix Mode OFF');
+                    if (state.matrixMode) showAchievement('💊 Red Pill - Entered the Matrix!');
+                    break;
+
+                case 'p': // Party mode
+                    state.partyMode = !state.partyMode;
+                    document.body.classList.toggle('party-mode', state.partyMode);
+                    if (state.partyMode) {
+                        bodies.forEach(b => b.plugin.rainbow = true);
+                        // Dramatic party entrance
+                        spawnFireworks(width/2, height/2, 60);
+                        for (let i = 0; i < 100; i++) {
+                            setTimeout(() => {
+                                spawnParticles(
+                                    Math.random() * width,
+                                    -20,
+                                    1,
+                                    { type: 'confetti', life: 3, decay: 0.01, gravity: 0.15,
+                                      vx: (Math.random() - 0.5) * 5, vy: Math.random() * 3 + 2 }
+                                );
+                            }, i * 30);
+                        }
+                        screenShake();
+                        showIndicator('🎉 PARTY MODE!');
+                        showAchievement('🎉 Party Animal - Activated party mode!');
+                    } else {
+                        bodies.forEach(b => b.plugin.rainbow = false);
+                        showIndicator('Party Mode OFF');
+                    }
+                    break;
+
+                case 's': // Slow motion toggle
+                    state.slowMotion = !state.slowMotion;
+                    engine.timing.timeScale = state.slowMotion ? 0.2 : 1;
+                    showIndicator(state.slowMotion ? '🐌 Slow Motion' : '▶️ Normal Speed');
+                    break;
+
+                case 'f': // Freeze
+                    state.frozen = !state.frozen;
+                    engine.timing.timeScale = state.frozen ? 0 : 1;
+                    showIndicator(state.frozen ? '❄️ Time Frozen' : '▶️ Time Resumed');
+                    if (state.frozen) showAchievement('❄️ Ice Age - Froze time!');
+                    break;
+
+                case 'v': // Vortex mode
+                    state.vortexMode = !state.vortexMode;
+                    document.body.classList.toggle('vortex-mode', state.vortexMode);
+                    showIndicator(state.vortexMode ? '🌀 Vortex Mode ON' : 'Vortex Mode OFF');
+                    break;
+
+                case 'b': // Bouncy mode
+                    state.bouncyMode = !state.bouncyMode;
+                    bodies.forEach(b => b.restitution = state.bouncyMode ? 1.3 : 0.8);
+                    showIndicator(state.bouncyMode ? '🏀 Super Bouncy!' : 'Normal Bounce');
+                    break;
+
+                case 'c': // Clear extras
+                    const extras = bodies.filter(b => !originalBodies.includes(b));
+                    extras.forEach(b => {
+                        spawnParticles(b.position.x, b.position.y, 10);
+                    });
+                    Composite.remove(world, extras);
+                    state.spawnCount = 3;
+                    showIndicator('🧹 Cleared!');
+                    break;
+
+                case 'x': // Explode random body
+                    if (bodies.length > 0) {
+                        const target = bodies[Math.floor(Math.random() * bodies.length)];
+                        spawnParticles(target.position.x, target.position.y, 30, { type: 'sparkle' });
+                        if (!originalBodies.includes(target)) {
+                            Composite.remove(world, target);
+                        } else {
+                            Body.applyForce(target, target.position, {
+                                x: (Math.random() - 0.5) * 0.3,
+                                y: -0.3
+                            });
+                        }
+                        screenShake();
+                        showIndicator('💣 Kaboom!');
+                    }
+                    break;
+
+                case 'arrowup':
+                    e.preventDefault();
+                    bodies.forEach(b => Body.applyForce(b, b.position, { x: 0, y: -0.02 * b.mass }));
+                    showIndicator('💨 Wind: Up');
+                    break;
+                case 'arrowdown':
+                    e.preventDefault();
+                    bodies.forEach(b => Body.applyForce(b, b.position, { x: 0, y: 0.02 * b.mass }));
+                    showIndicator('💨 Wind: Down');
+                    break;
+                case 'arrowleft':
+                    bodies.forEach(b => Body.applyForce(b, b.position, { x: -0.02 * b.mass, y: 0 }));
+                    showIndicator('💨 Wind: Left');
+                    break;
+                case 'arrowright':
+                    bodies.forEach(b => Body.applyForce(b, b.position, { x: 0.02 * b.mass, y: 0 }));
+                    showIndicator('💨 Wind: Right');
+                    break;
+
+                case '?':
+                case '/':
+                    document.getElementById('hints-panel').classList.toggle('visible');
+                    break;
+
+                case 'h': // Hide UI
+                    document.getElementById('overlay-text').style.opacity = 
+                        document.getElementById('overlay-text').style.opacity === '0' ? '1' : '0';
+                    break;
+
+                case 'i': // Invert colors
+                    const current = document.body.style.filter;
+                    document.body.style.filter = current.includes('invert') ? '' : 'invert(1) hue-rotate(180deg)';
+                    showIndicator('🎨 Colors Inverted');
+                    break;
+
+                case 'o': // Orbit mode - make bodies orbit mouse
+                    bodies.forEach(b => {
+                        const dx = mouse.position.x - b.position.x;
+                        const dy = mouse.position.y - b.position.y;
+                        const angle = Math.atan2(dy, dx) + Math.PI / 2;
+                        Body.setVelocity(b, { x: Math.cos(angle) * 5, y: Math.sin(angle) * 5 });
+                    });
+                    showIndicator('🌙 Orbit!');
+                    break;
+
+                case 't': // Tornado
+                    bodies.forEach(b => {
+                        const dx = width/2 - b.position.x;
+                        const dy = height/2 - b.position.y;
+                        const angle = Math.atan2(dy, dx) + Math.PI / 2;
+                        Body.applyForce(b, b.position, { 
+                            x: Math.cos(angle) * 0.01 * b.mass, 
+                            y: Math.sin(angle) * 0.01 * b.mass - 0.01 * b.mass
+                        });
+                    });
+                    showIndicator('🌪️ Tornado!');
+                    break;
+            }
+        });
+
+        // ============================================
+        // DEVICE MOTION (Mobile shake)
+        // ============================================
+        let lastAcc = { x: 0, y: 0, z: 0 };
+        window.addEventListener('devicemotion', (e) => {
+            if (!e.accelerationIncludingGravity) return;
+            const { x, y, z } = e.accelerationIncludingGravity;
+            const delta = Math.abs(x - lastAcc.x) + Math.abs(y - lastAcc.y) + Math.abs(z - lastAcc.z);
+            
+            if (delta > 20) {
+                getAllBodies().forEach(body => {
+                    Body.applyForce(body, body.position, {
+                        x: (Math.random() - 0.5) * 0.3,
+                        y: (Math.random() - 0.5) * 0.3
+                    });
+                });
+                screenShake();
+                // Spawn dramatic particles on shake
+                spawnParticles(width/2, height/2, 30, { 
+                    type: 'firework',
+                    vx: (Math.random() - 0.5) * 30,
+                    vy: (Math.random() - 0.5) * 30,
+                    life: 1.5
+                });
+            }
+            lastAcc = { x, y, z };
+        });
+
+        // ============================================
+        // MOBILE TOUCH CONTROLS
+        // ============================================
+        document.getElementById('mobile-controls')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            
+            const action = btn.dataset.action;
+            const bodies = getAllBodies();
+            
+            switch(action) {
+                case 'spawn':
+                    const code = ERROR_CODES[Math.floor(Math.random() * ERROR_CODES.length)];
+                    spawnCode(code);
+                    spawnFireworks(width/2, height/3, 20);
+                    showIndicator(`Spawned: ${code}`);
+                    break;
+                    
+                case 'explode':
+                    bodies.forEach(body => {
+                        const angle = Math.atan2(body.position.y - height/2, body.position.x - width/2);
+                        Body.applyForce(body, body.position, {
+                            x: Math.cos(angle) * 0.1 * body.mass,
+                            y: Math.sin(angle) * 0.1 * body.mass
+                        });
+                    });
+                    spawnFireworks(width/2, height/2, 50);
+                    screenShake();
+                    showIndicator('💥 BOOM!');
+                    break;
+                    
+                case 'gravity':
+                    engine.gravity.y *= -1;
+                    showIndicator(engine.gravity.y < 0 ? '⬆️ Gravity Flipped!' : '⬇️ Gravity Normal');
+                    break;
+                    
+                case 'party':
+                    state.partyMode = !state.partyMode;
+                    document.body.classList.toggle('party-mode', state.partyMode);
+                    if (state.partyMode) {
+                        bodies.forEach(b => b.plugin.rainbow = true);
+                        spawnFireworks(width/2, height/2, 40);
+                        showIndicator('🎉 PARTY MODE!');
+                    } else {
+                        bodies.forEach(b => b.plugin.rainbow = false);
+                        showIndicator('Party Mode OFF');
+                    }
+                    break;
+                    
+                case 'matrix':
+                    state.matrixMode = !state.matrixMode;
+                    document.body.classList.toggle('matrix-mode', state.matrixMode);
+                    showIndicator(state.matrixMode ? '💊 Matrix Mode ON' : 'Matrix Mode OFF');
+                    break;
+                    
+                case 'reset':
+                    const toRemove = bodies.filter(b => !originalBodies.includes(b));
+                    Composite.remove(world, toRemove);
+                    originalBodies.forEach((b, i) => {
+                        Body.setPosition(b, { x: width / 2 + (i - 1) * 150, y: 100 });
+                        Body.setVelocity(b, { x: 0, y: 0 });
+                        Body.setAngularVelocity(b, 0);
+                        Body.setAngle(b, 0);
+                    });
+                    engine.gravity.y = 1;
+                    state.partyMode = false;
+                    state.matrixMode = false;
+                    document.body.classList.remove('party-mode', 'matrix-mode');
+                    document.body.style.background = '';
+                    showIndicator('🔄 Reset!');
+                    break;
+                    
+                case 'zero-g':
+                    engine.gravity.y = engine.gravity.y === 0 ? 1 : 0;
+                    showIndicator(engine.gravity.y === 0 ? '🌌 Zero Gravity' : '⬇️ Gravity Restored');
+                    break;
+                    
+                case 'bouncy':
+                    state.bouncyMode = !state.bouncyMode;
+                    bodies.forEach(b => b.restitution = state.bouncyMode ? 1.3 : 0.8);
+                    showIndicator(state.bouncyMode ? '🏀 Super Bouncy!' : 'Normal Bounce');
+                    break;
+                    
+                case 'stupid':
+                    toggleStupidMode();
+                    break;
+            }
+            
+            // Button feedback
+            btn.style.transform = 'scale(0.9)';
+            setTimeout(() => btn.style.transform = '', 100);
+        });
+
+        // Touch-based spawn on double tap
+        let lastTap = 0;
+        let tapCount = 0;
+        document.addEventListener('touchend', (e) => {
+            if (e.target.closest('a, button, nav, footer, #mobile-controls')) return;
+            
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                tapCount++;
+                if (tapCount === 2) {
+                    // Double tap: spawn code
+                    const touch = e.changedTouches[0];
+                    const code = ERROR_CODES[Math.floor(Math.random() * ERROR_CODES.length)];
+                    spawnCode(code);
+                    spawnParticles(touch.clientX, touch.clientY, 20, { type: 'firework' });
+                    showIndicator(`Spawned: ${code}`);
+                } else if (tapCount === 3) {
+                    // Triple tap: mega jolt
+                    getAllBodies().forEach(body => {
+                        Body.applyForce(body, body.position, {
+                            x: (Math.random() - 0.5) * 0.8,
+                            y: -0.8 * body.mass
+                        });
+                    });
+                    screenShake();
+                    spawnFireworks(width/2, height/2, 50);
+                    showIndicator('💥 MEGA JOLT!');
+                    tapCount = 0;
+                }
+            } else {
+                tapCount = 1;
+            }
+            lastTap = now;
+        });
+
+        // Helper: Spawn dramatic fireworks
+        function spawnFireworks(x, y, count) {
+            const colors = ['#ff006e', '#fb5607', '#ffbe0b', '#3a86ff', '#8338ec', '#06d6a0'];
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                const speed = 5 + Math.random() * 10;
+                particles.push(new Particle(x, y, {
+                    type: 'firework',
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.5,
+                    decay: 0.02,
+                    size: 8 + Math.random() * 8,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    gravity: 0.05
+                }));
+            }
+        }
+
+        // ============================================
+        // PHYSICS UPDATE LOOP
+        // ============================================
+        Events.on(engine, 'beforeUpdate', () => {
+            const bodies = getAllBodies();
+            
+            // Update black hole visual position
+            if (state.blackHoleActive) {
+                blackHoleEl.style.left = state.mouseX + 'px';
+                blackHoleEl.style.top = state.mouseY + 'px';
+            }
+            
+            // Black hole effect - SUPER STRONG
+            if (state.blackHoleActive && mouse.position) {
+                bodies.forEach(body => {
+                    const dx = mouse.position.x - body.position.x;
+                    const dy = mouse.position.y - body.position.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 10) {
+                        const force = 0.005 * body.mass / (dist / 50); // 5x stronger
+                        Body.applyForce(body, body.position, {
+                            x: dx / dist * force,
+                            y: dy / dist * force
+                        });
+                        // Delete body if very close
+                        if (dist < 60 && !originalBodies.includes(body)) {
+                            Composite.remove(world, body);
+                            spawnParticles(body.position.x, body.position.y, 15, { 
+                                type: 'sparkle', 
+                                color: '#8b5cf6',
+                                life: 0.5
+                            });
+                        }
+                    }
+                });
+                // Eat page elements near black hole
+                const pageElements = ['nav', 'footer', '#hints-panel', '#mode-indicator', '#mobile-controls', '#overlay-text'];
+                pageElements.forEach(selector => {
+                    const el = document.querySelector(selector);
+                    if (el) {
+                        const rect = el.getBoundingClientRect();
+                        const elCenterX = rect.left + rect.width / 2;
+                        const elCenterY = rect.top + rect.height / 2;
+                        const dx = state.mouseX - elCenterX;
+                        const dy = state.mouseY - elCenterY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 200) {
+                            const scale = Math.max(0, 1 - (200 - dist) / 200);
+                            const blur = (1 - scale) * 10;
+                            el.style.transform = `scale(${scale}) translate(${dx * 0.1}px, ${dy * 0.1}px)`;
+                            el.style.filter = `blur(${blur}px)`;
+                            el.style.opacity = scale;
+                        } else {
+                            el.style.transform = '';
+                            el.style.filter = '';
+                            el.style.opacity = '';
+                        }
+                    }
+                });
+                // Visual feedback - spiral particles into black hole
+                for (let i = 0; i < 3; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 80 + Math.random() * 40;
+                    particles.push(new Particle(
+                        mouse.position.x + Math.cos(angle) * dist,
+                        mouse.position.y + Math.sin(angle) * dist,
+                        { 
+                            size: 2 + Math.random() * 3, 
+                            life: 0.8, 
+                            decay: 0.03,
+                            vx: Math.cos(angle + Math.PI/2) * 3,
+                            vy: Math.sin(angle + Math.PI/2) * 3,
+                            gravity: 0,
+                            color: `hsl(${270 + Math.random() * 30}, 100%, ${50 + Math.random() * 30}%)`
+                        }
+                    ));
+                }
+            } else {
+                // Reset page elements when black hole is off
+                const pageElements = ['nav', 'footer', '#hints-panel', '#mode-indicator', '#mobile-controls', '#overlay-text'];
+                pageElements.forEach(selector => {
+                    const el = document.querySelector(selector);
+                    if (el && el.style.transform) {
+                        el.style.transform = '';
+                        el.style.filter = '';
+                        el.style.opacity = '';
+                    }
+                });
+            }
+
+            // Vortex mode: bodies orbit mouse
+            if (state.vortexMode && mouse.position) {
+                bodies.forEach(body => {
+                    const dx = mouse.position.x - body.position.x;
+                    const dy = mouse.position.y - body.position.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 50 && dist < 400) {
+                        const angle = Math.atan2(dy, dx) + Math.PI / 2;
+                        Body.applyForce(body, body.position, {
+                            x: Math.cos(angle) * 0.0003 * body.mass + dx * 0.000005 * body.mass,
+                            y: Math.sin(angle) * 0.0003 * body.mass + dy * 0.000005 * body.mass
+                        });
+                    }
+                });
+            }
+
+        });
+
+        // ============================================
+        // CUSTOM RENDERING
+        // ============================================
+        Events.on(render, 'afterRender', function() {
+            const ctx = render.context;
+            const bodies = Composite.allBodies(world);
+            state.colorCycle += 0.02;
+
+            ctx.font = "900 180px 'Inter', sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            bodies.forEach(body => {
+                if (body.plugin && body.plugin.text) {
+                    const { x, y } = body.position;
+                    const angle = body.angle;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle);
+
+                    // Color based on mode
+                    let fillStyle;
+                    let glowColor;
+                    
+                    if (state.matrixMode) {
+                        fillStyle = '#0f0';
+                    } else if (body.plugin.rainbow || state.partyMode) {
+                        const hue = (state.colorCycle * 100 + body.plugin.hue) % 360;
+                        fillStyle = `hsl(${hue}, 85%, 60%)`;
+                    } else {
+                        const gradient = ctx.createLinearGradient(-60, -80, 60, 80);
+                        gradient.addColorStop(0, '#60a5fa');
+                        gradient.addColorStop(0.5, getVar('--primary-color') || '#3b82f6');
+                        gradient.addColorStop(1, '#a855f7');
+                        fillStyle = gradient;
+                    }
+
+                    // Draw text outline for depth
+                    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                    ctx.lineWidth = 8;
+                    ctx.strokeText(body.plugin.text, 2, 12);
+                    
+                    // Main text
+                    ctx.fillStyle = fillStyle;
+                    ctx.fillText(body.plugin.text, 0, 10);
+                    
+                    // Subtle highlight on top
+                    ctx.globalAlpha = 0.3;
+                    ctx.fillStyle = '#fff';
+                    ctx.font = "900 176px 'Inter', sans-serif";
+                    ctx.fillText(body.plugin.text, 0, 6);
+                    ctx.globalAlpha = 1;
+                    
+                    ctx.restore();
+                }
+            });
+        });
+
+        // ============================================
+        // COLLISION EVENTS
+        // ============================================
+        // Collision events disabled for performance
+
+        // ============================================
+        // START ENGINE
+        // ============================================
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+
+        // ============================================
+        // RESIZE HANDLER
+        // ============================================
+        window.addEventListener('resize', () => {
+            render.canvas.width = container.clientWidth;
+            render.canvas.height = container.clientHeight;
+            Body.setPosition(ground, { x: container.clientWidth / 2, y: container.clientHeight + 50 });
+            Body.setPosition(rightWall, { x: container.clientWidth + 50, y: container.clientHeight / 2 });
+        });
+
+        // ============================================
+        // INTRO ANIMATION
+        // ============================================
+        setTimeout(() => {
+            showIndicator('Press ? for secret controls', 3000);
+        }, 2000);
+
+        // Check for returning players
+        if (state.achievements.size > 0) {
+            setTimeout(() => showIndicator(`Welcome back! ${state.achievements.size} achievements unlocked`, 2500), 500);
+        }
+
+        console.log('%c🎮 Ultimate 404 Experience', 'font-size: 20px; font-weight: bold; color: #3b82f6');
+        console.log('%cPress ? to see all secret controls!', 'font-size: 14px; color: #8b5cf6');
+    </script>
+</body>
+
+</html>
