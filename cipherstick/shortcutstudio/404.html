@@ -371,43 +371,7 @@
             height: 24px;
         }
 
-        /* Mobile Controls */
-        #mobile-controls {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 90vw;
-        }
-
-        #mobile-controls button {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            color: var(--heading-color);
-            padding: 0.6rem 1rem;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.2s;
-            touch-action: manipulation;
-        }
-
-        #mobile-controls button:active {
-            transform: scale(0.95);
-            background: var(--primary-color);
-            color: white;
-        }
-
         @media (max-width: 768px) {
-            #mobile-controls {
-                display: flex;
-            }
             #hints-panel {
                 display: none !important;
             }
@@ -416,12 +380,6 @@
             }
             .overlay-text p {
                 font-size: 0.9rem;
-            }
-        }
-
-        @media (pointer: coarse) {
-            #mobile-controls {
-                display: flex;
             }
         }
 
@@ -511,19 +469,6 @@
     <div id="achievement">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
         <span id="achievement-text">Achievement Unlocked!</span>
-    </div>
-
-    <!-- Mobile Controls -->
-    <div id="mobile-controls">
-        <button data-action="spawn" title="Spawn Code">➕</button>
-        <button data-action="explode" title="Explosion">💥</button>
-        <button data-action="gravity" title="Flip Gravity">🔄</button>
-        <button data-action="party" title="Party Mode">🎉</button>
-        <button data-action="matrix" title="Matrix Mode">💊</button>
-        <button data-action="reset" title="Reset">🔃</button>
-        <button data-action="zero-g" title="Zero Gravity">🌌</button>
-        <button data-action="bouncy" title="Bouncy">🏀</button>
-        <button data-action="stupid" title="????">🤪</button>
     </div>
 
     <!-- Black Hole Visual -->
