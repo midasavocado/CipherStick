@@ -1,8 +1,1 @@
-{
-  "action": "Alert",
-  "params": {
-    "AlertActionMessage": "{{STRING}}",
-    "AlertActionTitle": "{{STRING}}",
-    "ShowCancelButton": "{{BOOLEAN}}"
-  }
-}
+{"a":"Alert","p":{"AlertActionMessage":"{{S}}","AlertActionTitle":"{{S}}","ShowCancelButton":"{{B}}"}}

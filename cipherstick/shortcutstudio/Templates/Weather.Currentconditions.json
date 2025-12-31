@@ -1,4 +1,1 @@
-{
-  "action": "Weather.Currentconditions",
-  "params": {}
-}
+{"a":"Weather.Currentconditions","p":{}}

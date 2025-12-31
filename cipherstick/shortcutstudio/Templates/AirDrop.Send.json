@@ -1,6 +1,1 @@
-{
-  "action": "AirDrop.Send",
-  "params": {
-    "Input": "{{VARIABLE}}"
-  }
-}
+{"a":"AirDrop.Send","p":{"Input":"{{V}}"}}

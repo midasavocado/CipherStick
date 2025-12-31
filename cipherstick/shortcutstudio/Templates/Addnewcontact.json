@@ -1,13 +1,1 @@
-{
-  "action": "Addnewcontact",
-  "params": {
-    "ContactCompany": "{{STRING}}",
-    "ContactEmail": "{{VARIABLE}}",
-    "ContactFirstName": "{{STRING}}",
-    "ContactLastName": "{{STRING}}",
-    "ContactNotes": "{{STRING}}",
-    "ContactPhoneNumber": "{{VARIABLE}}",
-    "ContactPhoto": "{{VARIABLE}}",
-    "ShowWhenRun": "{{VARIABLE}}"
-  }
-}
+{"a":"Addnewcontact","p":{"ContactCompany":"{{S}}","ContactEmail":"{{V}}","ContactFirstName":"{{S}}","ContactLastName":"{{S}}","ContactNotes":"{{S}}","ContactPhoneNumber":"{{V}}","ContactPhoto":"{{V}}","ShowWhenRun":"{{V}}"}}

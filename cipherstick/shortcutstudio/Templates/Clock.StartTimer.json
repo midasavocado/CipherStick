@@ -1,7 +1,1 @@
-{
-  "action": "Clock.IncreateTimer",
-  "params": {
-    "Duration": "{{NUMBER}}",
-    "Unit": "min/sec/hr"
-  }
-}
+{"a":"Clock.IncreateTimer","p":{"Duration":"{{N}}","Unit":"min/sec/hr"}}

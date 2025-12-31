@@ -1,8 +1,1 @@
-{
-  "action": "ChatGpt.OpenNewChatInApp",
-  "params": {
-    "StartWhisper": "{{BOOLEAN}}",
-    "TemporaryChat": "{{BOOLEAN}}",
-    "UseSearchGpt": "{{BOOLEAN}}"
-  }
-}
+{"a":"ChatGpt.OpenNewChatInApp","p":{"StartWhisper":"{{B}}","TemporaryChat":"{{B}}","UseSearchGpt":"{{B}}"}}

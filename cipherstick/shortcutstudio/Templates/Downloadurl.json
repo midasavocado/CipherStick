@@ -1,6 +1,1 @@
-{
-  "action": "Downloadurl",
-  "params": {
-    "URL": "{{STRING}}"
-  }
-}
+{"a":"Downloadurl","p":{"URL":"{{S}}"}}

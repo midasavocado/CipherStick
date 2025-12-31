@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShortcutStudio - Shortcut Details</title>
     <meta name="description" content="Download this Apple Shortcut for free on ShortcutStudio.">
-    <link rel="icon"
-        href="icon.png">
+    <link rel="icon" href="icon.png">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/utilities.css">
@@ -19,55 +18,398 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .detail-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: 2rem 1.5rem;
         }
 
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .back-link svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Header Section */
         .detail-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 1.5rem;
             margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .detail-icon {
             width: 80px;
             height: 80px;
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
-            box-shadow: var(--shadow-md);
+            flex-shrink: 0;
+        }
+
+        .detail-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .detail-info {
+            flex: 1;
         }
 
         .detail-info h1 {
-            font-size: 2rem;
+            font-size: 1.75rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
+            color: var(--heading-color);
         }
 
         .detail-meta {
-            color: var(--text-muted);
             display: flex;
+            align-items: center;
             gap: 1rem;
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
 
+        .detail-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .detail-meta svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Actions Bar */
         .detail-actions {
             display: flex;
             gap: 1rem;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
-        .preview-box {
+        .btn-get-lg {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-get-lg:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-get-lg svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-remix {
+            padding: 1rem 1.5rem;
+            background: var(--surface-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-remix:hover {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .btn-remix svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Section Cards */
+        .section-card {
             background: var(--surface-color);
             border: 1px solid var(--border-color);
             border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--heading-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-card h3 svg {
+            width: 18px;
+            height: 18px;
+            color: var(--primary-color);
+        }
+
+        .description-text {
+            line-height: 1.7;
+            color: var(--text-color);
+        }
+
+        /* Action Tree Preview - Reddit Style */
+        .action-tree {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Profile Modal */
+        .avatar-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-modal.active {
+            display: flex;
+        }
+
+        .avatar-modal-content {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
             padding: 2rem;
-            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
+            position: relative;
+        }
+
+        .action-node {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .action-node::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+            border-radius: 1px;
+        }
+
+        .action-node:last-child::before {
+            height: 1.2rem;
+        }
+
+        .action-item {
+            position: relative;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.5rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.15s;
+        }
+
+        .action-item:hover {
+            border-color: var(--primary-color);
+            transform: translateX(2px);
+        }
+
+        .action-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 50%;
+            width: 1.5rem;
+            height: 2px;
+            background: var(--border-color);
+        }
+
+        .action-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.75rem;
+        }
+
+        .action-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .action-icon.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .action-icon.purple { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+        .action-icon.green { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .action-icon.orange { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+        .action-icon.red { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .action-icon.cyan { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+        .action-icon.pink { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+        .action-icon.yellow { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .action-icon.gray { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+
+        .action-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .action-name {
+            font-weight: 600;
+            color: var(--heading-color);
+            font-size: 0.85rem;
+        }
+
+        .action-params {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .action-badge {
+            padding: 0.15rem 0.5rem;
+            background: rgba(139, 92, 246, 0.15);
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #8b5cf6;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        /* Nested actions (If/Else, Repeat, etc.) */
+        .action-children {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+            position: relative;
+        }
+
+        .action-branch {
+            position: relative;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-branch-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-color);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .action-branch-label.then { color: #22c55e; }
+        .action-branch-label.else { color: #f97316; }
+        .action-branch-label.repeat { color: #8b5cf6; }
+
+        /* Root level - no line above first item */
+        .action-tree > .action-node:first-child > .action-item::before {
+            display: none;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-color);
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--heading-color);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .detail-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .detail-meta {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .detail-actions {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -94,54 +436,155 @@
     </nav>
 
     <main class="detail-container" style="padding-top: 100px;">
-        <a href="marketplace.html" class="btn-text"
-            style="margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
+        <a href="marketplace.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5"></path>
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
             Back to Marketplace
         </a>
 
         <div class="detail-header">
-            <div class="detail-icon" id="item-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+            <div class="detail-icon purple" id="item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path>
                 </svg>
             </div>
             <div class="detail-info">
                 <h1 id="item-title">Loading...</h1>
                 <div class="detail-meta">
-                    <span id="item-author">@shortcutstudio</span>
-                    <span>•</span>
-                    <span id="item-uses">0 uses</span>
+                    <span id="item-author">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        @shortcutstudio
+                    </span>
+                    <span id="item-downloads">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        0 downloads
+                    </span>
+                    <span id="item-actions-count">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 3v12"></path>
+                            <path d="m8 11 4 4 4-4"></path>
+                            <path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"></path>
+                        </svg>
+                        0 actions
+                    </span>
                 </div>
             </div>
         </div>
 
         <div class="detail-actions">
-            <button class="btn btn-primary-lg" onclick="handleGet()" style="flex: 1;">
+            <button class="btn-get-lg" onclick="handleGet()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
                 Get Shortcut
             </button>
-            <button class="btn btn-secondary" onclick="handleRemix()" style="flex: 1;">
+            <button class="btn-remix" onclick="handleRemix()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 3v3"></path>
+                    <path d="M18.5 13h-13"></path>
+                    <path d="m8 17 4 4 4-4"></path>
+                    <path d="M12 13v8"></path>
+                    <path d="M18.36 5.64a9 9 0 1 1-12.73 0"></path>
+                </svg>
                 Remix in Editor
             </button>
         </div>
 
-        <div class="preview-box">
-            <h3 style="margin-bottom: 1rem;">Description</h3>
-            <p id="item-desc" style="line-height: 1.6; color: var(--text-color);">Loading description...</p>
+        <div class="section-card">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                Description
+            </h3>
+            <p class="description-text" id="item-desc">Loading description...</p>
         </div>
 
-        <div class="preview-box">
-            <h3 style="margin-bottom: 1rem;">Preview</h3>
-            <div
-                style="background: var(--bg-color); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; color: var(--text-muted);">
-                <!-- Mock Preview -->
-                <div style="margin-bottom: 0.5rem;">1. Receive Input (Text)</div>
-                <div style="margin-bottom: 0.5rem;">2. Run Script (AI Model)</div>
-                <div style="margin-bottom: 0.5rem;">3. Show Result</div>
+        <div class="section-card">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Action Preview
+            </h3>
+            <div class="action-tree" id="action-tree">
+                <!-- Actions will be rendered here -->
+            </div>
+     !-- User Profile Modal -->
+    <div class="avatar-modal" id="profile-modal">
+        <div class="avatar-modal-content" style="max-width: 500px;">
+            <div class="profile-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; justify-content: center; flex-direction: column; text-align: center;">
+                <div class="profile-avatar" id="modal-profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; margin: 0 auto; cursor: default; overflow: hidden;">
+                    <span id="modal-avatar-initial">U</span>
+                    <img id="modal-avatar-image" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Profile">
+                </div>
+                <div class="profile-info" style="margin-top: 1rem;">
+                    <h2 id="modal-display-name" style="font-size: 1.5rem; font-weight: 600; color: var(--heading-color); margin-bottom: 0.25rem;">User</h2>
+                    <div class="username" id="modal-username" style="color: var(--primary-color); font-size: 0.95rem; font-weight: 500;">@user</div>
+                </div>
+            </div>
+            
+            <p id="modal-bio" style="text-align: center; color: var(--text-color); margin-bottom: 1.5rem; line-height: 1.6; font-size: 0.95rem;"></p>
+
+            <div class="profile-stats" style="display: flex; justify-content: center; gap: 2rem; padding: 1.5rem 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+                <div class="profile-stat" style="text-align: center;">
+                    <div class="profile-stat-value" id="modal-stat-shortcuts" style="font-size: 1.5rem; font-weight: 700; color: var(--heading-color);">0</div>
+                    <div class="profile-stat-label" style="font-size: 0.85rem; color: var(--text-muted);">Shortcuts</div>
+                </div>
+                <div class="profile-stat" style="text-align: center;">
+                    <div class="profile-stat-value" id="modal-stat-downloads" style="font-size: 1.5rem; font-weight: 700; color: var(--heading-color);">0</div>
+                    <div class="profile-stat-label" style="font-size: 0.85rem; color: var(--text-muted);">Downloads</div>
+                </div>
+                <div class="profile-stat" style="text-align: center;">
+                    <div class="profile-stat-value" id="modal-stat-likes" style="font-size: 1.5rem; font-weight: 700; color: var(--heading-color);">0</div>
+                    <div class="profile-stat-label" style="font-size: 0.85rem; color: var(--text-muted);">Likes</div>
+                </div>
+            </div>
+
+            <div class="avatar-modal-actions" style="display: flex; justify-content: center;">
+                <button class="btn-secondary" onclick="closeProfileModal()" style="padding: 0.75rem 2rem; background: transparent; color: var(--text-color); border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <   </div>
+
+        <div class="section-card">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                </svg>
+                Statistics
+            </h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-downloads">0</div>
+                    <div class="stat-label">Downloads</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-likes">0</div>
+                    <div class="stat-label">Likes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-views">0</div>
+                    <div class="stat-label">Views</div>
+                </div>
             </div>
         </div>
     </main>
@@ -154,98 +597,273 @@
     <script src="theme.js"></script>
     <script src="shortcutstudio-ui.js"></script>
     <script>
-        // Mock Data
-        const items = {
-            'spotify-to-apple-music': {
-                title: 'Spotify to Apple Music',
-                icon: 'music',
-                author: '@alex',
-                uses: '1.2k uses',
-                desc: 'Instantly convert your Spotify playlists to Apple Music. Supports public and private playlists. Requires Apple Music subscription.'
-            },
-            'photo-resizer-pro': {
-                title: 'Photo Resizer Pro',
-                icon: 'photo',
-                author: '@sarah_design',
-                uses: '850 uses',
-                desc: 'Batch resize images for social media. Includes presets for Instagram, Twitter, and LinkedIn. Can also add custom watermarks.'
-            },
-            'meeting-summarizer': {
-                title: 'Meeting Summarizer',
-                icon: 'note',
-                author: '@tech_guru',
-                uses: '2.5k uses',
-                desc: 'Record audio during your meeting and get a concise bulleted summary using GPT-4. Automatically saves to Notes.'
-            },
-            'hydration-tracker': {
-                title: 'Hydration Tracker',
-                icon: 'water',
-                author: '@health_bot',
-                uses: '500 uses',
-                desc: 'Log your daily water intake with a single tap. Sends reminders every 2 hours. Syncs with Apple Health.'
-            }
-        };
+        const MARKETPLACE_JSON_URL = 'marketplace-data.json';
+        
+        // Item data - will be loaded from JSON
+        let item = null;
 
+        // Icon SVGs
         const ICONS = {
-            music: `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M9 18V5l12-2v13"></path>
-                    <circle cx="6" cy="18" r="3"></circle>
-                    <circle cx="18" cy="16" r="3"></circle>
-                </svg>
-            `,
-            photo: `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <path d="M21 15l-5-5L5 21"></path>
-                </svg>
-            `,
-            note: `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <path d="M14 2v6h6"></path>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-            `,
-            water: `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M12 2.5C12 2.5 7 9 7 12.5a5 5 0 0 0 10 0C17 9 12 2.5 12 2.5z"></path>
-                </svg>
-            `,
-            default: `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path>
-                </svg>
-            `
+            music: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`,
+            image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>`,
+            document: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+            health: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>`,
+            message: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+            water: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5C12 2.5 7 9 7 12.5a5 5 0 0 0 10 0C17 9 12 2.5 12 2.5z"></path></svg>`,
+            book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+            qr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>`,
+            default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"></path></svg>`,
+            // Action icons
+            clipboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>`,
+            link: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
+            download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
+            branch: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M6 9v6a6 6 0 0 0 6 6h1"></path></svg>`,
+            dict: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>`,
+            repeat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>`,
+            search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>`,
+            plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+            alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+            check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+            menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>`,
+            resize: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21H3V3"></path><path d="M21 3v18H3"></path></svg>`,
+            layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`,
+            save: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`,
+            bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
+            input: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>`,
+            var: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21s-4-3-4-9 4-9 4-9"></path><path d="M16 3s4 3 4 9-4 9-4 9"></path></svg>`,
+            mic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>`,
+            text: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>`,
+            ai: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path></svg>`,
+            calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+            heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>`,
+            type: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>`,
+            wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>`
         };
 
-        function getItemIconSvg(name) {
+        function getIcon(name) {
             return ICONS[name] || ICONS.default;
         }
 
-        // Load Data
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-        const item = items[id];
-
-        if (item) {
-            document.getElementById('item-title').textContent = item.title;
-            document.getElementById('item-icon').innerHTML = getItemIconSvg(item.icon);
-            document.getElementById('item-author').textContent = item.author;
-            document.getElementById('item-uses').textContent = item.uses;
-            document.getElementById('item-desc').textContent = item.desc;
-            document.title = `ShortcutStudio - ${item.title}`;
-        } else {
-            document.getElementById('item-title').textContent = 'Shortcut Not Found';
-            document.getElementById('item-desc').textContent = 'The requested shortcut could not be found.';
+        // Hex to RGBA conversion
+        function hexToRgba(hex, alpha = 1) {
+            if (!hex) return `rgba(59, 130, 246, ${alpha})`;
+            hex = hex.replace('#', '');
+            let r, g, b;
+            if (hex.length === 3) {
+                r = parseInt(hex[0] + hex[0], 16);
+                g = parseInt(hex[1] + hex[1], 16);
+                b = parseInt(hex[2] + hex[2], 16);
+            } else {
+                r = parseInt(hex.slice(0, 2), 16);
+                g = parseInt(hex.slice(2, 4), 16);
+                b = parseInt(hex.slice(4, 6), 16);
+            }
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
+
+        // Render action tree
+        function renderActionTree(actions, container, isNested = false) {
+            actions.forEach((action, index) => {
+                const node = document.createElement('div');
+                node.className = 'action-node';
+
+                const item = document.createElement('div');
+                item.className = 'action-item';
+                item.innerHTML = `
+                    <div class="action-icon ${action.color || 'gray'}">${getIcon(action.icon)}</div>
+                    <div class="action-content">
+                        <div class="action-name">${action.name}</div>
+                        ${action.params ? `<div class="action-params">${action.params}</div>` : ''}
+                    </div>
+                    ${action.then || action.cases ? `<span class="action-badge">Flow</span>` : ''}
+                `;
+                node.appendChild(item);
+
+                // Handle If/Else branches
+                if (action.then) {
+                    const children = document.createElement('div');
+                    children.className = 'action-children';
+
+                    // Then branch
+                    const thenBranch = document.createElement('div');
+                    thenBranch.className = 'action-branch';
+                    thenBranch.innerHTML = '<span class="action-branch-label then">Then</span>';
+                    renderActionTree(action.then, thenBranch, true);
+                    children.appendChild(thenBranch);
+
+                    // Else branch
+                    if (action.else && action.else.length > 0) {
+                        const elseBranch = document.createElement('div');
+                        elseBranch.className = 'action-branch';
+                        elseBranch.innerHTML = '<span class="action-branch-label else">Otherwise</span>';
+                        renderActionTree(action.else, elseBranch, true);
+                        children.appendChild(elseBranch);
+                    }
+
+                    node.appendChild(children);
+                }
+
+                // Handle Choose from Menu cases
+                if (action.cases) {
+                    const children = document.createElement('div');
+                    children.className = 'action-children';
+
+                    action.cases.forEach(caseItem => {
+                        const caseBranch = document.createElement('div');
+                        caseBranch.className = 'action-branch';
+                        caseBranch.innerHTML = `<span class="action-branch-label">${caseItem.label}</span>`;
+                        renderActionTree(caseItem.actions, caseBranch, true);
+                        children.appendChild(caseBranch);
+                    });
+
+                    node.appendChild(children);
+                }
+
+                // Handle Repeat children
+                if (action.children) {
+                    const children = document.createElement('div');
+                    children.className = 'action-children';
+
+                    const repeatBranch = document.createElement('div');
+                    repeatBranch.className = 'action-branch';
+                    repeatBranch.innerHTML = '<span class="action-branch-label repeat">Repeat</span>';
+                    renderActionTree(action.children, repeatBranch, true);
+                    children.appendChild(repeatBranch);
+
+                    node.appendChild(children);
+                }
+
+                container.appendChild(node);
+            });
+        }
+
+        // Count total actions including nested
+        function countActions(actions) {
+            if (!actions || !Array.isArray(actions)) return 0;
+            let count = 0;
+            actions.forEach(action => {
+                count++;
+                if (action.then) count += countActions(action.then);
+                if (action.else) count += countActions(action.else);
+                if (action.children) count += countActions(action.children);
+                if (action.cases) {
+                    action.cases.forEach(c => {
+                        count += countActions(c.actions);
+                    });
+                }
+            });
+            return count;
+        }
+
+        // Load shortcut data from JSON
+        async function loadShortcutData() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            console.log('Loading shortcut id:', id);
+            
+            if (!id) {
+                console.error('No ID in URL');
+                showNotFound('No ID provided');
+                return;
+            }
+
+            try {
+                const response = await fetch(MARKETPLACE_JSON_URL);
+                if (!response.ok) throw new Error('Failed to load marketplace data: ' + response.status);
+                
+                const data = await response.json();
+                const shortcut = data.shortcuts.find(s => s.id === id);
+                
+                if (!shortcut) {
+                    console.error('Shortcut not found in JSON:', id);
+                    showNotFound('Shortcut not found in database');
+                    return;
+                }
+
+                // Store globally for other functions
+                item = {
+                    title: shortcut.name,
+                    icon: shortcut.icon,
+                    iconColor: shortcut.iconColor,
+                    author: shortcut.author,
+                    downloads: formatNumber(shortcut.downloads),
+                    likes: shortcut.likes,
+                    views: formatNumber(shortcut.views),
+                    desc: shortcut.description,
+                    actions: shortcut.actions || []
+                };
+
+                renderItem(item);
+            } catch (err) {
+                console.error('Error loading shortcut:', err);
+                showNotFound(err.message);
+            }
+        }
+
+        function showNotFound(reason = '') {
+            document.getElementById('item-title').textContent = 'Shortcut Not Found';
+            document.getElementById('item-desc').textContent = 'The requested shortcut could not be found. ' + reason;
+            document.getElementById('action-tree').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No preview available</p>';
+        }
+
+        function renderItem(item) {
+            document.getElementById('item-title').textContent = item.title;
+            const iconColor = item.iconColor || '#3b82f6';
+            const iconBg = hexToRgba(iconColor, 0.15);
+            const iconEl = document.getElementById('item-icon');
+            iconEl.className = 'detail-icon';
+            iconEl.style.background = iconBg;
+            iconEl.style.color = iconColor;
+            iconEl.innerHTML = getIcon(item.icon);
+            
+            const author = item.author;
+            const initial = author.name ? author.name[0].toUpperCase() : 'A';
+            
+            document.getElementById('item-author').innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" onclick="viewProfile('${author.username}', event)">
+                    <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: ${author.avatarUrl ? 'transparent' : (author.avatarColor || AVATAR_COLORS[0])}; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">
+                        ${author.avatarUrl ? `<img src="${author.avatarUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="">` : initial}
+                    </div>
+                    <span>@${author.username}</span>
+                </div>
+            `;
+            
+            document.getElementById('item-downloads').innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                ${item.downloads} downloads
+            `;
+            
+            const actionCount = countActions(item.actions);
+            document.getElementById('item-actions-count').innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 3v12"></path>
+                    <path d="m8 11 4 4 4-4"></path>
+                    <path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"></path>
+                </svg>
+                ${actionCount} actions
+            `;
+
+            // Description
+            document.getElementById('item-desc').textContent = item.desc;
+
+            // Stats
+            document.getElementById('stat-downloads').textContent = item.downloads;
+            document.getElementById('stat-likes').textContent = item.likes;
+            document.getElementById('stat-views').textContent = item.views;
+
+            // Render action tree
+            const treeContainer = document.getElementById('action-tree');
+            renderActionTree(item.actions, treeContainer);
+
+            document.title = `ShortcutStudio - ${item.title}`;
+        }
+
+        // Initialize on page load
+        loadShortcutData();
 
         // Actions
         const legacyStoragePrefix = String.fromCharCode(102, 108, 117, 120);
@@ -266,7 +884,6 @@
         function handleGet() {
             const isLoggedIn = getStoredValue('logged_in');
             if (!isLoggedIn) {
-                // Use ShortcutStudioUI if available, else alert
                 if (typeof ShortcutStudioUI !== 'undefined') {
                     ShortcutStudioUI.confirm('You need to be signed in to download shortcuts.', 'Sign In Required', () => {
                         window.location.href = 'login.html';
@@ -277,32 +894,112 @@
                     }
                 }
             } else {
-                // Mock Download
-                const btn = document.querySelector('.btn-primary-lg');
-                const originalText = btn.textContent;
-                btn.textContent = 'Downloading...';
+                const btn = document.querySelector('.btn-get-lg');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                    </svg>
+                    Downloading...
+                `;
                 btn.disabled = true;
+                btn.style.opacity = '0.7';
 
                 setTimeout(() => {
-                    btn.textContent = 'Downloaded!';
+                    btn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Downloaded!
+                    `;
+                    btn.style.background = '#22c55e';
+                    
                     setTimeout(() => {
-                        btn.textContent = originalText;
+                        btn.innerHTML = originalHTML;
                         btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.background = '';
                     }, 2000);
 
                     if (typeof ShortcutStudioUI !== 'undefined') {
                         ShortcutStudioUI.alert('Shortcut downloaded to your device.', 'Success');
-                    } else {
-                        alert('Shortcut downloaded!');
                     }
                 }, 1500);
             }
         }
 
+        // =============================================
+        // PROFILE MODAL
+        // =============================================
+
+        async function viewProfile(username, event) {
+            if (event) event.stopPropagation();
+            
+            // We need to fetch all shortcuts to calculate stats
+            try {
+                const response = await fetch(MARKETPLACE_JSON_URL);
+                if (!response.ok) return;
+                const data = await response.json();
+                const allShortcuts = data.shortcuts;
+
+                // Find user data from shortcuts
+                const userShortcuts = allShortcuts.filter(s => s.author.username === username);
+                if (userShortcuts.length === 0) return;
+
+                const author = userShortcuts[0].author;
+                const totalDownloads = userShortcuts.reduce((sum, s) => sum + (s.downloads || 0), 0);
+                const totalLikes = userShortcuts.reduce((sum, s) => sum + (s.likes || 0), 0);
+
+                // Populate Modal
+                document.getElementById('modal-display-name').textContent = author.name;
+                document.getElementById('modal-username').textContent = '@' + author.username;
+                document.getElementById('modal-bio').textContent = author.bio || 'No bio available.';
+                
+                document.getElementById('modal-stat-shortcuts').textContent = userShortcuts.length;
+                document.getElementById('modal-stat-downloads').textContent = formatNumber(totalDownloads);
+                document.getElementById('modal-stat-likes').textContent = formatNumber(totalLikes);
+
+                const avatarEl = document.getElementById('modal-profile-avatar');
+                const initial = document.getElementById('modal-avatar-initial');
+                const img = document.getElementById('modal-avatar-image');
+
+                if (author.avatarUrl) {
+                    initial.style.display = 'none';
+                    img.style.display = 'block';
+                    img.src = author.avatarUrl;
+                    avatarEl.style.background = 'transparent';
+                } else {
+                    initial.style.display = 'block';
+                    img.style.display = 'none';
+                    initial.textContent = (author.name || 'U')[0].toUpperCase();
+                    avatarEl.style.background = author.avatarColor || AVATAR_COLORS[0];
+                }
+
+                document.getElementById('profile-modal').classList.add('active');
+            } catch (err) {
+                console.error('Error loading profile:', err);
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('profile-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'profile-modal') closeProfileModal();
+        });
+
         function handleRemix() {
-            window.location.href = `workspace.html?prompt=Remix of ${encodeURIComponent(item ? item.title : 'Shortcut')}`;
+            window.location.href = `app.html?prompt=Remix of ${encodeURIComponent(item ? item.title : 'Shortcut')}`;
         }
     </script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 
 </html>

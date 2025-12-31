@@ -1,6 +1,1 @@
-{
-  "action": "Openurl",
-  "params": {
-    "URL": "{{STRING}}"
-  }
-}
+{"a":"Openurl","p":{"URL":"{{S}}"}}

@@ -1,0 +1,298 @@
+{
+  "shortcuts": [
+    {
+      "id": "spotify-to-apple-music",
+      "name": "Spotify to Apple Music",
+      "description": "Convert playlists instantly between Spotify and Apple Music. Supports public and private playlists.",
+      "author": {
+        "name": "Alex Chen",
+        "username": "alex",
+        "avatarColor": "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+        "bio": "Full-stack developer and automation enthusiast. I love creating shortcuts that save time.",
+        "avatarUrl": "https://i.pravatar.cc/150?u=alex"
+      },
+      "icon": "music",
+      "iconColor": "#8b5cf6",
+      "likes": 420,
+      "downloads": 1200,
+      "views": 2800,
+      "createdAt": "2024-12-15",
+      "actions": [
+        { "name": "Get Clipboard", "icon": "clipboard", "color": "gray", "params": "" },
+        { "name": "Download URL", "icon": "download", "color": "green", "params": "Spotify API" },
+        {
+          "name": "If",
+          "icon": "branch",
+          "color": "purple",
+          "params": "URL contains \"spotify\"",
+          "then": [
+            { "name": "Get Dictionary Value", "icon": "dict", "color": "orange", "params": "Key: tracks" },
+            {
+              "name": "Repeat with Each",
+              "icon": "repeat",
+              "color": "purple",
+              "params": "Track in playlist",
+              "children": [
+                { "name": "Search Apple Music", "icon": "search", "color": "pink", "params": "Query: track name" },
+                { "name": "Add to Playlist", "icon": "plus", "color": "green", "params": "My Converted Playlist" }
+              ]
+            }
+          ],
+          "else": [
+            { "name": "Show Alert", "icon": "alert", "color": "red", "params": "\"Invalid Spotify URL\"" }
+          ]
+        },
+        { "name": "Show Result", "icon": "check", "color": "green", "params": "Playlist converted!" }
+      ]
+    },
+    {
+      "id": "photo-resizer-pro",
+      "name": "Photo Resizer Pro",
+      "description": "Batch resize and watermark images for social media. Presets for Instagram, Twitter, LinkedIn.",
+      "author": {
+        "name": "Sarah Design",
+        "bio": "Digital designer and content creator. Sharing tools to help you create better content faster.",
+        "avatarUrl": "https://i.pravatar.cc/150?u=sarah",
+        "username": "sarah_design",
+        "avatarColor": "linear-gradient(135deg, #22c55e, #06b6d4)"
+      },
+      "icon": "image",
+      "iconColor": "#3b82f6",
+      "likes": 310,
+      "downloads": 850,
+      "views": 1500,
+      "createdAt": "2024-12-18",
+      "actions": [
+        { "name": "Select Photos", "icon": "photo", "color": "blue", "params": "Multiple selection" },
+        {
+          "name": "Choose from Menu",
+          "icon": "menu",
+          "color": "purple",
+          "params": "\"Select platform\"",
+          "cases": [
+            {
+              "label": "Instagram",
+              "actions": [
+                { "name": "Resize Image", "icon": "resize", "color": "pink", "params": "1080 × 1080" }
+              ]
+            },
+            {
+              "label": "Twitter",
+              "actions": [
+                { "name": "Resize Image", "icon": "resize", "color": "cyan", "params": "1200 × 675" }
+              ]
+            },
+            {
+              "label": "LinkedIn",
+              "actions": [
+                { "name": "Resize Image", "icon": "resize", "color": "blue", "params": "1200 × 627" }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Repeat with Each",
+          "icon": "repeat",
+          "color": "purple",
+          "params": "Photo",
+          "children": [
+            { "name": "Overlay Image", "icon": "layers", "color": "orange", "params": "Watermark.png" },
+            { "name": "Save to Album", "icon": "save", "color": "green", "params": "Resized Photos" }
+          ]
+        },
+        { "name": "Show Notification", "icon": "bell", "color": "yellow", "params": "\"Done! Photos resized.\"" }
+      ]
+    },
+    {
+      "id": "meeting-summarizer",
+      "name": "Meeting Summarizer",
+      "description": "Record audio and get a bulleted summary via GPT-4. Automatically saves to Notes app.",
+      "author": {
+        "name": "Tech Guru",
+        "username": "tech_guru",
+        "avatarColor": "linear-gradient(135deg, #f97316, #ec4899)"
+      },
+      "icon": "document",
+      "iconColor": "#22c55e",
+      "likes": 560,
+      "downloads": 2500,
+      "views": 4100,
+      "createdAt": "2024-12-10",
+      "actions": [
+        { "name": "Ask for Input", "icon": "input", "color": "blue", "params": "\"Meeting title?\"" },
+        { "name": "Set Variable", "icon": "var", "color": "gray", "params": "meetingTitle" },
+        { "name": "Record Audio", "icon": "mic", "color": "red", "params": "Until stopped" },
+        { "name": "Transcribe Audio", "icon": "text", "color": "cyan", "params": "Whisper API" },
+        { "name": "Ask ChatGPT", "icon": "ai", "color": "green", "params": "\"Summarize this meeting in bullet points...\"" },
+        { "name": "Create Note", "icon": "note", "color": "yellow", "params": "Folder: Meeting Notes" },
+        { "name": "Show Alert", "icon": "check", "color": "green", "params": "\"Summary saved to Notes!\"" }
+      ]
+    },
+    {
+      "id": "hydration-tracker",
+      "name": "Hydration Tracker",
+      "description": "Log water intake with a single tap. Sends reminders every 2 hours. Syncs with Apple Health.",
+      "author": {
+        "name": "Health Bot",
+        "username": "health_bot",
+        "avatarColor": "linear-gradient(135deg, #ef4444, #f97316)"
+      },
+      "icon": "water",
+      "iconColor": "#06b6d4",
+      "likes": 180,
+      "downloads": 500,
+      "views": 890,
+      "createdAt": "2024-12-20",
+      "actions": [
+        {
+          "name": "Choose from Menu",
+          "icon": "menu",
+          "color": "purple",
+          "params": "\"Cup size?\"",
+          "cases": [
+            { "label": "Small (250ml)", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "amount = 250" }] },
+            { "label": "Medium (500ml)", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "amount = 500" }] },
+            { "label": "Large (750ml)", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "amount = 750" }] }
+          ]
+        },
+        { "name": "Log Health Sample", "icon": "heart", "color": "red", "params": "Water: ${amount}ml" },
+        { "name": "Show Notification", "icon": "bell", "color": "cyan", "params": "\"💧 Logged ${amount}ml!\"" }
+      ]
+    },
+    {
+      "id": "daily-journal",
+      "name": "Daily Journal",
+      "description": "Guided journaling prompts with mood tracking. Saves entries to a dedicated folder in Notes.",
+      "author": {
+        "name": "Mindful Dev",
+        "username": "mindful_dev",
+        "avatarColor": "linear-gradient(135deg, #8b5cf6, #ec4899)"
+      },
+      "icon": "book",
+      "iconColor": "#f97316",
+      "likes": 245,
+      "downloads": 720,
+      "views": 1100,
+      "createdAt": "2024-12-12",
+      "actions": [
+        { "name": "Date", "icon": "calendar", "color": "blue", "params": "Current date" },
+        {
+          "name": "Choose from Menu",
+          "icon": "menu",
+          "color": "purple",
+          "params": "\"How are you feeling?\"",
+          "cases": [
+            { "label": "😊 Great", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "mood = Great" }] },
+            { "label": "🙂 Good", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "mood = Good" }] },
+            { "label": "😐 Okay", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "mood = Okay" }] },
+            { "label": "😔 Not great", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "mood = Not great" }] }
+          ]
+        },
+        { "name": "Ask for Input", "icon": "input", "color": "orange", "params": "\"What's on your mind?\"" },
+        { "name": "Ask for Input", "icon": "input", "color": "orange", "params": "\"What are you grateful for?\"" },
+        { "name": "Ask for Input", "icon": "input", "color": "orange", "params": "\"Goals for tomorrow?\"" },
+        { "name": "Create Note", "icon": "note", "color": "yellow", "params": "Journal/${date}" },
+        { "name": "Show Alert", "icon": "check", "color": "green", "params": "\"Journal entry saved!\"" }
+      ]
+    },
+    {
+      "id": "qr-scanner",
+      "name": "Quick QR Scanner",
+      "description": "Scan any QR code and automatically handle URLs, contacts, WiFi, or plain text.",
+      "author": {
+        "name": "Utility Master",
+        "username": "utility_master",
+        "avatarColor": "linear-gradient(135deg, #06b6d4, #3b82f6)"
+      },
+      "icon": "qr",
+      "iconColor": "#ec4899",
+      "likes": 390,
+      "downloads": 1100,
+      "views": 2000,
+      "createdAt": "2024-12-05",
+      "actions": [
+        { "name": "Scan QR Code", "icon": "qr", "color": "pink", "params": "From camera" },
+        {
+          "name": "If",
+          "icon": "branch",
+          "color": "purple",
+          "params": "Contains URL",
+          "then": [
+            { "name": "Open URL", "icon": "link", "color": "blue", "params": "In Safari" }
+          ],
+          "else": [
+            { "name": "Copy to Clipboard", "icon": "clipboard", "color": "gray", "params": "QR content" },
+            { "name": "Show Alert", "icon": "check", "color": "green", "params": "\"Copied to clipboard!\"" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "smart-reply",
+      "name": "Smart Reply",
+      "description": "AI-powered email response generator. Analyzes incoming emails and suggests contextual replies.",
+      "author": {
+        "name": "AI Lab",
+        "username": "ai_lab",
+        "avatarColor": "linear-gradient(135deg, #3b82f6, #8b5cf6)"
+      },
+      "icon": "message",
+      "iconColor": "#3b82f6",
+      "likes": 620,
+      "downloads": 3200,
+      "views": 5500,
+      "createdAt": "2024-12-08",
+      "actions": [
+        { "name": "Get Clipboard", "icon": "clipboard", "color": "gray", "params": "Email content" },
+        {
+          "name": "Choose from Menu",
+          "icon": "menu",
+          "color": "purple",
+          "params": "\"Reply tone?\"",
+          "cases": [
+            { "label": "Professional", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "tone = professional" }] },
+            { "label": "Friendly", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "tone = friendly" }] },
+            { "label": "Brief", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "tone = brief" }] }
+          ]
+        },
+        { "name": "Ask ChatGPT", "icon": "ai", "color": "green", "params": "\"Write a ${tone} reply to this email...\"" },
+        { "name": "Copy to Clipboard", "icon": "clipboard", "color": "gray", "params": "Generated reply" },
+        { "name": "Show Alert", "icon": "check", "color": "green", "params": "\"Reply copied! Paste in your email app.\"" }
+      ]
+    },
+    {
+      "id": "fitness-logger",
+      "name": "Fitness Logger",
+      "description": "Quick workout logging with exercise presets. Tracks sets, reps, and weights.",
+      "author": {
+        "name": "Fit Dev",
+        "username": "fit_dev",
+        "avatarColor": "linear-gradient(135deg, #22c55e, #06b6d4)"
+      },
+      "icon": "health",
+      "iconColor": "#ef4444",
+      "likes": 275,
+      "downloads": 890,
+      "views": 1400,
+      "createdAt": "2024-12-22",
+      "actions": [
+        {
+          "name": "Choose from Menu",
+          "icon": "menu",
+          "color": "purple",
+          "params": "\"Exercise type?\"",
+          "cases": [
+            { "label": "🏋️ Strength", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "type = strength" }] },
+            { "label": "🏃 Cardio", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "type = cardio" }] },
+            { "label": "🧘 Flexibility", "actions": [{ "name": "Set Variable", "icon": "var", "color": "gray", "params": "type = flexibility" }] }
+          ]
+        },
+        { "name": "Ask for Input", "icon": "input", "color": "blue", "params": "\"Exercise name?\"" },
+        { "name": "Ask for Input", "icon": "input", "color": "blue", "params": "\"Duration (minutes)?\"" },
+        { "name": "Log Health Sample", "icon": "heart", "color": "red", "params": "Workout: ${type}" },
+        { "name": "Append to File", "icon": "file", "color": "orange", "params": "Fitness Log.txt" },
+        { "name": "Show Notification", "icon": "bell", "color": "green", "params": "\"💪 Workout logged!\"" }
+      ]
+    }
+  ]
+}

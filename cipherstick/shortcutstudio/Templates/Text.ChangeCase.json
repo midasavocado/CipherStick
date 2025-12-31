@@ -1,7 +1,1 @@
-{
-  "action": "Text.ChangeCase",
-  "params": {
-    "Text": "{{STRING}}",
-    "CaseType": "cApItAlIzE wItH aLtErNaTiNg cAsE/UPPERCASE/lowercase/Capitalize Every Word/Capitalize with Title Case/Capitalize with sentence case"
-  }
-}
+{"a":"Text.ChangeCase","p":{"Text":"{{S}}","CaseType":"cApItAlIzE wItH aLtErNaTiNg cAsE/UPPERCASE/lowercase/Capitalize Every Word/Capitalize with Title Case/Capitalize with sentence case"}}

@@ -1,12 +1,1 @@
-{
-  "action": "RepeatWithEach",
-  "params": {
-    "ItemsIn": "{{VARIABLE}}"
-  },
-  "notes": "Inside the loop body (do), you can reference the current item with !ID:repeatItem and the index/count with !ID:repeatIndex / !ID:repeatCount.",
-  "do": [
-    {
-      "params": {}
-    }
-  ]
-}
+{"a":"RepeatWithEach","p":{"ItemsIn":"{{V}}"},"notes":"Inside the loop body (do), you can reference the current item with !ID:repeatItem and the index/count with !ID:repeatIndex / !ID:repeatCount.","do":[{"p":{}}]}

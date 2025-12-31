@@ -1,6 +1,1 @@
-{
-  "action": "Emailaddress",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}
+{"a":"Emailaddress","p":{"Input":"{{S}}"}}

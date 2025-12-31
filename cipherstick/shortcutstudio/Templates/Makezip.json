@@ -1,7 +1,1 @@
-{
-  "action": "Makezip",
-  "params": {
-    "Input": "{{STRING}}",
-    "ZIPName": "{{STRING}}"
-  }
-}
+{"a":"Makezip","p":{"Input":"{{S}}","ZIPName":"{{S}}"}}

@@ -1,8 +1,1 @@
-{
-  "action": "RoundNumber",
-  "params": {
-    "Number": "{{NUMBER}}",
-    "Mode": "Normal/Always Round Up/Always Round Down",
-    "RoundTo": "{{NUMBER}}" #Ten to the power of {{NUMBER}}
-  }
-}
+{"a":"RoundNumber","p":{"Number":"{{N}}","Mode":"Normal/Always Round Up/Always Round Down","RoundTo":"{{N}}"}}

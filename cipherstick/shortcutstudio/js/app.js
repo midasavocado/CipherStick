@@ -105,8 +105,9 @@ let streamingJsonLastActionCount = 0;
 let streamingJsonLastParsedLength = 0;
 
 const DEFAULT_PROJECT_ICON = 'bolt';
-const PROJECT_NAME_MAX = 48;
-const PROJECT_DESCRIPTION_MAX = 180;
+const DEFAULT_PROJECT_COLOR = '#3b82f6';
+const PROJECT_NAME_MAX = 25;
+const PROJECT_DESCRIPTION_MAX = 110;
 const PROJECT_ICON_IDS = [
     'bolt', 'star', 'wand', 'doc', 'music', 'photo', 'video', 'mic',
     'calendar', 'clock', 'check', 'chat', 'gear', 'map', 'bell', 'spark',
@@ -161,6 +162,28 @@ function isValidProjectIcon(iconId) {
     return Boolean(PROJECT_ICON_SVGS[iconId]);
 }
 
+function isValidProjectColor(color) {
+    if (!color || typeof color !== 'string') return false;
+    // Support hex colors: #RGB or #RRGGBB
+    return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(color);
+}
+
+function hexToRgba(hex, alpha = 1) {
+    if (!hex) return `rgba(59, 130, 246, ${alpha})`;
+    hex = hex.replace('#', '');
+    let r, g, b;
+    if (hex.length === 3) {
+        r = parseInt(hex[0] + hex[0], 16);
+        g = parseInt(hex[1] + hex[1], 16);
+        b = parseInt(hex[2] + hex[2], 16);
+    } else {
+        r = parseInt(hex.slice(0, 2), 16);
+        g = parseInt(hex.slice(2, 4), 16);
+        b = parseInt(hex.slice(4, 6), 16);
+    }
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function normalizeProjectMetadata(project) {
     if (!project || typeof project !== 'object') return;
     if (typeof project.name !== 'string') project.name = '';
@@ -169,8 +192,10 @@ function normalizeProjectMetadata(project) {
     }
     if (typeof project.description !== 'string') project.description = String(project.description || '');
     if (!project.icon) project.icon = DEFAULT_PROJECT_ICON;
+    if (!project.color) project.color = DEFAULT_PROJECT_COLOR;
     if (typeof project.nameFrozen !== 'boolean') project.nameFrozen = false;
     if (typeof project.descriptionFrozen !== 'boolean') project.descriptionFrozen = false;
+    if (typeof project.colorFrozen !== 'boolean') project.colorFrozen = false;
     if (typeof project.iconFrozen !== 'boolean') project.iconFrozen = false;
 }
 
@@ -525,6 +550,8 @@ function renderProjectsGrid() {
             : '';
         const displayName = getProjectDisplayName(p);
         const iconSvg = getProjectIconSvg(p.icon);
+        const projectColor = isValidProjectColor(p.color) ? p.color : DEFAULT_PROJECT_COLOR;
+        const iconBgColor = hexToRgba(projectColor, 0.12);
         const selectionBtn = `
                     <button class="project-select-toggle${isSelected ? ' selected' : ''}" onclick="event.stopPropagation(); toggleProjectSelection('${p.id}')" title="Select project">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -535,7 +562,7 @@ function renderProjectsGrid() {
         card.innerHTML = `
                     ${selectionBtn}
                     <div class="project-card-header">
-                        <div class="project-card-icon">${iconSvg}</div>
+                        <div class="project-card-icon" style="background: ${iconBgColor}; color: ${projectColor}">${iconSvg}</div>
                         <h3>${escapeHtml(displayName)}</h3>
                     </div>
                     ${descriptionHtml}
@@ -585,11 +612,77 @@ function openProjectSettingsModal() {
     if (nameInput) nameInput.value = currentProject.name || '';
     if (descriptionInput) descriptionInput.value = currentProject.description || '';
     setProjectIconSelection(currentProject.icon || DEFAULT_PROJECT_ICON);
+    initColorPicker(currentProject.color || DEFAULT_PROJECT_COLOR);
     modal.classList.add('active');
+    updateInputCounters();
 }
 
 function closeProjectSettingsModal() {
     document.getElementById('project-settings-modal')?.classList.remove('active');
+}
+
+// Color Picker Functions
+let selectedProjectColor = DEFAULT_PROJECT_COLOR;
+
+function initColorPicker(initialColor) {
+    selectedProjectColor = initialColor;
+    const presets = document.querySelectorAll('.color-preset[data-color]');
+    const customBtn = document.getElementById('color-custom-btn');
+    const customInput = document.getElementById('color-custom-input');
+    
+    // Update selection UI
+    function updatePresetSelection(hex) {
+        const normalizedHex = hex.toLowerCase();
+        let foundPreset = false;
+        presets.forEach(p => {
+            const isMatch = p.dataset.color && p.dataset.color.toLowerCase() === normalizedHex;
+            p.classList.toggle('active', isMatch);
+            if (isMatch) foundPreset = true;
+        });
+        // If custom color, highlight the custom button
+        if (customBtn) {
+            if (!foundPreset) {
+                customBtn.classList.add('active');
+                customBtn.style.background = hex;
+                const svg = customBtn.querySelector('svg');
+                if (svg) svg.style.display = 'none';
+            } else {
+                customBtn.classList.remove('active');
+                customBtn.style.background = '';
+                const svg = customBtn.querySelector('svg');
+                if (svg) svg.style.display = '';
+            }
+        }
+    }
+    
+    updatePresetSelection(initialColor);
+    
+    // Preset click handlers
+    presets.forEach(preset => {
+        preset.onclick = () => {
+            if (preset.dataset.color) {
+                selectedProjectColor = preset.dataset.color;
+                updatePresetSelection(selectedProjectColor);
+            }
+        };
+    });
+    
+    // Custom color picker - input is now inside a label, so clicking works natively
+    if (customBtn && customInput) {
+        customInput.value = initialColor.startsWith('#') ? initialColor : '#3b82f6';
+        customInput.onchange = () => {
+            selectedProjectColor = customInput.value;
+            updatePresetSelection(selectedProjectColor);
+        };
+        customInput.oninput = () => {
+            selectedProjectColor = customInput.value;
+            updatePresetSelection(selectedProjectColor);
+        };
+    }
+}
+
+function getSelectedColor() {
+    return isValidProjectColor(selectedProjectColor) ? selectedProjectColor : DEFAULT_PROJECT_COLOR;
 }
 
 function saveProjectSettings() {
@@ -602,25 +695,30 @@ function saveProjectSettings() {
     const nextDescription = String(descriptionInput?.value || '').trim().slice(0, PROJECT_DESCRIPTION_MAX);
     const rawIcon = iconGrid?.dataset?.selectedIcon || DEFAULT_PROJECT_ICON;
     const nextIcon = isValidProjectIcon(rawIcon) ? rawIcon : DEFAULT_PROJECT_ICON;
+    const nextColor = getSelectedColor();
     const previousName = currentProject.name || '';
     const previousDescription = currentProject.description || '';
     const previousIcon = currentProject.icon || DEFAULT_PROJECT_ICON;
+    const previousColor = currentProject.color || DEFAULT_PROJECT_COLOR;
     const nameChanged = nextName !== previousName;
     const descriptionChanged = nextDescription !== previousDescription;
     const iconChanged = nextIcon !== previousIcon;
-    if (nameChanged || descriptionChanged || iconChanged) {
+    const colorChanged = nextColor !== previousColor;
+    if (nameChanged || descriptionChanged || iconChanged || colorChanged) {
         pushUndoState();
         currentProject.name = nextName;
         currentProject.description = nextDescription;
         currentProject.icon = nextIcon;
+        currentProject.color = nextColor;
         if (nameChanged && !currentProject.nameFrozen) currentProject.nameFrozen = true;
         if (descriptionChanged && !currentProject.descriptionFrozen) currentProject.descriptionFrozen = true;
         if (iconChanged && !currentProject.iconFrozen) currentProject.iconFrozen = true;
+        if (colorChanged && !currentProject.colorFrozen) currentProject.colorFrozen = true;
         currentProject.updated = Date.now();
     }
     const titleInput = document.getElementById('project-name-input');
     if (titleInput) titleInput.value = nextName;
-    if (nameChanged || descriptionChanged || iconChanged) {
+    if (nameChanged || descriptionChanged || iconChanged || colorChanged) {
         upsertMarketplaceItemFromProject(currentProject);
         saveProjects();
         updateMobileShortcutCard();
@@ -678,6 +776,7 @@ function loadProject(id) {
     resetUndoRedoHistory();
     showWorkspaceView();
     document.getElementById('project-name-input').value = currentProject.name || '';
+    updateInputCounters();
     window.history.replaceState({}, '', `app.html?id=${encodeURIComponent(id)}`);
     const messagesEl = document.getElementById('messages');
     messagesEl.innerHTML = '';
@@ -2469,6 +2568,213 @@ function getActionUUID(action) {
     return action.params.GroupingIdentifier;
 }
 
+// ============ Company/Third-party Action Mapping ============
+// Maps action name prefixes/patterns to company info with inline SVG icons for reliability
+// Apple actions don't show a badge (null)
+const ACTION_COMPANY_MAP = {
+    // Google/Chrome actions
+    'chrome': { 
+        name: 'Google Chrome', 
+        color: '#4285F4',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/><path d="M21.17 8H12M3.95 6.06L8.54 14M8.54 21.94l4.59-8" stroke="currentColor" stroke-width="2" fill="none"/></svg>'
+    },
+    'com.addreadinglistitemtochromeintent': { 
+        name: 'Google Chrome', 
+        color: '#4285F4',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/><path d="M21.17 8H12M3.95 6.06L8.54 14M8.54 21.94l4.59-8" stroke="currentColor" stroke-width="2" fill="none"/></svg>'
+    },
+    
+    // ChatGPT/OpenAI actions
+    'chatgpt': { 
+        name: 'ChatGPT', 
+        color: '#10A37F',
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12h8M12 8v8"/></svg>'
+    },
+    
+    // Spotify actions
+    'spotify': { 
+        name: 'Spotify', 
+        color: '#1DB954',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 14.36c-.19.31-.58.39-.87.2-2.4-1.46-5.41-1.79-8.96-.98-.34.08-.69-.13-.77-.47-.08-.34.13-.69.47-.77 3.89-.89 7.22-.51 9.93 1.13.29.19.38.58.2.89zm1.23-2.71c-.24.38-.74.5-1.11.26-2.75-1.69-6.94-2.18-10.19-1.19-.41.13-.85-.1-.98-.51-.13-.41.1-.85.51-.98 3.7-1.13 8.3-.58 11.51 1.31.37.24.49.74.26 1.11zm.1-2.83c-3.3-1.96-8.73-2.14-11.88-1.18-.51.15-1.04-.13-1.19-.64-.15-.51.13-1.04.64-1.19 3.62-1.1 9.64-.89 13.45 1.37.46.27.61.86.34 1.31-.27.46-.86.61-1.32.33h-.04z"/></svg>'
+    },
+    
+    // Slack actions
+    'slack': { 
+        name: 'Slack', 
+        color: '#4A154B',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>'
+    },
+    
+    // WhatsApp actions
+    'whatsapp': { 
+        name: 'WhatsApp', 
+        color: '#25D366',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+    },
+    
+    // Telegram actions
+    'telegram': { 
+        name: 'Telegram', 
+        color: '#0088CC',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>'
+    },
+    
+    // Discord actions
+    'discord': { 
+        name: 'Discord', 
+        color: '#5865F2',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>'
+    },
+    
+    // Notion actions
+    'notion': { 
+        name: 'Notion', 
+        color: '#000000',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.934zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279v-6.44l-1.215-.139c-.093-.514.28-.887.747-.933zM1.936 1.035l13.31-.98c1.634-.14 2.055-.047 3.082.7l4.249 2.986c.7.513.934.653.934 1.213v16.378c0 1.026-.373 1.634-1.68 1.726l-15.458.934c-.98.047-1.448-.093-1.962-.747l-3.129-4.06c-.56-.747-.793-1.306-.793-1.96V2.667c0-.839.374-1.54 1.447-1.632z"/></svg>'
+    },
+    
+    // Todoist actions
+    'todoist': { 
+        name: 'Todoist', 
+        color: '#E44332',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 0H3C1.35 0 0 1.35 0 3v18c0 1.65 1.35 3 3 3h18c1.65 0 3-1.35 3-3V3c0-1.65-1.35-3-3-3zM10.67 17.39l-4.42-2.5c-.15-.1-.15-.29 0-.39l1.64-.93c.15-.1.34-.1.49 0l2.29 1.32c.15.1.34.1.49 0l6.67-3.79c.15-.1.34-.1.49 0l1.64.93c.15.1.15.29 0 .39l-8.8 4.97c-.15.1-.34.1-.49 0zm0-4.17l-4.42-2.5c-.15-.1-.15-.29 0-.39l1.64-.93c.15-.1.34-.1.49 0l2.29 1.32c.15.1.34.1.49 0l6.67-3.79c.15-.1.34-.1.49 0l1.64.93c.15.1.15.29 0 .39l-8.8 4.97c-.15.1-.34.1-.49 0zm0-4.17l-4.42-2.5c-.15-.1-.15-.29 0-.39l1.64-.93c.15-.1.34-.1.49 0l2.29 1.32c.15.1.34.1.49 0l6.67-3.79c.15-.1.34-.1.49 0l1.64.93c.15.1.15.29 0 .39l-8.8 4.97c-.15.1-.34.1-.49 0z"/></svg>'
+    },
+    
+    // Drafts actions
+    'drafts': { 
+        name: 'Drafts', 
+        color: '#2D81FF',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-1.41 1.41L10 21l2-2 2 2 1.41-1.41L14 18h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>'
+    },
+    
+    // Overcast actions
+    'overcast': { 
+        name: 'Overcast', 
+        color: '#FC7E0F',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 24C5.373 24 0 18.627 0 12S5.373 0 12 0s12 5.373 12 12-5.373 12-12 12zm-.007-4.616a4.652 4.652 0 0 0 2.249-.536l.639 1.107a.334.334 0 0 0 .574 0l.639-1.107a4.658 4.658 0 0 0 2.29-4.004c0-.993-.312-1.912-.841-2.668l.841-1.458a.334.334 0 0 0-.289-.501h-1.318a4.6 4.6 0 0 0-2.536-.761v-2.91a.334.334 0 0 0-.578-.229l-.978.998-.978-.998a.334.334 0 0 0-.578.229v2.91a4.6 4.6 0 0 0-2.536.761H8.275a.334.334 0 0 0-.289.501l.841 1.458a4.658 4.658 0 0 0 1.449 6.672l.639 1.107a.334.334 0 0 0 .574 0l.639-1.107a4.652 4.652 0 0 0 1.865.536z"/></svg>'
+    },
+    
+    // Fantastical actions
+    'fantastical': { 
+        name: 'Fantastical', 
+        color: '#C0392B',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/></svg>'
+    },
+    
+    // Things 3 actions
+    'things': { 
+        name: 'Things', 
+        color: '#3B82F6',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="2" fill="none"/></svg>'
+    },
+    
+    // OmniFocus actions
+    'omnifocus': { 
+        name: 'OmniFocus', 
+        color: '#774AA4',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg>'
+    },
+    
+    // Bear actions
+    'bear': { 
+        name: 'Bear', 
+        color: '#DD4C4F',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+    },
+    
+    // Day One actions
+    'dayone': { 
+        name: 'Day One', 
+        color: '#50C6DB',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" stroke-width="2"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2"/><line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" stroke-width="2"/></svg>'
+    },
+    
+    // Pocket Casts actions
+    'pocketcasts': { 
+        name: 'Pocket Casts', 
+        color: '#F43E37',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 24C5.373 24 0 18.627 0 12S5.373 0 12 0s12 5.373 12 12-5.373 12-12 12zm0-4.5a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zm0-3a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>'
+    },
+    
+    // Castro actions
+    'castro': { 
+        name: 'Castro', 
+        color: '#00CC66',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>'
+    },
+    
+    // CARROT Weather actions
+    'carrot': { 
+        name: 'CARROT Weather', 
+        color: '#FF6B00',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>'
+    },
+    
+    // 1Password actions
+    '1password': { 
+        name: '1Password', 
+        color: '#0094F5',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2V7h2v10z"/></svg>'
+    },
+    
+    // Trello actions
+    'trello': { 
+        name: 'Trello', 
+        color: '#0079BF',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="5" y="5" width="5" height="12" rx="1"/><rect x="12" y="5" width="5" height="8" rx="1"/></svg>'
+    },
+    
+    // Twitter/X actions
+    'twitter': { 
+        name: 'X', 
+        color: '#000000',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+    },
+    'x': { 
+        name: 'X', 
+        color: '#000000',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+    },
+};
+
+// Get company info for an action
+function getActionCompanyInfo(actionName) {
+    if (!actionName) return null;
+    const normalized = normalizeActionKey(actionName);
+    
+    // Check for exact match first
+    if (ACTION_COMPANY_MAP[normalized]) {
+        return ACTION_COMPANY_MAP[normalized];
+    }
+    
+    // Check for prefix match (e.g., "chrome.addbookmark" -> "chrome")
+    const dotIndex = normalized.indexOf('.');
+    if (dotIndex > 0) {
+        const prefix = normalized.slice(0, dotIndex);
+        if (ACTION_COMPANY_MAP[prefix]) {
+            return ACTION_COMPANY_MAP[prefix];
+        }
+    }
+    
+    // Check if action starts with any known company prefix
+    for (const [key, info] of Object.entries(ACTION_COMPANY_MAP)) {
+        if (normalized.startsWith(key)) {
+            return info;
+        }
+    }
+    
+    return null; // Apple/native action
+}
+
+// Generate HTML for company badge (returns empty string for Apple actions)
+function getCompanyBadgeHtml(actionName) {
+    const companyInfo = getActionCompanyInfo(actionName);
+    if (!companyInfo) return ''; // Apple action - no badge
+    
+    const { name, color, icon } = companyInfo;
+    return `<span class="company-badge" title="${escapeHtml(name)}" style="--company-color: ${color}">${icon}</span>`;
+}
+
 const NON_LINKABLE_OUTPUT_ACTION_KEYS = new Set([
     // Control / non-output actions
     'if',
@@ -2894,7 +3200,6 @@ function getMarkdownRenderer() {
         typographer: true
     });
     const plugins = [
-        window.markdownitKatex,
         window.markdownitFootnote,
         window.markdownitTaskLists,
         window.markdownitDeflist,
@@ -2957,10 +3262,14 @@ function renderMarkdownFallback(src) {
     let i = 0;
 
     const isFence = (line) => /^\s*```/.test(line);
-    const isHeading = (line) => /^\s*#{1,3}\s+/.test(line);
+    const isHeading = (line) => /^\s*#{1,6}\s+/.test(line);
     const isQuote = (line) => /^\s*>\s?/.test(line);
     const isUl = (line) => /^\s*[-*+]\s+/.test(line);
     const isOl = (line) => /^\s*\d+\.\s+/.test(line);
+    const isHr = (line) => {
+        const normalized = String(line || '').replace(/\s+/g, '');
+        return /^[-*_]{3,}$/.test(normalized);
+    };
     const splitTableRow = (line) => {
         let trimmed = String(line || '').trim();
         if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
@@ -3030,11 +3339,17 @@ function renderMarkdownFallback(src) {
             continue;
         }
 
-        const headingMatch = line.match(/^\s*(#{1,3})\s+(.+?)\s*$/);
+        if (isHr(line)) {
+            blocks.push('<hr>');
+            i++;
+            continue;
+        }
+
+        const headingMatch = line.match(/^\s*(#{1,6})\s+(.+?)\s*$/);
         if (headingMatch) {
-            const level = headingMatch[1].length; // 1–3
+            const level = headingMatch[1].length; // 1–6
             const headingText = headingMatch[2];
-            const tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
+            const tag = level === 1 ? 'h3' : level === 2 ? 'h4' : level === 3 ? 'h5' : 'h6';
             blocks.push(`<${tag}>${renderInlineMarkdown(headingText)}</${tag}>`);
             i++;
             continue;
@@ -3092,11 +3407,31 @@ function renderMarkdownFallback(src) {
 
         if (isUl(line)) {
             const items = [];
+            let hasTaskItem = false;
             while (i < lines.length && isUl(lines[i])) {
-                items.push((lines[i] || '').replace(/^\s*[-*+]\s+/, ''));
+                const rawItem = lines[i] || '';
+                const taskMatch = rawItem.match(/^\s*[-*+]\s+\[( |x|X)\]\s+(.*)$/);
+                if (taskMatch) {
+                    hasTaskItem = true;
+                    items.push({
+                        task: true,
+                        checked: taskMatch[1].toLowerCase() === 'x',
+                        text: taskMatch[2] || ''
+                    });
+                } else {
+                    items.push({ task: false, text: rawItem.replace(/^\s*[-*+]\s+/, '') });
+                }
                 i++;
             }
-            blocks.push(`<ul>${items.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`);
+            const listHtml = items.map(item => {
+                if (item.task) {
+                    const checked = item.checked ? ' checked' : '';
+                    return `<li class="task-list-item"><input type="checkbox" disabled${checked}>${renderInlineMarkdown(item.text)}</li>`;
+                }
+                return `<li>${renderInlineMarkdown(item.text)}</li>`;
+            }).join('');
+            const listClass = hasTaskItem ? ' class="task-list"' : '';
+            blocks.push(`<ul${listClass}>${listHtml}</ul>`);
             continue;
         }
 
@@ -3115,7 +3450,7 @@ function renderMarkdownFallback(src) {
         while (i < lines.length) {
             const l = lines[i] ?? '';
             if (!l.trim()) break;
-            if (isFence(l) || isHeading(l) || isQuote(l) || isUl(l) || isOl(l)) break;
+            if (isFence(l) || isHeading(l) || isQuote(l) || isUl(l) || isOl(l) || isHr(l)) break;
             paraLines.push(l);
             i++;
         }
@@ -3146,6 +3481,12 @@ function renderInlineMarkdown(src) {
 
         let t = escapeHtml(part.value);
         // Keep regexes conservative so they don't cross HTML tags we inject.
+        t = t.replace(/!\[([^\]]*?)\]\(([^)]+)\)/g, (_match, alt, url) => {
+            const safeUrl = sanitizeMarkdownUrl(url);
+            const altText = escapeAttr(decodeHtmlEntities(alt));
+            if (!safeUrl) return escapeHtml(decodeHtmlEntities(alt));
+            return `<img src="${escapeAttr(safeUrl)}" alt="${altText}">`;
+        });
         t = t.replace(/~~([^<]+?)~~/g, '<del>$1</del>');
         t = t.replace(/\*\*([^<]+?)\*\*/g, '<strong>$1</strong>');
         t = t.replace(/\*([^<]+?)\*/g, '<em>$1</em>');
@@ -3153,6 +3494,12 @@ function renderInlineMarkdown(src) {
             const safeUrl = sanitizeMarkdownUrl(url);
             if (!safeUrl) return label;
             return `<a href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        });
+        t = t.replace(/&lt;((?:https?:\/\/|mailto:|tel:|data:image\/)[^\s]+?)&gt;/gi, (_match, url) => {
+            const safeUrl = sanitizeMarkdownUrl(url);
+            const displayUrl = decodeHtmlEntities(url);
+            if (!safeUrl) return escapeHtml(displayUrl);
+            return `<a href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(displayUrl)}</a>`;
         });
         return t;
     }).join('');
@@ -3181,6 +3528,12 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function decodeHtmlEntities(str) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = String(str || '');
+    return textarea.value;
 }
 
 function showTypingIndicator() {
@@ -3216,20 +3569,30 @@ function setPipelineMode(mode) {
 }
 
 const LIVE_HINTS = [
+    'Thinking...',
     'Reading your request...',
+    'Understanding intent...',
+    'Browsing actions...',
+    'Searching templates...',
     'Mapping actions to steps...',
-    'Drafting the workflow...',
-    'Linking inputs and outputs...',
-    'Validating the build...'
+    'Planning the workflow...',
+    'Drafting the shortcut...',
+    'Connecting inputs...',
+    'Wiring outputs...',
+    'Linking variables...',
+    'Building the flow...',
+    'Validating logic...',
+    'Checking parameters...',
+    'Polishing details...',
+    'Almost there...'
 ];
 
-const LIVE_HINT_TICK_MS = 1200;
+const LIVE_HINT_TICK_MS = 1800;
 
-function setPipelineHint(text, stepId = null) {
+function setPipelineHint(text) {
     if (!text) return;
-    const targetStep = stepId || currentPipelineStep || 'plan';
-    const hintEl = document.getElementById(`orb-hint-${targetStep}`);
-    if (hintEl) hintEl.textContent = text;
+    const liveHintEl = document.getElementById('pipeline-live-hint');
+    if (liveHintEl) liveHintEl.textContent = text;
 }
 
 function setLiveHint(text, lockMs = 2500) {
@@ -3479,6 +3842,7 @@ function updateStreamingProjectName(name) {
     if (mobileTitle) {
         mobileTitle.textContent = trimmed;
     }
+    updateInputCounters();
 }
 
 function updateStreamingProjectIcon(iconId) {
@@ -3497,7 +3861,11 @@ function applyStreamingMeta(meta) {
         updateStreamingProjectName(meta.name);
     }
     if (typeof meta.shortSummary === 'string' && meta.shortSummary !== streamingJsonMeta.shortSummary) {
-        streamingJsonMeta.shortSummary = meta.shortSummary;
+        let val = meta.shortSummary;
+        if (val.length > PROJECT_DESCRIPTION_MAX) {
+            val = '';
+        }
+        streamingJsonMeta.shortSummary = val;
     }
     if (typeof meta.icon === 'string') {
         const normalized = meta.icon.trim().toLowerCase();
@@ -4177,13 +4545,22 @@ function handleFinalResponse(data) {
     const canUpdateName = !!(currentProject && !currentProject.nameFrozen);
     const canUpdateDescription = !!(currentProject && !currentProject.descriptionFrozen);
     const canUpdateIcon = !!(currentProject && !currentProject.iconFrozen);
+    const canUpdateColor = !!(currentProject && !currentProject.colorFrozen);
     const willApplyName = !!(nextName && currentProject && !isDiscussionMode && canUpdateName && nextName !== currentProject.name);
-    const shortSummary = typeof meta?.shortSummary === 'string'
+    let shortSummary = typeof meta?.shortSummary === 'string'
         ? meta.shortSummary.trim()
         : (typeof data.shortSummary === 'string' ? data.shortSummary.trim() : '');
+    let shortSummaryOverLimit = false;
+    if (shortSummary.length > PROJECT_DESCRIPTION_MAX) {
+        shortSummary = '';
+        shortSummaryOverLimit = true;
+    }
     const iconChoice = typeof meta?.icon === 'string'
         ? meta.icon.trim()
         : (typeof data.iconChoice === 'string' ? data.iconChoice.trim() : '');
+    const colorChoice = typeof meta?.color === 'string'
+        ? meta.color.trim()
+        : (typeof data.colorChoice === 'string' ? data.colorChoice.trim() : '');
     const assistantAnswer = typeof meta?.summary === 'string'
         ? meta.summary.trim()
         : (typeof data.answer === 'string' ? data.answer : '');
@@ -4199,9 +4576,10 @@ function handleFinalResponse(data) {
         currentProject.updated = Date.now();
         upsertMarketplaceItemFromProject(currentProject);
         updateMobileShortcutCard();
+        updateInputCounters();
     }
 
-    if (shortSummary && currentProject && !isDiscussionMode && canUpdateDescription) {
+    if ((shortSummary || shortSummaryOverLimit) && currentProject && !isDiscussionMode && canUpdateDescription) {
         if (shortSummary !== currentProject.description) {
             currentProject.description = shortSummary;
             currentProject.updated = Date.now();
@@ -4213,6 +4591,16 @@ function handleFinalResponse(data) {
         const normalizedIcon = isValidProjectIcon(iconChoice) ? iconChoice : null;
         if (normalizedIcon && normalizedIcon !== currentProject.icon) {
             currentProject.icon = normalizedIcon;
+            currentProject.updated = Date.now();
+            upsertMarketplaceItemFromProject(currentProject);
+        }
+    }
+
+    // Update project color from AI
+    if (colorChoice && currentProject && !isDiscussionMode && canUpdateColor) {
+        const normalizedColor = isValidProjectColor(colorChoice) ? colorChoice : null;
+        if (normalizedColor && normalizedColor !== currentProject.color) {
+            currentProject.color = normalizedColor;
             currentProject.updated = Date.now();
             upsertMarketplaceItemFromProject(currentProject);
         }
@@ -4328,6 +4716,17 @@ function updateMobileShortcutCard() {
     const titleEl = document.getElementById('mobile-shortcut-title');
     const subEl = document.getElementById('mobile-shortcut-sub');
     const headerTitleInput = document.getElementById('mobile-project-name-input');
+    
+    // Update icon and color
+    const iconEl = card.querySelector('.mobile-shortcut-icon');
+    if (iconEl) {
+        const iconId = currentProject.icon || DEFAULT_PROJECT_ICON;
+        const color = currentProject.color || DEFAULT_PROJECT_COLOR;
+        iconEl.innerHTML = getProjectIconSvg(iconId);
+        iconEl.style.color = color;
+        iconEl.style.background = hexToRgba(color, 0.16);
+    }
+
     const name = getProjectDisplayName(currentProject);
     const actionCount = countActionsWithNested(currentActions || []);
     const updatedAt = currentProject?.updated || currentProject?.created || Date.now();
@@ -4825,12 +5224,14 @@ function createActionNode(action, index, shouldAnimate = false, parentMeta = { p
 
     const dragHandle = editMode ? '<div class="node-drag-handle" data-reorder-handle="true" title="Drag to reorder" style="touch-action:none; user-select:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="9" cy="18" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg></div>' : '';
 
+    const companyBadgeHtml = getCompanyBadgeHtml(action.action);
+
     node.innerHTML = `
 			                ${dragHandle}
 			                <div class="node-icon">${getActionIcon(action.action)}</div>
 			                <div class="node-content">
 			                    <div class="node-header">
-			                        <span class="node-title">${escapeHtml(getActionDisplayLabel(action) || (action.title || action.action))}</span>
+			                        <span class="node-title">${escapeHtml(getActionDisplayLabel(action) || (action.title || action.action))}${companyBadgeHtml}</span>
 			                        ${outputHtml}
 			                        ${actionsHtml}
 			                    </div>
@@ -6029,7 +6430,8 @@ function renderActionsList(filter = '') {
         const item = document.createElement('div');
         item.className = 'dropdown-item';
         item.style.cssText = 'padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;';
-        item.innerHTML = `<div class="node-icon" style="width:32px;height:32px;">${getActionIcon(t.action)}</div><span>${escapeHtml(t.label || t.action)}</span>`;
+        const companyBadge = getCompanyBadgeHtml(t.action);
+        item.innerHTML = `<div class="node-icon" style="width:32px;height:32px;">${getActionIcon(t.action)}</div><span>${escapeHtml(t.label || t.action)}${companyBadge}</span>`;
         item.onclick = () => {
             if (actionModalMode === 'add') {
                 addActionDirectly(t);
@@ -6096,10 +6498,11 @@ function enterPlacementMode(action) {
     if (placementCursor) placementCursor.remove();
     placementCursor = document.createElement('div');
     placementCursor.className = 'placement-cursor';
+    const companyBadge = getCompanyBadgeHtml(action.action);
     placementCursor.innerHTML = `
                 <div class="placement-cursor-content">
                     <div class="node-icon">${getActionIcon(action.action)}</div>
-                    <span>${escapeHtml(getActionDisplayLabel(action) || (action.title || action.action))}</span>
+                    <span>${escapeHtml(getActionDisplayLabel(action) || (action.title || action.action))}${companyBadge}</span>
                     <span class="placement-hint">Click to place action</span>
                 </div>
             `;
@@ -6370,15 +6773,30 @@ function initResizeHandle() {
     const handle = document.getElementById('resize-handle');
     if (!chatPane || !handle) return;
     let isResizing = false;
-    handle.addEventListener('mousedown', () => { isResizing = true; handle.classList.add('active'); document.body.style.cursor = 'col-resize'; });
+    handle.addEventListener('mousedown', (e) => { 
+        e.preventDefault();
+        isResizing = true; 
+        handle.classList.add('active'); 
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
+    });
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
+        e.preventDefault();
         let newWidth = e.clientX;
         if (newWidth < 320) newWidth = 320;
-        if (newWidth > 600) newWidth = 600;
+        if (newWidth > 800) newWidth = 800;
         chatPane.style.width = `${newWidth}px`;
     });
-    document.addEventListener('mouseup', () => { isResizing = false; handle.classList.remove('active'); document.body.style.cursor = ''; });
+    document.addEventListener('mouseup', () => { 
+        if (!isResizing) return;
+        isResizing = false; 
+        handle.classList.remove('active'); 
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.body.style.webkitUserSelect = '';
+    });
 }
 
 // ============ Edit Mode ============
@@ -6409,10 +6827,10 @@ function toggleEditMode() {
 
 // ============ Pipeline Orbs (in chat) ============
 const PIPELINE_STEPS = [
-    { id: 'plan', label: 'Planning', hint: 'Thinking...' },
-    { id: 'catalog', label: 'Searching', hint: 'Picking actions...' },
-    { id: 'build', label: 'Building', hint: 'Wiring the flow...' },
-    { id: 'summarize', label: 'Finalizing', hint: 'Wrapping it up...' }
+    { id: 'plan', label: 'Plan', hint: 'Thinking...' },
+    { id: 'catalog', label: 'Search', hint: 'Finding actions...' },
+    { id: 'build', label: 'Build', hint: 'Wiring flow...' },
+    { id: 'summarize', label: 'Finish', hint: 'Wrapping up...' }
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
@@ -6476,18 +6894,18 @@ function showPipelineOrbs() {
         orbsDiv.classList.add('full-catalog');
     }
     orbsDiv.innerHTML = `
-	                <div class="pipeline-orbs-row" role="group" aria-label="Generation progress">
-	                    ${PIPELINE_STEPS.map((step, idx) => `
-	                        <div class=\"orb-wrapper\" data-orb-wrapper=\"${step.id}\">
-	                            <div class=\"orb\" id=\"orb-${step.id}\" data-orb-step=\"${step.id}\">
-	                                <span>${step.label}</span>
-	                            </div>
-	                            <div class=\"orb-subhint\" id=\"orb-hint-${step.id}\">${escapeHtml(step.hint || 'Working...')}</div>
-	                        </div>
-	                        ${idx < PIPELINE_STEPS.length - 1 ? '<div class=\"orb-line\" aria-hidden=\"true\"></div>' : ''}
-	                    `).join('')}
-	                </div>
-	            `;
+        <div class="pipeline-orbs-row" role="group" aria-label="Generation progress">
+            ${PIPELINE_STEPS.map((step, idx) => `
+                <div class="orb-wrapper" data-orb-wrapper="${step.id}">
+                    <div class="orb" id="orb-${step.id}" data-orb-step="${step.id}">
+                        <span>${step.label}</span>
+                    </div>
+                </div>
+                ${idx < PIPELINE_STEPS.length - 1 ? '<div class="orb-line"></div>' : ''}
+            `).join('')}
+        </div>
+        <div class="pipeline-orbs-hint" id="pipeline-live-hint">Thinking...</div>
+    `;
     container.appendChild(orbsDiv);
     container.scrollTop = container.scrollHeight;
     resetPipelineSteps();
@@ -6503,7 +6921,7 @@ function updatePipelineOrb(step, status, hint = '') {
 
     if (status === 'started' || status === 'completed' || hint) {
         const state = status === 'completed' ? 'completed' : status === 'started' ? 'active' : 'idle';
-        setPipelineHint(hint || getDefaultHint(step, state), step);
+        setPipelineHint(hint || getDefaultHint(step, state));
     }
 }
 
@@ -6748,6 +7166,181 @@ function initRichInputHandlers() {
             selection.addRange(newRange);
         }
     });
+
+    // Variable pill drag-and-drop within rich inputs
+    initPillDragHandlers();
+}
+
+// ============ Variable Pill Drag & Drop ============
+let pillDragState = null;
+
+function initPillDragHandlers() {
+    document.addEventListener('pointerdown', handlePillDragStart);
+    document.addEventListener('pointermove', handlePillDragMove);
+    document.addEventListener('pointerup', handlePillDragEnd);
+    document.addEventListener('pointercancel', handlePillDragEnd);
+}
+
+function handlePillDragStart(e) {
+    // Only handle left mouse button or touch
+    if (e.button && e.button !== 0) return;
+    
+    // Check if clicking on remove button - don't start drag
+    if (e.target.closest('.variable-pill-remove')) return;
+    
+    const pill = e.target.closest('.variable-pill');
+    if (!pill) return;
+    
+    const richInput = pill.closest('.param-rich-input');
+    if (!richInput) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const rect = pill.getBoundingClientRect();
+    const token = pill.dataset.token;
+    const label = pill.querySelector('.variable-pill-label')?.textContent || token;
+    
+    // Create ghost element
+    const ghost = document.createElement('div');
+    ghost.className = 'variable-pill-drag-ghost';
+    ghost.textContent = label;
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top = e.clientY + 'px';
+    document.body.appendChild(ghost);
+    
+    pill.classList.add('dragging');
+    document.body.classList.add('dragging-pill');
+    
+    pillDragState = {
+        pill,
+        ghost,
+        richInput,
+        token,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false
+    };
+    
+    // Capture pointer
+    pill.setPointerCapture(e.pointerId);
+}
+
+function handlePillDragMove(e) {
+    if (!pillDragState) return;
+    
+    e.preventDefault();
+    
+    // Update ghost position
+    pillDragState.ghost.style.left = e.clientX + 'px';
+    pillDragState.ghost.style.top = e.clientY + 'px';
+    
+    // Check if moved enough to be considered a drag
+    const dx = e.clientX - pillDragState.startX;
+    const dy = e.clientY - pillDragState.startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        pillDragState.moved = true;
+    }
+    
+    // Find drop position in rich input
+    const richInput = pillDragState.richInput;
+    const range = getDropPositionInRichInput(richInput, e.clientX, e.clientY);
+    
+    // Store the range for drop
+    pillDragState.dropRange = range;
+}
+
+function handlePillDragEnd(e) {
+    if (!pillDragState) return;
+    
+    const { pill, ghost, richInput, token, moved, dropRange } = pillDragState;
+    
+    // Cleanup
+    ghost.remove();
+    pill.classList.remove('dragging');
+    document.body.classList.remove('dragging-pill');
+    
+    // Release pointer capture
+    try {
+        pill.releasePointerCapture(e.pointerId);
+    } catch (err) { /* ignore */ }
+    
+    // If actually moved, reposition the pill
+    if (moved && dropRange) {
+        // Remove the original pill
+        pill.remove();
+        
+        // Insert at new position
+        const pillWrapper = document.createElement('span');
+        pillWrapper.innerHTML = buildVariablePillHtml(token);
+        const newPill = pillWrapper.firstElementChild;
+        
+        // Insert spacing if needed
+        const fragment = document.createDocumentFragment();
+        const textBefore = dropRange.startContainer.nodeType === Node.TEXT_NODE 
+            ? dropRange.startContainer.textContent.slice(0, dropRange.startOffset)
+            : '';
+        const textAfter = dropRange.startContainer.nodeType === Node.TEXT_NODE
+            ? dropRange.startContainer.textContent.slice(dropRange.startOffset)
+            : '';
+        
+        const needsLeadingSpace = textBefore.length > 0 && !/\s$/.test(textBefore);
+        const needsTrailingSpace = textAfter.length > 0 && !/^\s/.test(textAfter);
+        
+        if (needsLeadingSpace) fragment.appendChild(document.createTextNode(' '));
+        fragment.appendChild(newPill);
+        if (needsTrailingSpace) fragment.appendChild(document.createTextNode(' '));
+        
+        dropRange.insertNode(fragment);
+        
+        // Update the data
+        handleRichInputChange(richInput, { render: false });
+        normalizeRichInputDisplay(richInput);
+    }
+    
+    pillDragState = null;
+}
+
+function getDropPositionInRichInput(richInput, clientX, clientY) {
+    if (!richInput) return null;
+    
+    // Use caretPositionFromPoint or caretRangeFromPoint
+    let range;
+    
+    if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(clientX, clientY);
+        if (pos) {
+            range = document.createRange();
+            range.setStart(pos.offsetNode, pos.offset);
+            range.collapse(true);
+        }
+    } else if (document.caretRangeFromPoint) {
+        range = document.caretRangeFromPoint(clientX, clientY);
+    }
+    
+    // Validate range is within richInput
+    if (range && richInput.contains(range.startContainer)) {
+        // Don't drop inside another pill
+        if (range.startContainer.closest && range.startContainer.closest('.variable-pill')) {
+            // Move after the pill instead
+            const nearestPill = range.startContainer.closest('.variable-pill');
+            range = document.createRange();
+            range.setStartAfter(nearestPill);
+            range.collapse(true);
+        } else if (range.startContainer.nodeType === Node.ELEMENT_NODE && 
+                   range.startContainer.classList?.contains('variable-pill')) {
+            range = document.createRange();
+            range.setStartAfter(range.startContainer);
+            range.collapse(true);
+        }
+        return range;
+    }
+    
+    // Fallback: append at end
+    range = document.createRange();
+    range.selectNodeContents(richInput);
+    range.collapse(false);
+    return range;
 }
 
 function applyTokenToContextTarget(token) {
@@ -7036,4 +7629,62 @@ document.addEventListener('DOMContentLoaded', () => {
     initRichInputHandlers();
     updateModeIndicators();
     renderForcedActions();
+    initInputCounters();
 });
+
+function initInputCounters() {
+    const inputs = [
+        { id: 'mobile-project-name-input', counterId: 'mobile-project-name-counter', max: PROJECT_NAME_MAX },
+        { id: 'project-name-input', counterId: 'project-name-counter', max: PROJECT_NAME_MAX },
+        { id: 'project-settings-name', counterId: 'project-settings-name-counter', max: PROJECT_NAME_MAX },
+        { id: 'project-settings-description', counterId: 'project-settings-description-counter', max: PROJECT_DESCRIPTION_MAX }
+    ];
+
+    inputs.forEach(({ id, counterId, max }) => {
+        const input = document.getElementById(id);
+        const counter = document.getElementById(counterId);
+        if (!input || !counter) return;
+
+        const updateCounter = () => {
+            const len = input.value.length;
+            counter.textContent = `${len}/${max}`;
+            if (len >= max) {
+                counter.style.color = 'var(--danger-color)';
+            } else {
+                counter.style.color = 'var(--text-muted)';
+            }
+        };
+
+        input.addEventListener('input', updateCounter);
+        // Initial update
+        updateCounter();
+        
+        // Also update when value is set programmatically (if we can catch it, or just rely on other functions calling it)
+        // We can use a MutationObserver if needed, but for now manual calls in update functions might be better.
+        // Or just rely on the fact that when we set .value we usually trigger an event or we can just call updateCounter manually.
+    });
+}
+
+// Helper to manually trigger counter updates when values change programmatically
+function updateInputCounters() {
+    const inputs = [
+        { id: 'mobile-project-name-input', counterId: 'mobile-project-name-counter', max: PROJECT_NAME_MAX },
+        { id: 'project-name-input', counterId: 'project-name-counter', max: PROJECT_NAME_MAX },
+        { id: 'project-settings-name', counterId: 'project-settings-name-counter', max: PROJECT_NAME_MAX },
+        { id: 'project-settings-description', counterId: 'project-settings-description-counter', max: PROJECT_DESCRIPTION_MAX }
+    ];
+    
+    inputs.forEach(({ id, counterId, max }) => {
+        const input = document.getElementById(id);
+        const counter = document.getElementById(counterId);
+        if (input && counter) {
+            const len = input.value.length;
+            counter.textContent = `${len}/${max}`;
+             if (len >= max) {
+                counter.style.color = 'var(--danger-color)';
+            } else {
+                counter.style.color = 'var(--text-muted)';
+            }
+        }
+    });
+}

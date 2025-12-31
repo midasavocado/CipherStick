@@ -1,6 +1,1 @@
-{
-  "action": "Com.AddReadingListItemToChromeIntent",
-  "params": {
-    "URL": "{{STRING}}"
-  }
-}
+{"a":"Com.AddReadingListItemToChromeIntent","p":{"URL":"{{S}}"}}

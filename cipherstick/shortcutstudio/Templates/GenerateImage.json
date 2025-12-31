@@ -1,7 +1,1 @@
-{
-  "action": "GenerateImage",
-  "params": {
-    "Prompt": "{{STRING}}",
-    "RefrenceImage": "{{IMAGE}}"
-  }
-}
+{"a":"GenerateImage","p":{"Prompt":"{{S}}","RefrenceImage":"{{I}}"}}

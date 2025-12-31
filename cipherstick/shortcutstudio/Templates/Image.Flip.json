@@ -1,6 +1,1 @@
-{
-  "action": "Image.Flip",
-  "params": {
-    "Image": "{{VARIABLE}}"
-  }
-}
+{"a":"Image.Flip","p":{"Image":"{{V}}"}}

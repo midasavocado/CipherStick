@@ -1,8 +1,1 @@
-{
-  "action": "Math",
-  "params": {
-    "1stNumber": "{{STRING}}",
-    "2ndNumber": "{{STRING}}",
-    "Operation": "+/-/x/÷"
-  }
-}
+{"a":"Math","p":{"1stNumber":"{{S}}","2ndNumber":"{{S}}","Operation":"+/-/x/÷"}}

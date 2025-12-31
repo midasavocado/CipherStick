@@ -1,8 +1,1 @@
-{
-  "action": "SplitText",
-  "params": {
-    "Text": "{{STRING}}",
-    "Separator": "Custom/Spaces/Every Character/New Lines",
-    "CustomSeparator": "{{STRING}}"
-  }
-}
+{"a":"SplitText","p":{"Text":"{{S}}","Separator":"Custom/Spaces/Every Character/New Lines","CustomSeparator":"{{S}}"}}

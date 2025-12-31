@@ -5,26 +5,547 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShortcutStudio - Marketplace</title>
-    <meta name="description"
-        content="Discover community-created Apple Shortcuts. ShortcutStudio Marketplace features the best AI-generated automation workflows.">
-    <meta property="og:title" content="ShortcutStudio - Marketplace">
-    <meta property="og:description" content="Discover community-created Apple Shortcuts.">
-    <meta property="og:type" content="website">
-    <link rel="icon"
-        href="icon.png">
+    <meta name="description" content="Discover community-created Apple Shortcuts. Browse, download, and share automation workflows.">
+    <link rel="icon" href="icon.png">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/utilities.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/pages/marketplace.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .marketplace-hero {
+            padding: 120px 1.5rem 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .marketplace-hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--heading-color) 0%, var(--primary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .marketplace-hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Search Bar */
+        .search-container {
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 1rem 1.25rem 1rem 3.25rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Sort Dropdown */
+        .sort-dropdown {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0 1.25rem;
+            height: 100%;
+            min-width: 140px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            justify-content: space-between;
+        }
+
+        .sort-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .sort-btn svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .sort-dropdown.open .sort-btn svg {
+            transform: rotate(180deg);
+        }
+
+        .sort-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 160px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .sort-dropdown.open .sort-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .sort-option {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .sort-option:hover {
+            background: var(--surface-hover);
+        }
+
+        .sort-option.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .stats-bar .count {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .stats-bar .count strong {
+            color: var(--heading-color);
+        }
+
+        /* Shortcut Grid */
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 1.5rem auto 4rem;
+            padding: 0 1.5rem;
+        }
+
+        /* Shortcut Card */
+        .shortcut-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .shortcut-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .shortcut-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .shortcut-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.5rem;
+        }
+
+        .shortcut-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .shortcut-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .shortcut-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.35rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Author Info with Avatar */
+        .shortcut-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: white;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .author-name {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .shortcut-description {
+            color: var(--text-color);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Stats */
+        .shortcut-stats {
+            display: flex;
+            gap: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .shortcut-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .shortcut-stat svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Action Button */
+        .shortcut-actions {
+            margin-top: 1rem;
+        }
+
+        .btn-get {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-get:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-get svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Publish CTA */
+        .publish-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .publish-card:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            border-color: var(--primary-color);
+            transform: translateY(-4px);
+        }
+
+        .publish-card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-color);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .publish-card-icon svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+        }
+
+        .publish-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .publish-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .no-results svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-results h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--heading-color);
+        }
+
+        /* Loading Skeleton */
+        .skeleton-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-color) 25%, var(--surface-hover) 50%, var(--bg-color) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 1.5rem 2rem;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .footer-brand .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .footer-brand span {
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-color);
+        }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Profile Modal */
+        .avatar-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-modal.active {
+            display: flex;
+        }
+
+        .avatar-modal-content {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .shortcut-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                gap: 1.5rem;
+            }
+        }
+    </style>
 </head>
 
 <body class="app-theme">
-
     <!-- Navigation -->
     <nav class="top-bar">
         <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
@@ -37,259 +558,642 @@
             <a href="pricing.html">Pricing</a>
         </div>
         <div class="nav-actions flex items-center gap-4">
-            <button class="icon-btn mode-toggle-btn" title="Toggle Theme">
-                <!-- Icon injected by theme.js -->
-            </button>
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme"></button>
             <a href="projects.html" id="nav-cta" class="btn btn-primary">Dashboard</a>
         </div>
     </nav>
 
-    <!-- Header -->
-    <section class="section text-center" style="padding-top: 100px;">
-        <div class="section-header">
-            <h1 class="flashy-text">Shortcut Marketplace</h1>
-            <p style="color: var(--text-muted);">Discover community-created shortcuts</p>
-        </div>
-        <div class="hero-input-wrapper"
-            style="max-width: 600px; margin: 2rem auto; position: relative; display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.8rem 1rem; backdrop-filter: blur(12px);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                style="color: var(--text-muted); margin-right: 0.8rem;">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input type="text" id="marketplace-search" placeholder="Search shortcuts..."
-                oninput="searchMarketplace(this.value)"
-                style="background: transparent; border: none; color: var(--text-color); outline: none; flex: 1; font-size: 1rem; width: 100%;">
-        </div>
-
-        <div class="flex justify-end"
-            style="margin-bottom: 2rem; max-width: 1100px; margin-left: auto; margin-right: auto; padding: 0 1rem;">
-            <div class="custom-select-wrapper" style="position: relative; display: inline-block;">
-                <select id="sort-select" onchange="filterMarketplace(this.value)" style="
-                    appearance: none;
-                    background: var(--surface-color);
-                    border: 1px solid var(--border-color);
-                    color: var(--text-color);
-                    padding: 0.6rem 2.5rem 0.6rem 1rem;
-                    border-radius: 8px;
-                    font-size: 0.9rem;
-                    cursor: pointer;
-                    outline: none;
-                    box-shadow: var(--shadow-sm);
-                ">
-                    <option value="all">All Shortcuts</option>
-                    <option value="popular">Most Popular</option>
-                    <option value="recent">Recently Added</option>
-                    <option value="trending">Trending Now</option>
-                </select>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    style="
-                    position: absolute;
-                    right: 12px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    pointer-events: none;
-                    color: var(--text-muted);
-                ">
-                    <polyline points="6 9 12 15 18 9"></polyline>
+    <!-- Hero -->
+    <section class="marketplace-hero">
+        <h1>Shortcut Marketplace</h1>
+        <p>Discover powerful shortcuts created by the community. One click to get started.</p>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
                 </svg>
+                <input type="text" id="search-input" placeholder="Search shortcuts..." oninput="handleSearch(this.value)">
+            </div>
+            <div class="sort-dropdown" id="sort-dropdown">
+                <button class="sort-btn" onclick="toggleSortMenu()">
+                    <span id="sort-label">Trending</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="sort-menu">
+                    <button class="sort-option active" data-sort="trending" onclick="selectSort('trending')">Trending</button>
+                    <button class="sort-option" data-sort="liked" onclick="selectSort('liked')">Most Liked</button>
+                    <button class="sort-option" data-sort="downloads" onclick="selectSort('downloads')">Most Downloaded</button>
+                    <button class="sort-option" data-sort="recent" onclick="selectSort('recent')">Recent</button>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Grid -->
-    <section class="section">
-        <div class="ss-grid">
-            <!-- Item 1 -->
-            <div class="ss-card market-card">
-                <div class="card-metrics">
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 21s-6-4.35-9-8.35C.5 9.5 2.3 6 6 6c2 0 3.4 1.1 4 2.1C10.6 7.1 12 6 14 6c3.7 0 5.5 3.5 3 6.65C18 16.65 12 21 12 21z"></path>
-                        </svg>
-                        420
-                    </span>
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3v12"></path>
-                            <path d="m7 10 5 5 5-5"></path>
-                            <path d="M5 21h14"></path>
-                        </svg>
-                        1.2k
-                    </span>
-                </div>
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 18V5l12-2v13"></path>
-                        <circle cx="6" cy="18" r="3"></circle>
-                        <circle cx="18" cy="16" r="3"></circle>
-                    </svg>
-                </div>
-                <h3>Spotify to Apple Music</h3>
-                <p>Convert playlists instantly between services.</p>
-                <div class="market-stats">
-                    <span>@alex</span>
-                    <span>1.2k uses</span>
-                </div>
-                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
-                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
-                </div>
-            </div>
-
-            <!-- Item 2 -->
-            <div class="ss-card market-card">
-                <div class="card-metrics">
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 21s-6-4.35-9-8.35C.5 9.5 2.3 6 6 6c2 0 3.4 1.1 4 2.1C10.6 7.1 12 6 14 6c3.7 0 5.5 3.5 3 6.65C18 16.65 12 21 12 21z"></path>
-                        </svg>
-                        310
-                    </span>
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3v12"></path>
-                            <path d="m7 10 5 5 5-5"></path>
-                            <path d="M5 21h14"></path>
-                        </svg>
-                        980
-                    </span>
-                </div>
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <path d="M21 15l-5-5L5 21"></path>
-                    </svg>
-                </div>
-                <h3>Photo Resizer Pro</h3>
-                <p>Batch resize and watermark images for social media.</p>
-                <div class="market-stats">
-                    <span>@sarah_design</span>
-                    <span>850 uses</span>
-                </div>
-                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
-                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
-                </div>
-            </div>
-
-            <!-- Item 3 -->
-            <div class="ss-card market-card">
-                <div class="card-metrics">
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 21s-6-4.35-9-8.35C.5 9.5 2.3 6 6 6c2 0 3.4 1.1 4 2.1C10.6 7.1 12 6 14 6c3.7 0 5.5 3.5 3 6.65C18 16.65 12 21 12 21z"></path>
-                        </svg>
-                        560
-                    </span>
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3v12"></path>
-                            <path d="m7 10 5 5 5-5"></path>
-                            <path d="M5 21h14"></path>
-                        </svg>
-                        2.5k
-                    </span>
-                </div>
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <path d="M14 2v6h6"></path>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
-                </div>
-                <h3>Meeting Summarizer</h3>
-                <p>Record audio and get a bulleted summary via GPT-4.</p>
-                <div class="market-stats">
-                    <span>@tech_guru</span>
-                    <span>2.5k uses</span>
-                </div>
-                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
-                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
-                </div>
-            </div>
-
-            <!-- Item 4 -->
-            <div class="ss-card market-card">
-                <div class="card-metrics">
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 21s-6-4.35-9-8.35C.5 9.5 2.3 6 6 6c2 0 3.4 1.1 4 2.1C10.6 7.1 12 6 14 6c3.7 0 5.5 3.5 3 6.65C18 16.65 12 21 12 21z"></path>
-                        </svg>
-                        180
-                    </span>
-                    <span class="card-metric">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3v12"></path>
-                            <path d="m7 10 5 5 5-5"></path>
-                            <path d="M5 21h14"></path>
-                        </svg>
-                        620
-                    </span>
-                </div>
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2.5C12 2.5 7 9 7 12.5a5 5 0 0 0 10 0C17 9 12 2.5 12 2.5z"></path>
-                    </svg>
-                </div>
-                <h3>Hydration Tracker</h3>
-                <p>Log water intake and get reminders.</p>
-                <div class="market-stats">
-                    <span>@health_bot</span>
-                    <span>500 uses</span>
-                </div>
-                <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
-                    <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
-                </div>
-            </div>
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="count">
+            <strong id="result-count">0</strong> shortcuts available
         </div>
+    </div>
+
+    <!-- Grid -->
+    <section class="shortcut-grid" id="shortcut-grid">
+        <!-- Dynamic content -->
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="footer-grid">
+        <div class="footer-content">
             <div class="footer-brand">
-                <div class="logo-container">
-                    <span class="logo-text">ShortcutStudio</span>
-                </div>
-                <p>Automation, Reimagined.</p>
+                <div class="logo-icon">S</div>
+                <span>ShortcutStudio</span>
             </div>
-            <div class="footer-col">
-                <h4>Product</h4>
-                <a href="#">Editor</a>
-                <a href="#">Marketplace</a>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="projects.html">Dashboard</a>
+                <a href="settings.html">Settings</a>
             </div>
-            <div class="footer-col">
-                <h4>Resources</h4>
-                <a href="marketplace.html">Marketplace</a>
+            <div class="footer-copy">
+                © 2025 ShortcutStudio. All rights reserved.
             </div>
-            <div class="footer-col">
-                <h4>Company</h4>
-                <a href="#">About</a>
-                <a href="#">Contact</a>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2025 ShortcutStudio Inc. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- User Profile Modal -->
+    <div class="avatar-modal" id="profile-modal">
+        <div class="avatar-modal-content" style="max-width: 500px;">
+            <div class="profile-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; justify-content: center; flex-direction: column; text-align: center;">
+                <div class="profile-avatar" id="modal-profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; margin: 0 auto; cursor: default; overflow: hidden;">
+                    <span id="modal-avatar-initial">U</span>
+                    <img id="modal-avatar-image" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Profile">
+                </div>
+                <div class="profile-info" style="margin-top: 1rem;">
+                    <h2 id="modal-display-name" style="font-size: 1.5rem; font-weight: 600; color: var(--heading-color); margin-bottom: 0.25rem;">User</h2>
+                    <div class="username" id="modal-username" style="color: var(--primary-color); font-size: 0.95rem; font-weight: 500;">@user</div>
+                </div>
+            </div>
+            
+            <p id="modal-bio" style="text-align: center; color: var(--text-color); margin-bottom: 1.5rem; line-height: 1.6; font-size: 0.95rem;"></p>
+
+            <div class="profile-stats" style="display: flex; justify-content: center; gap: 2rem; padding: 1.5rem 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+                <div class="profile-stat" style="text-align: center;">
+                    <div class="profile-stat-value" id="modal-stat-shortcuts" style="font-size: 1.5rem; font-weight: 700; color: var(--heading-color);">0</div>
+                    <div class="profile-stat-label" style="font-size: 0.85rem; color: var(--text-muted);">Shortcuts</div>
+                </div>
+                <div class="profile-stat" style="text-align: center;">
+                    <div class="profile-stat-value" id="modal-stat-downloads" style="font-size: 1.5rem; font-weight: 700; color: var(--heading-color);">0</div>
+                    <div class="profile-stat-label" style="font-size: 0.85rem; color: var(--text-muted);">Downloads</div>
+                </div>
+                <div class="profile-stat" style="text-align: center;">
+                    <div class="profile-stat-value" id="modal-stat-likes" style="font-size: 1.5rem; font-weight: 700; color: var(--heading-color);">0</div>
+                    <div class="profile-stat-label" style="font-size: 0.85rem; color: var(--text-muted);">Likes</div>
+                </div>
+            </div>
+
+            <div class="avatar-modal-actions" style="display: flex; justify-content: center;">
+                <button class="btn-secondary" onclick="closeProfileModal()" style="padding: 0.75rem 2rem; background: transparent; color: var(--text-color); border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
 
     <div class="bg-animation">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
     </div>
+
     <script src="theme.js"></script>
-    <script src="marketplace-search.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // =============================================
+        // MARKETPLACE DATA & CONFIGURATION
+        // =============================================
+        
+        const STORAGE_KEY = 'shortcutstudio_marketplace';
+        const USER_STORAGE_KEY = 'shortcutstudio_user';
+        const MARKETPLACE_JSON_URL = 'marketplace-data.json';
+
+        const AVATAR_COLORS = [
+            'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+            'linear-gradient(135deg, #22c55e, #06b6d4)',
+            'linear-gradient(135deg, #f97316, #ec4899)',
+            'linear-gradient(135deg, #ef4444, #f97316)',
+            'linear-gradient(135deg, #8b5cf6, #ec4899)',
+            'linear-gradient(135deg, #06b6d4, #3b82f6)'
+        ];
+
+        const ICONS = {
+            music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
+            image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>',
+            document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>',
+            health: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>',
+            tool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>',
+            ai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path><circle cx="7.5" cy="14.5" r="1.5"></circle><circle cx="16.5" cy="14.5" r="1.5"></circle></svg>',
+            qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>',
+            book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>',
+            water: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5C12 2.5 7 9 7 12.5a5 5 0 0 0 10 0C17 9 12 2.5 12 2.5z"></path></svg>',
+            message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>'
+        };
+
+        // Fallback shortcuts if JSON fails to load
+        let DEFAULT_SHORTCUTS = [];
+
+        // =============================================
+        // STATE MANAGEMENT
+        // =============================================
+
+        let allShortcuts = [];
+        let filteredShortcuts = [];
+        let currentCategory = 'all';
+        let currentSort = 'trending';
+        let searchQuery = '';
+        let dataLoaded = false;
+
+        // =============================================
+        // STORAGE FUNCTIONS
+        // =============================================
+
+        async function loadShortcuts() {
+            try {
+                // First try to fetch from JSON file
+                const response = await fetch(MARKETPLACE_JSON_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.shortcuts && data.shortcuts.length > 0) {
+                        // Transform shortcuts to add AVATAR_COLORS for author avatarColor
+                        allShortcuts = data.shortcuts.map((shortcut, index) => ({
+                            ...shortcut,
+                            author: {
+                                ...shortcut.author,
+                                avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length]
+                            },
+                            // Calculate action count from actions array if not provided
+                            actions: shortcut.actionCount || (shortcut.actions ? countActions(shortcut.actions) : 0)
+                        }));
+                        dataLoaded = true;
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to load marketplace data from JSON:', err);
+            }
+
+            // Fallback to localStorage or empty array
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    allShortcuts = data.length ? data : DEFAULT_SHORTCUTS;
+                } else {
+                    allShortcuts = DEFAULT_SHORTCUTS;
+                }
+            } catch {
+                allShortcuts = DEFAULT_SHORTCUTS;
+            }
+            dataLoaded = true;
+        }
+
+        // Helper to count total actions including nested ones
+        function countActions(actions) {
+            if (!actions || !Array.isArray(actions)) return 0;
+            let count = 0;
+            for (const action of actions) {
+                count++;
+                if (action.then) count += countActions(action.then);
+                if (action.else) count += countActions(action.else);
+                if (action.children) count += countActions(action.children);
+                if (action.cases) {
+                    for (const caseItem of action.cases) {
+                        count += countActions(caseItem.actions);
+                    }
+                }
+            }
+            return count;
+        }
+
+        function saveShortcuts() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(allShortcuts));
+            } catch {}
+        }
+
+        function getCurrentUser() {
+            try {
+                const stored = localStorage.getItem(USER_STORAGE_KEY);
+                return stored ? JSON.parse(stored) : null;
+            } catch {
+                return null;
+            }
+        }
+
+        // =============================================
+        // FILTERING & SORTING
+        // =============================================
+
+        function filterAndSort() {
+            filteredShortcuts = allShortcuts.filter(item => {
+                const matchesCategory = currentCategory === 'all' || item.category === currentCategory;
+                const matchesSearch = !searchQuery || 
+                    item.name.toLowerCase().includes(searchQuery) ||
+                    item.description.toLowerCase().includes(searchQuery);
+                return matchesCategory && matchesSearch;
+            });
+
+            // Sort
+            filteredShortcuts.sort((a, b) => {
+                const getValidDate = (d) => {
+                    const date = d ? new Date(d) : new Date(0);
+                    return isNaN(date.getTime()) ? new Date(0) : date;
+                };
+
+                switch (currentSort) {
+                    case 'trending':
+                        // Trending = high engagement ratio (likes + downloads weighted by recency)
+                        const getScore = (item) => {
+                            const date = getValidDate(item.createdAt);
+                            // If date is epoch (missing/invalid), treat as very old (low score)
+                            const ageDays = Math.max(1, (Date.now() - date.getTime()) / 86400000);
+                            const likes = item.likes || 0;
+                            const downloads = item.downloads || 0;
+                            return (likes + downloads) / ageDays;
+                        };
+                        return getScore(b) - getScore(a);
+                    case 'liked':
+                        return (b.likes || 0) - (a.likes || 0);
+                    case 'downloads':
+                        return (b.downloads || 0) - (a.downloads || 0);
+                    case 'recent':
+                        return getValidDate(b.createdAt) - getValidDate(a.createdAt);
+                    default:
+                        return 0;
+                }
+            });
+
+            updateResultCount();
+            renderGrid();
+        }
+
+        function handleSearch(query) {
+            searchQuery = query.toLowerCase().trim();
+            filterAndSort();
+        }
+
+        function setCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.category === category);
+            });
+            filterAndSort();
+        }
+
+        function updateResultCount() {
+            document.getElementById('result-count').textContent = filteredShortcuts.length;
+        }
+
+        // =============================================
+        // RENDERING
+        // =============================================
+
+        function renderGrid() {
+            const grid = document.getElementById('shortcut-grid');
+            
+            if (filteredShortcuts.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <h3>No shortcuts found</h3>
+                        <p>Try adjusting your search or filter criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const cards = filteredShortcuts.map(item => renderCard(item)).join('');
+            const publishCard = renderPublishCard();
+            
+            grid.innerHTML = cards + publishCard;
+        }
+
+        function renderCard(item) {
+            const icon = ICONS[item.icon] || ICONS.document;
+            const author = item.author || { name: 'Anonymous', username: 'anonymous', avatarColor: AVATAR_COLORS[0] };
+            const initial = author.name ? author.name[0].toUpperCase() : 'A';
+            const iconColor = item.iconColor || '#3b82f6';
+            const bgColor = hexToRgba(iconColor, 0.15);
+
+            return `
+                <article class="shortcut-card" onclick="viewShortcut('${item.id}')">
+                    <div class="shortcut-header">
+                        <div class="shortcut-icon" style="background: ${bgColor}; color: ${iconColor}">
+                            ${icon}
+                        </div>
+                        <div class="shortcut-info">
+                            <h3>${escapeHtml(item.name)}</h3>
+                            <div class="shortcut-author" onclick="viewProfile('${author.username}', event)" style="cursor: pointer;">
+                                <div class="author-avatar" style="background: ${author.avatarUrl ? 'transparent' : (author.avatarColor || AVATAR_COLORS[0])}">
+                                    ${author.avatarUrl ? `<img src="${author.avatarUrl}" alt="">` : initial}
+                                </div>
+                                <span class="author-name">@${escapeHtml(author.username)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="shortcut-description">${escapeHtml(item.description)}</p>
+                    <div class="shortcut-stats">
+                        <span class="shortcut-stat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path>
+                            </svg>
+                            ${formatNumber(item.likes)}
+                        </span>
+                        <span class="shortcut-stat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            ${formatNumber(item.downloads)}
+                        </span>
+                        <span class="shortcut-stat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            ${formatNumber(item.views)}
+                        </span>
+                    </div>
+                    <div class="shortcut-actions" onclick="event.stopPropagation()">
+                        <button class="btn-get" onclick="getShortcut('${item.id}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Get Shortcut
+                        </button>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderPublishCard() {
+            return `
+                <div class="publish-card" onclick="goToPublish()">
+                    <div class="publish-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h3>Create Your Shortcut</h3>
+                    <p>Share your creation with the community</p>
+                </div>
+            `;
+        }
+
+        // =============================================
+        // ACTIONS
+        // =============================================
+
+        function viewShortcut(id) {
+            // Store the shortcut data and navigate to detail page
+            const item = allShortcuts.find(s => s.id === id);
+            if (item) {
+                localStorage.setItem('marketplace_current_item', JSON.stringify(item));
+                window.location.href = 'marketplace-item.html?id=' + encodeURIComponent(id);
+            }
+        }
+
+        function getShortcut(id) {
+            // Navigate to detail page where user can download
+            viewShortcut(id);
+        }
+
+        function goToPublish() {
+            const isLoggedIn = localStorage.getItem('shortcutstudio_logged_in') === 'true';
+            if (isLoggedIn) {
+                window.location.href = 'projects.html';
+            } else {
+                window.location.href = 'login.html?redirect=projects.html';
+            }
+        }
+
+        // =============================================
+        // PROFILE MODAL
+        // =============================================
+
+        function viewProfile(username, event) {
+            if (event) event.stopPropagation();
+            
+            // Find user data from shortcuts
+            const userShortcuts = allShortcuts.filter(s => s.author.username === username);
+            if (userShortcuts.length === 0) return;
+
+            const author = userShortcuts[0].author;
+            const totalDownloads = userShortcuts.reduce((sum, s) => sum + (s.downloads || 0), 0);
+            const totalLikes = userShortcuts.reduce((sum, s) => sum + (s.likes || 0), 0);
+
+            // Populate Modal
+            document.getElementById('modal-display-name').textContent = author.name;
+            document.getElementById('modal-username').textContent = '@' + author.username;
+            document.getElementById('modal-bio').textContent = author.bio || 'No bio available.';
+            
+            document.getElementById('modal-stat-shortcuts').textContent = userShortcuts.length;
+            document.getElementById('modal-stat-downloads').textContent = formatNumber(totalDownloads);
+            document.getElementById('modal-stat-likes').textContent = formatNumber(totalLikes);
+
+            const avatarEl = document.getElementById('modal-profile-avatar');
+            const initial = document.getElementById('modal-avatar-initial');
+            const img = document.getElementById('modal-avatar-image');
+
+            if (author.avatarUrl) {
+                initial.style.display = 'none';
+                img.style.display = 'block';
+                img.src = author.avatarUrl;
+                avatarEl.style.background = 'transparent';
+            } else {
+                initial.style.display = 'block';
+                img.style.display = 'none';
+                initial.textContent = (author.name || 'U')[0].toUpperCase();
+                avatarEl.style.background = author.avatarColor || AVATAR_COLORS[0];
+            }
+
+            document.getElementById('profile-modal').classList.add('active');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.remove('active');
+        }
+
+        function goToPublish() {
+            const isLoggedIn = localStorage.getItem('shortcutstudio_logged_in') === 'true';
+            if (isLoggedIn) {
+                window.location.href = 'projects.html';
+            } else {
+                window.location.href = 'login.html?redirect=projects.html';
+            }
+        }
+
+        function toggleSortMenu() {
+            const dropdown = document.getElementById('sort-dropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        function selectSort(sort) {
+            currentSort = sort;
+            const labels = { trending: 'Trending', liked: 'Most Liked', downloads: 'Most Downloaded', recent: 'Recent' };
+            document.getElementById('sort-label').textContent = labels[sort];
+            
+            // Update active state
+            document.querySelectorAll('.sort-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.sort === sort);
+            });
+            
+            // Close dropdown
+            document.getElementById('sort-dropdown').classList.remove('open');
+            filterAndSort();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('sort-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+
+            // Close profile modal on outside click
+            const modal = document.getElementById('profile-modal');
+            if (e.target === modal) {
+                closeProfileModal();
+            }
+        });
+
+        // =============================================
+        // UTILITIES
+        // =============================================
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function hexToRgba(hex, alpha = 1) {
+            // Handle both #RGB and #RRGGBB formats
+            let r, g, b;
+            hex = hex.replace('#', '');
+            if (hex.length === 3) {
+                r = parseInt(hex[0] + hex[0], 16);
+                g = parseInt(hex[1] + hex[1], 16);
+                b = parseInt(hex[2] + hex[2], 16);
+            } else {
+                r = parseInt(hex.slice(0, 2), 16);
+                g = parseInt(hex.slice(2, 4), 16);
+                b = parseInt(hex.slice(4, 6), 16);
+            }
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function formatNumber(num) {
+            if (!num) return '0';
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+            }
+            return num.toString();
+        }
+
+        // =============================================
+        // PUBLIC API - For adding shortcuts programmatically
+        // =============================================
+
+        window.ShortcutStudio = window.ShortcutStudio || {};
+
+        /**
+         * Add a new shortcut to the marketplace
+         * @param {Object} shortcut - The shortcut object
+         * @param {string} shortcut.name - Name of the shortcut
+         * @param {string} shortcut.description - Description
+         * @param {string} shortcut.category - Category (productivity, media, social, utilities, health, ai)
+         * @param {string} shortcut.icon - Icon key (music, image, document, health, tool, ai, qr, book, water, message)
+         * @param {string} shortcut.iconColor - Hex color code (e.g., '#3b82f6', '#ec4899')
+         */
+        window.ShortcutStudio.addShortcut = function(shortcut) {
+            const user = getCurrentUser();
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            const newShortcut = {
+                id: shortcut.id || 'shortcut-' + Date.now(),
+                name: shortcut.name || 'Untitled Shortcut',
+                description: shortcut.description || '',
+                author: user ? {
+                    name: user.displayName,
+                    username: user.username,
+                    avatarColor: user.avatarColor,
+                    avatarImage: user.avatarImage
+                } : { name: 'Anonymous', username: 'anonymous', avatarColor: AVATAR_COLORS[0] },
+                category: shortcut.category || 'utilities',
+                icon: shortcut.icon || 'document',
+                iconColor: shortcut.iconColor || randomColor,
+                likes: 0,
+                downloads: 0,
+                views: 0,
+                actions: shortcut.actions || 1,
+                createdAt: new Date().toISOString().split('T')[0]
+            };
+
+            allShortcuts.unshift(newShortcut);
+            saveShortcuts();
+            filterAndSort();
+            return newShortcut;
+        };
+
+        window.ShortcutStudio.getShortcuts = function() {
+            return [...allShortcuts];
+        };
+
+        window.ShortcutStudio.removeShortcut = function(id) {
+            const index = allShortcuts.findIndex(s => s.id === id);
+            if (index > -1) {
+                allShortcuts.splice(index, 1);
+                saveShortcuts();
+                filterAndSort();
+                return true;
+            }
+            return false;
+        };
+
+        // =============================================
+        // INITIALIZATION
+        // =============================================
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Show loading state
+            const grid = document.getElementById('shortcutsGrid');
+            if (grid) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">Loading shortcuts...</div>';
+            }
+
+            await loadShortcuts();
+            filterAndSort();
+
+            // Category tab click handlers
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    setCategory(tab.dataset.category);
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

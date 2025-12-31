@@ -1,6 +1,1 @@
-{
-  "action": "Text",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}
+{"a":"Text","p":{"Text":"{{S}}"}}

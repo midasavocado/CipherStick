@@ -1,7 +1,1 @@
-{
-  "action": "GetAppAndWebsiteActivity",
-  "params": {
-    "Type": "App/Website/App & Website",
-    "During": "Today/Yesterday/This Week/Last Week/This Month"
-  }
-}
+{"a":"GetAppAndWebsiteActivity","p":{"Type":"App/Website/App & Website","During":"Today/Yesterday/This Week/Last Week/This Month"}}

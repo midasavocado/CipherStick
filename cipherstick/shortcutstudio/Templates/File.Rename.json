@@ -1,7 +1,1 @@
-{
-  "action": "File.Rename",
-  "params": {
-    "File": "{{VARIABLE}}",
-    "NewFilename": "{{STRING}}"
-  }
-}
+{"a":"File.Rename","p":{"File":"{{V}}","NewFilename":"{{S}}"}}

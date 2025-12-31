@@ -1,4 +1,4 @@
-@media (max-width: 1024px) {
+@media (max-width: 1050px) {
   body[data-page="workspace"] .app-container {
     height: 100dvh;
   }
@@ -120,12 +120,19 @@
   body[data-page="workspace"].mobile-preview-open .preview-pane {
     display: flex;
     position: fixed;
-    top: 64px;
+    top: 56px;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
     z-index: 70;
+    background: var(--bg-color);
+    overflow: hidden;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .preview-canvas {
+    overflow: hidden;
+    overflow-y: auto;
   }
 
   body[data-page="workspace"].mobile-preview-open .mobile-preview-close-btn {
@@ -144,8 +151,12 @@
     height: 48px;
     padding: 0 0.75rem;
     border-top: 1px solid var(--border-color);
+    border-bottom: none;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    background: var(--surface-color);
+    position: relative;
+    z-index: 5;
   }
 
   body[data-page="workspace"].mobile-preview-open .project-title-wrap {
@@ -291,5 +302,120 @@
 
   body.dragging-action {
     overflow: hidden;
+  }
+
+  /* Prevent text selection during pill drag */
+  body.dragging-pill {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grabbing !important;
+  }
+
+  body.dragging-pill * {
+    cursor: grabbing !important;
+  }
+}
+
+/* Very narrow mobile devices (under 380px) */
+@media (max-width: 380px) {
+  body[data-page="workspace"] .chat-header {
+    grid-template-columns: 32px 1fr 32px;
+    gap: 0.35rem;
+    padding: 0 0.5rem;
+    height: 48px;
+  }
+
+  body[data-page="workspace"] #mobile-project-name-input {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.45rem;
+  }
+
+  body[data-page="workspace"] #mobile-project-edit-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  body[data-page="workspace"] .mobile-shortcut-card {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(4.8rem + env(safe-area-inset-bottom));
+    padding: 0.65rem 0.85rem;
+  }
+
+  body[data-page="workspace"] .mobile-shortcut-card .shortcut-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  body[data-page="workspace"] .mobile-shortcut-card .shortcut-name {
+    font-size: 0.85rem;
+  }
+
+  body[data-page="workspace"] .mobile-shortcut-card .shortcut-action-count {
+    font-size: 0.7rem;
+  }
+
+  body[data-page="workspace"] .mobile-card-actions button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  body[data-page="workspace"] .chat-input-area {
+    padding: 0.5rem 0.65rem calc(0.5rem + env(safe-area-inset-bottom));
+  }
+
+  body[data-page="workspace"] .messages-container {
+    padding: 0.5rem;
+    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
+  }
+
+  body[data-page="workspace"] #chat-empty-state {
+    left: 1rem;
+    right: 1rem;
+    bottom: calc(9.5rem + env(safe-area-inset-bottom));
+  }
+
+  body[data-page="workspace"] #chat-empty-state h3 {
+    font-size: 1rem;
+  }
+
+  body[data-page="workspace"] #chat-empty-state p {
+    font-size: 0.8rem;
+  }
+
+  body[data-page="workspace"] .chat-empty-state .empty-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.75rem;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .preview-canvas {
+    padding: 0.65rem 0.5rem;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .action-node,
+  body[data-page="workspace"].mobile-preview-open .if-block,
+  body[data-page="workspace"].mobile-preview-open .repeat-block,
+  body[data-page="workspace"].mobile-preview-open .menu-block {
+    padding: 0.65rem;
+    gap: 0.5rem;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .node-title {
+    font-size: 0.8rem;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .node-param .param-label {
+    font-size: 0.7rem;
+    min-width: 90px;
+    flex: 0 0 90px;
+  }
+
+  body[data-page="workspace"].mobile-preview-open .node-param .param-value {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.35rem;
+    min-height: 26px;
   }
 }

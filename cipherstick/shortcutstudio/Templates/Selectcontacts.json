@@ -1,6 +1,1 @@
-{
-  "action": "Selectcontacts",
-  "params": {
-    "SelectMultiple": "{{BOOLEAN}}"
-  }
-}
+{"a":"Selectcontacts","p":{"SelectMultiple":"{{B}}"}}

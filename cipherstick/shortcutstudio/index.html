@@ -15,6 +15,28 @@
   <meta property="og:url" content="https://shortcutstudio.cipherstick.tech">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="icon.png">
+  <script>
+    // Smart Redirect Logic - Executed immediately to prevent flash
+    (function() {
+        try {
+            const loggedIn = localStorage.getItem('shortcutstudio_logged_in') === 'true';
+            const autoRedirect = localStorage.getItem('shortcutstudio_auto_redirect') !== 'false';
+            
+            if (loggedIn && autoRedirect) {
+                const hasVisitedHome = sessionStorage.getItem('visited_home');
+                const referrer = document.referrer;
+                const currentOrigin = window.location.origin;
+                const isInternal = referrer && referrer.includes(currentOrigin);
+                
+                if (!hasVisitedHome && !isInternal) {
+                    window.location.href = 'projects.html';
+                } else {
+                    sessionStorage.setItem('visited_home', 'true');
+                }
+            }
+        } catch (e) { console.error(e); }
+    })();
+  </script>
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/utilities.css">
@@ -360,22 +382,28 @@
         <div class="faq-grid"
           style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
           <div class="ss-card faq-item">
-            <h3>Is ShortcutStudio free to use?</h3>
-            <p>Yes, we offer a generous free tier for hobbyists. Pro plans are available for power users.</p>
+            <h3>Do I need coding experience?</h3>
+            <p>No. Just describe what you want your shortcut to do in plain English. Our AI handles the logic and structure. That said, we do make it easy for you to change your shortcut</p>
           </div>
           <div class="ss-card faq-item">
-            <h3>Do I need to know how to code?</h3>
-            <p>Not at all. ShortcutStudio uses advanced AI to turn your natural language descriptions into functional
-              shortcuts.
-            </p>
+            <h3>How do I get the shortcut on my iPhone?</h3>
+            <p>We generate a downloadable .shortcut file. Open it on your iPhone and it imports directly into the Shortcuts app.</p>
           </div>
           <div class="ss-card faq-item">
-            <h3>Can I export to my iPhone?</h3>
-            <p>Absolutely. You can download the .shortcut file and install it directly on your iOS device.</p>
+            <h3>What AI models power this?</h3>
+            <p>We may change AI models over time, but currently we use GPT-OSS-120B</p>
           </div>
           <div class="ss-card faq-item">
-            <h3>What models do you use?</h3>
-            <p>We use state-of-the-art language models optimized for logic and automation tasks.</p>
+            <h3>Can the AI make any shortcut I describe?</h3>
+            <p>While the AI is powerful, our action catolog does not include <i>every</i> action in Shortcuts.</p>
+          </div>
+          <div class="ss-card faq-item">
+            <h3>I have an app on the App Store. Can my app's shortcuts be supported?</h3>
+            <p>Yes! If your iOS app exposes Shortcuts actions, we can add support for them. <a href="#contact">Contact us</a> with your app details and we'll work with you to integrate your custom actions into ShortcutStudio.</p>
+          </div>
+          <div class="ss-card faq-item">
+            <h3>Does this work on Mac and iPad too?</h3>
+            <p>Yes. The Shortcuts app is available on iOS, iPadOS, and macOS. Our generated .shortcut files work across all Apple devices that support the Shortcuts app.</p>
           </div>
         </div>
       </div>

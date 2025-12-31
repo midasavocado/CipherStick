@@ -1,7 +1,1 @@
-{
-  "action": "ShortcutsActions.TranscribeAudio",
-  "params": {
-    "Audio": "{{EXTENSION_INPUT}}",
-    "Language": "{{STRING}}"
-  }
-}
+{"a":"ShortcutsActions.TranscribeAudio","p":{"Audio":"{{X}}","Language":"{{S}}"}}

@@ -1,6 +1,1 @@
-{
-  "action": "File.Getfoldercontents",
-  "params": {
-    "Folder": "{{VARIABLE}}"
-  }
-}
+{"a":"File.Getfoldercontents","p":{"Folder":"{{V}}"}}

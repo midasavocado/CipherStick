@@ -1,6 +1,1 @@
-{
-  "action": "Savetocameraroll",
-  "params": {
-    "Input": "{{Input}}"
-  }
-}
+{"a":"Savetocameraroll","p":{"Input":"{{V}}"}}

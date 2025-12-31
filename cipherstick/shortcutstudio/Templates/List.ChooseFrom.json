@@ -1,9 +1,1 @@
-{
-  "action": "List.ChooseFrom",
-  "params": {
-    "List": "{{VARIABLE}}",
-    "Prompt": "{{STRING}}",
-    "SelectAllInitally": "{{BOOLEAN}}",
-    "SelectMultiple": "{{BOOLEAN}}"
-  }
-}
+{"a":"List.ChooseFrom","p":{"List":"{{V}}","Prompt":"{{S}}","SelectAllInitally":"{{B}}","SelectMultiple":"{{B}}"}}

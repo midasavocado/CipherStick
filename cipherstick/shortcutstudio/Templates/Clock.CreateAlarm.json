@@ -1,9 +1,1 @@
-{
-  "action": "Clock.CreateAlarm",
-  "params": {
-    "Name": "{{STRING}}",
-    "AllowsSnooze": "{{BOOLEAN}}",
-    "Time": "{{STRING}}",
-    "OpenWhenRun": "{{BOOLEAN}}"
-  }
-}
+{"a":"Clock.CreateAlarm","p":{"Name":"{{S}}","AllowsSnooze":"{{B}}","Time":"{{S}}","OpenWhenRun":"{{B}}"}}

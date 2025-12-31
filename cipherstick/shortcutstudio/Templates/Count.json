@@ -1,6 +1,1 @@
-{
-  "action": "Count",
-  "params": {
-    "Input": "{{VARIABLE}}"
-  }
-}
+{"a":"Count","p":{"Input":"{{V}}"}}

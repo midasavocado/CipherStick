@@ -4,212 +4,1312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShortcutStudio - Login</title>
-    <meta name="description" content="Login to ShortcutStudio to build and manage your Apple Shortcuts.">
-    <meta property="og:title" content="ShortcutStudio - Login">
-    <link rel="icon"
-        href="icon.png">
+    <title>ShortcutStudio - Sign In</title>
+    <meta name="description" content="Sign in to ShortcutStudio to build and manage your Apple Shortcuts.">
+    <link rel="icon" href="icon.png">
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/utilities.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/pages/landing.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-color);
-            position: relative;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
             overflow: hidden;
         }
 
-        .login-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: var(--shadow-lg);
-            z-index: 10;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
         }
 
-        .social-btn {
+        /* Animated Background - contained properly */
+        .bg-animation {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-gradient {
+            position: absolute;
+            width: 100vmax;
+            height: 100vmax;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            animation: morphGradient 25s ease-in-out infinite;
+        }
+
+        .bg-gradient-1 {
+            background: radial-gradient(circle, var(--primary-color) 0%, transparent 60%);
+            top: -30%;
+            left: -20%;
+        }
+
+        .bg-gradient-2 {
+            background: radial-gradient(circle, #8b5cf6 0%, transparent 60%);
+            bottom: -30%;
+            right: -20%;
+            animation-delay: -8s;
+        }
+
+        .bg-gradient-3 {
+            background: radial-gradient(circle, #06b6d4 0%, transparent 60%);
+            top: 30%;
+            right: -25%;
+            animation-delay: -16s;
+            opacity: 0.2;
+        }
+
+        @keyframes morphGradient {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(5%, 5%) scale(1.05); }
+            66% { transform: translate(-3%, 8%) scale(0.98); }
+        }
+
+        /* Floating Particles - start distributed */
+        .particles {
+            position: absolute;
+            inset: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: floatParticle 20s infinite linear;
+        }
+
+        .particle::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: inherit;
+            border-radius: 50%;
+            filter: blur(4px);
+            opacity: 0.5;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(0) translateX(0); opacity: 0.5; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+        }
+
+        /* Grid pattern */
+        .grid-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+        }
+
+        /* Mouse Spotlight */
+        .mouse-spotlight {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            mix-blend-mode: screen;
+        }
+
+        /* Main Layout */
+        .auth-container {
+            height: 100vh;
+            display: flex;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Left Panel - Branding */
+        .brand-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            position: relative;
+        }
+
+        .brand-content {
+            max-width: 500px;
+            animation: slideInLeft 0.7s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .logo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            margin-bottom: 2.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-link:hover { transform: scale(1.02); }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.8rem;
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            background: var(--surface-color);
-            color: var(--text-color);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 0.8rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
         }
 
-        .social-btn:hover {
-            background: var(--surface-hover);
-            border-color: var(--text-muted);
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--heading-color);
         }
 
-        .divider {
+        .brand-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
+            color: var(--heading-color);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-title .highlight {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% 200%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .brand-description {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Feature cards */
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+        }
+
+        .feature-card {
             display: flex;
             align-items: center;
-            margin: 1.5rem 0;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.15s; }
+        .feature-card:nth-child(2) { animation-delay: 0.25s; }
+        .feature-card:nth-child(3) { animation-delay: 0.35s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feature-card:hover {
+            transform: translateX(6px);
+            border-color: var(--primary-color);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary-color);
+        }
+
+        .feature-text {
+            color: var(--text-color);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Right Panel - Form */
+        .form-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            padding-right: 8rem; /* Move card to the left */
+        }
+
+        @media (max-width: 1200px) {
+            .form-panel {
+                padding-right: 2rem;
+            }
+        }
+
+        .form-wrapper {
+            width: 100%;
+            max-width: 420px;
+            animation: slideInRight 0.7s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .form-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.25rem;
+            box-shadow: var(--shadow-lg), 0 0 60px -30px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Mobile logo */
+        .mobile-logo {
+            display: none;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .form-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.375rem;
+            color: var(--heading-color);
+        }
+
+        .form-header p {
             color: var(--text-muted);
             font-size: 0.9rem;
         }
 
+        /* Error Message */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            display: none;
+            align-items: center;
+            gap: 0.625rem;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .error-message.show { display: flex; }
+
+        .error-message svg {
+            width: 18px;
+            height: 18px;
+            color: #ef4444;
+            flex-shrink: 0;
+        }
+
+        .error-message span {
+            color: #ef4444;
+            font-size: 0.85rem;
+        }
+
+        /* Success Animation */
+        .success-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 0;
+            animation: successPop 0.4s ease;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0.9); opacity: 0; }
+            60% { transform: scale(1.02); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-container.show { display: flex; }
+
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.35);
+            animation: pulse 1.5s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.35); }
+            50% { box-shadow: 0 0 45px rgba(34, 197, 94, 0.5); }
+        }
+
+        .success-icon svg {
+            width: 36px;
+            height: 36px;
+            color: white;
+        }
+
+        .success-title {
+            font-size: 1.375rem;
+            font-weight: 700;
+            margin-bottom: 0.375rem;
+            color: var(--heading-color);
+        }
+
+        .success-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Social Buttons */
+        .social-buttons {
+            display: flex;
+            gap: 0.625rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .social-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary-color);
+            background: var(--surface-hover);
+            transform: translateY(-1px);
+        }
+
+        .social-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            margin: 1.25rem 0;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
         .divider::before,
         .divider::after {
-            content: "";
+            content: '';
             flex: 1;
             height: 1px;
             background: var(--border-color);
         }
 
-        .divider span {
-            padding: 0 1rem;
+        /* Form */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group {
+            position: relative;
+            transition: all 0.35s ease;
+            max-height: 85px;
+            opacity: 1;
+        }
+
+        .input-group.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.375rem;
+            transition: color 0.2s ease;
+        }
+
+        .input-group:focus-within label {
+            color: var(--primary-color);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            padding-left: 2.5rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 0.875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+            pointer-events: none;
+        }
+
+        .input-group:focus-within .input-icon {
+            color: var(--primary-color);
+        }
+
+        /* Password toggle with animation */
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            transition: color 0.2s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--text-color);
+        }
+
+        .password-toggle svg {
+            width: 16px;
+            height: 16px;
+            transition: all 0.25s ease;
+        }
+
+        .password-toggle.hidden-pass svg {
+            transform: scale(1);
+        }
+
+        .password-toggle.shown-pass svg {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+
+        /* Eye icon animation */
+        .eye-open, .eye-closed {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .password-toggle.hidden-pass .eye-open {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .password-toggle.hidden-pass .eye-closed {
+            opacity: 0;
+            transform: scale(0.8);
+            position: absolute;
+        }
+
+        .password-toggle.shown-pass .eye-open {
+            opacity: 0;
+            transform: scale(0.8);
+            position: absolute;
+        }
+
+        .password-toggle.shown-pass .eye-closed {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Remember & Forgot */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remember-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        .remember-label:hover { color: var(--text-color); }
+
+        .remember-label input {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--primary-color);
+        }
+
+        .forgot-link {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px -6px rgba(59, 130, 246, 0.5);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .form-footer {
+            text-align: center;
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-footer p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .form-footer a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .form-footer a:hover { text-decoration: underline; }
+
+        .terms {
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .terms a {
+            color: var(--text-muted);
+            text-decoration: underline;
+        }
+
+        .terms a:hover { color: var(--text-color); }
+
+        /* Already Logged In State */
+        .logged-in-state {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        .toggle-label {
+            font-size: 0.875rem;
+            color: var(--text-color);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary-color);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        .signout-link {
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .signout-link a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .signout-link a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 900px) {
+            .brand-panel { display: none; }
+            .mobile-logo { display: flex; }
+            .form-panel { padding: 1.25rem; }
+            .form-card { padding: 1.75rem; }
+        }
+
+        @media (max-width: 480px) {
+            .form-card {
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+            .social-buttons { flex-direction: column; }
         }
     </style>
 </head>
 
 <body class="app-theme">
-
-    <div class="login-container">
-        <!-- Background Blobs -->
-        <div class="bg-animation">
-            <div class="blob blob-1"></div>
-            <div class="blob blob-2"></div>
-        </div>
-
-        <div class="login-card">
-            <div class="text-center" style="margin-bottom: 2rem;">
-                <div class="logo-icon" style="width: 48px; height: 48px; margin: 0 auto 1rem auto; font-size: 1.5rem;">S
-                </div>
-                <h2 id="auth-title">Welcome back</h2>
-                <p id="auth-subtitle" style="color: var(--text-muted);">Sign in to continue to ShortcutStudio</p>
-            </div>
-
-            <button class="social-btn" onclick="handleLogin()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        fill="#4285F4" />
-                    <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        fill="#34A853" />
-                    <path
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05" />
-                    <path
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335" />
-                </svg>
-                Continue with Google
-            </button>
-            <button class="social-btn" onclick="handleLogin()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.19 2.31-.89 3.51-.84 1.54.06 2.74.79 3.5 1.84-2.93 1.75-2.46 5.23.45 6.42-.67 1.72-1.6 3.41-2.54 4.77zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-                </svg>
-                Continue with Apple
-            </button>
-
-            <div class="divider"><span>or continue with email</span></div>
-
-            <form onsubmit="handleLogin(event)">
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Email address</label>
-                    <input type="email" class="input-glass" placeholder="name@example.com" required>
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Password</label>
-                    <input type="password" class="input-glass" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn-primary"
-                    style="width: 100%; padding: 0.8rem; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">Sign
-                    In</button>
-            </form>
-
-            <p class="text-center" style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
-                <span id="auth-switch-text">Don't have an account?</span>
-                <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary-color); font-weight: 600;"
-                    id="auth-switch-btn">Sign up</a>
-            </p>
-        </div>
-    </div>
-
+    <!-- Animated Background -->
     <div class="bg-animation">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+        <div class="particles" id="particles"></div>
+        <div class="grid-pattern"></div>
     </div>
+
+    <div class="auth-container">
+        <!-- Left Panel - Branding -->
+        <div class="brand-panel">
+            <div class="brand-content">
+                <a href="index.html" class="logo-link">
+                    <div class="logo-icon">S</div>
+                    <span class="logo-text">ShortcutStudio</span>
+                </a>
+
+                <h1 class="brand-title">
+                    Build powerful<br>
+                    <span class="highlight">Apple Shortcuts</span><br>
+                    with AI
+                </h1>
+
+                <p class="brand-description">
+                    Join thousands of creators automating their workflow with intelligent, production-ready shortcuts.
+                </p>
+
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                            </svg>
+                        </div>
+                        <span class="feature-text">AI-powered shortcut generation</span>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <path d="M12 8v8m-4-4h8"></path>
+                            </svg>
+                        </div>
+                        <span class="feature-text">Export directly to Apple Shortcuts</span>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <span class="feature-text">Share and discover in the Marketplace</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Form -->
+        <div class="form-panel">
+            <div class="form-wrapper">
+                <div class="form-card">
+                    <div class="mobile-logo">
+                        <a href="index.html" class="logo-link">
+                            <div class="logo-icon">S</div>
+                            <span class="logo-text">ShortcutStudio</span>
+                        </a>
+                    </div>
+
+                    <div class="form-header">
+                        <h2 id="form-title">Welcome back</h2>
+                        <p id="form-subtitle">Sign in to continue to ShortcutStudio</p>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div class="error-message" id="error-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span id="error-text">Something went wrong</span>
+                    </div>
+
+                    <!-- Success State -->
+                    <div class="success-container" id="success-box">
+                        <div class="success-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6L9 17l-5-5"></path>
+                            </svg>
+                        </div>
+                        <h3 class="success-title">Welcome!</h3>
+                        <p class="success-subtitle">Redirecting to your dashboard...</p>
+                    </div>
+
+                    <!-- Form Content -->
+                    <div id="form-content">
+                        <div class="social-buttons">
+                            <button class="social-btn" onclick="handleSocialAuth('google')">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                </svg>
+                                <span>Google</span>
+                            </button>
+                            <button class="social-btn" onclick="handleSocialAuth('apple')">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.19 2.31-.89 3.51-.84 1.54.06 2.74.79 3.5 1.84-2.93 1.75-2.46 5.23.45 6.42-.67 1.72-1.6 3.41-2.54 4.77zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                                </svg>
+                                <span>Apple</span>
+                            </button>
+                        </div>
+
+                        <div class="divider">or</div>
+
+                        <form class="auth-form" id="auth-form" onsubmit="handleSubmit(event)">
+                            <!-- Username (Sign up only) -->
+                            <div class="input-group collapsed" id="username-group">
+                                <label for="username">Username</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <input type="text" id="username" placeholder="coolcreator" autocomplete="username">
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="input-group">
+                                <label for="email">Email</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                        <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                    <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required>
+                                </div>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="input-group">
+                                <label for="password">Password</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required minlength="6">
+                                    <button type="button" class="password-toggle hidden-pass" id="password-toggle" onclick="togglePassword()">
+                                        <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Remember & Forgot (Login only) -->
+                            <div class="form-options" id="form-options">
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label class="remember-label">
+                                        <input type="checkbox" id="remember" checked>
+                                        <span>Remember me</span>
+                                    </label>
+                                </div>
+                                <a href="#" class="forgot-link" onclick="showForgotPassword(event)">Forgot password?</a>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="submit-btn">
+                                <span id="btn-text">Sign In</span>
+                                <div class="spinner" id="spinner"></div>
+                            </button>
+                        </form>
+
+                        <div class="form-footer" id="form-footer">
+                            <p>
+                                <span id="footer-text">Don't have an account?</span>
+                                <a href="#" id="toggle-link" onclick="toggleMode(event)">Sign up</a>
+                            </p>
+                        </div>
+
+                        <div class="terms">
+                            By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="theme.js"></script>
     <script>
-        const legacyStoragePrefix = String.fromCharCode(102, 108, 117, 120);
+        // Generate floating particles - distributed across viewport
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 25;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                // Start particles lower down to avoid header interference
+                particle.style.top = (15 + Math.random() * 85) + '%';
+                particle.style.animationDelay = (Math.random() * 20) + 's';
+                particle.style.animationDuration = (18 + Math.random() * 12) + 's';
+                
+                const size = 2 + Math.random() * 3;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                const colors = [
+                    'rgba(59, 130, 246, 0.5)',
+                    'rgba(139, 92, 246, 0.5)',
+                    'rgba(6, 182, 212, 0.4)'
+                ];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
 
-        function handleLogin(e) {
-            if (e) e.preventDefault();
-            // Fake login
-            const btn = e ? e.target.querySelector('button') : document.activeElement;
-            if (btn) {
-                const originalText = btn.innerText;
-                btn.innerText = 'Authenticating...';
-                btn.disabled = true;
+        // State
+        const STORAGE_KEY = 'shortcutstudio_user';
+        const LOGIN_KEY = 'shortcutstudio_logged_in';
+        const AUTO_REDIRECT_KEY = 'shortcutstudio_auto_redirect';
+        let isSignUp = false;
+
+        const AVATAR_COLORS = [
+            'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+            'linear-gradient(135deg, #22c55e, #06b6d4)',
+            'linear-gradient(135deg, #f97316, #ec4899)',
+            'linear-gradient(135deg, #ef4444, #f97316)',
+            'linear-gradient(135deg, #8b5cf6, #ec4899)',
+            'linear-gradient(135deg, #06b6d4, #3b82f6)'
+        ];
+
+        function toggleMode(e) {
+            e.preventDefault();
+            isSignUp = !isSignUp;
+            hideError();
+
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+            const btnText = document.getElementById('btn-text');
+            const footerText = document.getElementById('footer-text');
+            const toggleLink = document.getElementById('toggle-link');
+            const usernameGroup = document.getElementById('username-group');
+            const formOptions = document.getElementById('form-options');
+
+            if (isSignUp) {
+                title.textContent = 'Create account';
+                subtitle.textContent = 'Start building shortcuts for free';
+                btnText.textContent = 'Create Account';
+                footerText.textContent = 'Already have an account?';
+                toggleLink.textContent = 'Sign in';
+                usernameGroup.classList.remove('collapsed');
+                formOptions.style.display = 'none';
+            } else {
+                title.textContent = 'Welcome back';
+                subtitle.textContent = 'Sign in to continue to ShortcutStudio';
+                btnText.textContent = 'Sign In';
+                footerText.textContent = "Don't have an account?";
+                toggleLink.textContent = 'Sign up';
+                usernameGroup.classList.add('collapsed');
+                formOptions.style.display = 'flex';
+            }
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const toggle = document.getElementById('password-toggle');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.classList.remove('hidden-pass');
+                toggle.classList.add('shown-pass');
+            } else {
+                input.type = 'password';
+                toggle.classList.remove('shown-pass');
+                toggle.classList.add('hidden-pass');
+            }
+        }
+
+        function showError(message) {
+            const errorBox = document.getElementById('error-box');
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            errorBox.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('error-box').classList.remove('show');
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('spinner');
+
+            btn.disabled = loading;
+            btnText.style.display = loading ? 'none' : 'inline';
+            spinner.style.display = loading ? 'block' : 'none';
+        }
+
+        function showSuccess() {
+            document.getElementById('form-content').style.display = 'none';
+            document.getElementById('success-box').classList.add('show');
+            document.getElementById('form-title').textContent = 'Welcome!';
+            document.getElementById('form-subtitle').textContent = 'Redirecting to your dashboard...';
+        }
+
+        function createUser(username, email) {
+            const displayName = username || email.split('@')[0];
+            const user = {
+                displayName: displayName.charAt(0).toUpperCase() + displayName.slice(1),
+                username: username || email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, ''),
+                email: email,
+                bio: '',
+                avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+                avatarImage: null,
+                memberSince: new Date().toISOString(),
+                stats: { shortcuts: 0, published: 0, downloads: 0 }
+            };
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+            return user;
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            hideError();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username')?.value?.trim();
+
+            if (!email || !password) {
+                showError('Please fill in all required fields');
+                return;
             }
 
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            if (isSignUp && !username) {
+                showError('Please choose a username');
+                return;
+            }
+
+            if (isSignUp && username.length < 3) {
+                showError('Username must be at least 3 characters');
+                return;
+            }
+
+            setLoading(true);
+            // Auto-redirect is always enabled now
+            localStorage.setItem(AUTO_REDIRECT_KEY, 'true');
+            
             setTimeout(() => {
-                // Set logged in state in localStorage (with legacy fallback)
-                localStorage.setItem('shortcutstudio_logged_in', 'true');
-                localStorage.setItem(`${legacyStoragePrefix}_logged_in`, 'true');
+                createUser(username, email);
+                localStorage.setItem(LOGIN_KEY, 'true');
+                localStorage.setItem('flux_logged_in', 'true');
+                // Enable auto-redirect by default for new logins
+                localStorage.setItem(AUTO_REDIRECT_KEY, 'true');
 
-                // Get prompt from URL if present
-                const urlParams = new URLSearchParams(window.location.search);
-                const prompt = urlParams.get('prompt');
+                setLoading(false);
+                showSuccess();
 
-                if (prompt) {
-                    window.location.href = `app.html?prompt=${encodeURIComponent(prompt)}`;
-                } else {
-                    window.location.href = 'projects.html';
-                }
+                setTimeout(() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const prompt = urlParams.get('prompt');
+                    const redirect = urlParams.get('redirect');
+
+                    if (prompt) {
+                        window.location.href = 'app.html?prompt=' + encodeURIComponent(prompt);
+                    } else if (redirect) {
+                        window.location.href = redirect;
+                    } else {
+                        window.location.href = 'projects.html';
+                    }
+                }, 1200);
             }, 1000);
         }
 
-        function toggleAuthMode(e) {
-            e.preventDefault();
-            const title = document.getElementById('auth-title');
-            const subtitle = document.getElementById('auth-subtitle');
-            const switchText = document.getElementById('auth-switch-text');
-            const switchBtn = document.getElementById('auth-switch-btn');
-            const submitBtn = document.querySelector('button[type="submit"]');
+        function handleSocialAuth(provider) {
+            hideError();
+            setLoading(true);
 
-            if (title.innerText === 'Welcome back') {
-                // Switch to Sign Up
-                title.innerText = 'Create an account';
-                subtitle.innerText = 'Start building shortcuts for free';
-                switchText.innerText = 'Already have an account?';
-                switchBtn.innerText = 'Sign in';
-                submitBtn.innerText = 'Sign Up';
-            } else {
-                // Switch to Sign In
-                title.innerText = 'Welcome back';
-                subtitle.innerText = 'Sign in to continue to ShortcutStudio';
-                switchText.innerText = "Don't have an account?";
-                switchBtn.innerText = 'Sign up';
-                submitBtn.innerText = 'Sign In';
+            setTimeout(() => {
+                const mockEmail = provider === 'google' ? 'user@gmail.com' : 'user@icloud.com';
+                const mockUsername = 'user' + Math.floor(Math.random() * 10000);
+                
+                createUser(mockUsername, mockEmail);
+                localStorage.setItem(LOGIN_KEY, 'true');
+                localStorage.setItem('flux_logged_in', 'true');
+                localStorage.setItem(AUTO_REDIRECT_KEY, 'true');
+
+                setLoading(false);
+                showSuccess();
+
+                setTimeout(() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const prompt = urlParams.get('prompt');
+                    
+                    if (prompt) {
+                        window.location.href = 'app.html?prompt=' + encodeURIComponent(prompt);
+                    } else {
+                        window.location.href = 'projects.html';
+                    }
+                }, 1200);
+            }, 800);
+        }
+
+        function showForgotPassword(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            
+            if (!email) {
+                showError('Please enter your email address first');
+                return;
+            }
+
+            document.getElementById('form-title').textContent = 'Check your email';
+            document.getElementById('form-subtitle').textContent = `We sent a reset link to ${email}`;
+            document.getElementById('form-content').innerHTML = `
+                <div style="text-align: center; padding: 2rem 0;">
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">
+                        Click the link in the email to reset your password.
+                    </p>
+                    <button class="submit-btn" onclick="window.location.reload()">Back to Login</button>
+                </div>
+            `;
+        }
+
+        function checkLoginState() {
+            const isLoggedIn = localStorage.getItem(LOGIN_KEY) === 'true';
+            const autoRedirect = localStorage.getItem(AUTO_REDIRECT_KEY) === 'true';
+            const urlParams = new URLSearchParams(window.location.search);
+            const force = urlParams.get('force');
+
+            if (isLoggedIn && !force) {
+                if (autoRedirect) {
+                    window.location.href = 'projects.html';
+                    return;
+                }
+
+                document.getElementById('form-title').textContent = 'Already signed in';
+                document.getElementById('form-subtitle').textContent = 'You are logged in to ShortcutStudio.';
+                
+                const formContent = document.getElementById('form-content');
+                formContent.innerHTML = `
+                    <div class="logged-in-state" style="text-align: center; padding: 1rem 0;">
+                        <a href="projects.html" class="submit-btn" style="text-decoration: none; text-align: center; display: block; margin-bottom: 1.5rem;">
+                            <span>Go to Dashboard</span>
+                        </a>
+                        
+                        <div class="signout-link">
+                            <a href="#" onclick="localStorage.removeItem('shortcutstudio_logged_in'); localStorage.removeItem('flux_logged_in'); window.location.reload(); return false;" style="color: var(--text-muted); font-size: 0.9rem;">Sign out and use a different account</a>
+                        </div>
+                    </div>
+                `;
             }
         }
+
+        // Mouse Spotlight Effect
+        const spotlight = document.getElementById('mouse-spotlight');
+        if (spotlight) {
+            document.addEventListener('mousemove', (e) => {
+                requestAnimationFrame(() => {
+                    spotlight.style.left = e.clientX + 'px';
+                    spotlight.style.top = e.clientY + 'px';
+                });
+            });
+        }
+
+        // Init
+        checkLoginState();
     </script>
 </body>
 

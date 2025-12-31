@@ -1,7 +1,1 @@
-{
-  "action": "Number.Random",
-  "params": {
-    "RandomNumberMaximum": "{{NUMBER}}",
-    "RandomNumberMinimum": "{{NUMBER}}"
-  }
-}
+{"a":"Number.Random","p":{"RandomNumberMaximum":"{{N}}","RandomNumberMinimum":"{{N}}"}}

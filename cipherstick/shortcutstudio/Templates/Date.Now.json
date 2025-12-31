@@ -1,4 +1,1 @@
-{
-  "action": "Date.Now",
-  "params": {}
-}
+{"a":"Date.Now","p":{}}

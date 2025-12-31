@@ -1,7 +1,1 @@
-{
-  "action": "list",
-  "params": {
-    "text": "{{STRING}}", # Static items separated by commas; escape literal commas as "\\,"
-    "AskUserToEdit": "{{BOOLEAN}}"
-  }
-}
+{"a":"list","p":{"text":"{{S}}","AskUserToEdit":"{{B}}"}}

@@ -1,8 +1,1 @@
-{
-    "action": "Email.Send",
-    "params": {
-        "Subject": "{{STRING}}",
-        "Content": "{{STRING}}",
-        "Attachments": "{{VARIABLE}}"
-    }
-}
+{"a":"Email.Send","p":{"Subject":"{{S}}","Content":"{{S}}","Attachments":"{{V}}"}}

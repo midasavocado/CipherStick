@@ -1,14 +1,1 @@
-{
-  "action": "Addnewreminder",
-  "params": {
-    "AlertTime": "HH:MM AM/PM",
-    "AlertEnabled": "Alert/No Alert",
-    "CalendarItemNotes": "{{STRING}}",
-    "CalendarItemTitle": "{{STRING}}",
-    "Flag": "{{BOOLEAN}}",
-    "Images": "{{VARIABLE}}",
-    "Priority": "Low/Medium/High",
-    "Tags": "{{STRING}}",
-    "URL": "{{STRING}}"
-  }
-}
+{"a":"Addnewreminder","p":{"AlertTime":"HH:MM AM/PM","AlertEnabled":"Alert/No Alert","CalendarItemNotes":"{{S}}","CalendarItemTitle":"{{S}}","Flag":"{{B}}","Images":"{{V}}","Priority":"Low/Medium/High","Tags":"{{S}}","URL":"{{S}}"}}

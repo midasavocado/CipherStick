@@ -1,6 +1,1 @@
-{
-  "action": "Hash",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}
+{"a":"Hash","p":{"Input":"{{S}}"}}

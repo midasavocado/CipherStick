@@ -1,6 +1,1 @@
-{
-  "action": "Chrome.AddBookmark",
-  "params": {
-    "URL": "{{STRING}}"
-  }
-}
+{"a":"Chrome.AddBookmark","p":{"URL":"{{S}}"}}

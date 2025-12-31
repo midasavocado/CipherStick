@@ -1,6 +1,1 @@
-{
-  "action": "Setbrightness",
-  "params": {
-    "Level": "{{NUMBER}}" #1-100
-  }
-}
+{"a":"Setbrightness","p":{"Level":"{{N}}"}}

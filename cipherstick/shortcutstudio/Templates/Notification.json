@@ -1,7 +1,1 @@
-{
-  "action": "Notification",
-  "params": {
-    "NotificationActionBody": "{{STRING}}",
-    "NotificationActionTitle": "{{STRING}}"
-  }
-}
+{"a":"Notification","p":{"NotificationActionBody":"{{S}}","NotificationActionTitle":"{{S}}"}}

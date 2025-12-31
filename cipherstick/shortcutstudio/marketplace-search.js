@@ -1,4 +1,4 @@
-// Marketplace Search Functionality
+// Marketplace Search & Navigation
 function storageKey(suffix) {
     return `shortcutstudio_${suffix}`;
 }
@@ -12,129 +12,232 @@ function readStoredJson(suffix, fallback) {
     }
 }
 
-function buildMarketplaceCard(item) {
-    const card = document.createElement('div');
-    card.className = 'ss-card market-card';
-    card.dataset.marketplaceId = item.id || '';
-    card.innerHTML = `
-        <div class="card-metrics">
-            <span class="card-metric">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 21s-6-4.35-9-8.35C.5 9.5 2.3 6 6 6c2 0 3.4 1.1 4 2.1C10.6 7.1 12 6 14 6c3.7 0 5.5 3.5 3 6.65C18 16.65 12 21 12 21z"></path>
-                </svg>
-                ${Number(item.upvotes || 0)}
-            </span>
-            <span class="card-metric">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 3v12"></path>
-                    <path d="m7 10 5 5 5-5"></path>
-                    <path d="M5 21h14"></path>
-                </svg>
-                ${Number(item.downloads || 0)}
-            </span>
-        </div>
-        <div class="card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-            </svg>
-        </div>
-        <h3>${item.name || 'Untitled Project'}</h3>
-        <p>${item.description || item.summary || 'Custom shortcut built with ShortcutStudio.'}</p>
-        <div class="market-stats">
-            <span>@you</span>
-            <span>${Number(item.downloads || 0)} uses</span>
-        </div>
-        <div class="market-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-            <button class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Remix</button>
-            <button class="btn-primary-sm" style="flex: 1; font-size: 0.8rem;">Download</button>
-        </div>
-    `;
-    return card;
+// Navigate to shortcut detail page
+function goToShortcut(id) {
+    window.location.href = `marketplace-item.html?id=${encodeURIComponent(id)}`;
 }
 
-function loadMarketplaceItems() {
-    const grid = document.querySelector('.ss-grid');
-    if (!grid) return;
-    const items = readStoredJson('marketplaceItems', []);
-    if (!Array.isArray(items) || !items.length) return;
-    items.forEach((item) => {
-        if (!item || !item.id) return;
-        if (grid.querySelector(`[data-marketplace-id="${item.id}"]`)) return;
-        grid.appendChild(buildMarketplaceCard(item));
-    });
-}
-
+// Search functionality
 function searchMarketplace(query) {
     const searchTerm = query.toLowerCase().trim();
-    const shortcutCards = document.querySelectorAll('.market-card');
+    const shortcutCards = document.querySelectorAll('.shortcut-card');
+    const noResults = document.getElementById('no-results');
+    const grid = document.getElementById('shortcut-grid');
+
+    let visibleCount = 0;
 
     shortcutCards.forEach(card => {
         const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
-        const description = card.querySelector('p')?.textContent.toLowerCase() || '';
+        const description = card.querySelector('.shortcut-description')?.textContent.toLowerCase() || '';
+        const author = card.querySelector('.shortcut-author')?.textContent.toLowerCase() || '';
 
-        if (title.includes(searchTerm) || description.includes(searchTerm)) {
-            card.style.display = 'block';
+        const matches = title.includes(searchTerm) || 
+                       description.includes(searchTerm) || 
+                       author.includes(searchTerm);
+
+        if (matches) {
+            card.style.display = '';
+            visibleCount++;
         } else {
             card.style.display = 'none';
         }
     });
 
-    // Show "no results" message if needed
-    const visibleCards = Array.from(shortcutCards).filter(card => card.style.display !== 'none');
-    const grid = document.querySelector('.ss-grid'); // Fixed selector from .shortcuts-grid
-
-    let noResultsMsg = document.getElementById('no-results-message');
-    if (visibleCards.length === 0) {
-        if (!noResultsMsg) {
-            noResultsMsg = document.createElement('div');
-            noResultsMsg.id = 'no-results-message';
-            noResultsMsg.style.textAlign = 'center';
-            noResultsMsg.style.padding = '3rem';
-            noResultsMsg.style.color = 'var(--text-muted)';
-            noResultsMsg.innerHTML = '<p>No shortcuts found matching your search.</p>';
-            grid.parentNode.insertBefore(noResultsMsg, grid.nextSibling);
-        }
-        noResultsMsg.style.display = 'block';
-    } else {
-        if (noResultsMsg) noResultsMsg.style.display = 'none';
+    // Show/hide no results message
+    if (noResults) {
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+    if (grid) {
+        grid.style.display = visibleCount === 0 ? 'none' : '';
     }
 }
 
-function filterMarketplace(filter) {
-    // Dropdown handles active state automatically
+// Filter chips functionality
+function initFilterChips() {
+    const filterChips = document.querySelectorAll('.filter-chip');
+    
+    filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            // Update active state
+            filterChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            
+            const filter = chip.dataset.filter;
+            applyFilter(filter);
+        });
+    });
+}
 
-    const cards = Array.from(document.querySelectorAll('.market-card'));
-    const grid = document.querySelector('.ss-grid');
+// Apply filter/sort
+function applyFilter(filter) {
+    const grid = document.getElementById('shortcut-grid');
+    if (!grid) return;
+    
+    const cards = Array.from(grid.querySelectorAll('.shortcut-card'));
+    
+    // Parse download count from stat
+    const getDownloads = (card) => {
+        const stats = card.querySelectorAll('.shortcut-stat');
+        // Downloads is second stat (index 1)
+        if (stats.length >= 2) {
+            const text = stats[1].textContent.trim();
+            return parseFloat(text.replace(/[^0-9.]/g, '')) * (text.includes('k') ? 1000 : 1);
+        }
+        return 0;
+    };
+    
+    const getLikes = (card) => {
+        const stats = card.querySelectorAll('.shortcut-stat');
+        // Likes is first stat (index 0)
+        if (stats.length >= 1) {
+            const text = stats[0].textContent.trim();
+            return parseFloat(text.replace(/[^0-9.]/g, '')) * (text.includes('k') ? 1000 : 1);
+        }
+        return 0;
+    };
 
-    // Mock sorting/filtering logic
     if (filter === 'popular') {
-        // Sort by uses (descending)
-        cards.sort((a, b) => {
-            const usesA = parseInt(a.querySelector('.market-stats span:nth-child(2)').textContent) || 0;
-            const usesB = parseInt(b.querySelector('.market-stats span:nth-child(2)').textContent) || 0;
-            return usesB - usesA;
-        });
-    } else if (filter === 'recent') {
-        // Random shuffle for "recent" mock
-        cards.sort(() => Math.random() - 0.5);
+        cards.sort((a, b) => getDownloads(b) - getDownloads(a));
     } else if (filter === 'trending') {
-        // Sort by uses (ascending for mock "trending")
-        cards.sort((a, b) => {
-            const usesA = parseInt(a.querySelector('.market-stats span:nth-child(2)').textContent) || 0;
-            const usesB = parseInt(b.querySelector('.market-stats span:nth-child(2)').textContent) || 0;
-            return usesA - usesB;
-        });
-    } else {
-        // All - Default order (DOM order)
-        // In a real app, we'd reload from source or have an ID to sort by
+        // Trending = high likes relative to downloads
+        cards.sort((a, b) => getLikes(b) - getLikes(a));
+    } else if (filter === 'recent') {
+        // Shuffle for demo (in real app would sort by date)
+        cards.sort(() => Math.random() - 0.5);
     }
+    // 'all' keeps original order
 
-    // Re-append in new order
+    // Re-append in sorted order
     cards.forEach(card => grid.appendChild(card));
 }
 
+// Category filtering
+function initCategoryCards() {
+    const categoryCards = document.querySelectorAll('.category-card');
+    
+    categoryCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Update active state
+            categoryCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            const category = card.dataset.category;
+            filterByCategory(category);
+        });
+    });
+}
+
+function filterByCategory(category) {
+    const shortcutCards = document.querySelectorAll('.shortcut-card');
+    const noResults = document.getElementById('no-results');
+    const grid = document.getElementById('shortcut-grid');
+
+    let visibleCount = 0;
+
+    shortcutCards.forEach(card => {
+        const cardCategories = (card.dataset.category || '').toLowerCase().split(',');
+        
+        if (category === 'all' || cardCategories.includes(category.toLowerCase())) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show/hide no results
+    if (noResults) {
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+    if (grid) {
+        grid.style.display = visibleCount === 0 ? 'none' : '';
+    }
+}
+
+// Load user's marketplace items (if any stored)
+function loadMarketplaceItems() {
+    const grid = document.getElementById('shortcut-grid');
+    if (!grid) return;
+    
+    const items = readStoredJson('marketplaceItems', []);
+    if (!Array.isArray(items) || !items.length) return;
+    
+    items.forEach((item) => {
+        if (!item || !item.id) return;
+        if (grid.querySelector(`[data-id="${item.id}"]`)) return;
+        grid.appendChild(buildMarketplaceCard(item));
+    });
+}
+
+// Build card for user-created items
+function buildMarketplaceCard(item) {
+    const colors = ['blue', 'purple', 'green', 'orange', 'pink', 'cyan'];
+    const colorClass = colors[Math.floor(Math.random() * colors.length)];
+    
+    const card = document.createElement('article');
+    card.className = 'shortcut-card';
+    card.dataset.id = item.id || '';
+    card.dataset.category = item.category || 'utilities';
+    card.onclick = () => goToShortcut(item.id);
+    
+    card.innerHTML = `
+        <div class="shortcut-card-header">
+            <div class="shortcut-icon ${colorClass}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                </svg>
+            </div>
+            <div class="shortcut-info">
+                <h3>${item.name || 'Untitled Shortcut'}</h3>
+                <span class="shortcut-author">@you</span>
+            </div>
+        </div>
+        <p class="shortcut-description">${item.description || item.summary || 'Custom shortcut built with ShortcutStudio.'}</p>
+        <div class="action-preview-mini">
+            <span class="action-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 3v12"></path>
+                    <path d="m8 11 4 4 4-4"></path>
+                    <path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"></path>
+                </svg>
+                ${item.actionCount || '?'} actions
+            </span>
+        </div>
+        <div class="shortcut-stats">
+            <span class="shortcut-stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path>
+                </svg>
+                ${item.upvotes || 0}
+            </span>
+            <span class="shortcut-stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                ${item.downloads || 0}
+            </span>
+        </div>
+        <div class="shortcut-actions" onclick="event.stopPropagation()">
+            <button class="btn-get" onclick="goToShortcut('${item.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Get Shortcut
+            </button>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+    initFilterChips();
+    initCategoryCards();
     loadMarketplaceItems();
 });

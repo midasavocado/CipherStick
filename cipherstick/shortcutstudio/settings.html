@@ -4,82 +4,650 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShortcutStudio - User Settings</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>ShortcutStudio - Settings</title>
+    <link rel="icon" href="icon.png">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/utilities.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 120px 1.5rem 4rem;
+        }
+
+        .settings-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .settings-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Profile Section */
+        .profile-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar-wrapper {
+            position: relative;
+        }
+
+        .profile-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar-edit {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            background: var(--surface-color);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .profile-avatar-edit:hover {
+            background: var(--surface-hover);
+        }
+
+        .profile-avatar-edit svg {
+            width: 14px;
+            height: 14px;
+            color: var(--text-color);
+        }
+
+        .profile-info h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-info .username {
+            color: var(--primary-color);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info .member-since {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-stat {
+            text-align: center;
+        }
+
+        .profile-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--heading-color);
+        }
+
+        .profile-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .profile-form {
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.85rem 1rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group .input-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Settings Cards */
+        .settings-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .settings-card-header svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary-color);
+        }
+
+        .settings-card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+
+        /* Plan Badge */
+        .plan-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .plan-badge.pro {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(236, 72, 153, 0.1));
+            border-color: rgba(249, 115, 22, 0.3);
+            color: #f97316;
+        }
+
+        .plan-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .plan-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .plan-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn-save {
+            padding: 0.85rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .btn-save:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-save:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            padding: 0.85rem 1.5rem;
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+            border-color: var(--text-muted);
+        }
+
+        .btn-danger {
+            padding: 0.85rem 1.5rem;
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+
+        .settings-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .settings-actions-left {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        /* Avatar Upload Modal */
+        .avatar-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-modal.active {
+            display: flex;
+        }
+
+        .avatar-modal-content {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
+        }
+
+        .avatar-modal h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .avatar-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            border: 3px solid transparent;
+        }
+
+        .avatar-option:hover {
+            transform: scale(1.1);
+        }
+
+        .avatar-option.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .avatar-upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar-upload-zone:hover {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .avatar-upload-zone svg {
+            width: 32px;
+            height: 32px;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .avatar-upload-zone p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .avatar-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success .toast-icon {
+            color: #22c55e;
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .toast-message {
+            color: var(--text-color);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+    </style>
 </head>
 
 <body class="app-theme">
-
     <!-- Navigation -->
-    <nav class="navbar">
-        <a href="index.html" class="logo-container">
+    <nav class="top-bar">
+        <a href="index.html" class="logo-area" style="text-decoration: none; color: inherit;">
             <div class="logo-icon">S</div>
-            <span class="logo-text">ShortcutStudio</span>
+            <span>ShortcutStudio</span>
         </a>
-        <div class="nav-links">
-            <a href="index.html#features">Features</a>
+        <div class="nav-links flex items-center gap-4">
+            <a href="index.html#how-it-works">How it Works</a>
             <a href="marketplace.html">Marketplace</a>
             <a href="pricing.html">Pricing</a>
         </div>
-        <div class="nav-actions">
-            <a href="projects.html" id="nav-cta" class="btn-primary-sm">Dashboard</a>
+        <div class="nav-actions flex items-center gap-4">
+            <button class="icon-btn mode-toggle-btn" title="Toggle Theme"></button>
+            <a href="projects.html" id="nav-cta" class="btn btn-primary">Dashboard</a>
         </div>
     </nav>
 
-    <!-- Settings Layout -->
-    <div class="settings-layout">
+    <div class="settings-container">
         <div class="settings-header">
-            <h2>User Settings</h2>
-            <p>Manage your account and global preferences.</p>
+            <h1>Account Settings</h1>
+            <p>Manage your profile, subscription, and preferences.</p>
         </div>
 
-        <!-- Subscription -->
-        <div class="settings-section">
-            <h3>Subscription</h3>
-            <div class="settings-form-group">
-                <label>Current Plan</label>
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <div>
-                        <strong id="user-plan-name" style="color: var(--heading-color);">Free Plan</strong>
-                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Basic access to standard
-                            models.</p>
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar-wrapper">
+                    <div class="profile-avatar" id="profile-avatar" onclick="openAvatarModal()">
+                        <span id="avatar-initial">U</span>
+                        <img id="avatar-image" style="display: none;" alt="Profile">
                     </div>
-                    <a href="pricing.html" class="btn-primary-sm">Upgrade</a>
+                    <div class="profile-avatar-edit" onclick="openAvatarModal()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <h2 id="display-name-preview">User</h2>
+                    <div class="username" id="username-preview">@user</div>
+                    <div class="member-since">Member since <span id="member-since">December 2024</span></div>
                 </div>
             </div>
+
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <div class="profile-stat-value" id="stat-shortcuts">0</div>
+                    <div class="profile-stat-label">Shortcuts</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-value" id="stat-published">0</div>
+                    <div class="profile-stat-label">Published</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-value" id="stat-downloads">0</div>
+                    <div class="profile-stat-label">Downloads</div>
+                </div>
+            </div>
+
+            <form class="profile-form" id="profile-form" onsubmit="saveProfile(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="display-name">Display Name</label>
+                        <input type="text" id="display-name" placeholder="Your name" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="username" maxlength="20" pattern="[a-zA-Z0-9_]+">
+                        <span class="input-hint">Letters, numbers, and underscores only</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" placeholder="Tell us about yourself..." maxlength="200"></textarea>
+                    <span class="input-hint"><span id="bio-count">0</span>/200 characters</span>
+                </div>
+            </form>
         </div>
 
-        <!-- Account -->
-        <div class="settings-section">
-            <h3>Account</h3>
-            <div class="settings-form-group">
-                <label>Email Address</label>
-                <input type="email" id="user-email" class="input-glass full-width" value="user@example.com">
+        <!-- Subscription Card -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <h3>Subscription</h3>
             </div>
-            <div class="settings-form-group">
+            <div class="plan-row">
+                <div class="plan-info">
+                    <h4 id="plan-name">Free Plan</h4>
+                    <p id="plan-description">Basic access to create and share shortcuts.</p>
+                </div>
+                <div>
+                    <span class="plan-badge" id="plan-badge">Free</span>
+                </div>
+            </div>
+            <div style="padding-top: 1rem;">
+                <a href="pricing.html" class="btn btn-primary" style="width: 100%; text-align: center;">Upgrade Plan</a>
+            </div>
+        </div>
+
+        <!-- Security Card -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <h3>Security</h3>
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
                 <label>Password</label>
-                <input type="password" id="user-password" class="input-glass full-width" value="********">
+                <input type="password" value="••••••••••" disabled style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 0.85rem 1rem; border-radius: 10px; color: var(--text-muted);">
+            </div>
+            <button class="btn-secondary" onclick="showToast('Password reset email sent!')">Change Password</button>
+        </div> for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label
+
+        <!-- Actions -->
+        <div class="settings-actions">
+            <div class="settings-actions-left">
+                <button class="btn-danger" onclick="handleLogout()">Sign Out</button>
+            </div>
+            <button class="btn-save" id="save-btn" onclick="saveProfile(event)">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- Avatar Modal -->
+    <div class="avatar-modal" id="avatar-modal">
+        <div class="avatar-modal-content">
+            <h3>Choose Avatar</h3>
+            <div class="avatar-options" id="avatar-options">
+                <!-- Generated by JS -->
+            </div>
+            <div class="avatar-upload-zone" id="upload-zone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Click to upload custom image</p>
+                <input type="file" id="avatar-file" accept="image/*" style="display: none;">
+            </div>
+            <div class="avatar-modal-actions">
+                <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
+                <button class="btn-save" onclick="saveAvatar()">Save</button>
             </div>
         </div>
+    </div>
 
-        <!-- Preferences -->
-        <div class="settings-section">
-            <h3>Global Preferences</h3>
-            <div class="settings-form-group">
-                <label>Custom Instructions</label>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">These instructions will
-                    be applied to all your new projects.</p>
-                <textarea id="user-instructions" class="input-glass full-width" rows="5"
-                    placeholder="E.g., Always prefer short variable names..."></textarea>
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-            <button class="btn-secondary" onclick="window.location.href='projects.html'">Cancel</button>
-            <button id="user-settings-save" class="btn-primary-sm" onclick="saveUserSettings()">Save Changes</button>
-        </div>
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span class="toast-message" id="toast-message">Saved successfully!</span>
     </div>
 
     <div class="bg-animation">
@@ -89,12 +657,225 @@
     </div>
 
     <script src="theme.js"></script>
-    <script src="script.js"></script>
     <script>
-        // Inline init for settings page
-        document.addEventListener('DOMContentLoaded', () => {
-            initUserSettings();
+        const STORAGE_KEY = 'shortcutstudio_user';
+        const AVATAR_COLORS = [
+            'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+            'linear-gradient(135deg, #22c55e, #06b6d4)',
+            'linear-gradient(135deg, #f97316, #ec4899)',
+            'linear-gradient(135deg, #ef4444, #f97316)',
+            'linear-gradient(135deg, #8b5cf6, #ec4899)',
+            'linear-gradient(135deg, #06b6d4, #3b82f6)',
+            'linear-gradient(135deg, #eab308, #22c55e)',
+            'linear-gradient(135deg, #ec4899, #8b5cf6)'
+        ];
+
+        let currentUser = null;
+        let selectedAvatarColor = null;
+        let selectedAvatarImage = null;
+
+        function loadUser() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    currentUser = JSON.parse(stored);
+                } else {
+                    // Create default user
+                    currentUser = {
+                        displayName: 'User',
+                        username: 'user',
+                        email: '',
+                        bio: '',
+                        avatarColor: AVATAR_COLORS[0],
+                        avatarImage: null,
+                        memberSince: new Date().toISOString(),
+                        stats: { shortcuts: 0, published: 0, downloads: 0 }
+                    };
+                    saveUser();
+                }
+            } catch {
+                currentUser = {
+                    displayName: 'User',
+                    username: 'user',
+                    email: '',
+                    bio: '',
+                    avatarColor: AVATAR_COLORS[0],
+                    avatarImage: null,
+                    memberSince: new Date().toISOString(),
+                    stats: { shortcuts: 0, published: 0, downloads: 0 }
+                };
+            }
+        }
+
+        function saveUser() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+            } catch {}
+        }
+
+        function populateForm() {
+            document.getElementById('display-name').value = currentUser.displayName || '';
+            document.getElementById('username').value = currentUser.username || '';
+            document.getElementById('email').value = currentUser.email || '';
+            document.getElementById('bio').value = currentUser.bio || '';
+            updateBioCount();
+            updateAvatarDisplay();
+            updatePreview();
+            updateStats();
+            updateMemberSince();
+        }
+
+        function updateAvatarDisplay() {
+            const avatarEl = document.getElementById('profile-avatar');
+            const initial = document.getElementById('avatar-initial');
+            const img = document.getElementById('avatar-image');
+
+            if (currentUser.avatarImage) {
+                initial.style.display = 'none';
+                img.style.display = 'block';
+                img.src = currentUser.avatarImage;
+                avatarEl.style.background = 'transparent';
+            } else {
+                initial.style.display = 'block';
+                img.style.display = 'none';
+                initial.textContent = (currentUser.displayName || 'U')[0].toUpperCase();
+                avatarEl.style.background = currentUser.avatarColor || AVATAR_COLORS[0];
+            }
+        }
+
+        function updatePreview() {
+            document.getElementById('display-name-preview').textContent = currentUser.displayName || 'User';
+            document.getElementById('username-preview').textContent = '@' + (currentUser.username || 'user');
+        }
+
+        function updateStats() {
+            const stats = currentUser.stats || { shortcuts: 0, published: 0, downloads: 0 };
+            document.getElementById('stat-shortcuts').textContent = stats.shortcuts;
+            document.getElementById('stat-published').textContent = stats.published;
+            document.getElementById('stat-downloads').textContent = stats.downloads;
+        }
+
+        function updateMemberSince() {
+            const date = new Date(currentUser.memberSince);
+            const options = { month: 'long', year: 'numeric' };
+            document.getElementById('member-since').textContent = date.toLocaleDateString('en-US', options);
+        }
+
+        function updateBioCount() {
+            const bio = document.getElementById('bio').value;
+            document.getElementById('bio-count').textContent = bio.length;
+        }
+
+        function openAvatarModal() {
+            const modal = document.getElementById('avatar-modal');
+            const optionsContainer = document.getElementById('avatar-options');
+            
+            selectedAvatarColor = currentUser.avatarColor;
+            selectedAvatarImage = currentUser.avatarImage;
+
+            optionsContainer.innerHTML = AVATAR_COLORS.map((color, i) => `
+                <div class="avatar-option ${color === currentUser.avatarColor && !currentUser.avatarImage ? 'selected' : ''}" 
+                     style="background: ${color};" 
+                     data-color="${color}"
+                     onclick="selectAvatarColor('${color}', this)">
+                    ${(currentUser.displayName || 'U')[0].toUpperCase()}
+                </div>
+            `).join('');
+
+            modal.classList.add('active');
+        }
+
+        function closeAvatarModal() {
+            document.getElementById('avatar-modal').classList.remove('active');
+        }
+
+        function selectAvatarColor(color, el) {
+            selectedAvatarColor = color;
+            selectedAvatarImage = null;
+            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function saveAvatar() {
+            currentUser.avatarColor = selectedAvatarColor || AVATAR_COLORS[0];
+            currentUser.avatarImage = selectedAvatarImage;
+            saveUser();
+            updateAvatarDisplay();
+            closeAvatarModal();
+            showToast('Avatar updated!');
+        }
+
+        function saveProfile(e) {
+            if (e) e.preventDefault();
+            
+            currentUser.displayName = document.getElementById('display-name').value.trim() || 'User';
+            currentUser.username = document.getElementById('username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '') || 'user';
+            currentUser.email = document.getElementById('email').value.trim();
+            currentUser.bio = document.getElementById('bio').value.trim();
+
+            saveUser();
+            updateAvatarDisplay();
+            updatePreview();
+            showToast('Settings saved successfully!');
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('shortcutstudio_logged_in');
+            localStorage.removeItem('flux_logged_in');
+            window.location.href = 'login.html';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toast-message');
+            messageEl.textContent = message;
+            toast.classList.add('show', 'success');
+            setTimeout(() => toast.classList.remove('show', 'success'), 3000);
+        }
+
+        // File upload handler
+        document.getElementById('upload-zone').addEventListener('click', () => {
+            document.getElementById('avatar-file').click();
         });
+
+        document.getElementById('avatar-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    selectedAvatarImage = event.target.result;
+                    selectedAvatarColor = null;
+                    document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+                    showToast('Image uploaded! Click Save to apply.');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Live preview updates
+        document.getElementById('display-name').addEventListener('input', (e) => {
+            document.getElementById('display-name-preview').textContent = e.target.value || 'User';
+            const initial = document.getElementById('avatar-initial');
+            if (initial.style.display !== 'none') {
+                initial.textContent = (e.target.value || 'U')[0].toUpperCase();
+            }
+        });
+
+        document.getElementById('username').addEventListener('input', (e) => {
+            const clean = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+            document.getElementById('username-preview').textContent = '@' + (clean || 'user');
+        });
+
+        document.getElementById('bio').addEventListener('input', updateBioCount);
+
+        // Close modal on outside click
+        document.getElementById('avatar-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'avatar-modal') closeAvatarModal();
+        });
+
+        // Init
+        loadUser();
+        populateForm();
     </script>
 </body>
 

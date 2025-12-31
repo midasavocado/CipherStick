@@ -1,6 +1,1 @@
-{
-  "action": "Data.Base64.Encode",
-  "params": {
-    "Input": "{{STRING}}"
-  }
-}
+{"a":"Data.Base64.Encode","p":{"Input":"{{S}}"}}

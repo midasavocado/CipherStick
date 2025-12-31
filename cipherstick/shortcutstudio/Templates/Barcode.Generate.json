@@ -1,6 +1,1 @@
-{
-  "action": "QRcode.Generate",
-  "params": {
-    "Text": "{{STRING}}"
-  }
-}
+{"a":"QRcode.Generate","p":{"Text":"{{S}}"}}
