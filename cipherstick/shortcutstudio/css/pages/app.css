@@ -226,9 +226,11 @@
 }
 
 .project-settings-hint {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    line-height: 1.3;
+    display: none;
+}
+
+.project-settings-tile-header {
+    display: none;
 }
 
 .project-settings-input {
@@ -724,8 +726,8 @@ body.is-generating .mobile-shortcut-loading {
 }
 
 .orb {
-    width: 42px;
-    height: 42px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: linear-gradient(145deg, var(--surface-color), var(--surface-hover));
     border: 2px solid var(--border-color);
@@ -783,6 +785,27 @@ body.is-generating .mobile-shortcut-loading {
     mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 6L9 17L4 12' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
 }
 
+.orb-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 0.4rem;
+    line-height: 1.2;
+    max-width: 60px;
+    opacity: 0.85;
+    transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.orb-wrapper:has(.orb.active) .orb-label {
+    color: var(--primary-color);
+    opacity: 1;
+}
+
+.orb-wrapper:has(.orb.completed) .orb-label {
+    color: #22c55e;
+    opacity: 0.9;
+}
+
 .pipeline-orbs-hint {
     font-size: 0.72rem;
     color: var(--text-muted);
@@ -832,12 +855,16 @@ body.is-generating .mobile-shortcut-loading {
     }
     
     .orb {
-        width: 38px;
-        height: 38px;
+        width: 48px;
+        height: 48px;
     }
     
     .orb span {
         font-size: 0.45rem;
+    }
+    
+    .orb-label {
+        font-size: 0.6rem;
     }
     
     .orb-line {
@@ -862,13 +889,17 @@ body.is-generating .mobile-shortcut-loading {
     }
     
     .orb {
-        width: 34px;
-        height: 34px;
+        width: 44px;
+        height: 44px;
     }
     
     .orb span {
         font-size: 0.4rem;
         padding: 0 1px;
+    }
+    
+    .orb-label {
+        font-size: 0.55rem;
     }
     
     .orb-line {
