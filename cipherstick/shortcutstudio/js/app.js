@@ -93,11 +93,14 @@ const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Val
 let liveHintTimer = null;
 let liveHintIndex = 0;
 let liveHintLockUntil = 0;
+let orbAnimateTimer = null;
+let orbAnimateIndex = 0;
 let pipelineMode = 'default';
 let projectSelectionMode = false;
 let selectedProjectIds = new Set();
 let lastPartialProgramActions = null;
 let streamingSummaryMessage = null;
+let streamingThinkingMessage = null;
 let streamingJsonBuffer = '';
 let streamingJsonActive = false;
 let streamingJsonMeta = { name: '', summary: '', shortSummary: '', icon: '' };
@@ -3208,6 +3211,14 @@ function clearStreamingSummary(removeNode = false) {
     streamingSummaryMessage = null;
 }
 
+function clearStreamingThinking(removeNode = false) {
+    if (!streamingThinkingMessage) return;
+    if (removeNode) {
+        streamingThinkingMessage.node?.remove();
+    }
+    streamingThinkingMessage = null;
+}
+
 function createStreamingSummaryMessage() {
     const container = document.getElementById('messages');
     if (!container) return null;
@@ -3218,6 +3229,31 @@ function createStreamingSummaryMessage() {
     container.scrollTop = container.scrollHeight;
     updateChatEmptyState();
     return { node: div, bubble: div.querySelector('.message-bubble'), text: '' };
+}
+
+function createStreamingThinkingMessage() {
+    const container = document.getElementById('messages');
+    if (!container) return null;
+    const div = document.createElement('div');
+    div.className = 'message assistant streaming thinking-message';
+    div.id = 'streaming-thinking';
+    div.innerHTML = '<div class="message-avatar">S</div><div class="message-bubble thinking-bubble" style="color: var(--text-secondary); font-style: italic;"></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    updateChatEmptyState();
+    return { node: div, bubble: div.querySelector('.message-bubble'), text: '' };
+}
+
+function appendStreamingThinking(delta) {
+    if (!delta) return;
+    if (!streamingThinkingMessage) {
+        streamingThinkingMessage = createStreamingThinkingMessage();
+    }
+    if (!streamingThinkingMessage || !streamingThinkingMessage.bubble) return;
+    streamingThinkingMessage.text += delta;
+    streamingThinkingMessage.bubble.textContent = streamingThinkingMessage.text;
+    const container = document.getElementById('messages');
+    if (container) container.scrollTop = container.scrollHeight;
 }
 
 function appendStreamingSummary(delta) {
@@ -3725,6 +3761,28 @@ function stopLiveHintTicker() {
     liveHintLockUntil = 0;
 }
 
+function startOrbTextAnimation() {
+    const orbText = document.querySelector('.orb-text.orb-animate');
+    if (!orbText) return;
+    
+    const texts = ['Thinking', 'Thinking.', 'Thinking..'];
+    orbAnimateIndex = 0;
+    orbText.textContent = texts[0];
+    
+    if (orbAnimateTimer) clearInterval(orbAnimateTimer);
+    orbAnimateTimer = setInterval(() => {
+        orbAnimateIndex = (orbAnimateIndex + 1) % texts.length;
+        orbText.textContent = texts[orbAnimateIndex];
+    }, 350);
+}
+
+function stopOrbTextAnimation() {
+    if (orbAnimateTimer) {
+        clearInterval(orbAnimateTimer);
+        orbAnimateTimer = null;
+    }
+}
+
 function safeParseJson(text) {
     try {
         return JSON.parse(text);
@@ -4204,7 +4262,13 @@ function handleStreamPacket(packet) {
     }
 
     if (packet.type === 'progress') {
-        updatePipelineProgress(packet.step, packet.status, packet.hint);
+        // Map backend step names to frontend step names
+        let backendStep = packet.step;
+        if (backendStep === 'assess') {
+            // Skip assess step - it's no longer part of the pipeline
+            return;
+        }
+        updatePipelineProgress(backendStep, packet.status, packet.hint);
         if (typeof packet.hint === 'string' && packet.hint.trim()) {
             setLiveHint(packet.hint, 1800);
         }
@@ -4235,6 +4299,11 @@ function handleStreamPacket(packet) {
         }
     }
 
+    if (packet.type === 'thinking' && typeof packet.content === 'string') {
+        // Stream model thinking line by line
+        appendStreamingThinking(packet.content);
+    }
+
     if (packet.type === 'summary_delta' && typeof packet.content === 'string' && !streamingJsonActive) {
         updatePipelineProgress('summarize', 'started', packet.hint || 'Summarizing your shortcut');
         appendStreamingSummary(packet.content);
@@ -4242,6 +4311,7 @@ function handleStreamPacket(packet) {
 
     // Handle cancellation
     if (packet.type === 'cancelled') {
+        clearStreamingThinking(true);
         clearStreamingSummary(true);
         resetStreamingJsonState();
         removeTypingIndicator();
@@ -4521,9 +4591,8 @@ function resetPipelineSteps() {
 
 function updatePipelineProgress(step, status, hint = '') {
     const order = PIPELINE_STEPS.map(s => s.id);
-    // Map backend steps to frontend steps
+    // Map backend steps to frontend steps (assess is skipped)
     const stepMap = {
-        'assess': 'plan',
         'search': 'catalog',
         'build': 'build',
         'summarize': 'summarize'
@@ -6949,15 +7018,12 @@ function toggleEditMode() {
 
 // ============ Pipeline Orbs (in chat) ============
 const PIPELINE_STEPS = [
-    { id: 'plan', label: 'Plan', hint: 'Understanding your request' },
-    { id: 'catalog', label: 'Search', hint: 'Finding available actions' },
+    { id: 'catalog', label: 'Thinking', hint: 'Understanding your request' },
     { id: 'build', label: 'Build', hint: 'Creating your shortcut' },
     { id: 'summarize', label: 'Finish', hint: 'Finalizing the build' }
 ];
 
 const MIN_PIPELINE_ACTIVE_MS = 350;
-const PIPELINE_PLAN_MIN_MS = 8000;
-const PIPELINE_PLAN_MAX_MS = 16000;
 const pipelineStepMinActiveMs = new Map();
 const pipelineStepStartedAt = new Map();
 const pipelineStepCompleteTimers = new Map();
@@ -6978,12 +7044,6 @@ function getRandomMs(minMs, maxMs) {
 }
 
 function getPipelineMinActiveMs(step) {
-    if (step === 'plan') {
-        if (!pipelineStepMinActiveMs.has(step)) {
-            pipelineStepMinActiveMs.set(step, getRandomMs(PIPELINE_PLAN_MIN_MS, PIPELINE_PLAN_MAX_MS));
-        }
-        return pipelineStepMinActiveMs.get(step) || MIN_PIPELINE_ACTIVE_MS;
-    }
     if (step === 'summarize') return 0;
     if (step === 'catalog') return 0;
     return MIN_PIPELINE_ACTIVE_MS;
@@ -7041,7 +7101,7 @@ function showPipelineOrbs() {
             ${PIPELINE_STEPS.map((step, idx) => `
                 <div class="orb-wrapper" data-orb-wrapper="${step.id}">
                     <div class="orb" id="orb-${step.id}" data-orb-step="${step.id}">
-                        <span>${step.label}</span>
+                        <span class="orb-text${idx === 0 ? ' orb-animate' : ''}">${step.label}</span>
                     </div>
                 </div>
                 ${idx < PIPELINE_STEPS.length - 1 ? '<div class="orb-line"></div>' : ''}
@@ -7052,6 +7112,7 @@ function showPipelineOrbs() {
     container.appendChild(orbsDiv);
     container.scrollTop = container.scrollHeight;
     resetPipelineSteps();
+    startOrbTextAnimation();
     updatePipelineProgress('assess', 'started');
 }
 
@@ -7088,6 +7149,7 @@ function removePipelineOrbs() {
         pipelineStepCompleteTimers.clear();
     }
     stopLiveHintTicker();
+    stopOrbTextAnimation();
     document.getElementById('pipeline-orbs')?.remove();
 }
 

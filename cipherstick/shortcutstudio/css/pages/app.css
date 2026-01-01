@@ -752,6 +752,18 @@ body.is-generating .mobile-shortcut-loading {
     letter-spacing: 0.01em;
 }
 
+.orb-text.orb-animate {
+    animation: orbTextAnimate 1.4s infinite;
+}
+
+@keyframes orbTextAnimate {
+    0% { opacity: 1; }
+    25% { opacity: 0.85; }
+    50% { opacity: 0.7; }
+    75% { opacity: 0.85; }
+    100% { opacity: 1; }
+}
+
 .orb.active {
     background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(147, 51, 234, 0.12));
     border-color: var(--primary-color);
@@ -1053,6 +1065,17 @@ body.is-generating .mobile-shortcut-loading {
 
 .message.user .message-bubble a {
     color: rgba(255, 255, 255, 0.95);
+}
+
+.thinking-message {
+    opacity: 0.8;
+}
+
+.thinking-bubble {
+    color: var(--text-secondary);
+    font-style: italic;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .message-bubble .message-table {
