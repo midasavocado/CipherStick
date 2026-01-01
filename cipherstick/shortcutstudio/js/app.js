@@ -30,6 +30,8 @@ function setStoredValue(suffix, value) {
     localStorage.setItem(storageKey(suffix), value);
 }
 
+const API_BASE = 'https://secrets.cipherstick.tech';
+
 function parseStoredJson(suffix, fallback) {
     const raw = getStoredValue(suffix);
     if (raw == null) return fallback;
