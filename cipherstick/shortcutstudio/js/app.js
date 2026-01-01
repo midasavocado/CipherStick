@@ -2062,7 +2062,6 @@ function getRepeatVariableOptions(actionId) {
     return [
         { value: formatIdToken('repeatItem'), label: 'Repeat Item' },
         { value: formatIdToken('repeatIndex'), label: 'Repeat Index' },
-        { value: formatIdToken('repeatCount'), label: 'Repeat Count' },
     ].filter(opt => opt.value);
 }
 
@@ -5618,7 +5617,6 @@ function humanizeOutputName(name) {
 const BUILTIN_OUTPUT_LABELS = new Map([
     ['repeatitem', 'Repeat Item'],
     ['repeatindex', 'Repeat Index'],
-    ['repeatcount', 'Repeat Count'],
 ]);
 
 function resolveBuiltinOutputLabel(raw) {
