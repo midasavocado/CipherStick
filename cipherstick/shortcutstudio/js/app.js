@@ -844,9 +844,67 @@ function serializeTreeForExport(nodes) {
     return out;
 }
 
+// Map project icon IDs to Apple Shortcuts glyph numbers
+const ICON_TO_GLYPH = {
+    bolt: 59798,      // Lightning bolt
+    star: 59810,      // Star
+    wand: 59771,      // Magic wand
+    doc: 59493,       // Document
+    music: 59667,     // Music note
+    photo: 59473,     // Photo
+    video: 59802,     // Video camera
+    mic: 59664,       // Microphone
+    calendar: 59515,  // Calendar
+    clock: 59536,     // Clock
+    check: 61444,     // Checkmark
+    chat: 61445,      // Chat bubble
+    gear: 59517,      // Gear
+    map: 59662,       // Map
+    bell: 59486,      // Bell
+    spark: 59779,     // Sparkle
+    folder: 59560,    // Folder
+    link: 61603,      // Link
+    globe: 59571,     // Globe
+    home: 59580,      // Home
+    camera: 59508,    // Camera
+    list: 59626,      // List
+    shield: 59756,    // Shield
+    heart: 59576,     // Heart
+    bookmark: 59492,  // Bookmark
+    repeat: 59753,    // Repeat arrows
+    wifi: 59829,      // WiFi
+    sun: 59808,       // Sun
+    moon: 59590,      // Moon
+    lock: 59631,      // Lock
+    key: 59605,       // Key
+    tag: 59814,       // Tag
+    mail: 59647,      // Mail envelope
+    phone: 59701,     // Phone
+    clipboard: 59534, // Clipboard
+    default: 59771    // Default: wand
+};
+
+// Convert hex color to Shortcuts startColor integer
+function hexToShortcutsColor(hex) {
+    if (!hex || typeof hex !== 'string') return 4282601983; // Default blue
+    const clean = hex.replace('#', '');
+    if (clean.length !== 6) return 4282601983;
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    // Shortcuts uses ARGB format with alpha=255
+    return ((255 << 24) | (r << 16) | (g << 8) | b) >>> 0;
+}
+
 function buildProgramExport(actions = currentActions) {
+    const iconId = currentProject?.icon || 'wand';
+    const colorHex = currentProject?.color || '#4A90D9';
     return {
         name: currentProject?.name || 'My Shortcut',
+        icon: {
+            glyph: ICON_TO_GLYPH[iconId] || ICON_TO_GLYPH.default,
+            color: hexToShortcutsColor(colorHex)
+        },
         actions: serializeTreeForExport(buildActionTree(actions || []))
     };
 }
@@ -6776,7 +6834,12 @@ async function executeDownload(type) {
         const exportCache = getProgramExportCache();
         const programObj = exportCache.programObj;
         const programJson = exportCache.programJson;
-        const baseName = String(programObj?.name || currentProject?.name || 'My Shortcut').replace(/[^a-z0-9]/gi, '_') || 'My_Shortcut';
+        // Create a clean filename: preserve spaces, remove only truly invalid characters
+        const rawName = String(programObj?.name || currentProject?.name || 'My Shortcut').trim();
+        const baseName = rawName
+            .replace(/[<>:"/\\|?*]/g, '') // Remove filesystem-invalid chars
+            .replace(/\s+/g, ' ')         // Normalize multiple spaces to single
+            .trim() || 'My Shortcut';
 
         // Convert to plist
         statusText.textContent = 'Generating plist...';

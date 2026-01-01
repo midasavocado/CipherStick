@@ -1,1 +1,1 @@
-{"a":"ShortcutsActions.TranscribeAudio","p":{"Audio":"{{X}}","Language":"{{S}}"}}
+{"a":"TranscribeAudio","p":{"Audio":"{{V}}"}}
