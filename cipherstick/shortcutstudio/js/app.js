@@ -1,7 +1,7 @@
-// ============ Configuration ============
-const API_BASE = 'https://secrets.mwsaulsbury.workers.dev';
-const APP_VERSION = '2025-12-14-6';
-console.log(`[App] Loaded js/app.js v${APP_VERSION}`);
+// ============ ShortcutStudio App - Main Bundle ============
+// This file contains all app logic. Will be modularized later.
+// Version: 2025-12-31
+console.log('[App] Loading ShortcutStudio...');
 
 const STORAGE_PREFIX = 'shortcutstudio';
 const LEGACY_STORAGE_PREFIX = String.fromCharCode(102, 108, 117, 120);
@@ -7125,7 +7125,8 @@ function removePipelineOrbs() {
         pipelineStepCompleteTimers.clear();
     }
     stopLiveHintTicker();
-    
+    document.getElementById('pipeline-orbs')?.remove();
+}
 
 // ============ Forced Actions ============
 async function addForcedAction(template) {
