@@ -93,8 +93,6 @@ const DEFAULT_CONDITION_OPTIONS = 'Is/Is Not/Has Any Value/Does Not Have Any Val
 let liveHintTimer = null;
 let liveHintIndex = 0;
 let liveHintLockUntil = 0;
-let orbAnimateTimer = null;
-let orbAnimateIndex = 0;
 let pipelineMode = 'default';
 let projectSelectionMode = false;
 let selectedProjectIds = new Set();
@@ -3760,28 +3758,6 @@ function stopLiveHintTicker() {
     liveHintLockUntil = 0;
 }
 
-function startOrbTextAnimation() {
-    const orbText = document.querySelector('.orb-text.orb-animate');
-    if (!orbText) return;
-    
-    const texts = ['Thinking', 'Thinking.', 'Thinking..'];
-    orbAnimateIndex = 0;
-    orbText.textContent = texts[0];
-    
-    if (orbAnimateTimer) clearInterval(orbAnimateTimer);
-    orbAnimateTimer = setInterval(() => {
-        orbAnimateIndex = (orbAnimateIndex + 1) % texts.length;
-        orbText.textContent = texts[orbAnimateIndex];
-    }, 350);
-}
-
-function stopOrbTextAnimation() {
-    if (orbAnimateTimer) {
-        clearInterval(orbAnimateTimer);
-        orbAnimateTimer = null;
-    }
-}
-
 function safeParseJson(text) {
     try {
         return JSON.parse(text);
@@ -4299,8 +4275,11 @@ function handleStreamPacket(packet) {
     }
 
     if (packet.type === 'thinking' && typeof packet.content === 'string') {
-        // Stream model thinking line by line
-        appendStreamingThinking(packet.content);
+        // Stream model thinking to the hint line below orbs
+        const hintEl = document.getElementById('pipeline-live-hint');
+        if (hintEl) {
+            hintEl.textContent = (hintEl.textContent || '') + packet.content;
+        }
     }
 
     if (packet.type === 'summary_delta' && typeof packet.content === 'string' && !streamingJsonActive) {
@@ -7099,18 +7078,17 @@ function showPipelineOrbs() {
             ${PIPELINE_STEPS.map((step, idx) => `
                 <div class="orb-wrapper" data-orb-wrapper="${step.id}">
                     <div class="orb" id="orb-${step.id}" data-orb-step="${step.id}">
-                        <span class="orb-text${idx === 0 ? ' orb-animate' : ''}">${step.label}</span>
+                        <span class="orb-text">${step.label}</span>
                     </div>
                 </div>
                 ${idx < PIPELINE_STEPS.length - 1 ? '<div class="orb-line"></div>' : ''}
             `).join('')}
         </div>
-        <div class="pipeline-orbs-hint" id="pipeline-live-hint">Thinking...</div>
+        <div class="pipeline-orbs-hint" id="pipeline-live-hint"></div>
     `;
     container.appendChild(orbsDiv);
     container.scrollTop = container.scrollHeight;
     resetPipelineSteps();
-    startOrbTextAnimation();
     updatePipelineProgress('assess', 'started');
 }
 
@@ -7147,9 +7125,7 @@ function removePipelineOrbs() {
         pipelineStepCompleteTimers.clear();
     }
     stopLiveHintTicker();
-    stopOrbTextAnimation();
-    document.getElementById('pipeline-orbs')?.remove();
-}
+    
 
 // ============ Forced Actions ============
 async function addForcedAction(template) {
