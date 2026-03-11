@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="8%" stop-color="#f7fbff" />
+      <stop offset="16%" stop-color="#f6bfd8" />
+      <stop offset="28%" stop-color="#f3c66b" />
+      <stop offset="42%" stop-color="#ef6a24" />
+      <stop offset="58%" stop-color="#13d0ff" />
+      <stop offset="72%" stop-color="#1467e4" />
+      <stop offset="86%" stop-color="#0b2c49" />
+      <stop offset="100%" stop-color="#03070c" />
+    </radialGradient>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="1.2" />
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="#04070c" />
+  <g opacity="0.96" filter="url(#blur)">
+    <polygon points="800,450 0,390 0,510" fill="#d00f10" />
+    <polygon points="800,450 0,0 210,0" fill="#6d3008" />
+    <polygon points="800,450 360,0 620,0" fill="#4f6f12" />
+    <polygon points="800,450 690,0 910,0" fill="#2dbf7f" />
+    <polygon points="800,450 1020,0 1600,0 1600,110" fill="#003427" />
+    <polygon points="800,450 1600,350 1600,550" fill="#00d6ff" />
+    <polygon points="800,450 1450,900 1600,900 1600,680" fill="#0342b5" />
+    <polygon points="800,450 980,900 1220,900" fill="#b8b9f4" />
+    <polygon points="800,450 660,900 900,900" fill="#b462d5" />
+    <polygon points="800,450 420,900 620,900" fill="#5d0f5f" />
+  </g>
+
+  <circle cx="800" cy="450" r="165" fill="url(#core)" opacity="0.98" />
+  <circle cx="800" cy="450" r="250" fill="url(#core)" opacity="0.22" />
+  <circle cx="800" cy="450" r="360" fill="url(#core)" opacity="0.08" />
+</svg>
