@@ -57,23 +57,6 @@
     }
     */
 
-    /* HEADER: no background so it blends in */
-    header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 1000;
-      background: rgba(0, 0, 0, 0.6);
-      border: none;
-      box-shadow: none;
-    }
-    header img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
     /* MAIN CONTAINER: Transparent, so background shows through */
     .container {
       max-width: 1200px;
@@ -82,7 +65,7 @@
       border-radius: 15px;
       box-shadow: none; /* removing heavy shadows if you want it truly transparent */
       flex: 1;
-      margin-top: calc(100vw * 0.18);
+      margin-top: 2rem;
       padding: 1rem;
     }
 
@@ -380,12 +363,6 @@
   gtag('config', 'G-M2NFQ1M6LR');
 </script>
 <body>
-  <header>
-    <a href="index.html">
-    <img src="ROCKY.png" alt="CipherStick: Extreme - Project Find Rocky"/>
-  </a>
-  </header>
-
   <div class="container">
     <div class="intro" id="introText">
     </div>
@@ -510,7 +487,8 @@ function loadIntroText() {
   const introHTML = `
   <p>Welcome to <strong>Project Find Rocky</strong>, a hard ARG/OSINT challenge inspired by <em>Project Hail Mary</em>. An anonymous ex-government employee leaked a folder called <em>help.zip</em> and says it came directly from Rocky.</p>
   <p>He could not decode what it meant before he disappeared. All that remains is a small bundle of files, a trail of metadata, and the chance that Rocky left enough breadcrumbs behind to be found.</p>
-  <p>Your investigation begins with <a href="ProjectFindRocky/help.zip" download style="color:#fff;text-decoration:underline;font-weight:bold;">this leaked ZIP file</a>.</p>
+  <p>According to the leak, the files were copied from an internal transfer after Rocky and Grace made it back to Earth. Rocky was separated, classified, and moved fast enough that no public record should exist. If that is true, these files are the first real crack in the cover story.</p>
+  <p>Your investigation begins with <a href="ProjectFindRocky/help.zip" download style="color:#fff;text-decoration:underline;font-weight:bold;">this leaked ZIP file</a>. Download it, inspect everything, and follow the trail wherever it forks.</p>
   ${prefixInfo}
   <p>Good luck, Agent.</p>
   <br><br>
@@ -870,7 +848,7 @@ function generatePlaceholder(answer) {
   const suffix = requiredSuffix || "";
   if (!answer) return "";
   const core = answer.slice(prefix.length, answer.length - suffix.length);
-  return `**{${core.replace(/[^{} ]/g, "*")}}`;
+  return core.replace(/\S/g, "*");
 }
 
 document.addEventListener('DOMContentLoaded', () => {
