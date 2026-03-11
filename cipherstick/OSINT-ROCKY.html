@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta name='description' content='Project Find Rocky is a cinematic OSINT-style puzzle about a leaked help.zip, hidden clues, and a missing Eridian.'>
+  <title>CipherStick: Project Find Rocky</title>
+  <link rel='preconnect' href='https://fonts.googleapis.com'>
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+  <link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap' rel='stylesheet'>
+  <script src='https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>
+  <script src='https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js'></script>
+  <script src='https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js'></script>
+  <script src='https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js'></script>
+  <style>
+    :root{--panel:rgba(7,16,24,.84);--panel2:rgba(7,16,24,.94);--line:rgba(126,247,221,.18);--accent:#77f5d4;--warm:#ffca8b;--text:#eefbf7;--muted:#9cb7b0;--danger:#ff6b6b;--success:#67f7b6}
+    *{box-sizing:border-box;margin:0;padding:0} body{min-height:100vh;font-family:'IBM Plex Sans',sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(74,145,255,.18),transparent 30%),radial-gradient(circle at 85% 15%,rgba(119,245,212,.24),transparent 22%),radial-gradient(circle at bottom,rgba(255,202,139,.08),transparent 26%),linear-gradient(160deg,#04090f 0%,#07111a 50%,#0a1620 100%);overflow-x:hidden}
+    body:before,body:after{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1} body:before{background-image:radial-gradient(circle at 18% 22%,rgba(255,255,255,.7) 0 1px,transparent 2px),radial-gradient(circle at 72% 14%,rgba(255,255,255,.6) 0 1px,transparent 2px),radial-gradient(circle at 83% 36%,rgba(255,255,255,.7) 0 1.2px,transparent 2px),radial-gradient(circle at 31% 68%,rgba(255,255,255,.55) 0 1px,transparent 2px),radial-gradient(circle at 55% 78%,rgba(255,255,255,.4) 0 1px,transparent 2px);opacity:.65} body:after{background:linear-gradient(rgba(119,245,212,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(119,245,212,.04) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,transparent,rgba(0,0,0,.85) 20%,rgba(0,0,0,.85) 80%,transparent);opacity:.2}
+    a{color:inherit;text-decoration:none} header{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:rgba(4,9,15,.72);border-bottom:1px solid rgba(255,255,255,.06)} .topbar{max-width:1180px;margin:0 auto;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}.brand{display:inline-flex;align-items:center;gap:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.brand-mark{width:.8rem;height:.8rem;border-radius:50%;background:var(--accent);box-shadow:0 0 18px rgba(119,245,212,.7)} .status{border:1px solid var(--line);border-radius:999px;padding:.55rem .95rem;font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;background:rgba(255,255,255,.03)}
+    main{max-width:1180px;margin:0 auto;padding:2rem 1.2rem 4rem} .hero,.card,details,.final,#victoryOverlay .shell,.modal-panel{background:var(--panel);border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 50px rgba(0,0,0,.22)} .hero{padding:2.4rem;border-radius:28px;position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(119,245,212,.08),transparent 40%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02)),var(--panel)} .hero:after{content:'';position:absolute;width:380px;height:380px;right:-80px;top:-110px;border-radius:50%;background:radial-gradient(circle,rgba(119,245,212,.36) 0%,rgba(119,245,212,.09) 40%,transparent 70%);filter:blur(8px)}
+    .eyebrow{display:inline-flex;gap:.55rem;align-items:center;font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}.eyebrow:before{content:'';width:2.5rem;height:1px;background:currentColor;opacity:.5} h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.5rem,6vw,4.8rem);line-height:.96;max-width:8ch;margin-bottom:1rem}.copy{max-width:54rem;color:#d8ebe5;font-size:1.08rem;line-height:1.75}.copy p+p,.story p+p{margin-top:1rem}.actions,.row,.buttons,.meta,.modal-actions{display:flex;flex-wrap:wrap;gap:.75rem}.actions{margin-top:1.4rem}
+    .btn,.ghost,.hint-btn,.check-btn,.answer-btn,.cert-btn{border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:.97rem;letter-spacing:.03em;border-radius:999px;transition:transform .18s ease;text-decoration:none}.btn,.cert-btn,.check-btn{background:linear-gradient(135deg,var(--accent) 0%,#88d5ff 100%);color:#041019;padding:.9rem 1.35rem;box-shadow:0 14px 30px rgba(119,245,212,.2)} .ghost,.hint-btn,.answer-btn{padding:.85rem 1.2rem;color:var(--text);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)} .btn:hover,.ghost:hover,.hint-btn:hover,.check-btn:hover,.answer-btn:hover,.cert-btn:hover{transform:translateY(-2px)}
+    .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.9fr);gap:1.3rem;margin-top:1.35rem}.card{padding:1.5rem;border-radius:24px}.story p{color:#d7e4df;line-height:1.78}.story code{font-family:'Space Grotesk',sans-serif;color:var(--warm)} .stack{display:grid;gap:.9rem}.evidence{padding:1rem;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)} .evidence h3{font-family:'Space Grotesk',sans-serif;font-size:1rem;margin-bottom:.35rem}.evidence p{font-size:.95rem;color:var(--muted);line-height:1.55;margin-bottom:.9rem}
+    details{margin-top:1.3rem;padding:1.2rem 1.35rem;border-radius:24px} summary{list-style:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:1.05rem} summary::-webkit-details-marker{display:none}.tools{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem}.tools div{padding:.9rem 1rem;border-radius:18px;background:rgba(255,255,255,.03);color:var(--muted);line-height:1.55}.tools strong{display:block;color:var(--text);margin-bottom:.2rem}
+    #questionsContainer{margin-top:1.5rem}.question{margin-bottom:1rem;padding:1.25rem;border-radius:22px;background:rgba(6,13,20,.86);border:1px solid rgba(255,255,255,.08);transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}.question:hover{border-color:rgba(119,245,212,.2);transform:translateY(-1px)} .question-text{font-family:'Space Grotesk',sans-serif;font-size:1.08rem;margin-bottom:.85rem;line-height:1.45}.row{align-items:center}.row input{flex:1 1 320px;min-width:0;padding:.95rem 1rem;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text);font-size:1rem;outline:none}.row input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(119,245,212,.1)} .hint,.reveal{display:none;margin-top:.85rem;padding:.95rem 1rem;border-radius:16px;line-height:1.65;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:#dbeae4}.hint p+p,.reveal p+p{margin-top:.45rem}.mini{color:var(--accent);text-transform:uppercase;letter-spacing:.12em;font-size:.77rem;margin-bottom:.45rem;font-family:'Space Grotesk',sans-serif}.result{min-height:1.4rem;margin-top:.75rem;font-weight:600;color:var(--muted)}
+    .final{display:none;margin-top:2rem;padding:1.5rem;border-radius:24px;background:linear-gradient(135deg,rgba(119,245,212,.14),rgba(255,202,139,.08)),var(--panel2);border:1px solid rgba(119,245,212,.24)} .final h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.8rem,3vw,2.4rem);margin-bottom:.65rem}.final p{color:#d9ebe5;line-height:1.75;max-width:50rem;margin-bottom:1rem}.chip{padding:.7rem .95rem;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--warm);font-size:.9rem}
+    #victoryOverlay{position:fixed;inset:0;display:grid;place-items:center;padding:1.25rem;background:rgba(2,6,10,.86);backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .4s ease;z-index:40} #victoryOverlay.active{opacity:1;pointer-events:auto} #victoryOverlay .shell{width:min(760px,100%);padding:2rem;border-radius:28px;text-align:center;background:linear-gradient(145deg,rgba(119,245,212,.1),rgba(255,202,139,.06)),rgba(5,11,18,.96);border:1px solid rgba(119,245,212,.24)} #victoryOverlay h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,5vw,3.1rem);margin-bottom:.6rem}.pulse{width:100px;height:100px;margin:0 auto 1.2rem;border-radius:50%;border:1px solid rgba(119,245,212,.45);position:relative;box-shadow:0 0 34px rgba(119,245,212,.18)} .pulse:before,.pulse:after{content:'';position:absolute;inset:12px;border-radius:50%;border:1px solid rgba(119,245,212,.4);animation:pulseRing 2.8s ease-out infinite}.pulse:after{inset:28px;animation-delay:.7s}.lines{margin-top:1rem;display:grid;gap:.6rem;min-height:11rem}.line{opacity:0;transform:translateY(10px);transition:opacity .35s ease,transform .35s ease;color:#d6e7e0;letter-spacing:.04em}.line.visible{opacity:1;transform:translateY(0)} .line.key{color:var(--warm);font-family:'Space Grotesk',sans-serif;font-size:1.02rem}
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);z-index:50;padding:1rem}.modal-panel{width:min(460px,100%);padding:1.6rem;border-radius:24px;background:rgba(7,16,24,.96)} .modal-panel h3{font-family:'Space Grotesk',sans-serif;margin-bottom:.65rem;font-size:1.5rem}.modal-panel p{color:var(--muted);line-height:1.65;margin-bottom:1rem}.modal-panel input{width:100%;padding:.95rem 1rem;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text);margin-bottom:1rem;font-size:1rem}
+    #toast{position:fixed;top:1rem;right:1rem;z-index:60;display:none;padding:.9rem 1rem;border-radius:16px;background:rgba(6,13,20,.95);border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 40px rgba(0,0,0,.28);min-width:220px;max-width:min(420px,92vw)} footer{margin-top:2rem;color:var(--muted);text-align:center;font-size:.95rem}
+    @keyframes pulseRing{0%{transform:scale(.8);opacity:.9}100%{transform:scale(1.55);opacity:0}} @media (max-width:900px){.grid{grid-template-columns:1fr}.hero{padding:1.7rem}h1{max-width:none}} @media (max-width:640px){.topbar{padding-inline:.9rem}main{padding-inline:.9rem}.actions,.row,.buttons,.modal-actions,.meta{flex-direction:column}.btn,.ghost,.hint-btn,.check-btn,.answer-btn,.cert-btn{width:100%}}
+  </style>
+</head>
+<body>
+  <header><div class='topbar'><a class='brand' href='index.html'><span class='brand-mark'></span><span>CipherStick</span></a><div class='status'>Signal Intercept // Rocky</div></div></header>
+  <main>
+    <section class='hero'>
+      <div class='eyebrow'>Recovered mission bundle</div>
+      <h1>Project Find Rocky</h1>
+      <div class='copy' id='introText'></div>
+      <div class='actions'>
+        <a class='btn' href='#questionsContainer'>Start the investigation</a>
+        <a class='ghost' href='ProjectFindRocky/checkspec.mp3' download>Download checkspec.mp3</a>
+      </div>
+    </section>
+    <section class='grid'>
+      <article class='card story'>
+        <h2 style="font-family:'Space Grotesk',sans-serif;margin-bottom:.9rem;">Mission Brief</h2>
+        <p>A former Department of Planetary Security employee leaked a folder called <code>help.zip</code> and claimed it came straight from Rocky. He could not make sense of it. You get the three surviving files, a trail of hidden metadata, and one job: figure out where Rocky was taken before the trail goes cold.</p>
+        <p>The evidence jumps from an author's old web history to binary hidden in an image, then into a sealed file that only opens if you notice the right astrophage-sized clue. Follow the crumbs, recover the coordinates, and identify the mountain before whoever moved Rocky disappears again.</p>
+        <p>There is no special answer wrapper for this challenge. URLs, handles, and extensions are checked forgivingly, so focus on the important part of the answer instead of exact formatting.</p>
+      </article>
+      <aside class='card'>
+        <h2 style="font-family:'Space Grotesk',sans-serif;margin-bottom:.9rem;">Starter Files</h2>
+        <div class='stack'>
+          <div class='evidence'><h3>checkspec.mp3</h3><p>A spectrogram-friendly audio file with metadata hiding the trailhead.</p><a class='ghost' href='ProjectFindRocky/checkspec.mp3' download>Download audio</a></div>
+          <div class='evidence'><h3>image.png</h3><p>A huge black-and-white image whose pixels are not saying what they seem.</p><a class='ghost' href='ProjectFindRocky/image.png' download>Download image</a></div>
+          <div class='evidence'><h3>rocky_message.nottext.txt</h3><p>A mislabeled file that becomes useful the moment you stop trusting the extension.</p><a class='ghost' href='ProjectFindRocky/rocky_message.nottext.txt' download>Download file</a></div>
+        </div>
+      </aside>
+    </section>
+    <details><summary>Useful tools for this case</summary><div class='tools'><div><strong>Metadata2Go / EXIF.tools</strong>Perfect for checking hidden fields inside the audio and image files.</div><div><strong>Spectrogram viewers</strong>Audacity, Sonic Visualiser, or any web spectrogram tool will help with both audio clues.</div><div><strong>Base64 + Morse decoders</strong>You will need both if you want the mislabeled file to stop lying to you.</div><div><strong>Wayback Machine</strong>One seized site is only useful once you look at what it used to be.</div></div></details>
+    <div id='questionsContainer'></div>
+    <section class='final' id='finalMessage'><h2>Contact recovered.</h2><div class='meta'><div class='chip'>Coordinates: -78.413966, -85.893177</div><div class='chip'>Location: Mount Tyree, Antarctica</div></div><p>You traced the leak, rebuilt the hidden path, and confirmed Rocky's location. The signal lock is stable now. Claim the certificate and keep the file set safe.</p><button class='cert-btn' onclick='openCertificateModal()'>Claim Your Rocky Certificate</button></section>
+  </main>
+  <div id='victoryOverlay' aria-hidden='true'><div class='shell'><div class='pulse' aria-hidden='true'></div><h2>Signal reacquired</h2><div class='lines' id='sequenceLines'></div></div></div>
+  <div id='nameInputModal' class='modal' aria-hidden='true'><div class='modal-panel'><h3>Claim your certificate</h3><p>Enter the name you want printed on your Project Find Rocky certificate.</p><input type='text' id='userNameInput' placeholder='Your name'><div class='modal-actions'><button class='cert-btn' onclick='downloadCertificate()'>Download certificate</button><button class='ghost' onclick='closeCertificateModal()'>Cancel</button></div></div></div>
+  <div id='toast'></div>
+  <footer>© <span id='year'></span> CipherStick. Rocky deserves better than a dead end.</footer>
+  <script>
+    const VALIDATION_URL = 'https://validate-answer.mwsaulsbury.workers.dev/';
+    const challengeSlug = 'rocky';
+    const storageKeyPrefix = 'OSINT-ROCKY';
+    const canonicalAnswers = ['galactnet','666','andyweirofficial','2013-09-17-22-43','binary','operation polar hideout','413966','zip','astrophage','polarhideout.pages.dev','893177','-78.413966, -85.893177','mount tyree'];
+    const questions = [
+      { question: "What is the name of the author's old website where he posted a comic about himself?", hints: ['The comic is Casey & Andy. Give only the website name, not the full URL.'] },
+      { question: 'What is the last strip number of that comic?', hints: ['The clue is embedded in the URL fragment built from the metadata trail.'] },
+      { question: "What is the author's Twitter/X handle?", hints: ['Use only the handle. The checker accepts it with or without the @.'] },
+      { question: 'When was the author\'s first ever Facebook post? Use YYYY-MM-DD-HH-MM.', hints: ['The exact timestamp is part of the secret URL recipe in the audio metadata.'] },
+      { question: 'Which format is the image\'s secret text encoded in?', hints: ['Read the pixels first, then identify the encoding format by name.'] },
+      { question: 'What is the name of the top secret government operation?', hints: ['Decode each trailer timestamp from the image into words and build the website it points to.', 'Take the first letter of each line on that archived page to uncover the operation name.'], revealAnswerAfterHints: true, revealedAnswer: 'Operation Polar Hideout' },
+      { question: 'What 6-digit sequence is hidden inside the PDF?', hints: ['Ignore the body text and look closely at the page numbers.'] },
+      { question: 'What is the true file extension for the rocky_message file?', hints: ['Treat the current extension as a lie. Give only the actual extension.'] },
+      { question: 'What is the password to that file?', hints: ['The answer is hidden in the Title field of checkspec.mp3.'] },
+      { question: 'Which website did that file link to?', hints: ['Decode the Morse sequence. Remember: 1 = dot, 2 = dash, 3 = space, 4 = literal period.'] },
+      { question: 'What 6 numbers are hidden inside the audio file on that page?', hints: ['Inspect the spectrogram on the linked site.'] },
+      { question: 'Where is Rocky located? Give the exact coordinates.', hints: ['Combine the numbers recovered from the first, second, and third starter files.'] },
+      { question: 'What is the name of the mountain at those coordinates?', hints: ['Use the final coordinates to identify the peak.'] }
+    ];
+    const checkedQuestions = new Array(questions.length).fill(false);
+    const answeredCorrectly = new Array(questions.length).fill(false);
+    const hintProgress = new Array(questions.length).fill(0);
+    let quizCompleted = false;
+    let victoryPlayed = false;
+    const testMode = new URLSearchParams(window.location.search).has('test');
+
+    function normalizeInput(str) {
+      return String(str).toLowerCase().replace(/[’‘]/g, "'").replace(/[“”]/g, '"').normalize('NFKC').trim();
+    }
+    function reduceImportantPart(str) {
+      const normalized = normalizeInput(str).replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[?#].*$/, '').replace(/\/+$/, '').replace(/^@+/, '').replace(/^\.+/, '');
+      return normalized.replace(/[^a-z0-9]+/g, '');
+    }
+    function validateLocally(index, answer) {
+      const expectedReduced = reduceImportantPart(canonicalAnswers[index]);
+      const givenReduced = reduceImportantPart(answer);
+      return expectedReduced.length >= 2 && givenReduced.length >= 2 && givenReduced.includes(expectedReduced);
+    }
+    async function validateAnswer(index, answer) {
+      try {
+        const response = await fetch(VALIDATION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ challenge: challengeSlug, questionIndex: index, answer })
+        });
+        if (!response.ok) throw new Error(`Validation status ${response.status}`);
+        const result = await response.json();
+        if (typeof result.correct === 'boolean') return result.correct;
+        throw new Error('Unexpected validator response');
+      } catch (error) {
+        console.warn('Validator fallback in use:', error);
+        return validateLocally(index, answer);
+      }
+    }
+    function showToastMessage(message, isCorrect) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      toast.style.borderColor = isCorrect ? 'rgba(103, 247, 182, 0.35)' : 'rgba(255, 107, 107, 0.35)';
+      toast.style.color = isCorrect ? '#dcffee' : '#ffe1e1';
+      clearTimeout(window.__rockyToastTimer);
+      window.__rockyToastTimer = setTimeout(() => { toast.style.display = 'none'; }, 2600);
+    }
+    function generatePlaceholder(answer) { return answer.replace(/[a-z0-9]/gi, '*'); }
+    function renderHints(index) {
+      const hintDiv = document.getElementById(`hint-${index}`);
+      const answerButton = document.getElementById(`answer-btn-${index}`);
+      const shown = hintProgress[index];
+      if (!shown) {
+        hintDiv.style.display = 'none';
+        answerButton.style.display = 'none';
+        return;
+      }
+      const activeHints = questions[index].hints.slice(0, shown);
+      hintDiv.innerHTML = `<div class="mini">Hint${activeHints.length > 1 ? 's' : ''}</div>` + activeHints.map((hint, i) => `<p><strong>${i + 1}.</strong> ${hint}</p>`).join('');
+      hintDiv.style.display = 'block';
+      if (questions[index].revealAnswerAfterHints && shown >= questions[index].hints.length) answerButton.style.display = 'inline-flex';
+    }
+    function showNextHint(index) {
+      if (hintProgress[index] < questions[index].hints.length) hintProgress[index] += 1;
+      renderHints(index);
+    }
+    function revealAnswer(index) {
+      const reveal = document.getElementById(`reveal-${index}`);
+      reveal.innerHTML = `<div class="mini">Show answer</div><p>${questions[index].revealedAnswer}</p>`;
+      reveal.style.display = 'block';
+    }
+    async function checkAnswer(index, showBanner = true) {
+      const inputField = document.getElementById(`input-${index}`);
+      const rawValue = inputField.value;
+      const answer = normalizeInput(rawValue);
+      const questionDiv = document.getElementById(`question-${index}`);
+      const questionText = document.getElementById(`question-text-${index}`);
+      const resultDiv = document.getElementById(`result-${index}`);
+      localStorage.setItem(`${storageKeyPrefix}-input-${index}`, rawValue);
+      checkedQuestions[index] = answer !== '';
+      const correct = await validateAnswer(index, rawValue);
+      if (correct) {
+        answeredCorrectly[index] = true;
+        questionDiv.style.borderColor = 'rgba(103, 247, 182, 0.5)';
+        questionDiv.style.boxShadow = '0 16px 40px rgba(103, 247, 182, 0.08)';
+        questionText.style.color = '#dbfff0';
+        inputField.style.borderColor = 'rgba(103, 247, 182, 0.5)';
+        inputField.style.background = 'rgba(103, 247, 182, 0.08)';
+        resultDiv.textContent = 'Correct';
+        resultDiv.style.color = 'var(--success)';
+        if (showBanner) {
+          showToastMessage('Correct signal lock.', true);
+          confetti({ particleCount: 90, spread: 90, startVelocity: 26, origin: { y: 0.62 } });
+        }
+      } else {
+        answeredCorrectly[index] = false;
+        questionDiv.style.borderColor = 'rgba(255, 107, 107, 0.42)';
+        questionDiv.style.boxShadow = 'none';
+        questionText.style.color = '#ffe8e8';
+        inputField.style.borderColor = 'rgba(255, 107, 107, 0.42)';
+        inputField.style.background = 'rgba(255, 107, 107, 0.08)';
+        resultDiv.textContent = rawValue ? `Not quite. Recheck question ${index + 1}.` : '';
+        resultDiv.style.color = 'var(--danger)';
+        if (showBanner) showToastMessage(`Signal mismatch on question ${index + 1}.`, false);
+      }
+      checkAllAnswers();
+    }
+    function startVictorySequence() {
+      if (victoryPlayed) return;
+      victoryPlayed = true;
+      const overlay = document.getElementById('victoryOverlay');
+      const sequenceLines = document.getElementById('sequenceLines');
+      const steps = [
+        { text: 'Cross-reference complete. Rocky-origin metadata confirmed.', key: false },
+        { text: 'Decoded coordinates: -78.413966, -85.893177', key: true },
+        { text: 'Terrain match: Mount Tyree, Antarctica.', key: true },
+        { text: 'Status: contact recovered. Mission file resolved.', key: false }
+      ];
+      sequenceLines.innerHTML = '';
+      overlay.classList.add('active');
+      steps.forEach((step, index) => {
+        const line = document.createElement('div');
+        line.className = `line${step.key ? ' key' : ''}`;
+        line.textContent = step.text;
+        sequenceLines.appendChild(line);
+        setTimeout(() => { line.classList.add('visible'); }, 850 + index * 1050);
+      });
+      setTimeout(() => {
+        confetti({ particleCount: 150, spread: 120, startVelocity: 30, scalar: 1.1, origin: { y: 0.56 } });
+      }, 2600);
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        document.getElementById('finalMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 6200);
+    }
+    function checkAllAnswers() {
+      const finalMessage = document.getElementById('finalMessage');
+      const allCorrect = answeredCorrectly.every(Boolean);
+      if (allCorrect && !quizCompleted) {
+        quizCompleted = true;
+        finalMessage.style.display = 'block';
+        startVictorySequence();
+        logCompletion();
+      } else if (!allCorrect) {
+        quizCompleted = false;
+        finalMessage.style.display = 'none';
+      }
+    }
+    function generateQuestions() {
+      const container = document.getElementById('questionsContainer');
+      questions.forEach((question, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'question';
+        questionDiv.id = `question-${index}`;
+        const questionText = document.createElement('div');
+        questionText.className = 'question-text';
+        questionText.id = `question-text-${index}`;
+        questionText.textContent = `${index + 1}. ${question.question}`;
+        questionDiv.appendChild(questionText);
+        const inputRow = document.createElement('div');
+        inputRow.className = 'row';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `input-${index}`;
+        input.placeholder = generatePlaceholder(canonicalAnswers[index]);
+        input.oninput = () => { localStorage.setItem(`${storageKeyPrefix}-input-${index}`, input.value); };
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            checkAnswer(index, true);
+          }
+        });
+        inputRow.appendChild(input);
+        const buttonRow = document.createElement('div');
+        buttonRow.className = 'buttons';
+        if (question.hints && question.hints.length) {
+          const hintButton = document.createElement('button');
+          hintButton.className = 'hint-btn';
+          hintButton.textContent = 'Show Hint';
+          hintButton.onclick = () => showNextHint(index);
+          buttonRow.appendChild(hintButton);
+        }
+        const checkButton = document.createElement('button');
+        checkButton.className = 'check-btn';
+        checkButton.textContent = 'Check Answer';
+        checkButton.onclick = () => checkAnswer(index, true);
+        buttonRow.appendChild(checkButton);
+        if (question.revealAnswerAfterHints) {
+          const answerButton = document.createElement('button');
+          answerButton.className = 'answer-btn';
+          answerButton.id = `answer-btn-${index}`;
+          answerButton.textContent = 'Show Answer';
+          answerButton.style.display = 'none';
+          answerButton.onclick = () => revealAnswer(index);
+          buttonRow.appendChild(answerButton);
+        } else {
+          const placeholder = document.createElement('span');
+          placeholder.id = `answer-btn-${index}`;
+          placeholder.style.display = 'none';
+          buttonRow.appendChild(placeholder);
+        }
+        inputRow.appendChild(buttonRow);
+        questionDiv.appendChild(inputRow);
+        ['hint','reveal','result'].forEach((kind) => {
+          const el = document.createElement('div');
+          el.className = kind === 'result' ? 'result' : kind;
+          el.id = `${kind}-${index}`;
+          questionDiv.appendChild(el);
+        });
+        container.appendChild(questionDiv);
+      });
+    }
+    function restoreInputs() {
+      questions.forEach((_, index) => {
+        const saved = localStorage.getItem(`${storageKeyPrefix}-input-${index}`);
+        if (saved) {
+          document.getElementById(`input-${index}`).value = saved;
+          checkAnswer(index, false);
+        }
+      });
+    }
+    function openCertificateModal() {
+      const modal = document.getElementById('nameInputModal');
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    function closeCertificateModal() {
+      const modal = document.getElementById('nameInputModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    function downloadCertificate() {
+      const userName = document.getElementById('userNameInput').value.trim() || 'CipherStick Investigator';
+      const certificateDate = new Date().toLocaleDateString();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [11, 8.5] });
+      const pageWidth = 11;
+      const pageHeight = 8.5;
+      doc.setFillColor(8, 15, 23);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+      doc.setDrawColor(119, 245, 212);
+      doc.setLineWidth(.06);
+      doc.roundedRect(.35, .35, pageWidth - .7, pageHeight - .7, .18, .18, 'S');
+      doc.setDrawColor(255, 202, 139);
+      doc.setLineWidth(.015);
+      doc.roundedRect(.55, .55, pageWidth - 1.1, pageHeight - 1.1, .12, .12, 'S');
+      doc.setTextColor(119, 245, 212);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('CipherStick Recovery Dossier', pageWidth / 2, 1.05, { align: 'center' });
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('times', 'bold');
+      doc.setFontSize(28);
+      doc.text('Project Find Rocky', pageWidth / 2, 1.95, { align: 'center' });
+      doc.setTextColor(255, 202, 139);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(15);
+      doc.text('Certificate of Recovery', pageWidth / 2, 2.45, { align: 'center' });
+      doc.setTextColor(220, 234, 228);
+      doc.setFontSize(16);
+      doc.text('This certifies that', pageWidth / 2, 3.25, { align: 'center' });
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('times', 'bolditalic');
+      doc.setFontSize(24);
+      doc.text(userName, pageWidth / 2, 3.95, { align: 'center' });
+      doc.setTextColor(220, 234, 228);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(15);
+      doc.text('successfully decoded the leaked trail, recovered Rocky\'s location,', pageWidth / 2, 4.7, { align: 'center' });
+      doc.text('and confirmed Mount Tyree, Antarctica as the final site.', pageWidth / 2, 5.05, { align: 'center' });
+      doc.text(`Issued on ${certificateDate}`, pageWidth / 2, 5.85, { align: 'center' });
+      doc.setTextColor(119, 245, 212);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('Coordinates verified: -78.413966, -85.893177', pageWidth / 2, 6.65, { align: 'center' });
+      doc.setTextColor(255, 202, 139);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.text('Awarded by CipherStick // Signal restored', pageWidth / 2, 7.2, { align: 'center' });
+      doc.save('ProjectFindRocky-Certificate.pdf');
+      closeCertificateModal();
+    }
+    function loadIntroText() {
+      document.getElementById('introText').innerHTML = [
+        '<p>An ex-Department of Planetary Security employee dropped a folder named <strong>help.zip</strong> and swore it came from Rocky. The files look ordinary right up until they do not: spectrogram text, binary pixels, fake extensions, archived pages, and one frightened message threaded through all of it.</p>',
+        '<p>If Rocky was taken after returning to Earth, someone had to build a paper trail and someone else tried to hide it. Start with the three recovered files below. Follow the metadata, decode the dead ends, and figure out exactly where Rocky was moved.</p>',
+        '<p>If you get stuck, keep the chain simple: inspect, decode, confirm, then move to the next file.</p>'
+      ].join('');
+    }
+    function logCompletion() {
+      if (testMode) return;
+      function writeCompletion() {
+        if (!window.authUID) { setTimeout(writeCompletion, 200); return; }
+        const uid = window.authUID;
+        const completionsRef = firebase.database().ref(`completions/rocky/${uid}`);
+        const newCompletionKey = firebase.database().ref().push().key;
+        const updateData = {};
+        updateData[newCompletionKey] = { timestamp: Date.now() };
+        completionsRef.update(updateData).catch((error) => { console.warn('Completion logging failed:', error); });
+      }
+      writeCompletion();
+    }
+    function setupFirebaseTracking() {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAiqYse2jzA7l2r6VkwdmdBGs0LzwkXb2Y',
+        authDomain: 'cipherstick.firebaseapp.com',
+        databaseURL: 'https://cipherstick-default-rtdb.firebaseio.com',
+        projectId: 'cipherstick',
+        storageBucket: 'cipherstick.appspot.com',
+        messagingSenderId: '827207706323',
+        appId: '1:827207706323:web:a84d3c536b25e0e66c5626'
+      };
+      firebase.initializeApp(firebaseConfig);
+      firebase.auth().onAuthStateChanged((user) => {
+        if (testMode) return;
+        if (user) {
+          const uid = user.uid;
+          window.authUID = uid;
+          setTimeout(() => {
+            const attemptRef = firebase.database().ref(`attempts/rocky/${uid}`);
+            attemptRef.set({ timestamp: firebase.database.ServerValue.TIMESTAMP }).catch((error) => {
+              console.warn('Attempt logging failed:', error);
+            });
+          }, 60000);
+        } else {
+          firebase.auth().signInAnonymously().catch((error) => { console.warn('Anonymous auth error:', error.message); });
+        }
+      });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      loadIntroText();
+      generateQuestions();
+      restoreInputs();
+      setupFirebaseTracking();
+      if (testMode) {
+        canonicalAnswers.forEach((answer, index) => {
+          document.getElementById(`input-${index}`).value = answer;
+          answeredCorrectly[index] = true;
+          checkedQuestions[index] = true;
+          document.getElementById(`result-${index}`).textContent = 'Correct';
+          document.getElementById(`result-${index}`).style.color = 'var(--success)';
+          document.getElementById(`question-${index}`).style.borderColor = 'rgba(103, 247, 182, 0.5)';
+        });
+        checkAllAnswers();
+      }
+    });
+  </script>
+</body>
+</html>
