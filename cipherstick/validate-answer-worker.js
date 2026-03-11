@@ -120,7 +120,7 @@ const challenges = {
       "galactnet",
       "666",
       "andyweirofficial",
-      "2013-09-17-22-43",
+      "2020-12-04-16-11",
       "binary",
       "operation polar hideout",
       "413966",
@@ -160,6 +160,15 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type"
 };
 
+const alternateAnswers = {
+  rocky: {
+    3: [
+      "Friday, December 4, 2020 at 4:11 PM",
+      "December 4, 2020 at 4:11 PM"
+    ]
+  }
+};
+
 function validateAnswer(challenge, questionIndex, answer) {
   const data = challenges[challenge];
   if (!data || typeof questionIndex !== "number" || typeof answer !== "string") {
@@ -178,9 +187,14 @@ function validateAnswer(challenge, questionIndex, answer) {
   const expectedReduced = reduceImportantPart(expectedAnswer);
   const givenReduced = reduceImportantPart(answer);
   const isTooShort = expectedReduced.length < 2 || givenReduced.length < 2;
+  const alternates = alternateAnswers[challenge]?.[questionIndex] || [];
+  const alternateMatch = alternates.some((alternate) => {
+    const alternateReduced = reduceImportantPart(alternate);
+    return alternateReduced.length >= 2 && givenReduced.includes(alternateReduced);
+  });
 
   return {
-    correct: !isTooShort && givenReduced.includes(expectedReduced),
+    correct: !isTooShort && (givenReduced.includes(expectedReduced) || alternateMatch),
     given: normalize(answer),
     challenge,
     questionIndex
