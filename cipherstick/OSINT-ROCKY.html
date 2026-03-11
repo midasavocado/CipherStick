@@ -508,9 +508,9 @@ function loadIntroText() {
     prefixInfo = `<p>All answers must be in the format <code>${requiredPrefix}</code>ANSWER<code>${requiredSuffix}</code>.</p>`;
   }
   const introHTML = `
-  <p>Welcome to <strong>Project Find Rocky</strong>, a hard ARG/OSINT challenge inspired by <em>Project Hail Mary</em>. A former Department of Planetary Security employee leaked a folder called <em>help.zip</em> and claims it came directly from Rocky.</p>
-  <p>The bundle contains a spectrogram-ready audio file, a giant image hiding binary, and a mislabeled file that only makes sense once you stop trusting its extension. Follow the metadata, chase the archived sites, and recover Rocky's location before the trail goes cold.</p>
-  <p>Your investigation begins with these files in the <code>ProjectFindRocky</code> folder.</p>
+  <p>Welcome to <strong>Project Find Rocky</strong>, a hard ARG/OSINT challenge inspired by <em>Project Hail Mary</em>. An anonymous ex-government employee leaked a folder called <em>help.zip</em> and says it came directly from Rocky.</p>
+  <p>He could not decode what it meant before he disappeared. All that remains is a small bundle of files, a trail of metadata, and the chance that Rocky left enough breadcrumbs behind to be found.</p>
+  <p>Your investigation begins with <a href="ProjectFindRocky/help.zip" download style="color:#fff;text-decoration:underline;font-weight:bold;">this leaked ZIP file</a>.</p>
   ${prefixInfo}
   <p>Good luck, Agent.</p>
   <br><br>
@@ -519,7 +519,7 @@ function loadIntroText() {
   document.getElementById("introText").innerHTML = introHTML;
 }
 
-const q = `W3sicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBuYW1lIG9mIHRoZSBhdXRob3IncyBvbGQgd2Vic2l0ZSB3aGVyZSBoZSBwb3N0ZWQgYSBjb21pYyBhYm91dCBoaW1zZWxmPyIsImhpbnQiOiJDb21pYyBuYW1lIGlzIENhc2V5ICYgQW5keS4gR2l2ZSBqdXN0IHRoZSBuYW1lLCBubyBVUkwuIn0seyJxdWVzdGlvbiI6IldoYXQgaXMgdGhlIGxhc3Qgc3RyaXAgbnVtYmVyIG9mIHRoYXQgY29taWMgaGUgbWFkZT8iLCJoaW50IjoiVGhlIHN0cmlwIG51bWJlciBpcyBwYXJ0IG9mIHRoZSBoaWRkZW4gVVJMIHBhdGggYXNzZW1ibGVkIGZyb20gdGhlIG1ldGFkYXRhIHRyYWlsLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBhdXRob3IncyBUd2l0dGVyL1ggaGFuZGxlPyIsImhpbnQiOiJUaGUgY2hlY2tlciBhY2NlcHRzIGl0IHdpdGggb3Igd2l0aG91dCB0aGUgQC4ifSx7InF1ZXN0aW9uIjoiV2hlbiB3YXMgdGhlIGF1dGhvcidzIGZpcnN0IGV2ZXIgRmFjZWJvb2sgcG9zdD8gWVlZWS1NTS1ERC1ISC1NTSIsImhpbnQiOiJUaGUgZXhhY3QgdGltZXN0YW1wIGlzIHBhcnQgb2YgdGhlIHNlY3JldCBSb2NreSBsb2dzIFVSTCByZWNpcGUuIn0seyJxdWVzdGlvbiI6IldoaWNoIGZvcm1hdCBpcyB0aGUgaW1hZ2UncyBzZWNyZXQgdGV4dCBlbmNvZGVkIGluPyIsImhpbnQiOiJBbnN3ZXIgd2l0aCB0aGUgZm9ybWF0IG5hbWUsIGxpa2UgTW9yc2UgQ29kZSBvciBCYXNlNjQuIn0seyJxdWVzdGlvbiI6IldoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIHRvcCBzZWNyZXQgZ292ZXJubWVudCBvcGVyYXRpb24/IiwiaGludCI6IkRlY29kZSBlYWNoIHRyYWlsZXIgdGltZXN0YW1wIHRvIGJ1aWxkIHRoZSBzaXRlLCB0aGVuIHRha2UgdGhlIGZpcnN0IGxldHRlciBvZiBlYWNoIGxpbmUgb24gdGhhdCBwYWdlLiBIaW50IDI6IHRoZSBhcmNoaXZlZCBzZWl6ZWQgc2l0ZSBtYXR0ZXJzLiJ9LHsicXVlc3Rpb24iOiJXaGF0IDYtZGlnaXQgc2VxdWVuY2UgaXMgaGlkZGVuIHdpdGhpbiB0aGUgUERGPyIsImhpbnQiOiJMb29rIGF0IHRoZSBwYWdlIG51bWJlcnMsIG5vdCB0aGUgYm9keSB0ZXh0LiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSB0cnVlIGZpbGUgZXh0ZW5zaW9uIGZvciB0aGUgcm9ja3lfbWVzc2FnZSBmaWxlPyIsImhpbnQiOiJHaXZlIGp1c3QgdGhlIHJlYWwgZXh0ZW5zaW9uLCBub3QgdGhlIGZha2Ugb25lLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBwYXNzd29yZCB0byB0aGF0IGZpbGU/IiwiaGludCI6Ikl0IGlzIHNob3duIGluIHRoZSBUaXRsZSBmaWVsZCBvZiB0aGUgY2hlY2tzcGVjIGF1ZGlvIGZpbGUuIn0seyJxdWVzdGlvbiI6IldoaWNoIHdlYnNpdGUgZGlkIHlvdSBmaW5kIHRoYXQgZmlsZSBsaW5raW5nIHRvPyIsImhpbnQiOiJEZWNvZGUgdGhlIG1vcnNlIGNvZGUuIDEgPSBkb3QsIDIgPSBkYXNoLCAzID0gc3BhY2UsIDQgPSB0aGUgYWN0dWFsIHBlcmlvZC4ifSx7InF1ZXN0aW9uIjoiV2hhdCA2IG51bWJlcnMgYXJlIGhpZGRlbiBpbnNpZGUgdGhlIGF1ZGlvIGZpbGUgb24gdGhhdCBwYWdlPyIsImhpbnQiOiJJbnNwZWN0IHRoZSBzcGVjdHJvZ3JhbS4ifSx7InF1ZXN0aW9uIjoiV2hlcmUgaXMgUm9ja3kgbG9jYXRlZCAoZXhhY3QgY29vcmRpbmF0ZXMpPyIsImhpbnQiOiJVc2UgdGhlIG51bWJlcnMgZnJvbSB0aGUgZmlyc3QsIHNlY29uZCwgYW5kIHRoaXJkIGZpbGVzIHRvZ2V0aGVyLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBuYW1lIG9mIHRoZSBtb3VudGFpbiB0aG9zZSBjb29yZGluYXRlcyBhcmUgYXQ/IiwiaGludCI6Ikxvb2sgdXAgdGhlIGZpbmFsIGNvb3JkaW5hdGVzIG9uY2UgeW91IGhhdmUgdGhlbSBleGFjdGx5LiJ9XQ==`;
+const q = `W3sicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBuYW1lIG9mIHRoZSBhdXRob3IncyBvbGQgd2Vic2l0ZSB3aGVyZSBoZSBwb3N0ZWQgYSBjb21pYyBhYm91dCBoaW1zZWxmPyIsImhpbnQiOiJDb21pYyBuYW1lIGlzIFwiQ2FzZXkgJiBBbmR5XCIuIEdpdmUganVzdCB0aGUgbmFtZSwgbm8gVVJMLiJ9LHsicXVlc3Rpb24iOiJXaGF0IGlzIHRoZSBsYXN0IHN0cmlwIG51bWJlciBvZiB0aGF0IGNvbWljIGhlIG1hZGU/In0seyJxdWVzdGlvbiI6IldoYXQgaXMgdGhlIGF1dGhvcidzIFR3aXR0ZXIvWCBoYW5kbGU/In0seyJxdWVzdGlvbiI6IldoZW4gd2FzIHRoZSBhdXRob3IncyBmaXJzdCBldmVyIEZhY2VCb29rIHBvc3Q/IFlZWVktTU0tREQtSEgtTU0ifSx7InF1ZXN0aW9uIjoiV2hpY2ggZm9ybWF0IGlzIHRoZSBpbWFnZSdzIHNlY3JldCB0ZXh0IGVuY29kZWQgaW4/IiwiaGludCI6IkFuc3dlciB3aXRoIHRoZSBuYW1lOiBlZy4gXCJNb3JzZSBDb2RlXCIgb3IgXCJCYXNlIDY0XCIifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyB0aGUgbmFtZSBvZiB0aGUgdG9wIHNlY3JldCBnb3Zlcm5tZW50IG9wZXJhdGlvbj8iLCJoaW50cyI6WyJEZWNvZGUgZWFjaCB0aW1lc3RhbXAgdGhhdCB0aGUgYmluYXJ5IGltYWdlLnBuZyBnYXZlIHlvdS4gRmluZCB0aGF0IGV4YWN0IHRpbWVzdGFtcCBpbiB0aGUgY29ycmVzcG9uZGluZyB0cmFpbGVyIChUMSwgVDIsIFQzKS4gVGFrZSB0aGUgZmlyc3Qgd29yZCBzYWlkIGluIGVhY2ggdGltZXN0YW1wIHRvIGJyaW5nIHRvZ2V0aGVyIGEgVVJMLiIsIlRha2UgdGhlIGZpcnN0IGxldHRlciBvZiBlYWNoIGxpbmUgaW4gdGhhdCB3ZWJzaXRlIl19LHsicXVlc3Rpb24iOiJXaGF0IDYtZGlnaXQgc2VxdWVuY2UgaXMgaGlkZGVuIHdpdGhpbiB0aGUgUERGPyIsImhpbnQiOiJMb29rIGF0IHRoZSBwYWdlIG51bWJlcnMifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyB0aGUgdHJ1ZSBmaWxlIGV4dGVuc2lvbiBmb3IgdGhlIHJvY2t5X21lc3NhZ2UgZmlsZT8ifSx7InF1ZXN0aW9uIjoiV2hhdCBpcyB0aGUgcGFzc3dvcmQgdG8gdGhhdCBmaWxlPyIsImhpbnQiOiJJdCBpcyBzaG93biBpbiB0aGUgXCJUaXRsZVwiIGZpZWxkIG9mIHRoZSBjaGVja3NwZWMubXAzIGZpbGUifSx7InF1ZXN0aW9uIjoiV2hpY2ggd2Vic2l0ZSBkaWQgeW91IGZpbmQgdGhhdCBmaWxlIGxpbmtpbmcgdG8/IiwiaGludCI6IkRlY29kZSB0aGUgbW9yc2UgY29kZS4gMT0uLCAyPS0sIDM9c3BhY2UsIDQ9dGhlIGFjdHVhbCAuIn0seyJxdWVzdGlvbiI6IldoYXQgNiBudW1iZXJzIGFyZSBoaWRkZW4gaW5zaWRlIHRoZSBhdWRpbyBmaWxlIG9uIHRoYXQgcGFnZT8iLCJoaW50IjoiaW5zcGVjdCB0aGUgc3BlY3Ryb2dyYW0ifSx7InF1ZXN0aW9uIjoiV2hlcmUgaXMgUm9ja3kgbG9jYXRlZCAoZXhhY3QgY29vcmRpbmF0ZXMpIiwiaGludCI6IlVzZSB0aGUgbnVtYmVycyBnaXZlbiB0byB5b3UgZnJvbSB0aGUgZmlyc3QsIHNlY29uZCwgYW5kIHRoaXJkIGZpbGVzLiBDb21iaW5lIHRoZW0uIn0seyJxdWVzdGlvbiI6IldoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIG1vdW50YWluIGluIHdoaWNoIHRob3NlIGNvb3JkaW5hdGVzIGFyZSBhdD8ifV0=`;
 const decoder = new TextDecoder('utf-8');
 const jsonString = decoder.decode(Uint8Array.from(atob(q), c => c.charCodeAt(0)));
 const questions = JSON.parse(jsonString);
@@ -633,7 +633,32 @@ function checkAllAnswers() {
 }
 function toggleHint(index) {
   const hint = document.getElementById(`hint-${index}`);
-  hint.style.display = (hint.style.display === 'none' || hint.style.display === '') ? 'block' : 'none';
+  const hintBtn = document.getElementById(`hint-btn-${index}`);
+  const hintList = questions[index].hints || (questions[index].hint ? [questions[index].hint] : []);
+  const currentStage = Number(hintBtn.dataset.stage || "0");
+
+  if (!hintList.length) return;
+
+  if (currentStage === 0) {
+    hint.innerHTML = hintList.length > 1
+      ? `<strong>Hint 1:</strong> ${hintList[0]}`
+      : hintList[0];
+    hint.style.display = 'block';
+    hintBtn.dataset.stage = "1";
+    hintBtn.textContent = hintList.length > 1 ? 'Show Hint 2' : 'Hide Hint';
+    return;
+  }
+
+  if (hintList.length > 1 && currentStage === 1) {
+    hint.innerHTML = `<strong>Hint 1:</strong> ${hintList[0]}<br><br><strong>Hint 2:</strong> ${hintList[1]}`;
+    hintBtn.dataset.stage = "2";
+    hintBtn.textContent = 'Hide Hint';
+    return;
+  }
+
+  hint.style.display = 'none';
+  hintBtn.dataset.stage = "0";
+  hintBtn.textContent = 'Show Hint';
 }
 
 function generateQuestions() {
@@ -663,9 +688,11 @@ function generateQuestions() {
     const btnGroup = document.createElement('div');
     btnGroup.className = 'btn-group';
 
-    if (q.hint) {
+    if (q.hint || q.hints) {
       const hintBtn = document.createElement('button');
       hintBtn.className = 'btn-hint';
+      hintBtn.id = `hint-btn-${index}`;
+      hintBtn.dataset.stage = "0";
       hintBtn.textContent = 'Show Hint';
       hintBtn.onclick = () => toggleHint(index);
       btnGroup.appendChild(hintBtn);
@@ -680,11 +707,10 @@ function generateQuestions() {
     inputGroup.appendChild(btnGroup);
     questionDiv.appendChild(inputGroup);
 
-    if (q.hint) {
+    if (q.hint || q.hints) {
       const hintDiv = document.createElement('div');
       hintDiv.className = 'hint';
       hintDiv.id = `hint-${index}`;
-      hintDiv.textContent = q.hint;
       questionDiv.appendChild(hintDiv);
     }
 
