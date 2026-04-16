@@ -1,0 +1,207 @@
+
+DESCRIPTION:
+	Welcome to Project Find Rocky, a hard ARG/OSINT challenge inspired by Project Hail Mary. 
+	An anonymous ex-government employee leaked a folder called help.zip and says it came directly from Rocky.
+
+	He could not decode what it meant before he disappeared. All that remains is a small bundle of files, a trail of metadata, and the chance that Rocky left enough breadcrumbs behind to be found.
+
+	According to the leak, the files were copied from an internal transfer after Rocky and Grace made it back to Earth. 
+	Rocky was separated, classified, and moved fast enough that no public record should exist. 
+	If that is true, these files are the first real crack in the cover story.
+	
+	
+	
+	
+GENERAL NOTES:
+
+
+	- I tried to get the text file metadata, but it is saying that the file is password encrypted. Need a password for text file
+	
+	Comic Website: https://www.galactanet.com/comic/
+	Websie link from decoding photo .pages.dev: rockyalienconcernworld.pages.dev
+		Hidden Hint: "Seized but never un-archived"
+	Comic Author: Andy Weir
+	Twitter Handle: @andyweirauthor
+
+	Friday, December 4, 2020 at 7:11 PM
+	Saturday, August 4, 2018 at 1:01 PM
+	
+
+	
+	STUFF NOT USED YET:
+
+		Comment - (Decoded B64) "trailer timestamps word first letter"
+		Band - (Decoded B64) "trailer timestamps: {{TrailerNum}}:{{TimeStamp in seconds}}. First word said on each timestamp."
+	
+	
+	
+PHOTO:
+
+	Metadata Values that look useful:
+		Comment - "The 4 names that the PHM book is dedicated to .pages.dev (only names)"
+		About - "uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"
+		Raw Header - 89 50 4E 47 0D 0A 1A 0A 00 00 00 0D 49 48 44 52
+					 00 00 02 28 00 00 00 01 08 06 00 00 00 F4 31 55
+					 52 00 00 00 4D 74 45 58 74 43 6F 6D 6D 65 6E 74
+					 00 54 68 65 20 34 20 6E 61 6D 65 73 20 74 68 61
+					 74 20 74 68 65 20 50 48 4D 20 62 6F 6F 6B 20 69
+					 73 20 64 65 64 69 63 61 74 65 64 20 74 6F 20 2E
+					 70 61 67 65 73 2E 64 65 76 20 28 6F 6E 6C 79 20
+					 6E 61 6D 65 73 29 66 A7 CB 3E 00 00 05 2E 69 54
+		
+	Helpful Hint:
+		- The secret text in the photo is encoded in binary
+	
+	Notes:
+		- The image decoded to "The 4 names that the PHM book is dedicated to .pages.dev (only names)"
+		- SOLVED "For John, Paul, George, and Ringo"
+		- johnpaulgeorgeringo.pages.dev
+
+
+
+
+
+
+
+
+
+CHECKSPEC.MP3:
+
+	Spectrogram:
+		"They have taken me. I do not know where. All I know is" and a square and then "Check Meta"
+	
+	Metadata Values that look useful:
+		Encoding - LAME3.100\u0004?\u0015
+		Title - "This file is definitely not a red herring. Password is what saved me from radiation aboard the Blip A."
+		Artist - Rocky
+		Album - My creator. There are some clues his old website, where he wrote his comic about himself. 
+		        They will help you fill in the following: secretrockylogs.pages.dev/{{EndStripNumber}}{{TwitterUsername}}{{YYYY-MM-DD-HH-MM}} of the date and time where the latest update of his profile pic happened 
+				(UTC, 24hr time)
+		User Defined Text - "(Description) escription"
+		Comment - (Decoded B64) "trailer timestamps word first letter"
+		Band - (Decoded B64) "trailer timestamps: {{TrailerNum}}:{{TimeStamp in seconds}}. First word said on each timestamp."
+		Tags - (Encoder) "LAME3.100"
+		Raw Header - 49 44 33 04 00 00 00 00 26 09 54 49 54 32 00 00
+					 00 68 00 00 00 54 68 69 73 20 66 69 6C 65 20 69
+					 73 20 64 65 66 69 6E 69 74 65 6C 79 20 6E 6F 74
+					 20 61 20 72 65 64 20 68 65 72 72 69 6E 67 2E 20
+					 50 61 73 73 77 6F 72 64 20 69 73 20 77 68 61 74
+					 20 73 61 76 65 64 20 6D 65 20 66 72 6F 6D 20 72
+					 61 64 69 61 74 69 6F 6E 20 61 62 6F 61 72 64 20
+					 74 68 65 20 42 6C 69 70 20 41 2E 00 54 50 45 31
+
+	secretrockylogs.pages.dev/{{666}}{{andyweirauthor}}{{2020-12-04-23-11}}
+	secretrockylogs.pages.dev/666andyweirauthor2020-12-04-23-11
+
+
+
+
+
+
+TEXT FILE:
+	
+	Metadata is password protected
+	- its a zip file
+	"Password is what saved me from radiation aboard the Blip A."
+		Answer: Astrophage
+
+
+
+
+PASSWORD MESSAGE:
+
+	"Help! R0cky scared. R0cky need5 he1p
+	MTIyMTMyMjIzMTIxMTMxMjMxMjEzMTExMTMxMTMyMTEzMTMyMjIzMTEyMzIzNDEyMjEzMTIzMjIxMzEzMTExMzQyMTEzMTMxMTEy"
+	
+		"MTIyMTMyMjIzMTIxMTMxMjMxMjEzMTExMTMxMTMyMTEzMTMyMjIzMTEyMzIzNDEyMjEzMTIzMjIxMzEzMTExMzQyMTEzMTMxMTEy"
+		Decodes to: 122132223121131231213111131132113132223112323412213123221313111342113131112
+		which decodes to: .--. --- .-.. .- .-. .... .. -.. . --- ..- - dot .--. .- --. . ... dot -.. . ...-
+		which decodes to: POLARHIDEOUT.PAGES.DEV
+		
+
+POLARHIDEOUT.PAGES.DEV AUDIO FILE:
+
+	Spectrogram - 893177
+
+
+
+
+ROCKYALIENCONCERNWORLD.PAGES.DEV:
+
+	- The website was siezed but not unarchived
+		- look at wayback machine
+		
+	- changed on 03/11/26
+	- Page called /"eridian_research.pdf"
+		- gave me a pdf 
+		
+		
+ERIDIAN_RESEARCH.PDF:
+
+	- I hope you understood. Number=location --Rocky
+
+	- Page numbers changed
+		- Reads out "First: 413966"
+
+
+
+STEPS:
+
+	1: What is the name of the author's old website where he posted a comic about himself?
+		Hint: Comic name is Casey & Andy
+			- I had to use the hint but I found the website as well as the author name
+			
+	2: What is the last strip number of that comic he made?
+		- I clicked on the permimant strip link and it said strip = 666
+		
+	3: What is the author's Twitter/X handle?
+		- I just searched his name in twitter and found it.
+		
+	4: What is the upload date of his facebook profile pic?
+		- Found the facebook post and looked at the date
+		
+	5: Which format is the image's secret text encoded in?
+		- 6 letters
+		- guessed "binary" off a whim and got it right
+	
+	6: What is the name of the top secret government operation?
+		Hint: Decode the binary text hidden in image.png. 
+			  It tells you what Rocky wants you to look up next.
+		- I need to figure out what PHM is
+		- It means project hail mary
+		- Redirected to rockyalienconcernworld.pages.dev
+		- 23 letters 
+		- operation polar hideout
+	
+	7: What 6-digit sequence is hidden within the PDF?
+		- I looked at the page numbers and it gave me the answer
+	
+	8: What is the true file extension for the rocky_message file?
+		- checked the binary at the start, its a zip file
+	
+	9: What is the password to that file?
+		- look this up on the internet and found the answer
+		
+	10: Which website did you find that file linking to?
+		- Through like 4 different translations I got the website link
+		
+	11: What 6 numbers are hidden inside the audio file on that page?
+		- Easy spectrogram find
+	
+	12: here is Rocky located (exact coordinates)
+		- Hint: Use the numbers given to you from the first, second, and third files. 
+			    Combine them.
+		- 22 letters
+		
+		- First File: -78.xxxxxx, -85.xxxxxx
+		- Second File: 413966
+		- Third File: 893177
+		
+		 There is another final answer in the path of the first file…
+		 IT HAS TO DO WITH THE AUDIO FILE
+		 
+		-78.413966, -85.893177
+		
+	13: What is the name of the mountain in which those coordinates are at?
+		- Look on google maps at coordinates
+	
