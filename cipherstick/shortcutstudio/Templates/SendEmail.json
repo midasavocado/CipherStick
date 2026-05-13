@@ -1,7 +1,0 @@
-{
-    "a": "Email.Send",
-    "p": {
-        "Subject": "{{S}}",
-        "Content": "{{S}}"
-    }
-}
