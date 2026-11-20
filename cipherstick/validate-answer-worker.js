@@ -161,6 +161,9 @@ const CORS_HEADERS = {
 };
 
 const alternateAnswers = {
+  hard: {
+    12: ["04/10/25"]
+  },
   rocky: {
     3: [
       "Friday, December 4, 2020 at 4:11 PM",
